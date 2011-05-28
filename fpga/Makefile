@@ -1,5 +1,11 @@
 all: proj compile
 
+sopc:
+	make -C mda_sopc
+
+sopc_clean:
+	make clean -C mda_sopc
+
 proj:
 	./config/generate_source_files.sh
 	quartus_sh -t config/setup_proj.tcl
@@ -13,5 +19,5 @@ nios_all:
 nios_clean:
 	make all -C nios
 
-clean: nios_clean
+clean: nios_clean sopc_clean
 	rm -rf db incremental_db *.summary *.rpt *.done *.smsg *.qpf *.qsf config/source_files.tcl *.qdf *.sof *.pin
