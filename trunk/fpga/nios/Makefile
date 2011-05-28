@@ -1,5 +1,9 @@
+ifndef NIOSCC
+	NIOSCC = nios2-elf-gcc
+endif
+
 all:
-	nios2-elf-gcc *.c
+	$(NIOSCC) *.c
 
 clean:
 	rm a.out
