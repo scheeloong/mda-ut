@@ -7,5 +7,11 @@ proj:
 compile:
 	quartus_sh --flow compile mda_top
 
-clean:
-	rm -rf db incremental_db *.summary *.rpt *.done *.smsg *.qpf *.qsf config/source_files.tcl
+nios_all:
+	make -C nios
+
+nios_clean:
+	make all -C nios
+
+clean: nios_clean
+	rm -rf db incremental_db *.summary *.rpt *.done *.smsg *.qpf *.qsf config/source_files.tcl *.qdf *.sof *.pin
