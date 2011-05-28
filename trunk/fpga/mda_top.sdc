@@ -1,1 +1,1 @@
-create_clock -period 9 CLOCK_50
+create_clock -period 20ns CLOCK_50

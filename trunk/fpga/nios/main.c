@@ -10,6 +10,9 @@ void print(char *str)
 
 int main()
 {
-  print("Hello World!");
+  while (1) {
+    print("Hello World!");
+    while(getchar() != '\n') ;
+  }
   return 0;
 }
