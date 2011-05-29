@@ -3,7 +3,7 @@
 
 void init()
 {
-  timer_interrupt_init();
+  interrupt_init();
 }
 
 int main()
