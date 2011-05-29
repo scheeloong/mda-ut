@@ -1,17 +1,16 @@
 #include <stdio.h>
+#include "interrupts.h"
 
-void print(char *str)
+void init()
 {
-  while(*str != '\0') {
-    putchar(*str++);
-  }
-  putchar('\n');
+  timer_interrupt_init();
 }
 
 int main()
 {
+  init();
   while (1) {
-    print("Hello World!");
+    puts("Hello World!");
     while(getchar() != '\n') ;
   }
   return 0;
