@@ -4,7 +4,7 @@ ifndef NIOSCC
 endif
 
 all:
-	$(NIOSCC) -O3 $(FLAG) *.c
+	$(NIOSCC) -O3 $(FLAG) *.c *.s
 
 clean:
 	rm -f a.out
