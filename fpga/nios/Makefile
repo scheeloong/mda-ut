@@ -1,9 +1,10 @@
 ifndef NIOSCC
 	NIOSCC = nios2-elf-gcc
+	FLAG = -D NIOSCC
 endif
 
 all:
-	$(NIOSCC) *.c
+	$(NIOSCC) -O3 $(FLAG) *.c
 
 clean:
-	rm a.out
+	rm -f a.out
