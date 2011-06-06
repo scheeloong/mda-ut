@@ -111,35 +111,11 @@
    element mda_cpu
    {
    }
-   element sw.s1
+   element timer_2.s1
    {
       datum baseAddress
       {
-         value = "8425632";
-         type = "long";
-      }
-   }
-   element timer_0.s1
-   {
-      datum baseAddress
-      {
-         value = "8429568";
-         type = "long";
-      }
-   }
-   element hex03.s1
-   {
-      datum baseAddress
-      {
-         value = "8425568";
-         type = "long";
-      }
-   }
-   element sdram.s1
-   {
-      datum baseAddress
-      {
-         value = "0";
+         value = "8429632";
          type = "long";
       }
    }
@@ -151,19 +127,19 @@
          type = "long";
       }
    }
-   element ledg.s1
+   element ledr.s1
    {
       datum baseAddress
       {
-         value = "8425536";
+         value = "8425504";
          type = "long";
       }
    }
-   element key.s1
+   element timer_0.s1
    {
       datum baseAddress
       {
-         value = "8425664";
+         value = "8429568";
          type = "long";
       }
    }
@@ -175,11 +151,19 @@
          type = "long";
       }
    }
-   element timer_2.s1
+   element hex03.s1
    {
       datum baseAddress
       {
-         value = "8429632";
+         value = "8425568";
+         type = "long";
+      }
+   }
+   element ledg.s1
+   {
+      datum baseAddress
+      {
+         value = "8425536";
          type = "long";
       }
    }
@@ -191,11 +175,27 @@
          type = "long";
       }
    }
-   element ledr.s1
+   element key.s1
    {
       datum baseAddress
       {
-         value = "8425504";
+         value = "8425664";
+         type = "long";
+      }
+   }
+   element sw.s1
+   {
+      datum baseAddress
+      {
+         value = "8425632";
+         type = "long";
+      }
+   }
+   element sdram.s1
+   {
+      datum baseAddress
+      {
+         value = "0";
          type = "long";
       }
    }
@@ -264,8 +264,8 @@
  <parameter name="maxAdditionalLatency" value="0" />
  <parameter name="projectName" value="mda_de2.qpf" />
  <parameter name="sopcBorderPoints" value="true" />
- <parameter name="systemHash" value="14807463571" />
- <parameter name="timeStamp" value="1307333067127" />
+ <parameter name="systemHash" value="34208426699" />
+ <parameter name="timeStamp" value="1307379106246" />
  <module kind="clock_source" version="11.0" enabled="1" name="clk">
   <parameter name="clockFrequency" value="50000000" />
   <parameter name="clockFrequencyKnown" value="true" />
@@ -340,7 +340,7 @@
   <parameter name="mmu_TLBMissExcSlave" value="" />
   <parameter name="mmu_TLBMissExcOffset" value="0" />
   <parameter name="manuallyAssignCpuID" value="false" />
-  <parameter name="internalIrqMaskSystemInfo" value="3" />
+  <parameter name="internalIrqMaskSystemInfo" value="63" />
   <parameter name="instSlaveMapParam"><![CDATA[<address-map><slave name='sdram.s1' start='0x0' end='0x800000' /><slave name='cpu.jtag_debug_module' start='0x808800' end='0x809000' /></address-map>]]></parameter>
   <parameter name="instAddrWidth" value="24" />
   <parameter name="impl" value="Fast" />
@@ -365,7 +365,7 @@
   <parameter name="dcache_numTCDM" value="_0" />
   <parameter name="dcache_lineSize" value="_32" />
   <parameter name="dcache_bursts" value="false" />
-  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram.s1' start='0x0' end='0x800000' /><slave name='cpu.jtag_debug_module' start='0x808800' end='0x809000' /><slave name='jtag_uart.avalon_jtag_slave' start='0x809000' end='0x809008' /><slave name='ledr.s1' start='0x809020' end='0x809040' /><slave name='ledg.s1' start='0x809040' end='0x809060' /><slave name='hex03.s1' start='0x809060' end='0x809080' /><slave name='hex47.s1' start='0x809080' end='0x8090A0' /><slave name='sw.s1' start='0x8090A0' end='0x8090B0' /><slave name='key.s1' start='0x8090C0' end='0x8090D0' /><slave name='lcd.control_slave' start='0x80A080' end='0x80A090' /></address-map>]]></parameter>
+  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram.s1' start='0x0' end='0x800000' /><slave name='cpu.jtag_debug_module' start='0x808800' end='0x809000' /><slave name='jtag_uart.avalon_jtag_slave' start='0x809000' end='0x809008' /><slave name='ledr.s1' start='0x809020' end='0x809040' /><slave name='ledg.s1' start='0x809040' end='0x809060' /><slave name='hex03.s1' start='0x809060' end='0x809080' /><slave name='hex47.s1' start='0x809080' end='0x8090A0' /><slave name='sw.s1' start='0x8090A0' end='0x8090B0' /><slave name='key.s1' start='0x8090C0' end='0x8090D0' /><slave name='timer_0.s1' start='0x80A000' end='0x80A020' /><slave name='timer_1.s1' start='0x80A020' end='0x80A040' /><slave name='timer_2.s1' start='0x80A040' end='0x80A060' /><slave name='timer_3.s1' start='0x80A060' end='0x80A080' /><slave name='lcd.control_slave' start='0x80A080' end='0x80A090' /></address-map>]]></parameter>
   <parameter name="dataAddrWidth" value="24" />
   <parameter name="customInstSlavesSystemInfo" value="&lt;info/&gt;" />
   <parameter name="cpuReset" value="false" />
@@ -469,7 +469,7 @@
   <parameter name="direction" value="Input" />
   <parameter name="edgeType" value="RISING" />
   <parameter name="generateIRQ" value="true" />
-  <parameter name="irqType" value="LEVEL" />
+  <parameter name="irqType" value="EDGE" />
   <parameter name="resetValue" value="0" />
   <parameter name="simDoTestBenchWiring" value="true" />
   <parameter name="simDrivenValue" value="15" />
