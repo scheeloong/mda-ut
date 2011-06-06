@@ -486,3 +486,5 @@ set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 001F3B5BB635000001306251CC
 set_global_assignment -name SDC_FILE cpu.sdc -qip mda_cpu.qip
 set_global_assignment -name SOURCE_FILE cpu.ocp -qip mda_cpu.qip
 set_global_assignment -name VERILOG_FILE sdram_pll.v -qip sdram_pll.qip
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 001F3B5BB63500000130629D156B -qip mda_cpu.qip
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 001F3B5BB6350000013062A0F20F -qip mda_cpu.qip
