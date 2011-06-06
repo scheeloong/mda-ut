@@ -1,0 +1,671 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system name="mda_cpu">
+ <parameter name="bonusData"><![CDATA[bonusData 
+{
+   element jtag_uart.avalon_jtag_slave
+   {
+      datum baseAddress
+      {
+         value = "8425472";
+         type = "long";
+      }
+   }
+   element clk
+   {
+      datum _sortIndex
+      {
+         value = "0";
+         type = "int";
+      }
+   }
+   element lcd.control_slave
+   {
+      datum baseAddress
+      {
+         value = "8429696";
+         type = "long";
+      }
+   }
+   element cpu
+   {
+      datum _sortIndex
+      {
+         value = "2";
+         type = "int";
+      }
+      datum megawizard_uipreferences
+      {
+         value = "{}";
+         type = "String";
+      }
+   }
+   element hex03
+   {
+      datum _sortIndex
+      {
+         value = "6";
+         type = "int";
+      }
+   }
+   element hex47
+   {
+      datum _sortIndex
+      {
+         value = "7";
+         type = "int";
+      }
+   }
+   element cpu.jtag_debug_module
+   {
+      datum baseAddress
+      {
+         value = "8423424";
+         type = "long";
+      }
+   }
+   element jtag_uart
+   {
+      datum _sortIndex
+      {
+         value = "3";
+         type = "int";
+      }
+   }
+   element key
+   {
+      datum _sortIndex
+      {
+         value = "9";
+         type = "int";
+      }
+   }
+   element lcd
+   {
+      datum _sortIndex
+      {
+         value = "14";
+         type = "int";
+      }
+      datum megawizard_uipreferences
+      {
+         value = "{}";
+         type = "String";
+      }
+   }
+   element ledg
+   {
+      datum _sortIndex
+      {
+         value = "5";
+         type = "int";
+      }
+   }
+   element ledr
+   {
+      datum _sortIndex
+      {
+         value = "4";
+         type = "int";
+      }
+   }
+   element mda_cpu
+   {
+   }
+   element timer_2.s1
+   {
+      datum baseAddress
+      {
+         value = "8429632";
+         type = "long";
+      }
+   }
+   element sw.s1
+   {
+      datum baseAddress
+      {
+         value = "8425632";
+         type = "long";
+      }
+   }
+   element timer_1.s1
+   {
+      datum baseAddress
+      {
+         value = "8429600";
+         type = "long";
+      }
+   }
+   element sdram.s1
+   {
+      datum baseAddress
+      {
+         value = "0";
+         type = "long";
+      }
+   }
+   element hex03.s1
+   {
+      datum baseAddress
+      {
+         value = "8425568";
+         type = "long";
+      }
+   }
+   element timer_0.s1
+   {
+      datum baseAddress
+      {
+         value = "8429568";
+         type = "long";
+      }
+   }
+   element timer_3.s1
+   {
+      datum baseAddress
+      {
+         value = "8429664";
+         type = "long";
+      }
+   }
+   element key.s1
+   {
+      datum baseAddress
+      {
+         value = "8425664";
+         type = "long";
+      }
+   }
+   element ledr.s1
+   {
+      datum baseAddress
+      {
+         value = "8425504";
+         type = "long";
+      }
+   }
+   element ledg.s1
+   {
+      datum baseAddress
+      {
+         value = "8425536";
+         type = "long";
+      }
+   }
+   element hex47.s1
+   {
+      datum baseAddress
+      {
+         value = "8425600";
+         type = "long";
+      }
+   }
+   element sdram
+   {
+      datum _sortIndex
+      {
+         value = "1";
+         type = "int";
+      }
+      datum megawizard_uipreferences
+      {
+         value = "{}";
+         type = "String";
+      }
+   }
+   element sw
+   {
+      datum _sortIndex
+      {
+         value = "8";
+         type = "int";
+      }
+   }
+   element timer_0
+   {
+      datum _sortIndex
+      {
+         value = "10";
+         type = "int";
+      }
+   }
+   element timer_1
+   {
+      datum _sortIndex
+      {
+         value = "11";
+         type = "int";
+      }
+   }
+   element timer_2
+   {
+      datum _sortIndex
+      {
+         value = "12";
+         type = "int";
+      }
+   }
+   element timer_3
+   {
+      datum _sortIndex
+      {
+         value = "13";
+         type = "int";
+      }
+   }
+}
+]]></parameter>
+ <parameter name="clockCrossingAdapter" value="HANDSHAKE" />
+ <parameter name="deviceFamily" value="CYCLONEII" />
+ <parameter name="fabricMode" value="SOPC" />
+ <parameter name="generateLegacySim" value="false" />
+ <parameter name="generationId" value="0" />
+ <parameter name="globalResetBus" value="true" />
+ <parameter name="hdlLanguage" value="VERILOG" />
+ <parameter name="maxAdditionalLatency" value="0" />
+ <parameter name="projectName" value="mda_de2.qpf" />
+ <parameter name="sopcBorderPoints" value="true" />
+ <parameter name="systemHash" value="32311694425" />
+ <parameter name="timeStamp" value="1307233932143" />
+ <module kind="clock_source" version="11.0" enabled="1" name="clk">
+  <parameter name="clockFrequency" value="50000000" />
+  <parameter name="clockFrequencyKnown" value="true" />
+  <parameter name="inputClockFrequency" value="0" />
+  <parameter name="resetSynchronousEdges" value="NONE" />
+ </module>
+ <module kind="altera_nios2" version="11.0" enabled="1" name="cpu">
+  <parameter name="userDefinedSettings" value="" />
+  <parameter name="tightlyCoupledInstructionMaster3MapParam" value="" />
+  <parameter name="tightlyCoupledInstructionMaster3AddrWidth" value="1" />
+  <parameter name="tightlyCoupledInstructionMaster2MapParam" value="" />
+  <parameter name="tightlyCoupledInstructionMaster2AddrWidth" value="1" />
+  <parameter name="tightlyCoupledInstructionMaster1MapParam" value="" />
+  <parameter name="tightlyCoupledInstructionMaster1AddrWidth" value="1" />
+  <parameter name="tightlyCoupledInstructionMaster0MapParam" value="" />
+  <parameter name="tightlyCoupledInstructionMaster0AddrWidth" value="1" />
+  <parameter name="tightlyCoupledDataMaster3MapParam" value="" />
+  <parameter name="tightlyCoupledDataMaster3AddrWidth" value="1" />
+  <parameter name="tightlyCoupledDataMaster2MapParam" value="" />
+  <parameter name="tightlyCoupledDataMaster2AddrWidth" value="1" />
+  <parameter name="tightlyCoupledDataMaster1MapParam" value="" />
+  <parameter name="tightlyCoupledDataMaster1AddrWidth" value="1" />
+  <parameter name="tightlyCoupledDataMaster0MapParam" value="" />
+  <parameter name="tightlyCoupledDataMaster0AddrWidth" value="1" />
+  <parameter name="setting_showUnpublishedSettings" value="false" />
+  <parameter name="setting_showInternalSettings" value="false" />
+  <parameter name="setting_shadowRegisterSets" value="0" />
+  <parameter name="setting_preciseSlaveAccessErrorException" value="false" />
+  <parameter name="setting_preciseIllegalMemAccessException" value="false" />
+  <parameter name="setting_preciseDivisionErrorException" value="false" />
+  <parameter name="setting_performanceCounter" value="false" />
+  <parameter name="setting_perfCounterWidth" value="_32" />
+  <parameter name="setting_interruptControllerType" value="Internal" />
+  <parameter name="setting_illegalMemAccessDetection" value="false" />
+  <parameter name="setting_illegalInstructionsTrap" value="false" />
+  <parameter name="setting_fullWaveformSignals" value="false" />
+  <parameter name="setting_extraExceptionInfo" value="false" />
+  <parameter name="setting_exportPCB" value="false" />
+  <parameter name="setting_debugSimGen" value="false" />
+  <parameter name="setting_clearXBitsLDNonBypass" value="true" />
+  <parameter name="setting_branchPredictionType" value="Automatic" />
+  <parameter name="setting_bit31BypassDCache" value="true" />
+  <parameter name="setting_bigEndian" value="false" />
+  <parameter name="setting_bhtPtrSz" value="_8" />
+  <parameter name="setting_bhtIndexPcOnly" value="false" />
+  <parameter name="setting_avalonDebugPortPresent" value="false" />
+  <parameter name="setting_alwaysEncrypt" value="true" />
+  <parameter name="setting_allowFullAddressRange" value="false" />
+  <parameter name="setting_activateTrace" value="true" />
+  <parameter name="setting_activateTestEndChecker" value="false" />
+  <parameter name="setting_activateMonitors" value="true" />
+  <parameter name="setting_activateModelChecker" value="false" />
+  <parameter name="setting_HDLSimCachesCleared" value="true" />
+  <parameter name="setting_HBreakTest" value="false" />
+  <parameter name="resetSlave" value="sdram.s1" />
+  <parameter name="resetOffset" value="0" />
+  <parameter name="muldiv_multiplierType" value="EmbeddedMulFast" />
+  <parameter name="muldiv_divider" value="true" />
+  <parameter name="mpu_useLimit" value="false" />
+  <parameter name="mpu_numOfInstRegion" value="8" />
+  <parameter name="mpu_numOfDataRegion" value="8" />
+  <parameter name="mpu_minInstRegionSize" value="_12" />
+  <parameter name="mpu_minDataRegionSize" value="_12" />
+  <parameter name="mpu_enabled" value="false" />
+  <parameter name="mmu_uitlbNumEntries" value="_4" />
+  <parameter name="mmu_udtlbNumEntries" value="_6" />
+  <parameter name="mmu_tlbPtrSz" value="_7" />
+  <parameter name="mmu_tlbNumWays" value="_16" />
+  <parameter name="mmu_processIDNumBits" value="_8" />
+  <parameter name="mmu_enabled" value="false" />
+  <parameter name="mmu_autoAssignTlbPtrSz" value="true" />
+  <parameter name="mmu_TLBMissExcSlave" value="" />
+  <parameter name="mmu_TLBMissExcOffset" value="0" />
+  <parameter name="manuallyAssignCpuID" value="false" />
+  <parameter name="internalIrqMaskSystemInfo" value="63" />
+  <parameter name="instSlaveMapParam"><![CDATA[<address-map><slave name='sdram.s1' start='0x0' end='0x800000' /><slave name='cpu.jtag_debug_module' start='0x808800' end='0x809000' /></address-map>]]></parameter>
+  <parameter name="instAddrWidth" value="24" />
+  <parameter name="impl" value="Fast" />
+  <parameter name="icache_size" value="_4096" />
+  <parameter name="icache_ramBlockType" value="Automatic" />
+  <parameter name="icache_numTCIM" value="_0" />
+  <parameter name="icache_burstType" value="None" />
+  <parameter name="exceptionSlave" value="sdram.s1" />
+  <parameter name="exceptionOffset" value="32" />
+  <parameter name="deviceFeaturesSystemInfo">M512_MEMORY 0 M4K_MEMORY 1 M9K_MEMORY 0 M20K_MEMORY 0 M144K_MEMORY 0 MRAM_MEMORY 0 MLAB_MEMORY 0 ESB 0 EPCS 1 DSP 0 EMUL 1 HARDCOPY 0 LVDS_IO 0 ADDRESS_STALL 1 TRANSCEIVER_3G_BLOCK 0 TRANSCEIVER_6G_BLOCK 0 DSP_SHIFTER_BLOCK 0</parameter>
+  <parameter name="deviceFamilyName" value="Cyclone II" />
+  <parameter name="debug_triggerArming" value="true" />
+  <parameter name="debug_level" value="Level3" />
+  <parameter name="debug_jtagInstanceID" value="0" />
+  <parameter name="debug_embeddedPLL" value="true" />
+  <parameter name="debug_debugReqSignals" value="false" />
+  <parameter name="debug_assignJtagInstanceID" value="false" />
+  <parameter name="debug_OCIOnchipTrace" value="_128" />
+  <parameter name="dcache_size" value="_2048" />
+  <parameter name="dcache_ramBlockType" value="Automatic" />
+  <parameter name="dcache_omitDataMaster" value="false" />
+  <parameter name="dcache_numTCDM" value="_0" />
+  <parameter name="dcache_lineSize" value="_32" />
+  <parameter name="dcache_bursts" value="false" />
+  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram.s1' start='0x0' end='0x800000' /><slave name='cpu.jtag_debug_module' start='0x808800' end='0x809000' /><slave name='jtag_uart.avalon_jtag_slave' start='0x809000' end='0x809008' /><slave name='ledr.s1' start='0x809020' end='0x809040' /><slave name='ledg.s1' start='0x809040' end='0x809060' /><slave name='hex03.s1' start='0x809060' end='0x809080' /><slave name='hex47.s1' start='0x809080' end='0x8090A0' /><slave name='sw.s1' start='0x8090A0' end='0x8090B0' /><slave name='key.s1' start='0x8090C0' end='0x8090D0' /><slave name='timer_0.s1' start='0x80A000' end='0x80A020' /><slave name='timer_1.s1' start='0x80A020' end='0x80A040' /><slave name='timer_2.s1' start='0x80A040' end='0x80A060' /><slave name='timer_3.s1' start='0x80A060' end='0x80A080' /><slave name='lcd.control_slave' start='0x80A080' end='0x80A090' /></address-map>]]></parameter>
+  <parameter name="dataAddrWidth" value="24" />
+  <parameter name="customInstSlavesSystemInfo" value="&lt;info/&gt;" />
+  <parameter name="cpuReset" value="false" />
+  <parameter name="cpuID" value="0" />
+  <parameter name="clockFrequency" value="50000000" />
+  <parameter name="breakSlave">cpu.jtag_debug_module</parameter>
+  <parameter name="breakOffset" value="32" />
+ </module>
+ <module
+   kind="altera_avalon_jtag_uart"
+   version="11.0"
+   enabled="1"
+   name="jtag_uart">
+  <parameter name="allowMultipleConnections" value="false" />
+  <parameter name="hubInstanceID" value="0" />
+  <parameter name="readBufferDepth" value="64" />
+  <parameter name="readIRQThreshold" value="8" />
+  <parameter name="simInputCharacterStream" value="" />
+  <parameter name="simInteractiveOptions">INTERACTIVE_ASCII_OUTPUT</parameter>
+  <parameter name="useRegistersForReadBuffer" value="false" />
+  <parameter name="useRegistersForWriteBuffer" value="false" />
+  <parameter name="useRelativePathForSimFile" value="false" />
+  <parameter name="writeBufferDepth" value="64" />
+  <parameter name="writeIRQThreshold" value="8" />
+ </module>
+ <module kind="altera_avalon_pio" version="11.0" enabled="1" name="ledr">
+  <parameter name="bitClearingEdgeCapReg" value="false" />
+  <parameter name="bitModifyingOutReg" value="true" />
+  <parameter name="captureEdge" value="false" />
+  <parameter name="clockRate" value="50000000" />
+  <parameter name="direction" value="Output" />
+  <parameter name="edgeType" value="RISING" />
+  <parameter name="generateIRQ" value="false" />
+  <parameter name="irqType" value="LEVEL" />
+  <parameter name="resetValue" value="0" />
+  <parameter name="simDoTestBenchWiring" value="false" />
+  <parameter name="simDrivenValue" value="0" />
+  <parameter name="width" value="18" />
+ </module>
+ <module kind="altera_avalon_pio" version="11.0" enabled="1" name="ledg">
+  <parameter name="bitClearingEdgeCapReg" value="false" />
+  <parameter name="bitModifyingOutReg" value="true" />
+  <parameter name="captureEdge" value="false" />
+  <parameter name="clockRate" value="50000000" />
+  <parameter name="direction" value="Output" />
+  <parameter name="edgeType" value="RISING" />
+  <parameter name="generateIRQ" value="false" />
+  <parameter name="irqType" value="LEVEL" />
+  <parameter name="resetValue" value="0" />
+  <parameter name="simDoTestBenchWiring" value="false" />
+  <parameter name="simDrivenValue" value="0" />
+  <parameter name="width" value="8" />
+ </module>
+ <module kind="altera_avalon_pio" version="11.0" enabled="1" name="hex03">
+  <parameter name="bitClearingEdgeCapReg" value="false" />
+  <parameter name="bitModifyingOutReg" value="true" />
+  <parameter name="captureEdge" value="false" />
+  <parameter name="clockRate" value="50000000" />
+  <parameter name="direction" value="Output" />
+  <parameter name="edgeType" value="RISING" />
+  <parameter name="generateIRQ" value="false" />
+  <parameter name="irqType" value="LEVEL" />
+  <parameter name="resetValue" value="0" />
+  <parameter name="simDoTestBenchWiring" value="false" />
+  <parameter name="simDrivenValue" value="0" />
+  <parameter name="width" value="32" />
+ </module>
+ <module kind="altera_avalon_pio" version="11.0" enabled="1" name="hex47">
+  <parameter name="bitClearingEdgeCapReg" value="false" />
+  <parameter name="bitModifyingOutReg" value="true" />
+  <parameter name="captureEdge" value="false" />
+  <parameter name="clockRate" value="50000000" />
+  <parameter name="direction" value="Output" />
+  <parameter name="edgeType" value="RISING" />
+  <parameter name="generateIRQ" value="false" />
+  <parameter name="irqType" value="LEVEL" />
+  <parameter name="resetValue" value="0" />
+  <parameter name="simDoTestBenchWiring" value="false" />
+  <parameter name="simDrivenValue" value="0" />
+  <parameter name="width" value="32" />
+ </module>
+ <module kind="altera_avalon_pio" version="11.0" enabled="1" name="sw">
+  <parameter name="bitClearingEdgeCapReg" value="false" />
+  <parameter name="bitModifyingOutReg" value="false" />
+  <parameter name="captureEdge" value="false" />
+  <parameter name="clockRate" value="50000000" />
+  <parameter name="direction" value="Input" />
+  <parameter name="edgeType" value="RISING" />
+  <parameter name="generateIRQ" value="false" />
+  <parameter name="irqType" value="LEVEL" />
+  <parameter name="resetValue" value="0" />
+  <parameter name="simDoTestBenchWiring" value="true" />
+  <parameter name="simDrivenValue" value="0" />
+  <parameter name="width" value="18" />
+ </module>
+ <module kind="altera_avalon_pio" version="11.0" enabled="1" name="key">
+  <parameter name="bitClearingEdgeCapReg" value="false" />
+  <parameter name="bitModifyingOutReg" value="false" />
+  <parameter name="captureEdge" value="true" />
+  <parameter name="clockRate" value="50000000" />
+  <parameter name="direction" value="Input" />
+  <parameter name="edgeType" value="RISING" />
+  <parameter name="generateIRQ" value="true" />
+  <parameter name="irqType" value="LEVEL" />
+  <parameter name="resetValue" value="0" />
+  <parameter name="simDoTestBenchWiring" value="true" />
+  <parameter name="simDrivenValue" value="15" />
+  <parameter name="width" value="4" />
+ </module>
+ <module kind="altera_avalon_timer" version="11.0" enabled="1" name="timer_0">
+  <parameter name="alwaysRun" value="false" />
+  <parameter name="counterSize" value="32" />
+  <parameter name="fixedPeriod" value="false" />
+  <parameter name="period" value="1" />
+  <parameter name="periodUnits" value="MSEC" />
+  <parameter name="resetOutput" value="false" />
+  <parameter name="snapshot" value="true" />
+  <parameter name="systemFrequency" value="50000000" />
+  <parameter name="timeoutPulseOutput" value="false" />
+  <parameter name="timerPreset" value="CUSTOM" />
+ </module>
+ <module kind="altera_avalon_timer" version="11.0" enabled="1" name="timer_1">
+  <parameter name="alwaysRun" value="false" />
+  <parameter name="counterSize" value="32" />
+  <parameter name="fixedPeriod" value="false" />
+  <parameter name="period" value="1" />
+  <parameter name="periodUnits" value="MSEC" />
+  <parameter name="resetOutput" value="false" />
+  <parameter name="snapshot" value="true" />
+  <parameter name="systemFrequency" value="50000000" />
+  <parameter name="timeoutPulseOutput" value="false" />
+  <parameter name="timerPreset" value="CUSTOM" />
+ </module>
+ <module kind="altera_avalon_timer" version="11.0" enabled="1" name="timer_2">
+  <parameter name="alwaysRun" value="false" />
+  <parameter name="counterSize" value="32" />
+  <parameter name="fixedPeriod" value="false" />
+  <parameter name="period" value="1" />
+  <parameter name="periodUnits" value="MSEC" />
+  <parameter name="resetOutput" value="false" />
+  <parameter name="snapshot" value="true" />
+  <parameter name="systemFrequency" value="50000000" />
+  <parameter name="timeoutPulseOutput" value="false" />
+  <parameter name="timerPreset" value="CUSTOM" />
+ </module>
+ <module kind="altera_avalon_timer" version="11.0" enabled="1" name="timer_3">
+  <parameter name="alwaysRun" value="false" />
+  <parameter name="counterSize" value="32" />
+  <parameter name="fixedPeriod" value="false" />
+  <parameter name="period" value="1" />
+  <parameter name="periodUnits" value="MSEC" />
+  <parameter name="resetOutput" value="false" />
+  <parameter name="snapshot" value="true" />
+  <parameter name="systemFrequency" value="50000000" />
+  <parameter name="timeoutPulseOutput" value="false" />
+  <parameter name="timerPreset" value="CUSTOM" />
+ </module>
+ <module kind="altera_avalon_lcd_16207" version="11.0" enabled="1" name="lcd" />
+ <module
+   kind="altera_avalon_new_sdram_controller"
+   version="11.0"
+   enabled="1"
+   name="sdram">
+  <parameter name="TAC" value="5.5" />
+  <parameter name="TMRD" value="3" />
+  <parameter name="TRCD" value="20.0" />
+  <parameter name="TRFC" value="70.0" />
+  <parameter name="TRP" value="20.0" />
+  <parameter name="TWR" value="14.0" />
+  <parameter name="casLatency" value="3" />
+  <parameter name="clockRate" value="50000000" />
+  <parameter name="columnWidth" value="8" />
+  <parameter name="dataWidth" value="16" />
+  <parameter name="generateSimulationModel" value="false" />
+  <parameter name="initNOPDelay" value="0.0" />
+  <parameter name="initRefreshCommands" value="2" />
+  <parameter name="masteredTristateBridgeSlave" value="" />
+  <parameter name="model" value="custom" />
+  <parameter name="numberOfBanks" value="4" />
+  <parameter name="numberOfChipSelects" value="1" />
+  <parameter name="pinsSharedViaTriState" value="false" />
+  <parameter name="powerUpDelay" value="100.0" />
+  <parameter name="refreshPeriod" value="15.625" />
+  <parameter name="registerDataIn" value="true" />
+  <parameter name="rowWidth" value="12" />
+ </module>
+ <connection kind="clock" version="11.0" start="clk.clk" end="cpu.clk" />
+ <connection
+   kind="avalon"
+   version="11.0"
+   start="cpu.instruction_master"
+   end="cpu.jtag_debug_module">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00808800" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="11.0"
+   start="cpu.data_master"
+   end="cpu.jtag_debug_module">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00808800" />
+ </connection>
+ <connection kind="clock" version="11.0" start="clk.clk" end="jtag_uart.clk" />
+ <connection
+   kind="avalon"
+   version="11.0"
+   start="cpu.data_master"
+   end="jtag_uart.avalon_jtag_slave">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00809000" />
+ </connection>
+ <connection kind="interrupt" version="11.0" start="cpu.d_irq" end="jtag_uart.irq">
+  <parameter name="irqNumber" value="0" />
+ </connection>
+ <connection kind="clock" version="11.0" start="clk.clk" end="ledr.clk" />
+ <connection kind="avalon" version="11.0" start="cpu.data_master" end="ledr.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00809020" />
+ </connection>
+ <connection kind="clock" version="11.0" start="clk.clk" end="ledg.clk" />
+ <connection kind="avalon" version="11.0" start="cpu.data_master" end="ledg.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00809040" />
+ </connection>
+ <connection kind="clock" version="11.0" start="clk.clk" end="hex03.clk" />
+ <connection kind="avalon" version="11.0" start="cpu.data_master" end="hex03.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00809060" />
+ </connection>
+ <connection kind="clock" version="11.0" start="clk.clk" end="hex47.clk" />
+ <connection kind="avalon" version="11.0" start="cpu.data_master" end="hex47.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00809080" />
+ </connection>
+ <connection kind="clock" version="11.0" start="clk.clk" end="sw.clk" />
+ <connection kind="avalon" version="11.0" start="cpu.data_master" end="sw.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x008090a0" />
+ </connection>
+ <connection kind="clock" version="11.0" start="clk.clk" end="key.clk" />
+ <connection kind="avalon" version="11.0" start="cpu.data_master" end="key.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x008090c0" />
+ </connection>
+ <connection kind="interrupt" version="11.0" start="cpu.d_irq" end="key.irq">
+  <parameter name="irqNumber" value="1" />
+ </connection>
+ <connection kind="clock" version="11.0" start="clk.clk" end="timer_0.clk" />
+ <connection kind="avalon" version="11.0" start="cpu.data_master" end="timer_0.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0080a000" />
+ </connection>
+ <connection kind="interrupt" version="11.0" start="cpu.d_irq" end="timer_0.irq">
+  <parameter name="irqNumber" value="2" />
+ </connection>
+ <connection kind="clock" version="11.0" start="clk.clk" end="timer_1.clk" />
+ <connection kind="avalon" version="11.0" start="cpu.data_master" end="timer_1.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0080a020" />
+ </connection>
+ <connection kind="interrupt" version="11.0" start="cpu.d_irq" end="timer_1.irq">
+  <parameter name="irqNumber" value="3" />
+ </connection>
+ <connection kind="clock" version="11.0" start="clk.clk" end="timer_2.clk" />
+ <connection kind="avalon" version="11.0" start="cpu.data_master" end="timer_2.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0080a040" />
+ </connection>
+ <connection kind="interrupt" version="11.0" start="cpu.d_irq" end="timer_2.irq">
+  <parameter name="irqNumber" value="4" />
+ </connection>
+ <connection kind="clock" version="11.0" start="clk.clk" end="timer_3.clk" />
+ <connection kind="avalon" version="11.0" start="cpu.data_master" end="timer_3.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0080a060" />
+ </connection>
+ <connection kind="interrupt" version="11.0" start="cpu.d_irq" end="timer_3.irq">
+  <parameter name="irqNumber" value="5" />
+ </connection>
+ <connection kind="clock" version="11.0" start="clk.clk" end="lcd.clk" />
+ <connection
+   kind="avalon"
+   version="11.0"
+   start="cpu.data_master"
+   end="lcd.control_slave">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0080a080" />
+ </connection>
+ <connection kind="clock" version="11.0" start="clk.clk" end="sdram.clk" />
+ <connection
+   kind="avalon"
+   version="11.0"
+   start="cpu.instruction_master"
+   end="sdram.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+ </connection>
+ <connection kind="avalon" version="11.0" start="cpu.data_master" end="sdram.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+ </connection>
+</system>
