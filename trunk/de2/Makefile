@@ -66,10 +66,10 @@ configure_sof:
 download_elf:download_elf_stop
 
 download_elf_stop:
-	nios2-download --directory $(APP_DIR) -r --stop
+	nios2-download -r --stop --directory $(APP_DIR) $(ELF_NAME)
 
 download_elf_go:
-	nios2-download --directory $(APP_DIR) -r --go
+	nios2-download -r --go   --directory $(APP_DIR) $(ELF_NAME)
 
 gdb_server:
 	(cd $(APP_DIR) && nios2-gdb-server --tcpport $(GDB_TCP_PORT))
