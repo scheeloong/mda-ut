@@ -186,7 +186,15 @@ SYS_LIB :=
 BSP_ROOT_DIR := ../bsp
 
 # List of application specific include directories, library directories and library names
-APP_INCLUDE_DIRS := inc
+APP_INCLUDE_DIRS += inc
+APP_INCLUDE_DIRS += inc/.svn
+APP_INCLUDE_DIRS += inc/.svn/prop-base
+APP_INCLUDE_DIRS += inc/.svn/props
+APP_INCLUDE_DIRS += inc/.svn/text-base
+APP_INCLUDE_DIRS += inc/.svn/tmp
+APP_INCLUDE_DIRS += inc/.svn/tmp/prop-base
+APP_INCLUDE_DIRS += inc/.svn/tmp/props
+APP_INCLUDE_DIRS += inc/.svn/tmp/text-base
 
 APP_LIBRARY_DIRS :=
 APP_LIBRARY_NAMES :=
