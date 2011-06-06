@@ -16,5 +16,5 @@ set_global_assignment -name SOURCE_FILE [file join $::quartus(qip_path) cpu.ocp]
 # lcd
 # sdram
 # null
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 001F3B5BB6350000013062490235 
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 001F3B5BB635000001306251CC1A 
  

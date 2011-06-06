@@ -51,7 +51,7 @@ assign HEX5[6:0] = HEX47[14: 8];
 assign HEX6[6:0] = HEX47[22:16];
 assign HEX7[6:0] = HEX47[30:24];
 
-sdram_pll neg_3ns(CLOCK_50, DRAM_CLK);
+sdram_pll neg_2_5ns(CLOCK_50, DRAM_CLK);
 mda_cpu nios2(
 	.clk(CLOCK_50),
 	.reset_n(KEY[0]),
