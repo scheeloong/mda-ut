@@ -8,8 +8,11 @@
 # File (.qsf), and the list of source files used.
 ###################################################################
 
-PROJECT = mda_de2
-SOURCE_FILES = mda_de2.v
+PROJECT=mda_de2
+SOPC_FILE=mda_cpu.sopc
+SOPCINFO_FILE=$(SOPC_FILE)info
+SOPCINFO_FILE_DEPENDS=$(SOPC_FILE)
+SOURCE_FILES = mda_de2.v sdram_pll.v $(SOPCINFO_FILE)
 ASSIGNMENT_FILES = $(PROJECT).qpf $(PROJECT).qsf 
 
 ###################################################################
@@ -21,10 +24,11 @@ ASSIGNMENT_FILES = $(PROJECT).qpf $(PROJECT).qsf
 
 all: smart.log $(PROJECT).asm.rpt $(PROJECT).sta.rpt 
 
-clean: cleansopc
+clean: clean_sopc
 	rm -rf *.rpt *.chg smart.log *.htm *.eqn *.pin *.sof *.pof db
 
-cleanspoc:
+clean_sopc:
+	rm -rf ledg.v mda_cpu.bsf cpu_oci_test_bench.v cpu_rf_ram_a.mif cpu_rf_ram_b.mif ledr.v key.v mda_cpu.qip cpu_ic_tag_ram.mif cpu.ocp mda_cpu_inst.v sdram.v cpu_jtag_debug_module_wrapper.v mda_cpu.html mda_cpu.v cpu_jtag_debug_module_tck.v mda_cpu_sim jtag_uart.v mda_cpu.sopcinfo mda_cpu_log.txt cpu_test_bench.v cpu_mult_cell.v cpu.v hex03.v mda_cpu.ptf.bak sw.v cpu_bht_ram.mif cpu.sdc mda_cpu.ptf cpu_dc_tag_ram.mif hex47.v timer_0.v cpu_jtag_debug_module_sysclk.v mda_cpu.ptf.8.0 timer_1.v timer_2.v timer_3.v lcd.v mda_cpu_generation_script mda_cpu.ptf.pre_generation_ptf cpu_ociram_default_contents.mif sopc_builder_log.txt .sopc_builder
 
 .PHONY: clean all
 
@@ -48,6 +52,9 @@ STA_ARGS =
 ###################################################################
 
 STAMP = echo done >
+
+$(SOPCINFO_FILE): $(SOPCINFO_FILE_DEPENDS)
+	- sopc_builder --generate $(SOPC_FILE)
 
 $(PROJECT).map.rpt: map.chg $(SOURCE_FILES) 
 	quartus_map $(MAP_ARGS) $(PROJECT)
