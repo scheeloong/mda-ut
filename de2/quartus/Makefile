@@ -21,8 +21,12 @@ ASSIGNMENT_FILES = $(PROJECT).qpf $(PROJECT).qsf
 
 all: smart.log $(PROJECT).asm.rpt $(PROJECT).sta.rpt 
 
-clean:
+clean: cleansopc
 	rm -rf *.rpt *.chg smart.log *.htm *.eqn *.pin *.sof *.pof db
+
+cleanspoc:
+
+.PHONY: clean all
 
 map: smart.log $(PROJECT).map.rpt
 fit: smart.log $(PROJECT).fit.rpt
