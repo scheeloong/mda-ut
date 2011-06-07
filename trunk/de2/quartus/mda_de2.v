@@ -3,7 +3,7 @@ module mda_de2(
 	SW, KEY, 
 	LEDG, LEDR, 
 	HEX0, HEX1, HEX2, HEX3, HEX4, HEX5, HEX6, HEX7,
-	LCD_EN, LCD_RS, LCD_RW, LCD_DATA,
+	LCD_ON, LCD_BLON, LCD_EN, LCD_RS, LCD_RW, LCD_DATA,
 	DRAM_ADDR, DRAM_BA_0, DRAM_BA_1, DRAM_CAS_N, DRAM_CKE, 
 	DRAM_CLK, DRAM_CS_N, DRAM_DQ, 
 	DRAM_LDQM, DRAM_UDQM, DRAM_RAS_N, DRAM_WE_N
@@ -22,6 +22,8 @@ output[6:0] HEX5;
 output[6:0] HEX6;
 output[6:0] HEX7;
 
+output LCD_ON;
+output LCD_BLON;
 output LCD_EN;
 output LCD_RS;
 output LCD_RW;
@@ -52,6 +54,8 @@ assign HEX6[6:0] = HEX47[22:16];
 assign HEX7[6:0] = HEX47[30:24];
 
 sdram_pll neg_2_5ns(CLOCK_50, DRAM_CLK);
+assign LCD_BLON = 1;
+assign LCD_ON = 1;
 mda_cpu nios2(
 	.clk(CLOCK_50),
 	.reset_n(KEY[0]),

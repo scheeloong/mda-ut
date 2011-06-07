@@ -50,8 +50,10 @@ int main(){
 		// IOWR_ALTERA_AVALON_PIO_DATA(LEDG_BASE, 0xff);
 		// I don't know why this doesn't work, maybe it is a different LCD on the DE2 board
 		// NOt really worth my time
-		fprintf(lcd, "\nTesting the LCD\n");
-		fprintf(lcd, "By Mark Harfouche\n");
+		fprintf(lcd, "\n");
+		// 16 chars   0123456789123456
+		fprintf(lcd, "MDA test code By\n");
+		fprintf(lcd, " Mark Harfouche \n");
 
 
 		// This command clears the LCD
