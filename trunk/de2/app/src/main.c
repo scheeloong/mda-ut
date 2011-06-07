@@ -11,6 +11,7 @@
 #include "system.h"
 #include "sys/alt_irq.h"
 #include "altera_avalon_pio_regs.h"
+#include "altera_avalon_timer_regs.h"
 
 #include "seven_seg.h"
 
@@ -21,6 +22,7 @@
  */
 
 volatile int edge_capture;
+volatile int timer_1=0;
 
 
 static void handle_key_interrupts(void * context){
@@ -34,6 +36,16 @@ static void handle_key_interrupts(void * context){
 	IORD_ALTERA_AVALON_PIO_EDGE_CAP(KEY_BASE);
 }
 
+static void handle_timer_1_interrupts(void *context){
+	volatile int *timer = (volatile int *)context;
+	(*timer) ++;
+
+	IOWR_ALTERA_AVALON_PIO_DATA(LEDR_BASE, *timer);
+
+	// write 0 to ackwoledge the interrupt
+	IOWR_ALTERA_AVALON_TIMER_STATUS(TIMER_1_BASE, 0x0);
+}
+
 int main(){
 	alt_u32 sw;
 
@@ -45,12 +57,6 @@ int main(){
 #define ESC 27
 #define CLEAR_LCD_STRING "[2J"
 	if(lcd != NULL){
-		// It actually goes in here, but doesn't do anything
-		// You can check by enabling this command
-		// IOWR_ALTERA_AVALON_PIO_DATA(LEDG_BASE, 0xff);
-		// I don't know why this doesn't work, maybe it is a different LCD on the DE2 board
-		// NOt really worth my time
-		fprintf(lcd, "\n");
 		// 16 chars   1234567890123456
 		fprintf(lcd, "MDA test code By\n");
 		fprintf(lcd, " Mark Harfouche \n");
@@ -60,6 +66,27 @@ int main(){
 		// fprintf(lcd, "%c%s", ESC, CLEAR_LCD_STRING);
 		fclose(lcd);
 	}
+	
+	// Setup TIMER_1 (I think timer_0 is used for the system clock, so I'll leave that on its own)
+	// The timer data gets sent in chuncks of 16 bits
+	
+	timer_1 = 0;
+	// stop it
+	IOWR_ALTERA_AVALON_TIMER_CONTROL(TIMER_1_BASE, ALTERA_AVALON_TIMER_CONTROL_STOP_MSK);
+	IOWR_ALTERA_AVALON_TIMER_STATUS(TIMER_1_BASE, 0x0);
+
+	// write the period
+	IOWR_ALTERA_AVALON_TIMER_PERIODL(TIMER_1_BASE, 50000000);
+	IOWR_ALTERA_AVALON_TIMER_PERIODH(TIMER_1_BASE, 50000000>>16);
+
+	alt_ic_isr_register(TIMER_1_IRQ_INTERRUPT_CONTROLLER_ID, TIMER_1_IRQ, handle_timer_1_interrupts, &timer_1, 0x0);
+	// Start it 
+	IOWR_ALTERA_AVALON_TIMER_CONTROL(TIMER_1_BASE, 
+			ALTERA_AVALON_TIMER_CONTROL_ITO_MSK | 
+			ALTERA_AVALON_TIMER_CONTROL_CONT_MSK |
+			ALTERA_AVALON_TIMER_CONTROL_START_MSK);
+
+	
 
 
 	// set up the push_bottun interrupts
@@ -69,10 +96,12 @@ int main(){
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEY_BASE, 0x0);
 	alt_ic_isr_register(KEY_IRQ_INTERRUPT_CONTROLLER_ID, KEY_IRQ, handle_key_interrupts, edge_capture_ptr, 0x0);
 
-	while(1){
-		sw = IORD_ALTERA_AVALON_PIO_DATA(SW_BASE);
-		IOWR_ALTERA_AVALON_PIO_DATA(LEDR_BASE, sw);
-	}
+	while(1);
+	// This is a simple example of how to read from the keys
+	//while(1){
+		//sw = IORD_ALTERA_AVALON_PIO_DATA(SW_BASE);
+		//IOWR_ALTERA_AVALON_PIO_DATA(LEDR_BASE, sw);
+	//}
 
 	return 0;
 }
