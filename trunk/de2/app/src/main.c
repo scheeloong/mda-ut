@@ -51,7 +51,7 @@ int main(){
 		// I don't know why this doesn't work, maybe it is a different LCD on the DE2 board
 		// NOt really worth my time
 		fprintf(lcd, "\n");
-		// 16 chars   0123456789123456
+		// 16 chars   1234567890123456
 		fprintf(lcd, "MDA test code By\n");
 		fprintf(lcd, " Mark Harfouche \n");
 
