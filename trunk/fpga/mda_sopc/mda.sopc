@@ -2,6 +2,14 @@
 <system name="mda">
  <parameter name="bonusData"><![CDATA[bonusData 
 {
+   element jtag_uart_0.avalon_jtag_slave
+   {
+      datum baseAddress
+      {
+         value = "96";
+         type = "long";
+      }
+   }
    element clk_0
    {
       datum _sortIndex
@@ -39,6 +47,14 @@
          type = "long";
       }
    }
+   element jtag_uart_0
+   {
+      datum _sortIndex
+      {
+         value = "5";
+         type = "int";
+      }
+   }
    element mda
    {
    }
@@ -50,11 +66,11 @@
          type = "int";
       }
    }
-   element continuous_timer_1.s1
+   element motor_timer_0.s1
    {
       datum baseAddress
       {
-         value = "64";
+         value = "32";
          type = "long";
       }
    }
@@ -66,11 +82,11 @@
          type = "long";
       }
    }
-   element motor_timer_0.s1
+   element continuous_timer_1.s1
    {
       datum baseAddress
       {
-         value = "32";
+         value = "64";
          type = "long";
       }
    }
@@ -99,8 +115,8 @@
  <parameter name="maxAdditionalLatency" value="0" />
  <parameter name="projectName" value="" />
  <parameter name="sopcBorderPoints" value="true" />
- <parameter name="systemHash" value="-3417296153" />
- <parameter name="timeStamp" value="1307290058717" />
+ <parameter name="systemHash" value="-3808602564" />
+ <parameter name="timeStamp" value="1307324381926" />
  <module kind="clock_source" version="11.0" enabled="1" name="clk_0">
   <parameter name="clockFrequency" value="50000000" />
   <parameter name="clockFrequencyKnown" value="true" />
@@ -175,7 +191,7 @@
   <parameter name="mmu_TLBMissExcSlave" value="" />
   <parameter name="mmu_TLBMissExcOffset" value="0" />
   <parameter name="manuallyAssignCpuID" value="false" />
-  <parameter name="internalIrqMaskSystemInfo" value="3" />
+  <parameter name="internalIrqMaskSystemInfo" value="7" />
   <parameter name="instSlaveMapParam"><![CDATA[<address-map><slave name='cpu_0.jtag_debug_module' start='0x800' end='0x1000' /><slave name='sdram_0.s1' start='0x2000000' end='0x3000000' /></address-map>]]></parameter>
   <parameter name="instAddrWidth" value="26" />
   <parameter name="impl" value="Small" />
@@ -200,7 +216,7 @@
   <parameter name="dcache_numTCDM" value="_0" />
   <parameter name="dcache_lineSize" value="_32" />
   <parameter name="dcache_bursts" value="false" />
-  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='motor_timer_0.s1' start='0x20' end='0x40' /><slave name='continuous_timer_1.s1' start='0x40' end='0x60' /><slave name='cpu_0.jtag_debug_module' start='0x800' end='0x1000' /><slave name='sdram_0.s1' start='0x2000000' end='0x3000000' /></address-map>]]></parameter>
+  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='motor_timer_0.s1' start='0x20' end='0x40' /><slave name='continuous_timer_1.s1' start='0x40' end='0x60' /><slave name='jtag_uart_0.avalon_jtag_slave' start='0x60' end='0x68' /><slave name='cpu_0.jtag_debug_module' start='0x800' end='0x1000' /><slave name='sdram_0.s1' start='0x2000000' end='0x3000000' /></address-map>]]></parameter>
   <parameter name="dataAddrWidth" value="26" />
   <parameter name="customInstSlavesSystemInfo" value="&lt;info/&gt;" />
   <parameter name="cpuReset" value="false" />
@@ -268,6 +284,23 @@
   <parameter name="systemFrequency" value="50000000" />
   <parameter name="timeoutPulseOutput" value="false" />
   <parameter name="timerPreset">SIMPLE_PERIODIC_INTERRUPT</parameter>
+ </module>
+ <module
+   kind="altera_avalon_jtag_uart"
+   version="11.0"
+   enabled="1"
+   name="jtag_uart_0">
+  <parameter name="allowMultipleConnections" value="false" />
+  <parameter name="hubInstanceID" value="0" />
+  <parameter name="readBufferDepth" value="64" />
+  <parameter name="readIRQThreshold" value="8" />
+  <parameter name="simInputCharacterStream" value="" />
+  <parameter name="simInteractiveOptions">NO_INTERACTIVE_WINDOWS</parameter>
+  <parameter name="useRegistersForReadBuffer" value="false" />
+  <parameter name="useRegistersForWriteBuffer" value="false" />
+  <parameter name="useRelativePathForSimFile" value="false" />
+  <parameter name="writeBufferDepth" value="64" />
+  <parameter name="writeIRQThreshold" value="8" />
  </module>
  <connection kind="clock" version="11.0" start="clk_0.clk" end="cpu_0.clk" />
  <connection
@@ -338,5 +371,21 @@
    start="cpu_0.d_irq"
    end="continuous_timer_1.irq">
   <parameter name="irqNumber" value="1" />
+ </connection>
+ <connection kind="clock" version="11.0" start="clk_0.clk" end="jtag_uart_0.clk" />
+ <connection
+   kind="avalon"
+   version="11.0"
+   start="cpu_0.data_master"
+   end="jtag_uart_0.avalon_jtag_slave">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0060" />
+ </connection>
+ <connection
+   kind="interrupt"
+   version="11.0"
+   start="cpu_0.d_irq"
+   end="jtag_uart_0.irq">
+  <parameter name="irqNumber" value="2" />
  </connection>
 </system>
