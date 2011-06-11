@@ -43,7 +43,9 @@ joystick:
 
 
 clean:
-	$(MAKE) -C $(NAV_DIR) $@
+	-$(MAKE) -k -C $(NAV_DIR) $@
+	rm -f $(NAV_DIR)/Makfile
+	rm -rf $(BSP_DIR)
 	$(MAKE) -C $(FPGA_DIR) $@
 
 .PHONY: all clean bsp nav fpga vision joystick
