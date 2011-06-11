@@ -25,7 +25,7 @@ ASSIGNMENT_FILES = $(PROJECT).qpf $(PROJECT).qsf
 all: smart.log $(PROJECT).asm.rpt $(PROJECT).sta.rpt 
 
 clean: clean_sopc
-	rm -rf *.rpt *.chg smart.log *.htm *.eqn *.pin *.sof *.pof db
+	rm -rf *.rpt *.chg smart.log *.htm *.eqn *.pin *.sof *.pof db incremental_db *.map.smsg *.jdi *.map.summary *.fit.summary *.sta.summary
 
 clean_sopc:
 	rm -rf ledg.v mda_cpu.bsf cpu_oci_test_bench.v cpu_rf_ram_a.mif cpu_rf_ram_b.mif ledr.v key.v mda_cpu.qip cpu_ic_tag_ram.mif cpu.ocp mda_cpu_inst.v sdram.v cpu_jtag_debug_module_wrapper.v mda_cpu.html mda_cpu.v cpu_jtag_debug_module_tck.v mda_cpu_sim jtag_uart.v mda_cpu.sopcinfo mda_cpu_log.txt cpu_test_bench.v cpu_mult_cell.v cpu.v hex03.v mda_cpu.ptf.bak sw.v cpu_bht_ram.mif cpu.sdc mda_cpu.ptf cpu_dc_tag_ram.mif hex47.v timer_0.v cpu_jtag_debug_module_sysclk.v mda_cpu.ptf.8.0 timer_1.v timer_2.v timer_3.v lcd.v mda_cpu_generation_script mda_cpu.ptf.pre_generation_ptf cpu_ociram_default_contents.mif sopc_builder_log.txt .sopc_builder
