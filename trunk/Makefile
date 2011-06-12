@@ -50,7 +50,7 @@ clean:
 
 .PHONY: all clean bsp nav fpga vision joystick
 
-# Alright the lines bellow help you get your code on the device
+# Alright the lines below help you get your code on the device
 #
 # You first need to configure the SOF file (I'm guessing this means software)
 # make configure_sof
