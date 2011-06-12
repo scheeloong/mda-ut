@@ -9,7 +9,7 @@
 # You should only have to change the name of the directories listed at the top 
 # to change what you want to build
 #
-FPGA_DIR=./de2
+FPGA_DIR=./de0nano
 BSP_DIR=./bsp
 NAV_DIR=./nav
 

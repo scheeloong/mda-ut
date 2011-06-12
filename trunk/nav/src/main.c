@@ -15,6 +15,12 @@
 
 #include "seven_seg.h"
 
+
+// Somet things to make it work with the DE2
+#ifdef LEDG_BASE
+#define LED_BASE LEDG_BASE
+#endif
+
 /*
  * This is just a simple program that tests the capabilities of the NIOS2 on the DE2 board
  * I got most of this info from
@@ -22,7 +28,9 @@
  */
 
 volatile int edge_capture;
+#ifdef TIMER_1_BASE
 volatile int timer_1=0;
+#endif
 
 
 static void handle_key_interrupts(void * context){
@@ -30,28 +38,35 @@ static void handle_key_interrupts(void * context){
 	*edge_capture_ptr = IORD_ALTERA_AVALON_PIO_EDGE_CAP(KEY_BASE);
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEY_BASE, 0);
 
-	IOWR_ALTERA_AVALON_PIO_DATA(LEDG_BASE, *edge_capture_ptr);
+	IOWR_ALTERA_AVALON_PIO_DATA(LED_BASE, *edge_capture_ptr);
 
 	// Read to delay stuff
 	IORD_ALTERA_AVALON_PIO_EDGE_CAP(KEY_BASE);
 }
 
+#ifdef TIMER_1_BASE
 static void handle_timer_1_interrupts(void *context){
 	volatile int *timer = (volatile int *)context;
 	(*timer) ++;
 
-	IOWR_ALTERA_AVALON_PIO_DATA(LEDR_BASE, *timer);
+	IOWR_ALTERA_AVALON_PIO_DATA(LED_BASE, *timer);
 
 	// write 0 to ackwoledge the interrupt
 	IOWR_ALTERA_AVALON_TIMER_STATUS(TIMER_1_BASE, 0x0);
 }
+#endif
 
 int main(){
 	alt_u32 sw;
 
+#ifdef HEX47_BASE
 	IOWR_ALTERA_AVALON_PIO_DATA(HEX47_BASE, str_to_seven_seg("mda "));
+#endif
+#ifdef HEX03_BASE
 	IOWR_ALTERA_AVALON_PIO_DATA(HEX03_BASE, str_to_seven_seg("uoft"));
+#endif
 
+#ifdef LCD_NAME
 	FILE *lcd;
 	lcd = fopen(LCD_NAME, "w");
 #define ESC 27
@@ -66,7 +81,9 @@ int main(){
 		// fprintf(lcd, "%c%s", ESC, CLEAR_LCD_STRING);
 		fclose(lcd);
 	}
+#endif
 	
+#ifdef TIMER_1_BASE
 	// Setup TIMER_1 (I think timer_0 is used for the system clock, so I'll leave that on its own)
 	// The timer data gets sent in chuncks of 16 bits
 	
@@ -85,6 +102,7 @@ int main(){
 			ALTERA_AVALON_TIMER_CONTROL_ITO_MSK | 
 			ALTERA_AVALON_TIMER_CONTROL_CONT_MSK |
 			ALTERA_AVALON_TIMER_CONTROL_START_MSK);
+#endif
 
 	
 
