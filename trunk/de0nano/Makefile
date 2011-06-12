@@ -25,12 +25,13 @@ ASSIGNMENT_FILES = $(PROJECT).qpf $(PROJECT).qsf
 all: smart.log $(PROJECT).asm.rpt $(PROJECT).sta.rpt 
 
 clean: clean_sopc
-	#rm -rf *.rpt *.chg smart.log *.htm *.eqn *.pin *.sof *.pof db incremental_db *.map.smsg *.jdi *.map.summary *.fit.summary *.sta.summary
+	rm -rf *.rpt *.chg smart.log *.htm *.eqn *.pin *.sof *.pof db incremental_db *.map.smsg *.jdi *.map.summary *.fit.summary *.sta.summary
 
 clean_sopc:
-	#rm -rf ledg.v mda_cpu.bsf cpu_oci_test_bench.v cpu_rf_ram_a.mif cpu_rf_ram_b.mif ledr.v key.v mda_cpu.qip cpu_ic_tag_ram.mif cpu.ocp mda_cpu_inst.v sdram.v cpu_jtag_debug_module_wrapper.v mda_cpu.html mda_cpu.v cpu_jtag_debug_module_tck.v mda_cpu_sim jtag_uart.v mda_cpu.sopcinfo mda_cpu_log.txt cpu_test_bench.v cpu_mult_cell.v cpu.v hex03.v mda_cpu.ptf.bak sw.v cpu_bht_ram.mif cpu.sdc mda_cpu.ptf cpu_dc_tag_ram.mif hex47.v timer_0.v cpu_jtag_debug_module_sysclk.v mda_cpu.ptf.8.0 timer_1.v timer_2.v timer_3.v lcd.v mda_cpu_generation_script mda_cpu.ptf.pre_generation_ptf cpu_ociram_default_contents.mif sopc_builder_log.txt .sopc_builder
+	rm -rf led.v DE0_Nano_SOPC_sim i2c_scl.v cpu_oci_test_bench.v timer.v DE0_Nano_SOPC_log.txt cpu_rf_ram_a.mif cpu_rf_ram_b.mif altpll_sys.v DE0_Nano_SOPC.ptf.bak key.v epcs.v DE0_Nano_SOPC.ptf sysid.v adc_spi_read.v epcs_boot_rom_synth.hex DE0_Nano_SOPC.ptf.8.0 DE0_Nano_SOPC_clock_0.v DE0_Nano_SOPC_clock_1.v DE0_Nano_SOPC_generation_script cpu_ic_tag_ram.mif cpu.ocp DE0_Nano_SOPC_inst.v i2c_sda.v altpll_sys.vo select_i2c_clk.v sdram.v  DE0_Nano_SOPC.html cpu_jtag_debug_module_wrapper.v cpu_jtag_debug_module_tck.v clock_crossing_io2.v DE0_Nano_SOPC.bsf  jtag_uart.v  DE0_Nano_SOPC.sopcinfo  .sopc_builder sopc_builder_log.txt cpu_test_bench.v cpu.v sdram_test_component.v cpu_mult_cell.v sw.v cpu_bht_ram.mif clock_crossing_io.v g_sensor_int.v gsensor_spi.v DE0_Nano_SOPC.qip cpu.sdc cpu_dc_tag_ram.mif cpu_jtag_debug_module_sysclk.v DE0_Nano_SOPC.ptf.pre_generation_ptf DE0_Nano_SOPC.v cpu_ociram_default_contents.mif
 
-.PHONY: clean all
+
+.PHONY: clean all clean_sopc
 
 map: smart.log $(PROJECT).map.rpt
 fit: smart.log $(PROJECT).fit.rpt
