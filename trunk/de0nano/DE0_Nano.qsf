@@ -421,3 +421,4 @@ set_global_assignment -name VERILOG_FILE ip/TARASIC_SPI_3WIRE/SPI_3WIRE.v -qip D
 set_global_assignment -name VERILOG_FILE gsensor_spi.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name SDC_FILE /opt/altera/latest/ip/altera/sopc_builder_ip/altera_avalon_clock_adapter/altera_avalon_clock_adapter.sdc -qip DE0_Nano_SOPC.qip
 set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 001F3B5BB63500000130812C6051 -qip DE0_Nano_SOPC.qip
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 001F3B5BB63500000130B4DCFEE7 -qip DE0_Nano_SOPC.qip

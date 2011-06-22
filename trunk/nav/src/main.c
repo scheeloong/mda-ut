@@ -114,12 +114,11 @@ int main(){
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEY_BASE, 0x0);
 	alt_ic_isr_register(KEY_IRQ_INTERRUPT_CONTROLLER_ID, KEY_IRQ, handle_key_interrupts, edge_capture_ptr, 0x0);
 
-	while(1);
 	// This is a simple example of how to read from the keys
-	//while(1){
-		//sw = IORD_ALTERA_AVALON_PIO_DATA(SW_BASE);
-		//IOWR_ALTERA_AVALON_PIO_DATA(LEDR_BASE, sw);
-	//}
+	while(1){
+		sw = IORD_ALTERA_AVALON_PIO_DATA(SW_BASE);
+		IOWR_ALTERA_AVALON_PIO_DATA(LED_BASE, sw);
+	}
 
 	return 0;
 }
