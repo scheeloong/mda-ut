@@ -7,7 +7,7 @@ module motor_controller (input clk, input dir, input on, input [4:0] duty_cycle,
   parameter dead_time = 9'd500; // 500 cycles = 10 microseconds
 
   reg [3:0] out_reg;
-  reg [4:0] duty_counter = 10'd0;
+  reg [9:0] duty_counter = 10'd0;
   reg [8:0] dead_time_counter = dead_time;
   reg [1:0] prev_in = 2'b00;
 
@@ -17,7 +17,7 @@ module motor_controller (input clk, input dir, input on, input [4:0] duty_cycle,
       dead_time_counter <= 9'd0;
     if (dead_time_counter != dead_time)
       dead_time_counter <= dead_time_counter + 9'd1;
-    case ({dir, on})
+    casex ({dir, on})
       2'bx0: out_reg <= 4'b0000;
       2'b11: out_reg <= 4'b1001;
       2'b01: out_reg <= 4'b0110;

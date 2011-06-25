@@ -29,6 +29,14 @@
          type = "long";
       }
    }
+   element motor_controller_0.avalon_slave_0
+   {
+      datum baseAddress
+      {
+         value = "2144";
+         type = "long";
+      }
+   }
    element altpll_sys.c0
    {
       datum _clockDomain
@@ -231,6 +239,14 @@
          type = "String";
       }
    }
+   element motor_controller_0
+   {
+      datum _sortIndex
+      {
+         value = "19";
+         type = "int";
+      }
+   }
    element altpll_sys.pll_slave
    {
       datum baseAddress
@@ -244,38 +260,6 @@
       datum baseAddress
       {
          value = "2112";
-         type = "long";
-      }
-   }
-   element clock_crossing_io.s1
-   {
-      datum baseAddress
-      {
-         value = "67108864";
-         type = "long";
-      }
-   }
-   element g_sensor_int.s1
-   {
-      datum baseAddress
-      {
-         value = "80";
-         type = "long";
-      }
-   }
-   element select_i2c_clk.s1
-   {
-      datum baseAddress
-      {
-         value = "96";
-         type = "long";
-      }
-   }
-   element i2c_scl.s1
-   {
-      datum baseAddress
-      {
-         value = "2128";
          type = "long";
       }
    }
@@ -300,11 +284,27 @@
          type = "long";
       }
    }
-   element timer.s1
+   element select_i2c_clk.s1
    {
       datum baseAddress
       {
-         value = "0";
+         value = "96";
+         type = "long";
+      }
+   }
+   element key.s1
+   {
+      datum baseAddress
+      {
+         value = "32";
+         type = "long";
+      }
+   }
+   element i2c_scl.s1
+   {
+      datum baseAddress
+      {
+         value = "2128";
          type = "long";
       }
    }
@@ -316,6 +316,14 @@
          type = "long";
       }
    }
+   element g_sensor_int.s1
+   {
+      datum baseAddress
+      {
+         value = "80";
+         type = "long";
+      }
+   }
    element clock_crossing_io2.s1
    {
       datum baseAddress
@@ -324,11 +332,19 @@
          type = "long";
       }
    }
-   element key.s1
+   element clock_crossing_io.s1
    {
       datum baseAddress
       {
-         value = "32";
+         value = "67108864";
+         type = "long";
+      }
+   }
+   element timer.s1
+   {
+      datum baseAddress
+      {
+         value = "0";
          type = "long";
       }
    }
@@ -353,19 +369,19 @@
          type = "int";
       }
    }
-   element gsensor_spi.slave
-   {
-      datum baseAddress
-      {
-         value = "2048";
-         type = "long";
-      }
-   }
    element adc_spi_read.slave
    {
       datum baseAddress
       {
          value = "100667416";
+         type = "long";
+      }
+   }
+   element gsensor_spi.slave
+   {
+      datum baseAddress
+      {
+         value = "2048";
          type = "long";
       }
    }
@@ -420,15 +436,15 @@
  <parameter name="maxAdditionalLatency" value="0" />
  <parameter name="projectName" value="DE0_Nano.qpf" />
  <parameter name="sopcBorderPoints" value="true" />
- <parameter name="systemHash" value="45392022796" />
- <parameter name="timeStamp" value="1298277150484" />
- <module kind="clock_source" version="10.1" enabled="1" name="clk_50">
+ <parameter name="systemHash" value="42609522657" />
+ <parameter name="timeStamp" value="1309024961811" />
+ <module kind="clock_source" version="11.0" enabled="1" name="clk_50">
   <parameter name="clockFrequency" value="50000000" />
   <parameter name="clockFrequencyKnown" value="true" />
   <parameter name="inputClockFrequency" value="0" />
   <parameter name="resetSynchronousEdges" value="NONE" />
  </module>
- <module kind="altera_nios2" version="10.1" enabled="1" name="cpu">
+ <module kind="altera_nios2" version="11.0" enabled="1" name="cpu">
   <parameter name="userDefinedSettings" value="" />
   <parameter name="tightlyCoupledInstructionMaster3MapParam" value="" />
   <parameter name="tightlyCoupledInstructionMaster3AddrWidth" value="1" />
@@ -521,7 +537,7 @@
   <parameter name="dcache_numTCDM" value="_0" />
   <parameter name="dcache_lineSize" value="_32" />
   <parameter name="dcache_bursts" value="false" />
-  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='sdram.s1' start='0x2000000' end='0x4000000' /><slave name='timer.s1' start='0x4000000' end='0x4000020' /><slave name='key.s1' start='0x4000020' end='0x4000030' /><slave name='led.s1' start='0x4000030' end='0x4000040' /><slave name='sw.s1' start='0x4000040' end='0x4000050' /><slave name='g_sensor_int.s1' start='0x4000050' end='0x4000060' /><slave name='select_i2c_clk.s1' start='0x4000060' end='0x4000070' /><slave name='sysid.control_slave' start='0x4000070' end='0x4000078' /><slave name='epcs.epcs_control_port' start='0x5000000' end='0x5000800' /><slave name='gsensor_spi.slave' start='0x5000800' end='0x5000840' /><slave name='i2c_sda.s1' start='0x5000840' end='0x5000850' /><slave name='i2c_scl.s1' start='0x5000850' end='0x5000860' /><slave name='cpu.jtag_debug_module' start='0x6000800' end='0x6001000' /><slave name='altpll_sys.pll_slave' start='0x6001000' end='0x6001010' /><slave name='jtag_uart.avalon_jtag_slave' start='0x6001010' end='0x6001018' /><slave name='adc_spi_read.slave' start='0x6001018' end='0x600101C' /></address-map>]]></parameter>
+  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='motor_controller_0.avalon_slave_0' start='0x860' end='0x868' /><slave name='sdram.s1' start='0x2000000' end='0x4000000' /><slave name='timer.s1' start='0x4000000' end='0x4000020' /><slave name='key.s1' start='0x4000020' end='0x4000030' /><slave name='led.s1' start='0x4000030' end='0x4000040' /><slave name='sw.s1' start='0x4000040' end='0x4000050' /><slave name='g_sensor_int.s1' start='0x4000050' end='0x4000060' /><slave name='select_i2c_clk.s1' start='0x4000060' end='0x4000070' /><slave name='sysid.control_slave' start='0x4000070' end='0x4000078' /><slave name='epcs.epcs_control_port' start='0x5000000' end='0x5000800' /><slave name='gsensor_spi.slave' start='0x5000800' end='0x5000840' /><slave name='i2c_sda.s1' start='0x5000840' end='0x5000850' /><slave name='i2c_scl.s1' start='0x5000850' end='0x5000860' /><slave name='cpu.jtag_debug_module' start='0x6000800' end='0x6001000' /><slave name='altpll_sys.pll_slave' start='0x6001000' end='0x6001010' /><slave name='jtag_uart.avalon_jtag_slave' start='0x6001010' end='0x6001018' /><slave name='adc_spi_read.slave' start='0x6001018' end='0x600101C' /></address-map>]]></parameter>
   <parameter name="dataAddrWidth" value="27" />
   <parameter name="customInstSlavesSystemInfo" value="&lt;info/&gt;" />
   <parameter name="cpuReset" value="false" />
@@ -530,10 +546,10 @@
   <parameter name="breakSlave">cpu.jtag_debug_module</parameter>
   <parameter name="breakOffset" value="32" />
  </module>
- <module kind="altera_avalon_sysid" version="10.1" enabled="1" name="sysid">
+ <module kind="altera_avalon_sysid" version="11.0" enabled="1" name="sysid">
   <parameter name="id" value="0" />
  </module>
- <module kind="altera_avalon_timer" version="10.1" enabled="1" name="timer">
+ <module kind="altera_avalon_timer" version="11.0" enabled="1" name="timer">
   <parameter name="alwaysRun" value="false" />
   <parameter name="counterSize" value="32" />
   <parameter name="fixedPeriod" value="false" />
@@ -545,7 +561,7 @@
   <parameter name="timeoutPulseOutput" value="false" />
   <parameter name="timerPreset" value="CUSTOM" />
  </module>
- <module kind="altera_avalon_pio" version="10.1" enabled="1" name="key">
+ <module kind="altera_avalon_pio" version="11.0" enabled="1" name="key">
   <parameter name="bitClearingEdgeCapReg" value="false" />
   <parameter name="bitModifyingOutReg" value="false" />
   <parameter name="captureEdge" value="true" />
@@ -559,7 +575,7 @@
   <parameter name="simDrivenValue" value="0" />
   <parameter name="width" value="2" />
  </module>
- <module kind="altera_avalon_pio" version="10.1" enabled="1" name="sw">
+ <module kind="altera_avalon_pio" version="11.0" enabled="1" name="sw">
   <parameter name="bitClearingEdgeCapReg" value="false" />
   <parameter name="bitModifyingOutReg" value="false" />
   <parameter name="captureEdge" value="true" />
@@ -573,7 +589,7 @@
   <parameter name="simDrivenValue" value="0" />
   <parameter name="width" value="4" />
  </module>
- <module kind="altera_avalon_pio" version="10.1" enabled="1" name="led">
+ <module kind="altera_avalon_pio" version="11.0" enabled="1" name="led">
   <parameter name="bitClearingEdgeCapReg" value="false" />
   <parameter name="bitModifyingOutReg" value="false" />
   <parameter name="captureEdge" value="false" />
@@ -587,7 +603,7 @@
   <parameter name="simDrivenValue" value="0" />
   <parameter name="width" value="8" />
  </module>
- <module kind="altera_avalon_pio" version="10.1" enabled="1" name="i2c_scl">
+ <module kind="altera_avalon_pio" version="11.0" enabled="1" name="i2c_scl">
   <parameter name="bitClearingEdgeCapReg" value="false" />
   <parameter name="bitModifyingOutReg" value="false" />
   <parameter name="captureEdge" value="false" />
@@ -601,7 +617,7 @@
   <parameter name="simDrivenValue" value="0" />
   <parameter name="width" value="1" />
  </module>
- <module kind="altera_avalon_pio" version="10.1" enabled="1" name="i2c_sda">
+ <module kind="altera_avalon_pio" version="11.0" enabled="1" name="i2c_sda">
   <parameter name="bitClearingEdgeCapReg" value="false" />
   <parameter name="bitModifyingOutReg" value="false" />
   <parameter name="captureEdge" value="false" />
@@ -617,7 +633,7 @@
  </module>
  <module
    kind="altera_avalon_new_sdram_controller"
-   version="10.1"
+   version="11.0"
    enabled="1"
    name="sdram">
   <parameter name="TAC" value="5.5" />
@@ -643,7 +659,7 @@
   <parameter name="registerDataIn" value="true" />
   <parameter name="rowWidth" value="13" />
  </module>
- <module kind="altpll" version="10.1" enabled="1" name="altpll_sys">
+ <module kind="altpll" version="11.0" enabled="1" name="altpll_sys">
   <parameter name="HIDDEN_CUSTOM_ELABORATION">altpll_avalon_elaboration</parameter>
   <parameter name="HIDDEN_CUSTOM_POST_EDIT">altpll_avalon_post_edit</parameter>
   <parameter name="INTENDED_DEVICE_FAMILY" value="Cyclone IV E" />
@@ -812,7 +828,7 @@
  </module>
  <module
    kind="altera_avalon_clock_crossing"
-   version="10.1"
+   version="11.0"
    enabled="1"
    name="clock_crossing_io">
   <parameter name="dataWidth" value="32" />
@@ -827,7 +843,7 @@
  </module>
  <module
    kind="altera_avalon_pio"
-   version="10.1"
+   version="11.0"
    enabled="1"
    name="g_sensor_int">
   <parameter name="bitClearingEdgeCapReg" value="false" />
@@ -845,7 +861,7 @@
  </module>
  <module
    kind="altera_avalon_epcs_flash_controller"
-   version="10.1"
+   version="11.0"
    enabled="1"
    name="epcs">
   <parameter name="autoSelectASMIAtom" value="true" />
@@ -854,7 +870,7 @@
  </module>
  <module
    kind="altera_avalon_clock_crossing"
-   version="10.1"
+   version="11.0"
    enabled="1"
    name="clock_crossing_io2">
   <parameter name="dataWidth" value="32" />
@@ -869,7 +885,7 @@
  </module>
  <module
    kind="altera_avalon_jtag_uart"
-   version="10.1"
+   version="11.0"
    enabled="1"
    name="jtag_uart">
   <parameter name="allowMultipleConnections" value="false" />
@@ -892,7 +908,7 @@
  </module>
  <module
    kind="altera_avalon_pio"
-   version="10.1"
+   version="11.0"
    enabled="1"
    name="select_i2c_clk">
   <parameter name="bitClearingEdgeCapReg" value="false" />
@@ -908,9 +924,16 @@
   <parameter name="simDrivenValue" value="0" />
   <parameter name="width" value="1" />
  </module>
+ <module
+   kind="motor_controller"
+   version="1.0"
+   enabled="1"
+   name="motor_controller_0">
+  <parameter name="AUTO_CLOCK_CLOCK_RATE" value="50000000" />
+ </module>
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="cpu.instruction_master"
    end="cpu.jtag_debug_module">
   <parameter name="arbitrationPriority" value="1" />
@@ -918,38 +941,38 @@
  </connection>
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="cpu.data_master"
    end="cpu.jtag_debug_module">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x06000800" />
  </connection>
- <connection kind="interrupt" version="10.1" start="cpu.d_irq" end="timer.irq">
+ <connection kind="interrupt" version="11.0" start="cpu.d_irq" end="timer.irq">
   <parameter name="irqNumber" value="0" />
  </connection>
- <connection kind="interrupt" version="10.1" start="cpu.d_irq" end="key.irq">
+ <connection kind="interrupt" version="11.0" start="cpu.d_irq" end="key.irq">
   <parameter name="irqNumber" value="1" />
  </connection>
- <connection kind="interrupt" version="10.1" start="cpu.d_irq" end="sw.irq">
+ <connection kind="interrupt" version="11.0" start="cpu.d_irq" end="sw.irq">
   <parameter name="irqNumber" value="2" />
  </connection>
  <connection
    kind="clock"
-   version="10.1"
+   version="11.0"
    start="clk_50.clk"
    end="altpll_sys.inclk_interface" />
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="cpu.data_master"
    end="altpll_sys.pll_slave">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x06001000" />
  </connection>
- <connection kind="clock" version="10.1" start="altpll_sys.c0" end="cpu.clk" />
+ <connection kind="clock" version="11.0" start="altpll_sys.c0" end="cpu.clk" />
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="cpu.data_master"
    end="clock_crossing_io.s1">
   <parameter name="arbitrationPriority" value="1" />
@@ -957,22 +980,22 @@
  </connection>
  <connection
    kind="clock"
-   version="10.1"
+   version="11.0"
    start="altpll_sys.c0"
    end="clock_crossing_io.clk_s1" />
  <connection
    kind="clock"
-   version="10.1"
+   version="11.0"
    start="altpll_sys.c2"
    end="clock_crossing_io.clk_m1" />
- <connection kind="clock" version="10.1" start="altpll_sys.c2" end="sysid.clk" />
- <connection kind="clock" version="10.1" start="altpll_sys.c2" end="timer.clk" />
- <connection kind="clock" version="10.1" start="altpll_sys.c2" end="key.clk" />
- <connection kind="clock" version="10.1" start="altpll_sys.c2" end="sw.clk" />
- <connection kind="clock" version="10.1" start="altpll_sys.c2" end="led.clk" />
+ <connection kind="clock" version="11.0" start="altpll_sys.c2" end="sysid.clk" />
+ <connection kind="clock" version="11.0" start="altpll_sys.c2" end="timer.clk" />
+ <connection kind="clock" version="11.0" start="altpll_sys.c2" end="key.clk" />
+ <connection kind="clock" version="11.0" start="altpll_sys.c2" end="sw.clk" />
+ <connection kind="clock" version="11.0" start="altpll_sys.c2" end="led.clk" />
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="clock_crossing_io.m1"
    end="timer.s1">
   <parameter name="arbitrationPriority" value="1" />
@@ -980,7 +1003,7 @@
  </connection>
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="clock_crossing_io.m1"
    end="sysid.control_slave">
   <parameter name="arbitrationPriority" value="1" />
@@ -988,7 +1011,7 @@
  </connection>
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="clock_crossing_io.m1"
    end="key.s1">
   <parameter name="arbitrationPriority" value="1" />
@@ -996,42 +1019,42 @@
  </connection>
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="clock_crossing_io.m1"
    end="led.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0030" />
  </connection>
- <connection kind="avalon" version="10.1" start="clock_crossing_io.m1" end="sw.s1">
+ <connection kind="avalon" version="11.0" start="clock_crossing_io.m1" end="sw.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0040" />
  </connection>
  <connection
    kind="interrupt"
-   version="10.1"
+   version="11.0"
    start="cpu.d_irq"
    end="g_sensor_int.irq">
   <parameter name="irqNumber" value="3" />
  </connection>
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="clock_crossing_io.m1"
    end="g_sensor_int.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0050" />
  </connection>
- <connection kind="avalon" version="10.1" start="cpu.data_master" end="sdram.s1">
+ <connection kind="avalon" version="11.0" start="cpu.data_master" end="sdram.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x02000000" />
  </connection>
- <connection kind="clock" version="10.1" start="altpll_sys.c0" end="sdram.clk" />
- <connection kind="interrupt" version="10.1" start="cpu.d_irq" end="epcs.irq">
+ <connection kind="clock" version="11.0" start="altpll_sys.c0" end="sdram.clk" />
+ <connection kind="interrupt" version="11.0" start="cpu.d_irq" end="epcs.irq">
   <parameter name="irqNumber" value="4" />
  </connection>
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="cpu.data_master"
    end="clock_crossing_io2.s1">
   <parameter name="arbitrationPriority" value="1" />
@@ -1039,37 +1062,37 @@
  </connection>
  <connection
    kind="clock"
-   version="10.1"
+   version="11.0"
    start="clk_50.clk"
    end="clock_crossing_io2.clk_m1" />
  <connection
    kind="clock"
-   version="10.1"
+   version="11.0"
    start="altpll_sys.c0"
    end="clock_crossing_io2.clk_s1" />
  <connection
    kind="clock"
-   version="10.1"
+   version="11.0"
    start="altpll_sys.c2"
    end="g_sensor_int.clk" />
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="cpu.data_master"
    end="jtag_uart.avalon_jtag_slave">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x06001010" />
  </connection>
- <connection kind="interrupt" version="10.1" start="cpu.d_irq" end="jtag_uart.irq">
+ <connection kind="interrupt" version="11.0" start="cpu.d_irq" end="jtag_uart.irq">
   <parameter name="irqNumber" value="5" />
  </connection>
- <connection kind="clock" version="10.1" start="altpll_sys.c0" end="jtag_uart.clk" />
- <connection kind="clock" version="10.1" start="clk_50.clk" end="epcs.clk" />
- <connection kind="clock" version="10.1" start="clk_50.clk" end="i2c_scl.clk" />
- <connection kind="clock" version="10.1" start="clk_50.clk" end="i2c_sda.clk" />
+ <connection kind="clock" version="11.0" start="altpll_sys.c0" end="jtag_uart.clk" />
+ <connection kind="clock" version="11.0" start="clk_50.clk" end="epcs.clk" />
+ <connection kind="clock" version="11.0" start="clk_50.clk" end="i2c_scl.clk" />
+ <connection kind="clock" version="11.0" start="clk_50.clk" end="i2c_sda.clk" />
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="cpu.data_master"
    end="adc_spi_read.slave">
   <parameter name="arbitrationPriority" value="1" />
@@ -1077,12 +1100,12 @@
  </connection>
  <connection
    kind="clock"
-   version="10.1"
+   version="11.0"
    start="altpll_sys.c4"
    end="adc_spi_read.clock" />
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="clock_crossing_io2.m1"
    end="i2c_sda.s1">
   <parameter name="arbitrationPriority" value="1" />
@@ -1090,7 +1113,7 @@
  </connection>
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="clock_crossing_io2.m1"
    end="i2c_scl.s1">
   <parameter name="arbitrationPriority" value="1" />
@@ -1098,12 +1121,12 @@
  </connection>
  <connection
    kind="clock"
-   version="10.1"
+   version="11.0"
    start="clk_50.clk"
    end="gsensor_spi.clock_reset" />
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="clock_crossing_io2.m1"
    end="epcs.epcs_control_port">
   <parameter name="arbitrationPriority" value="1" />
@@ -1111,7 +1134,7 @@
  </connection>
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="cpu.instruction_master"
    end="sdram.s1">
   <parameter name="arbitrationPriority" value="1" />
@@ -1119,7 +1142,7 @@
  </connection>
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="clock_crossing_io2.m1"
    end="gsensor_spi.slave">
   <parameter name="arbitrationPriority" value="1" />
@@ -1127,15 +1150,28 @@
  </connection>
  <connection
    kind="clock"
-   version="10.1"
+   version="11.0"
    start="altpll_sys.c2"
    end="select_i2c_clk.clk" />
  <connection
    kind="avalon"
-   version="10.1"
+   version="11.0"
    start="clock_crossing_io.m1"
    end="select_i2c_clk.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0060" />
+ </connection>
+ <connection
+   kind="clock"
+   version="11.0"
+   start="clk_50.clk"
+   end="motor_controller_0.clock" />
+ <connection
+   kind="avalon"
+   version="11.0"
+   start="cpu.data_master"
+   end="motor_controller_0.avalon_slave_0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0860" />
  </connection>
 </system>

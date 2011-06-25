@@ -82,15 +82,15 @@ clean:
 # open a nios2-terminal
 # you can open that with make terminal
 configure_sof:
-	nios2-configure-sof --directory $(FPGA_DIR)
+	nios2-configure-sof --directory $(FPGA_DIR) || nios2-configure-sof --directory $(FPGA_DIR)
 
 download_elf:download_elf_stop
 
 download_elf_stop:
-	nios2-download -r --stop --directory $(NAV_DIR) $(ELF_NAME)
+	nios2-download --accept-bad-sysid -r --stop --directory $(NAV_DIR) $(ELF_NAME)
 
 download_elf_go:
-	nios2-download -r --go   --directory $(NAV_DIR) $(ELF_NAME)
+	nios2-download --accept-bad-sysid -r --go   --directory $(NAV_DIR) $(ELF_NAME)
 
 gdb_server:
 	(cd $(NAV_DIR) && nios2-gdb-server --tcpport $(GDB_TCP_PORT))

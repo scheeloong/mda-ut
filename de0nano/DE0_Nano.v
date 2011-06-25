@@ -176,6 +176,10 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
                        .altpll_sys(),
                        .clk_50(CLOCK_50),
                        .reset_n(reset_n),
+
+			
+                      // GPIO pins to Avalon slave(s)
+                       .GPIO_out_from_the_motor_controller_0 (GPIO_0[23:0]),
 							  
                       // the_select_i2c_clk
                        .out_port_from_the_select_i2c_clk(select_i2c_clk),							  
