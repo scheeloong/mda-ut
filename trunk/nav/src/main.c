@@ -1,124 +1,48 @@
 /*
  * main.c
  *
- *  Created on: 2011-06-06
- *      Author: mark
+ * The guts of the FPGA processor
+ *
+ * Author: victor
  */
 
-#include "alt_types.h"
-#include <stdio.h>
-#include <unistd.h>
+#include <string.h>
 #include "system.h"
-#include "sys/alt_irq.h"
-#include "altera_avalon_pio_regs.h"
-#include "altera_avalon_timer_regs.h"
+#include "sys/alt_stdio.h"
 
-#include "seven_seg.h"
+#include "utils.h"
 
+volatile int *motor_addr = (int *)MOTOR_CONTROLLER_0_BASE;
+int motor_word = 0;
 
-// Somet things to make it work with the DE2
-#ifdef LEDG_BASE
-#define LED_BASE LEDG_BASE
-#endif
-
-/*
- * This is just a simple program that tests the capabilities of the NIOS2 on the DE2 board
- * I got most of this info from
- * /opt/altera/latest/nios2eds/examples/software/board_diag/
- */
-
-volatile int edge_capture;
-#ifdef TIMER_1_BASE
-volatile int timer_1=0;
-#endif
-
-
-static void handle_key_interrupts(void * context){
-	volatile int *edge_capture_ptr = (volatile int *)context;
-	*edge_capture_ptr = IORD_ALTERA_AVALON_PIO_EDGE_CAP(KEY_BASE);
-	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEY_BASE, 0);
-
-	IOWR_ALTERA_AVALON_PIO_DATA(LED_BASE, *edge_capture_ptr);
-
-	// Read to delay stuff
-	IORD_ALTERA_AVALON_PIO_EDGE_CAP(KEY_BASE);
+void do_command(char *st) {
+  if (strncmp(st, "f", 1) == 0) {
+    alt_putstr("going forward\n");
+    motor_word |= 0xfff;
+  } else if (strncmp(st, "r", 1) == 0) {
+    alt_putstr("going in reverse\n");
+    motor_word &= 0xff0000;
+    motor_word |= 0x555;
+  } else if (strncmp(st, "stop", 4) == 0) {
+    alt_putstr("stopping\n");
+    motor_word &= 0xff0000;
+  } else if (strncmp(st, "sd ", 3) == 0) {
+    alt_putstr("setting duty cycle\n");
+    motor_word &= 0xffff;
+	motor_word |= (read_hex(&st[3]) << 16);
+  } else {
+    alt_putstr("command not recognized\n");
+  }
+  *(motor_addr+1) = motor_word;
 }
 
-#ifdef TIMER_1_BASE
-static void handle_timer_1_interrupts(void *context){
-	volatile int *timer = (volatile int *)context;
-	(*timer) ++;
+int main() {
+  char buffer_str[STR_LEN+1];
 
-	IOWR_ALTERA_AVALON_PIO_DATA(LED_BASE, *timer);
+  while(1) {
+    alt_getline(buffer_str, STR_LEN);
+    do_command(buffer_str);
+  }
 
-	// write 0 to ackwoledge the interrupt
-	IOWR_ALTERA_AVALON_TIMER_STATUS(TIMER_1_BASE, 0x0);
-}
-#endif
-
-int main(){
-	alt_u32 sw;
-
-#ifdef HEX47_BASE
-	IOWR_ALTERA_AVALON_PIO_DATA(HEX47_BASE, str_to_seven_seg("mda "));
-#endif
-#ifdef HEX03_BASE
-	IOWR_ALTERA_AVALON_PIO_DATA(HEX03_BASE, str_to_seven_seg("uoft"));
-#endif
-
-#ifdef LCD_NAME
-	FILE *lcd;
-	lcd = fopen(LCD_NAME, "w");
-#define ESC 27
-#define CLEAR_LCD_STRING "[2J"
-	if(lcd != NULL){
-		// 16 chars   1234567890123456
-		fprintf(lcd, "MDA test code By\n");
-		fprintf(lcd, " Mark Harfouche \n");
-
-
-		// This command clears the LCD
-		// fprintf(lcd, "%c%s", ESC, CLEAR_LCD_STRING);
-		fclose(lcd);
-	}
-#endif
-	
-#ifdef TIMER_1_BASE
-	// Setup TIMER_1 (I think timer_0 is used for the system clock, so I'll leave that on its own)
-	// The timer data gets sent in chuncks of 16 bits
-	
-	timer_1 = 0;
-	// stop it
-	IOWR_ALTERA_AVALON_TIMER_CONTROL(TIMER_1_BASE, ALTERA_AVALON_TIMER_CONTROL_STOP_MSK);
-	IOWR_ALTERA_AVALON_TIMER_STATUS(TIMER_1_BASE, 0x0);
-
-	// write the period
-	IOWR_ALTERA_AVALON_TIMER_PERIODL(TIMER_1_BASE, 50000000);
-	IOWR_ALTERA_AVALON_TIMER_PERIODH(TIMER_1_BASE, 50000000>>16);
-
-	alt_ic_isr_register(TIMER_1_IRQ_INTERRUPT_CONTROLLER_ID, TIMER_1_IRQ, handle_timer_1_interrupts, &timer_1, 0x0);
-	// Start it 
-	IOWR_ALTERA_AVALON_TIMER_CONTROL(TIMER_1_BASE, 
-			ALTERA_AVALON_TIMER_CONTROL_ITO_MSK | 
-			ALTERA_AVALON_TIMER_CONTROL_CONT_MSK |
-			ALTERA_AVALON_TIMER_CONTROL_START_MSK);
-#endif
-
-	
-
-
-	// set up the push_bottun interrupts
-	
-	void * edge_capture_ptr = (void *) &edge_capture;
-	IOWR_ALTERA_AVALON_PIO_IRQ_MASK(KEY_BASE, 0xf);
-	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(KEY_BASE, 0x0);
-	alt_ic_isr_register(KEY_IRQ_INTERRUPT_CONTROLLER_ID, KEY_IRQ, handle_key_interrupts, edge_capture_ptr, 0x0);
-
-	// This is a simple example of how to read from the keys
-	while(1){
-		sw = IORD_ALTERA_AVALON_PIO_DATA(SW_BASE);
-		IOWR_ALTERA_AVALON_PIO_DATA(LED_BASE, sw);
-	}
-
-	return 0;
+  return 0;
 }
