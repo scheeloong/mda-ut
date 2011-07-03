@@ -179,7 +179,7 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
 
 			
                       // GPIO pins to Avalon slave(s)
-                       .GPIO_out_from_the_motor_controller_0 (GPIO_0[23:0]),
+                       .GPIO_out_from_the_motor_controller_0 ({LED[7:0], GPIO_0[15:0]}),
 							  
                       // the_select_i2c_clk
                        .out_port_from_the_select_i2c_clk(select_i2c_clk),							  
@@ -222,7 +222,7 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
                        .in_port_to_the_key(KEY),
 
                       // the_led
-                       .out_port_from_the_led(LED),
+                       .out_port_from_the_led(GPIO_0[23:16]),
 
                       // the_sdram
                        .zs_addr_from_the_sdram(DRAM_ADDR),

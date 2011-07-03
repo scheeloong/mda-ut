@@ -20,8 +20,6 @@ clean:
 #
 # You first need to configure the SOF file (I'm guessing this means software)
 # make configure_sof
-#
-# Add more if you want to demo NIOS capability as well (see top-level Makefile)
 
 configure_sof:
 	nios2-configure-sof || nios2-configure-sof
