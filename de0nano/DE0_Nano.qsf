@@ -435,3 +435,4 @@ set_global_assignment -name VERILOG_FILE ../fpga/motor_controller/motor_controll
 set_global_assignment -name VERILOG_FILE motor_controller_0.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000130CA06739F -qip DE0_Nano_SOPC.qip
 set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000130F1AAE01C -qip DE0_Nano_SOPC.qip
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000130F1CC6CAF -qip DE0_Nano_SOPC.qip
