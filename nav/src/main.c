@@ -7,6 +7,7 @@
  */
 
 #include <string.h>
+#include "io.h"
 #include "system.h"
 #include "sys/alt_stdio.h"
 
@@ -22,23 +23,23 @@ void do_command(char *st)
   int i;
   if (strncmp(st, "f", 1) == 0) {
     for (i = 0; i < NUM_MOTORS; i++) {
-      *(motor_addr+i) = 0x3;
+      IOWR(MOTOR_CONTROLLER_0_BASE, i*4, 0x3);
     }
     alt_putstr("going forward\n");
   } else if (strncmp(st, "r", 1) == 0) {
     for (i = 0; i < NUM_MOTORS; i++) {
-      *(motor_addr+i) = 0x1;
+      IOWR(MOTOR_CONTROLLER_0_BASE, i*4, 0x1);
     }
     alt_putstr("going in reverse\n");
   } else if (strncmp(st, "stop", 4) == 0) {
     for (i = 0; i < NUM_MOTORS; i++) {
-      *(motor_addr+i) = 0x0;
+      IOWR(MOTOR_CONTROLLER_0_BASE, i*4, 0x0);
     }
     alt_putstr("stopping\n");
   } else if (strncmp(st, "sd ", 3) == 0) {
     int dc = read_hex(&st[3]);
     for (i = 0; i < NUM_MOTORS; i++) {
-      *(motor_addr+8+i) = dc;
+      IOWR(MOTOR_CONTROLLER_0_BASE, (8+i)*4, dc);
     }
     alt_putstr("setting duty cycle\n");
   } else {
