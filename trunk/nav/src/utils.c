@@ -6,9 +6,14 @@
  * Author: victor
  */
 
+#include "alt_types.h"
 #include "sys/alt_stdio.h"
+#include "system.h"
 
-void alt_getline(char *st, int len) {
+#include "accelerometer_adxl345_spi.h"
+
+void alt_getline(char *st, int len)
+{
   while (len--) {
     char c = (char)alt_getchar();
 	alt_putchar(c);
@@ -19,7 +24,8 @@ void alt_getline(char *st, int len) {
   *st = '\0';
 }
 
-int read_hex (char *st) {
+int read_hex(char *st)
+{
   int i = 0;
   while (*st && *st != '\n') {
     i <<= 4;
@@ -30,4 +36,29 @@ int read_hex (char *st) {
     st++;
   }
   return i;
+}
+
+void print_accel(void)
+{
+  // accelerometer data in each direction
+  struct t_accel_data accel_data;
+
+  // TODO: uncomment the next line
+  // IOWR(SELECT_I2C_CLK_BASE, 0, 0x00);
+    
+  // configure accelerometer as +-2g and start measure
+  if (!ADXL345_SPI_Init(GSENSOR_SPI_BASE)) {
+    // could not configure accelerometer
+    return;
+  }
+    
+  while (1) {
+    if (ADXL345_SPI_IsDataReady(GSENSOR_SPI_BASE) && ADXL345_SPI_XYZ_Read(GSENSOR_SPI_BASE, accel_data)) {
+      // multiply each struct member by 4 to get the acceleration in mg and print in hexadecimal
+      alt_printf("X=%x mg, Y=%x mg, Z=%x mg\n", accel_data.x << 2, accel_data.y << 2, accel_data.z << 2);
+      break;
+    }
+  }
+
+  return;
 }

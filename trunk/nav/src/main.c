@@ -17,7 +17,8 @@
 volatile int *motor_addr = (int *)MOTOR_CONTROLLER_0_BASE;
 int motor_word = 0;
 
-void do_command(char *st) {
+void do_command(char *st)
+{
   int i;
   if (strncmp(st, "f", 1) == 0) {
     for (i = 0; i < NUM_MOTORS; i++) {
@@ -45,7 +46,8 @@ void do_command(char *st) {
   }
 }
 
-int main() {
+int main()
+{
   char buffer_str[STR_LEN+1];
 
   while(1) {
