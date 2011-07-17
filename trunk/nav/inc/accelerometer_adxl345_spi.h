@@ -90,7 +90,7 @@ struct t_accel_data {
 
 bool ADXL345_SPI_Init(alt_u32 device_base);
 bool ADXL345_SPI_IsDataReady(alt_u32 device_base);
-bool ADXL345_SPI_XYZ_Read(alt_u32 device_base, struct t_accel_data szData16);
+bool ADXL345_SPI_XYZ_Read(alt_u32 device_base, struct t_accel_data *szData16);
 bool ADXL345_SPI_IdRead(alt_u32 device_base, alt_u8 *pId);
 
 

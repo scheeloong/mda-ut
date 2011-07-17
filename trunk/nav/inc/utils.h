@@ -4,9 +4,10 @@
 #define _MDA_UTILS_H
 
 #define STR_LEN 30
+#include "accelerometer_adxl345_spi.h"
 
-void alt_getline(char *st, int len);
-int read_hex(char *st);
-void print_accel(void);
+void alt_getline(char *, int);
+int read_hex(char *);
+void get_accel(struct t_accel_data *);
 
 #endif

@@ -7,11 +7,11 @@
  */
 
 #include "alt_types.h"
-#include "sys/alt_stdio.h"
 #include "io.h"
 #include "system.h"
+#include "sys/alt_stdio.h"
 
-#include "accelerometer_adxl345_spi.h"
+#include "utils.h"
 
 void alt_getline(char *st, int len)
 {
@@ -39,11 +39,8 @@ int read_hex(char *st)
   return i;
 }
 
-void print_accel(void)
+void get_accel(struct t_accel_data *accel_data)
 {
-  // accelerometer data in each direction
-  struct t_accel_data accel_data;
-
   IOWR(SELECT_I2C_CLK_BASE, 0, 0x00);
     
   // configure accelerometer as +-2g and start measure
@@ -54,8 +51,6 @@ void print_accel(void)
     
   while (1) {
     if (ADXL345_SPI_IsDataReady(GSENSOR_SPI_BASE) && ADXL345_SPI_XYZ_Read(GSENSOR_SPI_BASE, accel_data)) {
-      // multiply each struct member by 4 to get the acceleration in mg and print in hexadecimal
-      alt_printf("X=%x mg, Y=%x mg, Z=%x mg\n", accel_data.x * 4, accel_data.y * 4, accel_data.z * 4);
       break;
     }
   }
