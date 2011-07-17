@@ -78,14 +78,14 @@ bool ADXL345_SPI_IsDataReady(alt_u32 device_base){
 
 
 
-bool ADXL345_SPI_XYZ_Read(alt_u32 device_base, struct t_accel_data szData16){
+bool ADXL345_SPI_XYZ_Read(alt_u32 device_base, struct t_accel_data *szData16){
     bool bPass;
     alt_u8 szData8[6];
     bPass = SPI_MultipleRead(device_base, 0x32, (alt_u8 *)&szData8, sizeof(szData8));
     if (bPass){
-        szData16.x = (szData8[1] << 8) | szData8[0]; 
-        szData16.y = (szData8[3] << 8) | szData8[2];
-        szData16.z = (szData8[5] << 8) | szData8[4];
+        szData16->x = (szData8[1] << 8) | szData8[0]; 
+        szData16->y = (szData8[3] << 8) | szData8[2];
+        szData16->z = (szData8[5] << 8) | szData8[4];
     }        
     
     return bPass;
