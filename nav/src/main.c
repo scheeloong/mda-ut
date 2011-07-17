@@ -42,6 +42,23 @@ void do_command(char *st)
       IOWR(MOTOR_CONTROLLER_0_BASE, (8+i)*4, dc);
     }
     alt_putstr("setting duty cycle\n");
+  } else if (strncmp(st, "ga", 2) == 0) {
+    struct t_accel_data accel_data;
+    get_accel(&accel_data);
+    switch (st[2]) {
+      case 'x':
+        alt_printf("%04x\n", accel_data.x);
+        break;
+      case 'y':
+        alt_printf("%04x\n", accel_data.y);
+        break;
+      case 'z':
+        alt_printf("%04x\n", accel_data.z);
+        break;
+      case '\n':
+        alt_printf("%04x,%04x,%04x\n", accel_data.x, accel_data.y, accel_data.z);
+        break;
+    }
   } else {
     alt_putstr("command not recognized\n");
   }
