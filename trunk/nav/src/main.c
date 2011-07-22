@@ -11,6 +11,7 @@
 #include "system.h"
 #include "sys/alt_stdio.h"
 
+#include "settings.h"
 #include "utils.h"
 
 #define NUM_MOTORS 6
@@ -23,12 +24,16 @@ void do_command(char *st)
     for (i = 0; i < NUM_MOTORS; i++) {
       IOWR(MOTOR_CONTROLLER_0_BASE, i, 0x3);
     }
-    alt_putstr("going forward\n");
+    if (INTERACTIVE) {
+      alt_putstr("going forward\n");
+    }
   } else if (strncmp(st, "r", 1) == 0) {
     for (i = 0; i < NUM_MOTORS; i++) {
       IOWR(MOTOR_CONTROLLER_0_BASE, i, 0x1);
     }
-    alt_putstr("going in reverse\n");
+    if (INTERACTIVE) {
+      alt_putstr("going in reverse\n");
+    }
   } else if (strncmp(st, "stop", 4) == 0) {
     for (i = 0; i < NUM_MOTORS; i++) {
       IOWR(MOTOR_CONTROLLER_0_BASE, i, 0x0);
@@ -39,7 +44,9 @@ void do_command(char *st)
     for (i = 0; i < NUM_MOTORS; i++) {
       IOWR(MOTOR_CONTROLLER_0_DUTY_CYCLE, i, dc);
     }
-    alt_putstr("setting duty cycle\n");
+    if (INTERACTIVE) {
+      alt_putstr("setting duty cycle\n");
+    }
   } else if (strncmp(st, "ga", 2) == 0) {
     struct t_accel_data accel_data;
     get_accel(&accel_data);
@@ -58,7 +65,9 @@ void do_command(char *st)
         break;
     }
   } else {
-    alt_putstr("command not recognized\n");
+    if (INTERACTIVE) {
+      alt_putstr("command not recognized\n");
+    }
   }
 }
 
