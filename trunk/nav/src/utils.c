@@ -14,6 +14,7 @@
 #include "settings.h"
 #include "utils.h"
 
+// returns a string until the maximum length (int len) or a newline character is reached from stdin
 void alt_getline(char *st, int len)
 {
   while (len--) {
@@ -26,6 +27,7 @@ void alt_getline(char *st, int len)
   *st = '\0';
 }
 
+// returns an int from reading a hex string
 int read_hex(char *st)
 {
   // ignore leading spaces
@@ -47,6 +49,7 @@ int read_hex(char *st)
   return i;
 }
 
+// returns a struct of x,y,z acceleration values
 void get_accel(struct t_accel_data *accel_data)
 {
   IOWR(SELECT_I2C_CLK_BASE, 0, 0x00);
