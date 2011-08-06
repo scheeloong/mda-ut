@@ -32,14 +32,16 @@ struct command_struct my_cmds[] = {
   {"stop", COMMAND_STOP_ALL, "stop\n  Usage: stop\n\n  Stop all motors\n\n"}
 };
 
+// the size of the above array
 int cmd_len = sizeof(my_cmds) / sizeof(struct command_struct);
 
+// print a description of all available commands
 void print_help(char *st)
 {
   // ignore leading spaces
   while (*st == ' ') st++;
 
-  printf("Help messages\n\n");
+  printf("Command descriptions:\n\n");
 
   int i, len = strlen(st);
   for (i = 0; i < cmd_len; i++) {
@@ -49,21 +51,24 @@ void print_help(char *st)
   }
 }
 
+// process a command
 void process_command(char *st)
 {
+  // linearly search for the command from the table of commands
   enum COMMAND_ID cid = COMMAND_INVALID;
-  int mid;
-  for (mid = 0; mid < cmd_len; mid++) {
-    if (strncmp(st, my_cmds[mid].name, strlen(my_cmds[mid].name)) == 0) {
-      cid = my_cmds[mid].id;
-      st += strlen(my_cmds[mid].name);
+  int i;
+  for (i = 0; i < cmd_len; i++) {
+    if (strncmp(st, my_cmds[i].name, strlen(my_cmds[i].name)) == 0) {
+      cid = my_cmds[i].id;
+      st += strlen(my_cmds[i].name);
       break;
     }
   }
 
   // variables used in case statement
   struct t_accel_data accel_data;
-  int i, dc;
+  int dc;
+
   switch (cid) {
     case COMMAND_INVALID:
       printf("Sorry, command %s is not recognized. For a list of valid commands, type 'h' for help\n", st);
@@ -153,10 +158,12 @@ void process_command(char *st)
   }
 }
 
+// the main function
 int main()
 {
   char buffer_str[STR_LEN+1];
 
+  // read and process commands continuously
   while(1) {
     alt_getline(buffer_str, STR_LEN);
     process_command(buffer_str);
