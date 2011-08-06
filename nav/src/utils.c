@@ -18,9 +18,7 @@ void alt_getline(char *st, int len)
 {
   while (len--) {
     char c = (char)alt_getchar();
-    if (INTERACTIVE) {
-      alt_putchar(c);
-    }
+    putchar(c);
     *st++ = c;
     if (c == '\n')
       break;
@@ -30,8 +28,15 @@ void alt_getline(char *st, int len)
 
 int read_hex(char *st)
 {
+  // ignore leading spaces
+  while (*st == ' ') st++;
+
+  if (*st == '\0' || *st == '\n') {
+    return -1;
+  }
+
   int i = 0;
-  while (*st && *st != '\n') {
+  while (*st && *st != '\n' && *st != ' ') {
     i <<= 4;
     if (*st >= '0' && *st <= '9')
       i |= (int)(*st - '0');
