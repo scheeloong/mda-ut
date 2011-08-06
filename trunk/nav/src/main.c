@@ -25,7 +25,7 @@ struct command_struct my_cmds[] = {
   {"gay", COMMAND_ACCEL_Y, "get y-acceleration\n  Usage: gay\n\n  Print y-acceleration\n\n"},
   {"gaz", COMMAND_ACCEL_Z, "get z-acceleration\n  Usage: gaz\n\n  Print z-acceleration\n\n"},
   {"h", COMMAND_HELP, "help\n  Usage: h <cmd>\n\n  Print the help message for all commands that start with cmd, leave empty to print all help messages\n\n"},
-  {"sdc", COMMAND_DUTY_CYCLE, "set duty cycle\n  Usage: sf <n> <dc>\n\n  Set the duty cycle of the nth motor to dc\n\n"},
+  {"sdc", COMMAND_DUTY_CYCLE, "set duty cycle\n  Usage: sf <n> <dc>\n\n  Set the duty cycle of the nth motor to dc\nNote: the duty cycle is inputted in hex\n\n"},
   {"sf", COMMAND_FORWARD, "set forward\n  Usage: sf <n>\n\n  Turn on the nth motor in the forward direction\n\n"},
   {"sr", COMMAND_REVERSE, "set reverse\n  Usage: sr <n>\n\n  Turn on the nth motor in the reverse direction\n\n"},
   {"ss", COMMAND_STOP, "set stop\n  Usage: ss <n>\n\n  Turn the mth motor off\n\n"},
@@ -43,7 +43,8 @@ void print_help(char *st)
 
   printf("Command descriptions:\n\n");
 
-  int i, len = strlen(st);
+  // -1 to ignore the \n at the end of st
+  int len = strlen(st) - 1, i;
   for (i = 0; i < cmd_len; i++) {
     if (strncmp(st, my_cmds[i].name, len) == 0) {
       printf("%s - %s", my_cmds[i].name, my_cmds[i].help_string);
