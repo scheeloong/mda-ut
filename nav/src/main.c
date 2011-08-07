@@ -19,17 +19,18 @@
 
 // This is the list of all the commands
 // PLEASE KEEP THIS IN ALPHABETICAL ORDER
+// Note: end the first string with a \n to ensure an exact match if no arguments are used
 struct command_struct my_cmds[] = {
-  {"ga", COMMAND_ACCEL, "get acceleration\n  Usage: ga\n\n  Print (x,y,z) acceleration\n\n"},
-  {"gax", COMMAND_ACCEL_X, "get x-acceleration\n  Usage: gax\n\n  Print x-acceleration\n\n"},
-  {"gay", COMMAND_ACCEL_Y, "get y-acceleration\n  Usage: gay\n\n  Print y-acceleration\n\n"},
-  {"gaz", COMMAND_ACCEL_Z, "get z-acceleration\n  Usage: gaz\n\n  Print z-acceleration\n\n"},
-  {"h", COMMAND_HELP, "help\n  Usage: h <cmd>\n\n  Print the help message for all commands that start with cmd, leave empty to print all help messages\n\n"},
-  {"sdc", COMMAND_DUTY_CYCLE, "set duty cycle\n  Usage: sf <n> <dc>\n\n  Set the duty cycle of the nth motor to dc\nNote: the duty cycle is inputted in hex\n\n"},
-  {"sf", COMMAND_FORWARD, "set forward\n  Usage: sf <n>\n\n  Turn on the nth motor in the forward direction\n\n"},
-  {"sr", COMMAND_REVERSE, "set reverse\n  Usage: sr <n>\n\n  Turn on the nth motor in the reverse direction\n\n"},
-  {"ss", COMMAND_STOP, "set stop\n  Usage: ss <n>\n\n  Turn the mth motor off\n\n"},
-  {"stop", COMMAND_STOP_ALL, "stop\n  Usage: stop\n\n  Stop all motors\n\n"}
+  {"ga\n", COMMAND_ACCEL, "ga - get acceleration\n  Usage: ga\n\n  Print (x,y,z) acceleration\n"},
+  {"gax\n", COMMAND_ACCEL_X, "gax - get x-acceleration\n  Usage: gax\n\n  Print x-acceleration\n"},
+  {"gay\n", COMMAND_ACCEL_Y, "gay - get y-acceleration\n  Usage: gay\n\n  Print y-acceleration\n"},
+  {"gaz\n", COMMAND_ACCEL_Z, "gaz - get z-acceleration\n  Usage: gaz\n\n  Print z-acceleration\n"},
+  {"h", COMMAND_HELP, "h - help\n  Usage: h <cmd>\n\n  Print the help message for all commands that start with cmd, leave empty to print all help messages\n"},
+  {"sdc", COMMAND_DUTY_CYCLE, "sdc - set duty cycle\n  Usage: sf <n> <dc>\n\n  Set the duty cycle of the nth motor to dc\nNote: the duty cycle is inputted in hex\n"},
+  {"sf", COMMAND_FORWARD, "sf - set forward\n  Usage: sf <n>\n\n  Turn on the nth motor in the forward direction\n"},
+  {"sr", COMMAND_REVERSE, "sr - set reverse\n  Usage: sr <n>\n\n  Turn on the nth motor in the reverse direction\n"},
+  {"ss", COMMAND_STOP, "ss - set stop\n  Usage: ss <n>\n\n  Turn the mth motor off\n"},
+  {"stop\n", COMMAND_STOP_ALL, "stop\n  Usage: stop\n\n  Stop all motors\n"}
 };
 
 // the size of the above array
@@ -47,7 +48,7 @@ void print_help(char *st)
   int len = strlen(st) - 1, i;
   for (i = 0; i < cmd_len; i++) {
     if (strncmp(st, my_cmds[i].name, len) == 0) {
-      printf("%s - %s", my_cmds[i].name, my_cmds[i].help_string);
+      printf("%s\n", my_cmds[i].help_string);
     }
   }
 }
