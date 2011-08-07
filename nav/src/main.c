@@ -44,6 +44,8 @@ void print_help(char *st)
 
   // -1 to ignore the \n at the end of st
   int len = strlen(st) - 1, i;
+  if (len < 0) len = 0;
+
   for (i = 0; i < cmd_len; i++) {
     if (strncmp(st, my_cmds[i].name, len) == 0) {
       printf("%s\n", my_cmds[i].help_string);
