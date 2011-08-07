@@ -14,9 +14,6 @@
 #include "settings.h"
 #include "utils.h"
 
-#define NUM_MOTORS 6
-#define MOTOR_CONTROLLER_0_DUTY_CYCLE (MOTOR_CONTROLLER_0_BASE + 32)
-
 // This is the list of all the commands
 // PLEASE KEEP THIS IN ALPHABETICAL ORDER
 // Note: end the first string with a \n to ensure an exact match if no arguments are used
@@ -25,6 +22,7 @@ struct command_struct my_cmds[] = {
   {"gax\n", COMMAND_ACCEL_X, "gax - get x-acceleration\n  Usage: gax\n\n  Print x-acceleration\n"},
   {"gay\n", COMMAND_ACCEL_Y, "gay - get y-acceleration\n  Usage: gay\n\n  Print y-acceleration\n"},
   {"gaz\n", COMMAND_ACCEL_Z, "gaz - get z-acceleration\n  Usage: gaz\n\n  Print z-acceleration\n"},
+  {"gm\n", COMMAND_MOTORS, "gm - get motor data\n Usage: gm\n\n Print all motor settings (direction on one line and duty cycle on the next)\n"},
   {"h", COMMAND_HELP, "h - help\n  Usage: h <cmd>\n\n  Print the help message for all commands that start with cmd, leave empty to print all help messages\n"},
   {"sdc", COMMAND_DUTY_CYCLE, "sdc - set duty cycle\n  Usage: sf <n> <dc>\n\n  Set the duty cycle of the nth motor to dc\nNote: the duty cycle is inputted in hex\n"},
   {"sf", COMMAND_FORWARD, "sf - set forward\n  Usage: sf <n>\n\n  Turn on the nth motor in the forward direction\n"},
@@ -80,7 +78,7 @@ void process_command(char *st)
       break;
     case COMMAND_STOP_ALL:
       for (i = 0; i < NUM_MOTORS; i++) {
-        IOWR(MOTOR_CONTROLLER_0_BASE, i, 0x0);
+        set_motor_dir(i, MOTOR_DIR_STOPPED);
       }
       printf("stopping\n");
       break;
@@ -89,7 +87,7 @@ void process_command(char *st)
       if (i < 0 || i >= NUM_MOTORS) {
         printf("motor # invalid\n");
       } else {
-        IOWR(MOTOR_CONTROLLER_0_BASE, i, 0x0);
+        set_motor_dir(i, MOTOR_DIR_STOPPED);
         printf("stopping motor %d\n", i);
       }
       break;
@@ -98,7 +96,7 @@ void process_command(char *st)
       if (i < 0 || i >= NUM_MOTORS) {
         printf("motor # invalid\n");
       } else {
-        IOWR(MOTOR_CONTROLLER_0_BASE, i, 0x1 | 0x2);
+        set_motor_dir(i, MOTOR_DIR_FORWARD);
         printf("setting motor %d to forward\n", i);
       }
       break;
@@ -107,7 +105,7 @@ void process_command(char *st)
       if (i < 0 || i >= NUM_MOTORS) {
         printf("motor # invalid\n");
       } else {
-        IOWR(MOTOR_CONTROLLER_0_BASE, i, 0x1);
+        set_motor_dir(i, MOTOR_DIR_REVERSE);
         printf("setting motor %d to reverse\n", i);
       }
       break;
@@ -120,42 +118,48 @@ void process_command(char *st)
         if (dc < 0) {
           printf("duty cycle # invalid\n");
         } else {
-          IOWR(MOTOR_CONTROLLER_0_DUTY_CYCLE, i, dc);
+          set_motor_duty_cycle(i, dc);
           printf("setting motor %d to duty cycle %d\n", i, dc);
         }
       }
       break;
     case COMMAND_ACCEL:
       get_accel(&accel_data);
-#ifdef INTERACTIVE
-      printf("%d,%d,%d\n", accel_data.x, accel_data.y, accel_data.z);
-#else
-      alt_printf("%x,%x,%x\n", accel_data.x, accel_data.y, accel_data.z);
-#endif
+      print_int(accel_data.x);
+      alt_putchar(',');
+      print_int(accel_data.y);
+      alt_putchar(',');
+      print_int(accel_data.z);
+      alt_putchar('\n');
       break;
     case COMMAND_ACCEL_X:
       get_accel(&accel_data);
-#ifdef INTERACTIVE
-      printf("%d\n", accel_data.x);
-#else
-      alt_printf("%x\n", accel_data.x);
-#endif
+      print_int(accel_data.x);
+      alt_putchar('\n');
       break;
     case COMMAND_ACCEL_Y:
       get_accel(&accel_data);
-#ifdef INTERACTIVE
-      printf("%d\n", accel_data.y);
-#else
-      alt_printf("%x\n", accel_data.y);
-#endif
+      print_int(accel_data.y);
+      alt_putchar('\n');
       break;
     case COMMAND_ACCEL_Z:
       get_accel(&accel_data);
-#ifdef INTERACTIVE
-      printf("%d\n", accel_data.z);
-#else
-      alt_printf("%x\n", accel_data.z);
-#endif
+      print_int(accel_data.z);
+      alt_putchar('\n');
+      break;
+    case COMMAND_MOTORS:
+      alt_putchar(get_motor_dir(0));
+      for (i = 1; i < NUM_MOTORS; i++) {
+        alt_putchar(',');
+        alt_putchar(get_motor_dir(i));
+      }
+      alt_putchar('\n');
+      print_int(get_motor_duty_cycle(0));
+      for (i = 1; i < NUM_MOTORS; i++) {
+        alt_putchar(',');
+        print_int(get_motor_duty_cycle(i));
+      }
+      alt_putchar('\n');
       break;
   }
 }
@@ -164,6 +168,8 @@ void process_command(char *st)
 int main()
 {
   char buffer_str[STR_LEN+1];
+
+  init();
 
   // read and process commands continuously
   while(1) {
