@@ -6,6 +6,7 @@
  * Author: victor
  */
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "alt_types.h"
