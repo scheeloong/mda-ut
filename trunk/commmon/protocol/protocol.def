@@ -1,0 +1,53 @@
+
+/* 	item code name
+	type
+	access mode
+	call before transfer
+	call after transfer */
+
+///////////////////////// compass 
+DEFDATA(CMD_HEADING,
+        INT_T,                  RW_T,    NULL, post_heading_handler)
+
+DEFDATA(CUR_HEADING,
+        INT_T,                  RW_T,    NULL, NULL)
+
+
+///////////////////////// forward or downward camera
+DEFDATA(CUR_CAMERA,
+        INT_T,                  RW_T,    NULL, NULL)
+
+DEFDATA(CMD_CAMERA,
+        INT_T,                  RW_T,    NULL, NULL)
+
+
+///////////////////////// depth sensor
+DEFDATA(CMD_DEPTH,
+        FLOAT_T,                  RW_T,    NULL, NULL)
+
+DEFDATA(CUR_DEPTH,
+        FLOAT_T,                  RW_T,    NULL, NULL)
+
+///////////////////////// motor drivers
+DEFDATA(CMD_SIDE_SPEED,
+        FLOAT_T,                  RW_T,    NULL, NULL)
+
+DEFDATA(CMD_FWD_SPEED,
+        FLOAT_T,                  RW_T,    NULL, NULL)
+
+
+///////////////////////// captured picture/image
+DEFDATA(CUR_IMAGE,
+        IMG_T,                  RW_T,     pre_image_handler, post_image_handler)
+///////////////////////// processed picture/image
+DEFDATA(PROC_IMAGE,
+        IMG_T,                  RW_T,     pre_image_handler, post_image_handler)
+
+///////////////////////// verbose channel
+DEFDATA(VERB,
+        INT_T,                  RW_T,     NULL, post_verb_handler)
+
+
+#define D232_MSG(a,b) DEFDATA( a , INT_T, RW_T, NULL, NULL)
+
+#include "../rs232/rs232_messages.h"
