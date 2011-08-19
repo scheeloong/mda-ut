@@ -69,7 +69,7 @@ int window_width, window_height;        // only updates when window resized by u
 * @param tex_name
 * Texture name, which is a number
 */
-void makeTextureImage(char filename[], GLuint tex_name)
+void makeTextureImage(const char *filename, GLuint tex_name)
 {
    unsigned long width=0;
    long height=0;	/* width/height of textures */
