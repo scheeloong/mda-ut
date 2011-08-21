@@ -31,5 +31,5 @@ bmp_io.o: bmp_io.cpp
 	g++ -c $< -g
 
 clean:
-	rm -f $(OBJS) sim
+	rm -f $(OBJS) sim *.bmp
 
