@@ -5,6 +5,8 @@
 
 `include "defines.v"
 
+`define MAX_DC (1024*`MAX_DUTY_CYCLE_FRAC)
+
 module motor_controller (input clk, input dir, input on, input [`DUTY_CYCLE_SIZE-1:0] duty_cycle, output reg [3:0] out);
 
   reg [3:0] out_reg;
@@ -24,8 +26,8 @@ module motor_controller (input clk, input dir, input on, input [`DUTY_CYCLE_SIZE
       2'b01: out_reg <= 4'b0110;
     endcase
     prev_in <= {dir, on};
-    duty_counter <= duty_counter + 4'd1;
-    out <= ((duty_counter < {duty_cycle, 6'b0}) && (duty_counter <= 15'd32767 * `MAX_DUTY_CYCLE) && (dead_time_counter == `DEAD_TIME)) ? out_reg : 4'd0;
+    duty_counter <= duty_counter + 14'd1;
+    out <= ((duty_counter[14:5] < duty_cycle) && (duty_counter[14:5] < `MAX_DC) && (dead_time_counter == `DEAD_TIME)) ? out_reg : 4'd0;
   end
 
 endmodule
