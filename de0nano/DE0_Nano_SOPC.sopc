@@ -255,11 +255,11 @@
          type = "long";
       }
    }
-   element clock_crossing_io.s1
+   element led.s1
    {
       datum baseAddress
       {
-         value = "67108864";
+         value = "48";
          type = "long";
       }
    }
@@ -271,6 +271,14 @@
          type = "long";
       }
    }
+   element clock_crossing_io2.s1
+   {
+      datum baseAddress
+      {
+         value = "83886080";
+         type = "long";
+      }
+   }
    element sw.s1
    {
       datum baseAddress
@@ -279,19 +287,11 @@
          type = "long";
       }
    }
-   element timer.s1
+   element clock_crossing_io.s1
    {
       datum baseAddress
       {
-         value = "0";
-         type = "long";
-      }
-   }
-   element g_sensor_int.s1
-   {
-      datum baseAddress
-      {
-         value = "80";
+         value = "67108864";
          type = "long";
       }
    }
@@ -308,19 +308,19 @@
          type = "long";
       }
    }
+   element key.s1
+   {
+      datum baseAddress
+      {
+         value = "32";
+         type = "long";
+      }
+   }
    element select_i2c_clk.s1
    {
       datum baseAddress
       {
          value = "96";
-         type = "long";
-      }
-   }
-   element clock_crossing_io2.s1
-   {
-      datum baseAddress
-      {
-         value = "83886080";
          type = "long";
       }
    }
@@ -332,19 +332,19 @@
          type = "long";
       }
    }
-   element key.s1
+   element g_sensor_int.s1
    {
       datum baseAddress
       {
-         value = "32";
+         value = "80";
          type = "long";
       }
    }
-   element led.s1
+   element timer.s1
    {
       datum baseAddress
       {
-         value = "48";
+         value = "0";
          type = "long";
       }
    }
@@ -369,19 +369,19 @@
          type = "int";
       }
    }
-   element gsensor_spi.slave
-   {
-      datum baseAddress
-      {
-         value = "2048";
-         type = "long";
-      }
-   }
    element adc_spi_read.slave
    {
       datum baseAddress
       {
          value = "100667416";
+         type = "long";
+      }
+   }
+   element gsensor_spi.slave
+   {
+      datum baseAddress
+      {
+         value = "2048";
          type = "long";
       }
    }
@@ -436,8 +436,8 @@
  <parameter name="maxAdditionalLatency" value="0" />
  <parameter name="projectName" value="DE0_Nano.qpf" />
  <parameter name="sopcBorderPoints" value="true" />
- <parameter name="systemHash" value="44688063149" />
- <parameter name="timeStamp" value="1309726583016" />
+ <parameter name="systemHash" value="44506011437" />
+ <parameter name="timeStamp" value="1313890777659" />
  <module kind="clock_source" version="11.0" enabled="1" name="clk_50">
   <parameter name="clockFrequency" value="50000000" />
   <parameter name="clockFrequencyKnown" value="true" />
@@ -515,7 +515,7 @@
   <parameter name="internalIrqMaskSystemInfo" value="63" />
   <parameter name="instSlaveMapParam"><![CDATA[<address-map><slave name='sdram.s1' start='0x2000000' end='0x4000000' /><slave name='cpu.jtag_debug_module' start='0x6000800' end='0x6001000' /></address-map>]]></parameter>
   <parameter name="instAddrWidth" value="27" />
-  <parameter name="impl" value="Fast" />
+  <parameter name="impl" value="Tiny" />
   <parameter name="icache_size" value="_1024" />
   <parameter name="icache_ramBlockType" value="Automatic" />
   <parameter name="icache_numTCIM" value="_0" />
