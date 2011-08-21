@@ -24,7 +24,7 @@ module motor_controller (input clk, input dir, input on, input [`DUTY_CYCLE_SIZE
       2'b01: out_reg <= 4'b0110;
     endcase
     prev_in <= {dir, on};
-    duty_counter <= duty_counter + 1;
+    duty_counter <= duty_counter + `DUTY_CYCLE_SIZE'd1;
     out <= ((duty_counter[`FREQ_NEG_POW-1:`FREQ_NEG_POW-`DUTY_CYCLE_SIZE] < duty_cycle) && (duty_counter[`FREQ_NEG_POW-1:`FREQ_NEG_POW-`DUTY_CYCLE_SIZE] < `MAX_DC) && (dead_time_counter == `DEAD_TIME)) ? out_reg : 4'd0;
   end
 
