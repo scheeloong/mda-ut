@@ -3,19 +3,20 @@
 // Change the PWM frequency by modifying duty_counter's length in bits (and the padding in the comparison)
 // There is also a dead time to ensure that the H-bridge doesn't toggle between two on states in 10 microseconds
 
-module motor_controller (input clk, input dir, input on, input [4:0] duty_cycle, output reg [3:0] out);
-  parameter dead_time = 9'd500; // 500 cycles = 10 microseconds
+`include "defines.v"
+
+module motor_controller (input clk, input dir, input on, input [`DUTY_CYCLE_SIZE-1:0] duty_cycle, output reg [3:0] out);
 
   reg [3:0] out_reg;
-  reg [9:0] duty_counter = 10'd0;
-  reg [8:0] dead_time_counter = dead_time;
+  reg [14:0] duty_counter = 15'd0;
+  reg [8:0] dead_time_counter = `DEAD_TIME;
   reg [1:0] prev_in = 2'b00;
 
   always @(posedge clk)
   begin
     if ({dir, on} != prev_in)
       dead_time_counter <= 9'd0;
-    if (dead_time_counter != dead_time)
+    if (dead_time_counter != `DEAD_TIME)
       dead_time_counter <= dead_time_counter + 9'd1;
     casex ({dir, on})
       2'bx0: out_reg <= 4'b0000;
@@ -24,7 +25,7 @@ module motor_controller (input clk, input dir, input on, input [4:0] duty_cycle,
     endcase
     prev_in <= {dir, on};
     duty_counter <= duty_counter + 4'd1;
-    out <= ((duty_counter < {5'd0, duty_cycle}) && (dead_time_counter == dead_time)) ? out_reg : 4'd0;
+    out <= ((duty_counter < {duty_cycle, 6'b0}) && (duty_counter <= 15'd32767 * `MAX_DUTY_CYCLE) && (dead_time_counter == `DEAD_TIME)) ? out_reg : 4'd0;
   end
 
 endmodule
