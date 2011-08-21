@@ -420,21 +420,11 @@ set_global_assignment -name VERILOG_FILE ip/TARASIC_SPI_3WIRE/TERASIC_SPI_3WIRE.
 set_global_assignment -name VERILOG_FILE ip/TARASIC_SPI_3WIRE/SPI_3WIRE.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE gsensor_spi.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name SDC_FILE /opt/altera/latest/ip/altera/sopc_builder_ip/altera_avalon_clock_adapter/altera_avalon_clock_adapter.sdc -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 001F3B5BB63500000130812C6051 -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 001F3B5BB63500000130B4DCFEE7 -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000130B589848B -qip DE0_Nano_SOPC.qip
 set_global_assignment -name TCL_SCRIPT_FILE ../../../../altera/11.0/ip/altera/sopc_builder_ip/altera_avalon_altpll/altera_avalon_altpll_hw.tcl -qip DE0_Nano_SOPC.qip
 set_global_assignment -name SDC_FILE ../../../../altera/11.0/ip/altera/sopc_builder_ip/altera_avalon_clock_adapter/altera_avalon_clock_adapter.sdc -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000130B59F5982 -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000130B5AA326E -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000130B5B25A81 -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000130C803990B -qip DE0_Nano_SOPC.qip
 set_global_assignment -name TCL_SCRIPT_FILE ../fpga/motor_controller/slave_controller_hw.tcl -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE ../fpga/motor_controller/slave_controller.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE ../fpga/motor_controller/motor_controller.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE motor_controller_0.v -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000130CA06739F -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000130F1AAE01C -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000130F1CC6CAF -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000131E7EF5817 -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000131E9C9DA45 -qip DE0_Nano_SOPC.qip
+
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000131EA089315 -qip DE0_Nano_SOPC.qip
