@@ -10,8 +10,8 @@
 //   23 -> 6 Hz
 `define FREQ_NEG_POW 12
 
-// Maximum duty cycle (as a fraction)
-`define MAX_DUTY_CYCLE (4/5)
+// Maximum duty cycle as a fraction
+`define MAX_DUTY_CYCLE_FRAC 4/5
 
 // # of dead time cycles to ensure H-bridge does not short
 // 500 cycles = 10 microseconds

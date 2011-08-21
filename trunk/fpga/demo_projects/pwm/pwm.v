@@ -1,4 +1,4 @@
-module pwm(input CLOCK_50, output [7:0]LED, output [33:0]GPIO_0);
+module pwm(input CLOCK_50, output [7:0]LED, output [7:0]GPIO_0);
 
   reg [27:0] counter = 28'd0;
 
