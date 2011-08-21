@@ -48,3 +48,4 @@ copy pasted from main.cpp:
  * the current CV_COMMAND, then flag window as needing to be redraw. This causes cv to update 
  * CV_COMMAND. Thus you will see on terminal what CV wants to do, and press a key to see the
  * action occur.
+
