@@ -23,15 +23,15 @@ endmodule
 module motor_internal (input clk, input dir, input on, output reg [3:0] out);
 
   reg [3:0] out_reg;
-  reg [6:0] dead_time_counter = `DEAD_TIME;
+  reg [9:0] dead_time_counter = `DEAD_TIME;
   reg [1:0] prev_in = 2'b00;
 
   always @(posedge clk)
   begin
     if ({dir, on} != prev_in)
-      dead_time_counter <= 6'd0;
+      dead_time_counter <= 10'd0;
     if (dead_time_counter != `DEAD_TIME)
-      dead_time_counter <= dead_time_counter + 6'd1;
+      dead_time_counter <= dead_time_counter + 10'd1;
     casex ({dir, on})
       2'bx0: out_reg <= 4'b0000;
       2'b11: out_reg <= 4'b1001;
