@@ -1,6 +1,6 @@
 `define DUTY_CYCLE 1/2
 
-module pwm(input CLOCK_50, input [3:0]SW, output [7:0]LED, output [7:0]GPIO_0);
+module pwm(input CLOCK_50, input [0:0]SW, output [7:0]LED, output [7:0]GPIO_0);
 
   reg [27:0] counter = 28'd0;
 
