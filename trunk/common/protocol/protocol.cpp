@@ -68,7 +68,7 @@ void read_item(CSocket *cs, item_type code)
       if(MODE == R_T) { printf("Read-only field: %s\n",str); assert(false); } \
       f = CF; if(f != NULL) f(CMD_GET);					\
       /* must be after the call to CF */				\
-      char* addr = (is_ptr)?(char*)((int)(NAME ## _store)):((char*)&(NAME ## _store)); \
+      char* addr = (is_ptr)?(char*)((size_t)(NAME ## _store)):((char*)&(NAME ## _store)); \
       if(!is_ptr)							\
 	blocking_read(cs, addr, tmp);					\
       else								\
@@ -100,7 +100,7 @@ void write_item(CSocket *cs, item_type code)
       bool is_ptr = (SIZE ## _PTR == 1);				\
       f = CF; if(f != NULL) f(CMD_PUT);					\
       /* must be after the call to CF */				\
-      char* addr = (is_ptr)?(char*)((int)(NAME ## _store)):((char*)&(NAME ## _store)); \
+      char* addr = (is_ptr)?(char*)((size_t)(NAME ## _store)):((char*)&(NAME ## _store)); \
       if(!is_ptr)							\
 	blocking_write(cs, addr, tmp);					\
       else								\
