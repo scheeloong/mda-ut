@@ -85,13 +85,13 @@ void drawHoughLines (IplImage* img, CvMat* lines, int display) {
         rad = *(dataPtr);  ang = *(dataPtr+1);
         //printf ("%f %f\n", rad, ang*180/CV_PI);
         
-        if (ABS(ang - CV_PI/2.0) < 0.001) { x[0] = -9000;  x[2] = 9000; }
+        if (fabs(ang - CV_PI/2.0) < 0.001) { x[0] = -9000;  x[2] = 9000; }
         else {
             x[0] = rad / cos(ang);  y[0] = 0; // intercept with y=0 line
             x[2] = (rad-img->height*sin(ang)) / cos(ang);  y[2] = img->height; // y = max(y) line
         }
         
-        if (ABS(ang) < 0.001) { x[1] = -9000;  x[3] = 9000; }
+        if (fabs(ang) < 0.001) { x[1] = -9000;  x[3] = 9000; }
         else {
             x[1] = 0;  y[1] = rad / sin(ang);  // x = 0 line
             x[3] = img->width;  y[3] = (rad-img->width*cos(ang)) / sin(ang); // x = max(x) line

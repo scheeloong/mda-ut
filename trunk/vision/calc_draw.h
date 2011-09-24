@@ -1,10 +1,9 @@
 #ifndef CALCULATIONS_DRAWING_
 #define CALCULATIONS_DRAWING_
 
-#include "cv.h"
-#include "highgui.h"
+#include <cv.h>
+#include <highgui.h>
 
-#define ABS(X) (((X) < 0) ? -(X) : (X))
 #define _display 1
 
 // holds functions to draw stuff and calculate things

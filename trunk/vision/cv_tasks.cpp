@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "cv_tasks.h"
 
 // this is for the gate task
@@ -49,7 +50,7 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range, char* win
     for (int i = nlines-1; i >= 0; i--) { // for each line
         temp = (CvPoint*)cvGetSeqElem(lines, i);  
  
-        if (ABS(temp[1].y-temp[0].y) < ABS(temp[1].x-temp[0].x)) {  // horiz line
+        if (fabs(temp[1].y-temp[0].y) < fabs(temp[1].x-temp[0].x)) {  // horiz line
             cvSeqRemove(lines,i); // if it is a horiz line, delete it 
             /*if (temp[0].x > temp[1].x) { // sort so lower X value comes first
                 swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
@@ -85,7 +86,7 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range, char* win
     cvShowImage(window[1], img_1);
 
 /** decide on how many segments detected, return results */
-    int line_seperation = (ABS(cseed[0][0].x-cseed[1][0].x)+ABS(cseed[0][1].x-cseed[1][1].x))/2;
+    int line_seperation = (fabs(cseed[0][0].x-cseed[1][0].x)+fabs(cseed[0][1].x-cseed[1][1].x))/2;
     int ret = -1;
     
     if (nseeds == 1) { // if lines are very close (< guessed line length), only 1 line visible
@@ -178,7 +179,7 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
     for (int i = 0; i < nlines; i++) { // for each line
         temp = (CvPoint*)cvGetSeqElem(lines, i);  
  
-        if (ABS(temp[1].y-temp[0].y) < ABS(temp[1].x-temp[0].x)) {  // horiz line
+        if (fabs(temp[1].y-temp[0].y) < fabs(temp[1].x-temp[0].x)) {  // horiz line
             if (temp[0].x > temp[1].x) { // sort so lower X value comes first
                 swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
                 swap=temp[1].x; temp[1].x=temp[0].x; temp[0].x=swap;
@@ -305,6 +306,8 @@ char controller_GATE (IplImage* img, char &state, char* window[]) {
         case 'X':
             printf ("Gate Error\n");
             return '/';
+        default:
+            return '\0';
     }
 }
 
@@ -346,7 +349,7 @@ char controller_PATH (IplImage* img, char &state, char* window[]) {
     if (estate == PARTIAL && sqrt(pathX*pathX + pathY*pathY) < 30)
         estate = CENTERED;    
     else if (estate == DCENTERED) {
-        if (ABS(tan_angle) < 0.05) // 3ish degrees
+        if (fabs(tan_angle) < 0.05) // 3ish degrees
             estate = STOP;
     }
     else if ((estate == SINK) && (length < 100)) {
@@ -361,7 +364,7 @@ char controller_PATH (IplImage* img, char &state, char* window[]) {
     switch (estate) {
         case NOPATH: return 'w';
         case PARTIAL: case DPARTIAL:
-            if (ABS(pathY/(pathX+0.01)) < 11.5) { // if centroid outside of +-5 degrees from vertical
+            if (fabs(pathY/(pathX+0.01)) < 11.5) { // if centroid outside of +-5 degrees from vertical
                 if (pathX > 0) return 'd'; // turn towards the centroid
                 else return 'a';
             }

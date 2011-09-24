@@ -1,11 +1,10 @@
 #ifndef PREPROCESSING_FILTERS_
 #define PREPROCESSING_FILTERS_
 
-#include "cv.h"
-#include "highgui.h"
+#include <cv.h>
+#include <highgui.h>
 
 #define _DISPLAY 1
-//#define ABS(X) (((X) < 0) ? (-(X)) : (X))
 
 // holds functions that will be used to do basic image processing.
 // For example extract object of interest from background, pick out outline of object

@@ -1,8 +1,8 @@
 #ifndef _CV_TASKS
 #define _CV_TASKS
 
-#include "cv.h"
-#include "highgui.h"
+#include <cv.h>
+#include <highgui.h>
 
 #include "preproc_filters.h"
 #include "obj_detection.h"
