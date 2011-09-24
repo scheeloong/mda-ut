@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "obj_detection.h"
 
 // NAME: cvCornerST_Custom
@@ -75,7 +76,7 @@ float areaQuad (float x1,float y1, float x2,float y2, float x3,float y3, float x
     float a124 = (x2-x1)*(y4-y1) - (x4-x1)*(y2-y1);
     float a234 = (x3-x2)*(y4-y2) - (x4-x2)*(y3-y2);
     
-    a123=ABS(a123); a134=ABS(a134); a124=ABS(a124); a234=ABS(a234);
+    a123=fabs(a123); a134=fabs(a134); a124=fabs(a124); a234=fabs(a234);
     return (a123+a134+a124+a234)/8.0; // not divide by 4.0
 }
 

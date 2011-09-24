@@ -1,10 +1,9 @@
 #ifndef OBJECT_DETECTION_
 #define OBJECT_DETECTION_
 
-#include "cv.h"
-#include "highgui.h"
+#include <cv.h>
+#include <highgui.h>
 
-#define ABS(X) (((X) > 0) ? (X) : (-(X)))
 #define N_CLUSTERS_MAX 20
 
 // holds functions to identify and track objects

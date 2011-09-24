@@ -1,5 +1,6 @@
-#include "cv.h"
-#include "highgui.h"
+#include <stdio.h>
+#include <cv.h>
+#include <highgui.h>
 #include <cmath>
 
 #include "calc_draw.h"
@@ -85,7 +86,7 @@ int main( int argc, char** argv ) {
     for (int i = 0; i < nlines; i++) { // for each line
         temp = (CvPoint*)cvGetSeqElem(lines, i);  
  
-        if (ABS(temp[1].y-temp[0].y) < ABS(temp[1].x-temp[0].x)) {  // horiz line
+        if (fabs(temp[1].y-temp[0].y) < fabs(temp[1].x-temp[0].x)) {  // horiz line
             if (temp[0].x > temp[1].x) { // sort so lower X value comes first
                 swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
                 swap=temp[1].x; temp[1].x=temp[0].x; temp[0].x=swap;
