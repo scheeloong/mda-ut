@@ -74,7 +74,6 @@ int satThreshold (IplImage* img, int sat_guess,
 float HueSat_Filter1 (IplImage* img, IplImage* &dst, // source and dest images. Do no allocate dst  
                   int H_MIN, int H_MAX,         // hue min and max
                   unsigned S_MIN, unsigned S_MAX,                   // saturation min and max
-                  int CLOSE_DIM,
                   char flags)              // kernal dimension for close operation
 {
     //assert (img != NULL);
@@ -110,15 +109,7 @@ float HueSat_Filter1 (IplImage* img, IplImage* &dst, // source and dest images. 
         }
     }
     
-    dst = cvCreateImage (cvGetSize(img), IPL_DEPTH_8U, 1);
-
-// close operation
-    if (CLOSE_DIM) 
-        cvMorphologyEx (img_Hue, dst, NULL, // src, dst, temp
-        cvCreateStructuringElementEx (CLOSE_DIM, CLOSE_DIM, (CLOSE_DIM+1)/2, (CLOSE_DIM+1)/2, CV_SHAPE_RECT),
-        CV_MOP_CLOSE, 1);
-    else 
-        cvCopy (img_Hue, dst);        
+    dst = img_Hue;         
     
     if (flags & _DISPLAY) {
         cvNamedWindow ("Preprocessing_Filter_1", CV_WINDOW_AUTOSIZE);
@@ -126,7 +117,6 @@ float HueSat_Filter1 (IplImage* img, IplImage* &dst, // source and dest images. 
         cvWaitKey(0);
         cvDestroyWindow ("Preprocessing_Filter_1");
     }
-    cvReleaseImage (&img_Hue);
     cvReleaseImage (&img_Sat);
     
     return goodpix / img->width / img->height;
@@ -138,7 +128,7 @@ float HueSat_Filter1 (IplImage* img, IplImage* &dst, // source and dest images. 
 //
 // ARGUMENTS:
 //      img - source image. Must be 1 channel.
-//      dst - destination. Also 1 channel 8 bit
+//      dst - destination. Also 1 channel 8 bit. Can be in place.
 //      KERNEL_H,KERNEL_W - dimensions of the gradient kernel. Bigger = slower and more accurate
 //      iterations - I still dont know why you'd want more than 1.
 //      flags - 8 bitflags. bit1 = displays dst.
@@ -157,6 +147,7 @@ void cvGradient_Custom (IplImage* img, IplImage* &dst,
     
     dst = cvCreateImage ( // create second image with 1 channel
         cvGetSize(img), IPL_DEPTH_8U, 1);
+    dst->origin = img->origin;
     IplImage* temp = cvCreateImage ( // create temp with 1 channel
         cvGetSize(img), IPL_DEPTH_8U, 1);
     

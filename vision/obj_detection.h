@@ -1,8 +1,11 @@
 #ifndef OBJECT_DETECTION_
 #define OBJECT_DETECTION_
 
-#include <cv.h>
-#include <highgui.h>
+#include "cv.h"
+#include "highgui.h"
+
+#define ABS(X) (((X) > 0) ? (X) : (-(X)))
+#define N_CLUSTERS_MAX 20
 
 // holds functions to identify and track objects
 
@@ -17,7 +20,9 @@ void lines_binning (CvMat* lines, int nlines, CvMat* &out, int nout, // input li
                        int rbounds[], float abounds[], // min/max bound for rad and ang
                        int radbins, int angbins);         // num of bins
 
-void KMcluster (CvPoint** cseed, int nseeds, CvSeq* lines, int nlines, int iterations=1);
+float KMcluster (CvPoint** &cseed, int nseeds, CvSeq* lines, int nlines, int iterations=1);
+void KMcluster_auto_K (CvPoint** &cseed, int &nseeds, int K_MIN, int K_MAX, 
+                       CvSeq* lines, int nlines, int kmeans_iterations=1);
 void addClusterSeed (CvPoint** &cseed, int &nseeds, CvSeq* lines, int nlines);
 void createSDMatrix (float** &SDmat, CvPoint** cseed, int nseeds, CvSeq* lines, int nlines);
 float areaQuad (float x1,float y1, float x2,float y2, float x3,float y3, float x4,float y4);

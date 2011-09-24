@@ -11,7 +11,6 @@ extern orientation angle;	/* should be deleted*/
 
 bool lights_on;
 
-
 /* this is the interface of the simulator with the real world */
 
 void update_model(long delta_time)

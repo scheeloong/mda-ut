@@ -68,7 +68,7 @@ void bmp_palette_write ( ofstream &file_out, unsigned long int colorsused,
 
 bool bmp_print_test ( char *file_in_name );
 
-bool bmp_read ( const char *file_in_name, unsigned long int *width, long int *height,
+bool bmp_read ( char *file_in_name, unsigned long int *width, long int *height,
                 unsigned char * & array );
 /*
   bool bmp_read ( char *file_in_name, unsigned long int *width, long int *height,
