@@ -1,8 +1,8 @@
 #ifndef HISTOGRAMS_
 #define HISTOGRAMS_
 
-#include <cv.h>
-#include <highgui.h>
+#include "cv.h"
+#include "highgui.h"
 
 #define _DISPLAY 1
 

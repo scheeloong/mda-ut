@@ -4,7 +4,6 @@ OBJS= main.o bmp_io.o  site.o  glQuaternion.o \
 
 EECG=-lXt -lSM -lICE -lXext -lX11 -lXi -lm
 LIBS= $(EECG) -lGL -lglut -lGLU $(LIBPROTOCOL) $(LIBLZF) -lpthread $(LIBHOUGH) $(LIBFIFO) 
-HAS_FIFO=0
 
 FLAGS= -Wall `pkg-config opencv --cflags --libs`
 

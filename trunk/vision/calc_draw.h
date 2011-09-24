@@ -1,9 +1,10 @@
 #ifndef CALCULATIONS_DRAWING_
 #define CALCULATIONS_DRAWING_
 
-#include <cv.h>
-#include <highgui.h>
+#include "cv.h"
+#include "highgui.h"
 
+#define ABS(X) (((X) < 0) ? -(X) : (X))
 #define _display 1
 
 // holds functions to draw stuff and calculate things
@@ -23,6 +24,8 @@ CvPoint calcLCenter (CvPoint2D32f* L, IplImage* img, int origin_center=0);
 // To do this, find the vector from point on line lp to img center. Then dot
 // with line's unit direction vector
 CvPoint calcLineDist (IplImage* img, float rad, float ang);
+
+CvPoint calcImgCentroid (IplImage* img);
 
 // draw lines output by cvHoughLines2. Does so by calculating where line meets
 // image edges. Must check to see if it meets x or y edge.
