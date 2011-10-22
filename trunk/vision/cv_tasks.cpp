@@ -382,6 +382,8 @@ char controller_PATH (IplImage* img, char &state, char* window[]) {
             printf ("PATH Error\n");
             return '/';
     }
+    // should never happen
+    return '\0';
 }
 
 
