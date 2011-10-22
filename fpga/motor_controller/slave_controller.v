@@ -8,7 +8,7 @@
 module slave_controller(input clk, input chipselect, input write, input [3:0]addr, input [31:0] writedata, output [23:0] GPIO_out);
   reg [11:0] in;
   reg [6*`DUTY_CYCLE_SIZE-1:0] duty_cycle;
-  
+ 
   always @(posedge clk)
     if (chipselect & write)
     casex (addr)
@@ -42,7 +42,7 @@ module slave_controller(input clk, input chipselect, input write, input [3:0]add
 
   generate
   genvar i;
-    for (i=3; i<6; i=i+1)
+    for (i=0; i<6; i=i+1)
       begin : motor_control_loop
         motor_controller mc(clk, in[i*2 + 1], in[i*2], duty_cycle[(i+1)*`DUTY_CYCLE_SIZE-1:i*`DUTY_CYCLE_SIZE], GPIO_out[i*4+3:i*4]);
       end

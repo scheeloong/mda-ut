@@ -1,4 +1,4 @@
-`define DUTY_CYCLE 1/2
+`define DUTY_CYCLE 85/100
 
 module pwm(input CLOCK_50, input [0:0]SW, output [7:0]LED, output [7:0]GPIO_0);
 

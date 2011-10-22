@@ -14,7 +14,6 @@ BSP_DIR=./bsp
 NAV_DIR=./nav
 SIM_DIR=./sim
 VISION_DIR=./vision
-JOYSTICK_DIR=./joystick
 COMMON_DIR=./common
 
 ELF_NAME=main.elf
@@ -22,7 +21,7 @@ ELF_NAME=main.elf
 GDB_TCP_PORT=2345
 
 
-all:nav sim vision joystick
+all:nav sim vision
 
 # This next command just creates the Board Support Pacakge from the sopc file
 # Pretty basic command, it is actually pretty cool
@@ -42,9 +41,6 @@ vision:
 sim:
 	$(MAKE) -C $(SIM_DIR)
 
-joystick:
-
-
 clean:
 	-$(MAKE) -k -C $(NAV_DIR) $@
 	rm -f $(NAV_DIR)/Makfile
@@ -54,7 +50,7 @@ clean:
 	$(MAKE) -C $(VISION_DIR) $@
 	$(MAKE) -C $(COMMON_DIR) $@
 
-.PHONY: all clean bsp nav fpga vision joystick sim
+.PHONY: all clean bsp nav fpga vision sim
 
 # Alright the lines below help you get your code on the device
 #
