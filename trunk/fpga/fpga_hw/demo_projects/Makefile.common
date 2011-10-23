@@ -1,0 +1,27 @@
+# Project demo makefile
+#
+# Created by: Victor Zhang
+#
+# This makefile is included by each project demo
+#
+# You should only have to specify PROJ in each makefile
+# and include this makefile
+#
+
+all:
+	quartus_sh --flow compile $(PROJ)
+
+clean:
+	rm -rf *.rpt *.summary db incremental_db *.pin *.sof *.bak *.done
+
+.PHONY: all clean
+
+# The lines below help you get your code on the device
+#
+# You first need to configure the SOF file (I'm guessing this means software)
+# make configure_sof
+
+configure_sof:
+	nios2-configure-sof || nios2-configure-sof
+
+.PHONY:configure_sof
