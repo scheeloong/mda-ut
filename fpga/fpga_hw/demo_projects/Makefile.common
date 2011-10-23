@@ -14,14 +14,7 @@ all:
 clean:
 	rm -rf *.rpt *.summary db incremental_db *.pin *.sof *.bak *.done
 
-.PHONY: all clean
-
-# The lines below help you get your code on the device
-#
-# You first need to configure the SOF file (I'm guessing this means software)
-# make configure_sof
-
-configure_sof:
+dl_hw:
 	nios2-configure-sof || nios2-configure-sof
 
-.PHONY:configure_sof
+.PHONY: all clean dl_hw
