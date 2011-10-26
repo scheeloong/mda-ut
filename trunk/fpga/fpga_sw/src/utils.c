@@ -23,6 +23,9 @@ char motor_modes[NUM_MOTORS];
 // remember the duty cycle value for each motor
 int motor_duty_cycles[NUM_MOTORS];
 
+// remember the PWM period (calculated from inputted frequency)
+int pwm_period = -1;
+
 // initialize array values
 void init()
 {
@@ -36,7 +39,7 @@ void alt_getline(char *st, int len)
 {
   while (len--) {
     char c = (char)alt_getchar();
-    putchar(c);
+    alt_putchar(c);
     *st++ = c;
     if (c == '\n')
       break;
@@ -106,8 +109,17 @@ char get_motor_dir(int motor_num)
 // set motor duty cycle
 void set_motor_duty_cycle(int motor_num, int duty_cycle)
 {
-  IOWR(MOTOR_CONTROLLER_0_DUTY_CYCLE, motor_num, duty_cycle);
+  // set duty period using duty_cycle as a fraction over 1024
+  IOWR(MOTOR_CONTROLLER_0_DUTY_CYCLE, motor_num, duty_cycle * pwm_period / 1024);
   motor_duty_cycles[motor_num] = duty_cycle;
+}
+
+// set PWM frequency for motor
+void set_pwm_freq(int freq)
+{
+  // 50000 is 50MHz in KHz
+  pwm_period = 50000 / freq;
+  IOWR(MOTOR_CONTROLLER_0_DUTY_CYCLE, NUM_MOTORS+1, pwm_period);
 }
 
 // get motor duty cycle
@@ -116,6 +128,12 @@ int get_motor_duty_cycle(int motor_num)
   if (motor_num < 0 || motor_num >= NUM_MOTORS)
     return 0;
   return motor_duty_cycles[motor_num];
+}
+
+// get PWM frequency
+int get_freq()
+{
+  return  50000 / pwm_period;
 }
 
 // returns a struct of x,y,z acceleration values
