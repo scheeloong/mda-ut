@@ -129,6 +129,7 @@ void process_command(char *st)
     case COMMAND_FREQ:
       i = read_hex(st);
       set_pwm_freq(i);
+      printf("PWM frequency set\n");
       break;
     case COMMAND_ACCEL:
       get_accel(&accel_data);
