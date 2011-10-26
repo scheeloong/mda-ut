@@ -24,10 +24,11 @@ struct command_struct my_cmds[] = {
   {"gaz\n", COMMAND_ACCEL_Z, "gaz - get z-acceleration\n  Usage: gaz\n\n  Print z-acceleration\n"},
   {"gm\n", COMMAND_MOTORS, "gm - get motor data\n Usage: gm\n\n Print all motor settings (direction on one line and duty cycle on the next)\n"},
   {"h", COMMAND_HELP, "h - help\n  Usage: h <cmd>\n\n  Print the help message for all commands that start with cmd, leave empty to print all help messages\n"},
-  {"sdc", COMMAND_DUTY_CYCLE, "sdc - set duty cycle\n  Usage: sf <n> <dc>\n\n  Set the duty cycle of the nth motor to dc\nNote: the duty cycle is inputted in hex\n"},
-  {"sf", COMMAND_FORWARD, "sf - set forward\n  Usage: sf <n>\n\n  Turn on the nth motor in the forward direction\n"},
-  {"sr", COMMAND_REVERSE, "sr - set reverse\n  Usage: sr <n>\n\n  Turn on the nth motor in the reverse direction\n"},
-  {"ss", COMMAND_STOP, "ss - set stop\n  Usage: ss <n>\n\n  Turn the mth motor off\n"},
+  {"smd", COMMAND_DUTY_CYCLE, "smd - set motor duty cycle\n  Usage: smd <n> <0xdc>\n\n  Set the duty cycle of the nth motor to dc\nNote: the duty cycle is inputted in hex out of 0x3ff (1024 in decimal)\n"},
+  {"smf", COMMAND_FORWARD, "smf - set motor forward\n  Usage: smf <n>\n\n  Turn on the nth motor in the forward direction\n"},
+  {"smr", COMMAND_REVERSE, "smr - set motor reverse\n  Usage: smr <n>\n\n  Turn on the nth motor in the reverse direction\n"},
+  {"sms", COMMAND_STOP, "sms - set motor stop\n  Usage: sms <n>\n\n  Turn the nth motor off\n"},
+  {"spf", COMMAND_FREQ, "spf - set PWM frequency\n  Usage: sms <0xn>\n\n  Set the PWM frequency to n in kilohertz\nNote: the frequency is inputted in hex\n"},
   {"stop\n", COMMAND_STOP_ALL, "stop\n  Usage: stop\n\n  Stop all motors\n"}
 };
 
@@ -125,6 +126,10 @@ void process_command(char *st)
         }
       }
       break;
+    case COMMAND_FREQ:
+      i = read_hex(st);
+      set_pwm_freq(i);
+      break;
     case COMMAND_ACCEL:
       get_accel(&accel_data);
       print_int(accel_data.x);
@@ -150,6 +155,8 @@ void process_command(char *st)
       alt_putchar('\n');
       break;
     case COMMAND_MOTORS:
+      print_int(get_freq());
+      alt_putchar('\n');
       alt_putchar(get_motor_dir(0));
       for (i = 1; i < NUM_MOTORS; i++) {
         alt_putchar(',');

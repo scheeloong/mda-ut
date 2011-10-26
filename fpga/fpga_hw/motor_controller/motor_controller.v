@@ -3,17 +3,18 @@
 
 `include "defines.v"
 
-`define MAX_DC (1024*`MAX_DUTY_CYCLE_FRAC)
+module motor_controller (input clk, input dir, input on, input [15:0] period, input [15:0] duty_cycle, output [3:0] out);
 
-module motor_controller (input clk, input dir, input on, input [`DUTY_CYCLE_SIZE-1:0] duty_cycle, output [3:0] out);
-
-  reg [`FREQ_NEG_POW-1:0] duty_counter = 0;
+  reg [`PERIOD_LENGTH-1:0] duty_counter = 0;
   reg dir_reg;
 
   always @(posedge clk)
   begin
-    duty_counter <= duty_counter + `DUTY_CYCLE_SIZE'd1;
-    dir_reg <= ((duty_counter[`FREQ_NEG_POW-1:`FREQ_NEG_POW-`DUTY_CYCLE_SIZE] < duty_cycle) && (duty_counter[`FREQ_NEG_POW-1:`FREQ_NEG_POW-`DUTY_CYCLE_SIZE] < `MAX_DC)) ? dir : ~dir;
+    if (duty_counter == period)
+      duty_counter <= 0;
+    else
+      duty_counter <= duty_counter + 1;
+    dir_reg <= (duty_counter < duty_cycle) ? dir : ~dir;
   end
 
   motor_internal mi(clk, dir_reg, on, out);

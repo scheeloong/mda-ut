@@ -22,7 +22,9 @@ void print_int(int);
 void set_motor_dir(int, enum MOTOR_DIR);
 char get_motor_dir(int);
 void set_motor_duty_cycle(int, int);
+void set_pwm_freq(int);
 int get_motor_duty_cycle(int);
+int get_pwm_freq();
 void get_accel(struct t_accel_data *);
 
 // API to give commands to NIOS
@@ -34,6 +36,7 @@ enum COMMAND_ID {
   COMMAND_STOP_ALL,
   COMMAND_STOP,
   COMMAND_DUTY_CYCLE,
+  COMMAND_FREQ,
   COMMAND_ACCEL,
   COMMAND_ACCEL_X,
   COMMAND_ACCEL_Y,
