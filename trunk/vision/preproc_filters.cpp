@@ -19,7 +19,7 @@
 // METHOD: calculates fraction of pixels accepted by sat_guess. If larger than threshold, then
 //      iteratively increase sat_guess until accept_fraction is less than threshold. Do one 
 //      final check to make sure not too few pixels are accepted.
-int satThreshold (IplImage* img, int sat_guess, 
+/*int satThreshold (IplImage* img, int sat_guess, 
                   int step, float threshold) {
     //assert (img != NULL);
     //assert (img->nChannels == 3);
@@ -51,6 +51,29 @@ int satThreshold (IplImage* img, int sat_guess,
         sat_guess -= step;
     
     return sat_guess;
+}*/
+
+HSV_settings:: HSV_settings () {
+    H_MIN = S_MIN  = V_MIN = 0;
+    H_MAX = 180;
+    S_MAX = V_MAX = 255;
+}
+
+HSV_settings:: HSV_settings (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax) {
+    H_MIN = hmin; H_MAX = hmax; S_MIN = smin; S_MAX = smax; V_MIN = vmin; V_MAX = vmax;
+}
+
+void HSV_settings:: setAll (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax) {
+    H_MIN = hmin; H_MAX = hmax; S_MIN = smin; S_MAX = smax; V_MIN = vmin; V_MAX = vmax;
+}
+void HSV_settings:: setHue (int hmin, int hmax) {
+    H_MIN = hmin; H_MAX = hmax;
+}
+void HSV_settings:: setSat (unsigned smin, unsigned smax) {
+    S_MIN = smin; S_MAX = smax;
+}
+void HSV_settings:: setVal (unsigned vmin, unsigned vmax) {
+    V_MIN = vmin; V_MAX = vmax;
 }
 
 // NAME: HueSat_Filter1
@@ -64,6 +87,7 @@ int satThreshold (IplImage* img, int sat_guess,
 //      dst - destination img. Is 8 bit and 1 channel. All pixels either 0 or 255
 //      H_MIN,H_MAX - min and max allowed hue values. Hues between these will be accepted
 //      S_MIN, S_MAX - min and max allowed saturation
+//      V_MIN, V_MAX - min and max allowed value
 //      CLOSE_DIM - kernel size of the close operation
 //      flags - 8 bitflags to pass in options. Setting bit 1 makes it display the dst image.
 //
@@ -71,9 +95,8 @@ int satThreshold (IplImage* img, int sat_guess,
 //      then steps thru each pixel to see which are acceptable. Then performs a CLOSE operation
 //      with cvMorphologyEx to get rid of stray pixels if CLOSE_DIM > 0.
 //
-float HueSat_Filter1 (IplImage* img, IplImage* &dst, // source and dest images. Do no allocate dst  
-                  int H_MIN, int H_MAX,         // hue min and max
-                  unsigned S_MIN, unsigned S_MAX,                   // saturation min and max
+float HSV_Filter (IplImage* img, IplImage* &dst, // source and dest images. Do no allocate dst  
+                  HSV_settings HSV,
                   char flags)              // kernal dimension for close operation
 {
     //assert (img != NULL);
@@ -83,29 +106,32 @@ float HueSat_Filter1 (IplImage* img, IplImage* &dst, // source and dest images. 
     IplImage* img_Hue = cvCreateImage ( // image to store the Hue values
         cvGetSize(img), IPL_DEPTH_8U, 1);
     IplImage* img_Sat = cvCreateImage ( // image to store the Saturation values
-        cvGetSize(img), IPL_DEPTH_8U,1);
+        cvGetSize(img), IPL_DEPTH_8U, 1);
+    IplImage* img_Val = cvCreateImage ( // image to store the Saturation values
+        cvGetSize(img), IPL_DEPTH_8U, 1);
     
     cvCvtColor (img, img, CV_BGR2HSV); // convert to Hue,Saturation,Value 
-    cvSplit (img, img_Hue, img_Sat, NULL,NULL);   // extract Hue, Saturation
+    cvSplit (img, img_Hue, img_Sat, img_Val, NULL);   // extract Hue, Saturation
        
 // Isolate Color. Set all Pipe pixels to 1 and non-Pipe pixels to 0
     float goodpix = 0; // keeps track of how many good pixels
     // look through both H and S images, pick out pixels where Hue is between H_MIN,H_MAX and Sat > S_MIN
-    unsigned char *huePtr, *satPtr;
+    unsigned char *huePtr, *satPtr, *valPtr;
     for (int r = 0; r < img_Hue->height; r++) {                         
         huePtr = (unsigned char*) (img_Hue->imageData + r*img_Hue->widthStep);
         satPtr = (unsigned char*) (img_Sat->imageData + r*img_Sat->widthStep);
+        valPtr = (unsigned char*) (img_Val->imageData + r*img_Val->widthStep);
         for (int c = 0; c < img_Hue->width; c++) {
             // note that saturation values are from 0 to 255 but is interpreted as 
-            if ((*huePtr >= H_MIN) && (*huePtr <= H_MAX) && 
-                (*satPtr >= S_MIN) && (*satPtr <= S_MAX)) {
+            if ((*huePtr >= HSV.H_MIN) && (*huePtr <= HSV.H_MAX) && 
+                (*satPtr >= HSV.S_MIN) && (*satPtr <= HSV.S_MAX) &&
+                (*valPtr >= HSV.V_MIN) && (*valPtr <= HSV.V_MIN)) {
                 *huePtr = 255;
                 goodpix++;
             }
             else *huePtr = 0;
             
-            huePtr++;
-            satPtr++;
+            huePtr++; satPtr++; valPtr++;
         }
     }
     
@@ -118,6 +144,7 @@ float HueSat_Filter1 (IplImage* img, IplImage* &dst, // source and dest images. 
         cvDestroyWindow ("Preprocessing_Filter_1");
     }
     cvReleaseImage (&img_Sat);
+    cvReleaseImage (&img_Val);
     
     return goodpix / img->width / img->height;
 }

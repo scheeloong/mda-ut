@@ -9,13 +9,16 @@
 
 #define ANG_RNG(X) (((X) > 90) ? ((X)-180) : (X))
 
-#define DIM_RATIO 2
-#define PIX_COUNT_THRESHOLD 0.01
-
-#define HUE_MIN 40 //30,40
-#define HUE_MAX 70 //55
-#define SAT_MIN 70 //45
-#define SAT_MAX 150
+/*
+#define GATE_HMIN 10 
+#define GATE_HMAX 30 
+#define GATE_SMIN 60
+#define GATE_SMAX 255
+*/
+#define GATE_HMIN 45 
+#define GATE_HMAX 90 
+#define GATE_SMIN 130
+#define GATE_SMAX 200
 
 #define OP_DIM 7  // kernal rows for gradient
 #define CLOSE_DIM 11
@@ -27,6 +30,8 @@
 #define WIN2 "window2"
 
 #define PATH_SKINNYNESS 0.12
+
+HSV_settings HSV (40, 70, 70, 150, 80, 200);
 
 
 int main( int argc, char** argv ) {
@@ -41,75 +46,41 @@ int main( int argc, char** argv ) {
     cv_windows[0]=(char*)malloc(10); cv_windows[1]=(char*)malloc(10); cv_windows[2]=(char*)malloc(10);
     strcpy(cv_windows[0], WIN0); strcpy(cv_windows[1], WIN1); strcpy(cv_windows[2], WIN2);
     
+    /** your code here */
+    int gateX, gateY; float range;    
+    // webcam video
+    
+    printf ("%d %d\n", HSV.H_MAX, HSV.V_MAX);
+    
+    CvCapture* capture = cvCreateCameraCapture(1) ;    // create a webcam video capture
+    IplImage* frame = cvQueryFrame( capture );         // read a single frame from the cam
+/*
+    CvVideoWriter * vid1 = cvCreateVideoWriter (       // create a video file to store video
+        "webcam1.avi",              // name of the video file
+        CV_FOURCC('P','I','M','1'), // video codec (don't worry about this one)
+        25,                         // framerate that gets stored along with the video
+        cvGetSize(frame),           // the resolution. 
+        1);                         // 1 here means color video, 0 means not color
+*/
+    while(1) {                      // play the video like before     
+        frame = cvQueryFrame( capture );
+        if( !frame ) break;
+        
+        //cvWriteFrame( vid1, frame );      // write the frame to the video writer
+        cvShowImage( WIN2, frame );
+        vision_SQUARE (frame, gateX, gateY, range, HSV, cv_windows, _DISPLAY);
+    
+        char c = cvWaitKey(50);
+        if( c == 'q' ) break;
+    }
+        
+    /*
     IplImage* img = cvLoadImage( argv[1], CV_LOAD_IMAGE_ANYCOLOR); // load image with name argv[1], color
-
-// size down
-    IplImage* img_Resize = cvCreateImage ( // create second image with diff size
-        cvSize(img->width/DIM_RATIO, img->height/DIM_RATIO),
-        img->depth,
-        img->nChannels);
-    cvPyrDown (img, img_Resize, CV_GAUSSIAN_5x5); // resize img 1/2
     
-    cvNamedWindow("Img", CV_WINDOW_AUTOSIZE);
-    cvShowImage("Img", img_Resize);
-    cvWaitKey(0);
-    cvReleaseImage(&img);
+    int gateX, gateY;
+    float range;
+    vision_GATE (img, gateX,gateY, range, cv_windows);
     
-/** HS filter to extract object */
-    IplImage* img_1;
-    HueSat_Filter1 (img_Resize, img_1, HUE_MIN, HUE_MAX, SAT_MIN, SAT_MAX); // need to delete
-    int pix = cvCountNonZero(img_1);
-    
-/** take gradient of image */    
-    cvGradient_Custom (img_1, img_1, 3, 3, 1);
-    cvShowImage(cv_windows[1], img_1);
-    
-/** probabilistic Hough line finder. Determine the threshold using the number of high pixels */
-    int thresh = (int)(sqrt(pix/PATH_SKINNYNESS)); // guessed length of pipe in pixels
-    CvMemStorage* storage = cvCreateMemStorage(0); // create memstorage for line finidng, delete later
-    CvSeq* lines = 0;
-    
-    int minlen=20, mindist=50;
-    lines = cvHoughLines2(img_1, storage,
-        CV_HOUGH_PROBABILISTIC,
-        2, CV_PI/180.0,
-        thresh, minlen, mindist);
-/** check if lines were found, if not quit */
-    int nlines=lines->total;
-    if (nlines == 0) { 
-        cvReleaseImage (&img_1);  cvReleaseMemStorage (&storage);
-        printf ("  vision_PATH: No Lines Detected. Exiting.\n");
-        return 0;
-    }
-/** arrange lines by Y value. Will bug if horizontal lines encountered. Assume no horiz lines. */
-    CvPoint* temp; int swap;
-    for (int i = 0; i < nlines; i++) { // for each line
-        temp = (CvPoint*)cvGetSeqElem(lines, i);  
- 
-        if (fabs(temp[1].y-temp[0].y) < fabs(temp[1].x-temp[0].x)) {  // horiz line
-            if (temp[0].x > temp[1].x) { // sort so lower X value comes first
-                swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
-                swap=temp[1].x; temp[1].x=temp[0].x; temp[0].x=swap;
-            }
-        }
-        else {
-            if (temp[0].y > temp[1].y) { // sort so lower Y value comes first
-                swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
-                swap=temp[1].x; temp[1].x=temp[0].x; temp[0].x=swap;
-            }
-            //cvLine (img_1, temp[0],temp[1], CV_RGB(100,200,100), 1);
-        }
-    }
-
-/** perform clustering */
-    int nseeds=0;
-    CvPoint** cseed=0;
-    KMcluster_auto_K (cseed, nseeds, 1,4, lines, nlines, 1);   
-// display clustered lines
-    for (int i = 0; i < nseeds; i++) 
-        cvLine (img_1, cseed[i][0],cseed[i][1], CV_RGB(0,50,50), 2);
-    cvShowImage(cv_windows[1], img_1);
-    
-    cvWaitKey(0);
+    cvWaitKey(0);*/
     return 0;
 }

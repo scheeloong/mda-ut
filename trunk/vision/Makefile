@@ -13,10 +13,11 @@ all: test_cv
 test_cv: main.o cv_tasks.o $(LIBO)		
 	$(CC) $(LIBO) main.o cv_tasks.o -o test_cv -Wall $(CVFLAGS)
 
-cv_tasks.o: cv_tasks.cpp $(LIBO)
+cv_tasks.o: cv_tasks.cpp cv_tasks.h $(LIBO)
 	$(CC) $< -o $@ $(FLAGS)
 
 all_but_main: cv_tasks.o $(LIBO)
+	$(CC) $(FLAGS) $(CVFLAGS) $< -o $@
 
 clean:
 	rm -rf $(LIBO) cv_tasks.o main.o test_cv
