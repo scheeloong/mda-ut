@@ -11,23 +11,24 @@ char vision_BUOY1(IplImage *img, int &buoy_x, int &buoy_y, float &radius)
   // 2 = neither, we could be looking at random stuff
   // 3 = more than one circle. We are supposed to be looking at one
   /** HS filter to extract object seen */
-  IplImage* img_1;
-  HueSat_Filter1(img, img_1, 50, 180, 60, 7, 0);
-  img_1->origin=1;
-  cvShowImage("img_1", img_1);
+  IplImage* img_grad = cvCreateImage (cvGetSize(img), IPL_DEPTH_8U, 1);
+  IplImage* img_1 = cvCreateImage (cvGetSize(img), IPL_DEPTH_8U, 1);
+  cvConvertImage (img, img_1);
+  cvConvertImage (img_1, img_grad);
+  cvCanny (img_1, img_grad, 50, 25);
   
-  // check to see if there are enough pixels
-  int pix = cvCountNonZero(img_1);
-  if (float(pix)/img_1->width/img_1->height < 0.001) {// nothing in the view
-      cvReleaseImage(&img_1);
-      printf("  vision_BUOY: Pixel Fraction Too Low. Exiting.\n");
-      return 0; 
-  }
+  
+  //HueSat_Filter1 (img, img_grad, 70,140, 50, 255);
+  
+  cvShowImage("img_1", img_grad);
+  
+  cvWaitKey(0);
   
   /** Use cvHoughCircles(). Determine the threshold using the number of high pixels */
   //int thresh = (int)(sqrt(pix/BUOY_SKINNYNESS)); //not sure if this is right
   CvMemStorage* storage=cvCreateMemStorage(0);
-  IplImage* img_grad = img_1;
+  //IplImage* img_grad = cvCreateImage (cvGetSize(img_1), IPL_DEPTH_8U, 1);
+  
   
   CvSeq* circles = 0;
   
@@ -35,7 +36,7 @@ char vision_BUOY1(IplImage *img, int &buoy_x, int &buoy_y, float &radius)
 			   2, //  resolution in center pos
 			   200, // mindist
 			   50, // canny high threshold
-			   40.0 ); // accumulator threshold
+			   120.0 ); // accumulator threshold
   /** check if (a) circle is found, if not...quit */
   int ncircles=circles->total; 
   printf("Number of Circles: %d\n", ncircles);
@@ -89,8 +90,7 @@ int main(int argc, char **argv) {
     int x, y; // they can initially be garbage...
     float radius; // this can initially be garbage
     IplImage* img = cvLoadImage(argv[1]);
-    CvMemStorage* storage = cvCreateMemStorage(0);
+    
     vision_BUOY1(img, x, y, radius);
-    cvReleaseMemStorage(&storage);
     return 0;
 }

@@ -286,60 +286,66 @@ void KMcluster_auto_K (CvPoint** &cseed, int &nseeds, int K_MIN, int K_MAX,
     printf ("  Final: %d clusters, %f validity\n", nseeds, min_valid);
 }
 
-/*
-
-void KMcluster (CvPoint** cseed, int nseeds, CvSeq* lines, int nlines, int iterations) {
-    // create arrays to hold line indices, and SDmatrix
-    int indexArray[nseeds][nlines];  // indexArray[i] is array of lines that belong to cluster i
-    int indexArraySize[nseeds];      // size of indexArray[i]
-    for (int i = 0; i < nseeds; i++) indexArraySize[i] = 0;
-
-    float** SDmat;
-    createSDMatrix (SDmat, cseed, nseeds, lines, nlines); // create SDmatrix
+// Let line A be denoted by endpoints P0(x0,y0), P1(x1,y1)
+// Let line B be denoted by endpoints P2(x2,y2), P3(x3,y3)
+// Then using vector equation of line, we have r = P0 + TA(P1-P0) and r = P2 + TB(P3-P2)
+// A bit of math gets us the follow 2 equations for TA,TB
+//      (x1-x0)TA + (x2-x3)TB = x2-x0    =>  dx10*TA + dx23*TB = dx20
+//      (y1-y0)TA + (y2-y3)TB = y2-y0    =>  dy10*TA + dy23*TB = dy20
+// This can be solved using matrices and Cramer's rule
+//      TA = (dx20*dy23 - dx23-dy20) / D
+//      TB = (dx10*dy20 - dx20-dy10) / D
+//      D  = (dx10*dy23 - dx23*dy10)
+int lineSegment_intersect_1 (CvPoint** lines, int iA, int iB, CvPoint &intersect) {
+// iA, iB are the indices of the 2 lines in the CvPoint matrix
     
-    // step thru each line, accumulate to closest seed
-    for (int i = 0; i < nlines; i++) {
-        int nearestSeed=0; float nearestSeedDiff = 1e8;
-        for (int s = 0; s < nseeds; s++) // find closest seed to ith line
-            if (nearestSeedDiff > SDmat[s][i]) {
-                nearestSeedDiff = SDmat[s][i];
-                nearestSeed = s;
-            }
 
-        indexArray[nearestSeed][indexArraySize[nearestSeed]] = i; // add line to that cluster
-        indexArraySize[nearestSeed]++;                  // increment cluster size
-    }
-                
-    // average each cluster to form new seeds // this loop can be removed for faster
-    for (int s = 0; s < nseeds; s++) {
-        float x1=0,y1=0,x2=0,y2=0; // cluster mean
-        float len, weight, totalweight=0;
-        
-        for (int i = 0; i < indexArraySize[s]; i++) { // step thru lines in cluster s
-            CvPoint* temp = (CvPoint*)cvGetSeqElem(lines, indexArray[s][i]);   
-            
-            // do a weighted average of lines in cluster s. Weight = line length^2
-            float dy = temp[1].y-temp[0].y, dx = temp[1].x-temp[0].x;
-            len = sqrt(dy*dy + dx*dx);
-            
-            if (SDmat[s][i]/len > 300) weight = 0.0;
-            else weight = len + 0.01;               
-            
-            x1+=temp[0].x * weight;      y1+=temp[0].y * weight;
-            x2+=temp[1].x * weight;      y2+=temp[1].y * weight;
-            totalweight += weight; // number of lines in this cluster            
-//printf ("%d %d %d %d\n", temp[0].x,temp[0].y,temp[1].x,temp[1].y);
-        }
-//printf ("\n");
-        
-        cseed[s][0].x=x1/totalweight; cseed[s][0].y=y1/totalweight; // average of cluster is new seed
-        cseed[s][1].x=x2/totalweight; cseed[s][1].y=y2/totalweight;
-    }
-    destroySDMatrix (SDmat, nseeds);
-     
-    iterations--;
-    if (iterations > 0) // call recursively if needed
-        KMcluster (cseed, nseeds, lines, nlines, iterations);
+    /** retrieve line endpoints */
+    int x0=lines[iA][0].x;  int y0=lines[iA][0].y;
+    int x1=lines[iA][1].x;  int y1=lines[iA][1].y;
+    int x2=lines[iB][0].x;  int y2=lines[iB][0].y;
+    int x3=lines[iB][1].x;  int y3=lines[iB][1].y;
+    
+    /** calculate the dx and dy terms */
+    int dx10 = x1-x0;  int dx20 = x2-x0; int dx23 = x2-x3;
+    int dy10 = y1-y0;  int dy20 = y2-y0; int dy23 = y2-y3;
+
+    /** calculate D, tA, tB */
+    float D = (dx10*dy23 - dy10*dx23);
+    if (((D > 0) ? (D):(-D)) < 0.001) return 0; // the two lines are exactly parallel
+    
+    float TA = (dx20*dy23 - dy20*dx23) / D;
+    //float TB = (dx10*dy20 - dx20-dy10) / D;
+    int xx = cvRound(x0 + TA*dx10);  int yy = cvRound(y0 + TA*dy10);
+    intersect = cvPoint (xx, yy);
+  /*  
+    printf ("  %d %d %d %d\n", x0,y0, x1,y1);
+    printf ("  %d %d %d %d\n", x2,y2, x3,y3);
+    printf ("  %d %d\n\n    ", xx,yy);
+  */  
+    return 1;
 }
 
-*/
+int lineSegment_intersects (CvPoint** lines, int nlines, CvSize imgSize, CvPoint* &points) {
+// returns number of intersects
+    if (nlines <= 1) return 0;
+    
+    points = new CvPoint[20];
+    int temp, npoints=0;
+    CvPoint tempPoint;
+    
+    for (int i = 0; i < nlines; i++)
+        for (int j = 0; j < nlines-1; j++) {
+            temp = lineSegment_intersect_1 (lines, i,j, tempPoint);
+            if ((temp) && (tempPoint.x > 0) && (tempPoint.x < imgSize.width) && 
+                (tempPoint.y > 0) && (tempPoint.y < imgSize.height)) {// if intersect inside img bounds
+                //printf ("%d %d\n", tempPoint.x, tempPoint.y);
+                points[npoints] = tempPoint;
+                npoints++;
+            }
+    }
+    return npoints;
+}
+    
+    
+    

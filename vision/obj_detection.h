@@ -25,5 +25,6 @@ void KMcluster_auto_K (CvPoint** &cseed, int &nseeds, int K_MIN, int K_MAX,
 void addClusterSeed (CvPoint** &cseed, int &nseeds, CvSeq* lines, int nlines);
 void createSDMatrix (float** &SDmat, CvPoint** cseed, int nseeds, CvSeq* lines, int nlines);
 float areaQuad (float x1,float y1, float x2,float y2, float x3,float y3, float x4,float y4);
-
+int lineSegment_intersects (CvPoint** lines, int nlines, CvSize imgSize, CvPoint* &points);
+    
 #endif

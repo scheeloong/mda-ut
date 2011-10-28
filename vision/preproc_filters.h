@@ -6,6 +6,20 @@
 
 #define _DISPLAY 1
 
+class HSV_settings {
+    public:
+    int H_MIN, H_MAX;
+    unsigned S_MIN, S_MAX;
+    unsigned V_MIN, V_MAX;
+    
+    HSV_settings (); // initialize all values to 0
+    HSV_settings (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax);
+    void setAll (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax); // set all values
+    void setHue (int hmin, int hmax); // set hue
+    void setSat (unsigned smin, unsigned smax); // set saturation
+    void setVal (unsigned vmin, unsigned vmax);
+};
+
 // holds functions that will be used to do basic image processing.
 // For example extract object of interest from background, pick out outline of object
 
@@ -17,9 +31,8 @@ int satThreshold (IplImage* img, int sat_guess=90,
 // PURPOSE: converts an image to HSV. All pixels with H in {H_MIN,H_MAX} and S > S_MIN are set to
 //      255 and others to 0. Does a close operation to get rid of stray pixels. Returns fraction of
 //      high pixels (approximate).
-float HueSat_Filter1 (IplImage* img, IplImage* &dst, // source and dest images. Do no allocate dst  
-                  int H_MIN, int H_MAX,         // hue min and max
-                  unsigned S_MIN, unsigned S_MAX,                   // saturation min and max
+float HSV_Filter (IplImage* img, IplImage* &dst, // source and dest images. Do no allocate dst  
+                  HSV_settings HSV,             
                   char flags = 0);              
 
 // PURPOSE: Outputs morphological gradient of image. A simple wrapper of cvMorphologyEx

@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include "cv_tasks.h"
 
-// this is for the gate task
+/**######### MAIN GATE TASKK ############*/
 
-char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range, char* window[]) {
+char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range, 
+                  HSV_settings HSV, char* window[], char flags) {
 // return state guide:
 // -1 = bad, disregard this image
 // 0 = no detection (not enough pixels to constitute image, or no lines detected)
@@ -12,9 +13,14 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range, char* win
 // 3 = gate very close, (dist between segments > 3/4 image width). XY gate center.
 /** HS filter to extract gate object */
     IplImage* img_1;  
-    HueSat_Filter1 (img, img_1, GATE_HMIN, GATE_HMAX, GATE_SMIN, GATE_SMAX); // need to delete
-    img_1->origin = 1;
-    cvShowImage(window[0], img_1);
+    HSV_Filter (img, img_1, HSV); 
+    cvMorphologyEx (img_1, img_1, NULL, 
+                    cvCreateStructuringElementEx (5,5,3,3,CV_SHAPE_RECT),
+                    CV_MOP_CLOSE
+                   );
+    
+    if (flags & _INVERT) img_1->origin = 1;
+    if (flags & _DISPLAY) cvShowImage(window[0], img_1);
 
     // check to see if there are enough pixels to do line finding
     int pix = cvCountNonZero (img_1); 
@@ -52,18 +58,12 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range, char* win
  
         if (fabs(temp[1].y-temp[0].y) < fabs(temp[1].x-temp[0].x)) {  // horiz line
             cvSeqRemove(lines,i); // if it is a horiz line, delete it 
-            /*if (temp[0].x > temp[1].x) { // sort so lower X value comes first
-                swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
-                swap=temp[1].x; temp[1].x=temp[0].x; temp[0].x=swap;
-            }*/
         }
-        else {
-            if (temp[0].y > temp[1].y) { // sort so lower Y value comes first
-                swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
-                swap=temp[1].x; temp[1].x=temp[0].x; temp[0].x=swap;
-            }
+        else if (temp[0].y > temp[1].y) { // sort so lower Y value comes first
+            swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
+            swap=temp[1].x; temp[1].x=temp[0].x; temp[0].x=swap;
+        }
             //cvLine (img_1, temp[0],temp[1], CV_RGB(100,200,100), 1);
-        }
     }
     //cvShowImage(window[1], img_1);
 /** recheck that there are lines found */
@@ -73,7 +73,7 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range, char* win
         printf ("  vision_GATE: No Lines Detected. Exiting.\n");
         return 0;
     }
-    printf ("Lines: %d\n", nlines);
+    if (!(flags & _QUIET)) printf ("Lines: %d\n", nlines);
 
 /** perform clustering */
     int nseeds=0;
@@ -81,11 +81,14 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range, char* win
     KMcluster_auto_K (cseed, nseeds, 1,2, lines, nlines, 1);
     
 // display clustered lines
-    for (int i = 0; i < nseeds; i++) 
-        cvLine (img_1, cseed[i][0],cseed[i][1], CV_RGB(0,50,50), 2);
-    cvShowImage(window[1], img_1);
-
+    if (flags & _DISPLAY) {
+        for (int i = 0; i < nseeds; i++) 
+            cvLine (img_1, cseed[i][0],cseed[i][1], CV_RGB(0,50,50), 2);
+        cvShowImage(window[1], img_1);
+    }
+    
 /** decide on how many segments detected, return results */
+
     int line_seperation = (fabs(cseed[0][0].x-cseed[1][0].x)+fabs(cseed[0][1].x-cseed[1][1].x))/2;
     int ret = -1;
     
@@ -114,7 +117,7 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range, char* win
             ret = 3;
         else ret = 2;
     }
-    
+   
     cvReleaseImage (&img_1);  cvReleaseMemStorage (&storage); // no leakingz
     for (int i = 0; i < nseeds; i++) 
         delete cseed[i];
@@ -122,17 +125,146 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range, char* win
     return ret;
 }
 
+/**######### SQUARE WINDOW TASKK ############*/
+
+char vision_SQUARE (IplImage* img, int &gateX, int &gateY, float &range, 
+                    HSV_settings HSV, char* window[], char flags) {
+// return state guide:
+// -1 = bad, disregard this image
+// 0 = no detection (not enough pixels to constitute image, or no lines detected)
+// 1 = 
+/** HS filter to extract gate object */
+    IplImage* img_1;  
+    HSV_Filter (img, img_1, HSV); // need to delete
+    cvMorphologyEx (img_1, img_1, NULL, 
+                    cvCreateStructuringElementEx (5,5,3,3,CV_SHAPE_RECT),
+                    CV_MOP_CLOSE
+                   );
+    
+    if (flags & _INVERT) img_1->origin = 1;
+    if (flags & _DISPLAY) cvShowImage(window[0], img_1);
+
+    // check to see if there are enough pixels to do line finding
+    int pix = cvCountNonZero (img_1); 
+    //printf ("  vision_GATE: Pix Fraction: %f\n", float(pix)/img->width/img->height); 
+    if (float(pix)/img_1->width/img_1->height < 0.01) { // if nothing in the view
+        cvReleaseImage (&img_1);
+        printf ("  vision_GATE: Pixel Fraction Too Low. Exiting.\n");
+        return 0;
+    }
+
+/** probabilistic Hough line finder. Determine the threshold using the number of high pixels */
+    int thresh = (int)(sqrt(pix/GATE_SKINNYNESS) / 4.0); // guessed length of gate segment in pixels
+    CvMemStorage* storage = cvCreateMemStorage(0); // create memstorage for line finidng, delete later
+    CvSeq* lines = 0;
+    
+    int minlen=30, mindist=30;
+    lines = cvHoughLines2(img_1, storage,
+        CV_HOUGH_PROBABILISTIC,
+        2, CV_PI/180.0,
+        thresh, minlen, mindist);
+
+/** check if lines were found, if not quit */
+    int nlines=lines->total;
+    if (nlines == 0) { 
+        cvReleaseImage (&img_1);  cvReleaseMemStorage (&storage);
+        printf ("  vision_GATE: No Lines Detected. Exiting.\n");
+        return 0;
+    }
+    if (!(flags & _QUIET)) printf ("Lines: %d\n", nlines);
+    
+/** Organize lines so first endpoint of vertical line is the upper one, first endpoint
+ of horizontal line is left one */
+    CvPoint* temp; int swap;
+    for (int i = nlines-1; i >= 0; i--) { // for each line
+        temp = (CvPoint*)cvGetSeqElem(lines, i);  
+ 
+        if (fabs(temp[1].y-temp[0].y) < fabs(temp[1].x-temp[0].x)) {  // horiz line 
+            if (temp[0].x > temp[1].x) { // sort so lower X value comes first
+                swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
+                swap=temp[1].x; temp[1].x=temp[0].x; temp[0].x=swap;
+            }
+        }
+        else if (temp[0].y > temp[1].y) { // sort so lower Y value comes first
+            swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
+            swap=temp[1].x; temp[1].x=temp[0].x; temp[0].x=swap;
+        }
+    }
+
+/** perform clustering, line intersect finding */
+    int nseeds=0;
+    CvPoint** cseed=0;  // this memory needs to be freed later
+    KMcluster_auto_K (cseed, nseeds, 1,5, lines, nlines, 1);
+    CvPoint* intersects;
+    int nIntersects = lineSegment_intersects (cseed, nseeds, cvGetSize(img_1), intersects);
+    //printf ("%d\n", nIntersects);
+    
+// display clustered lines
+    if (flags & _DISPLAY) {
+        for (int i = 0; i < nIntersects; i++)
+            cvCircle (img_1, intersects[i], 5, CV_RGB(0,100,100), -1);
+        for (int i = 0; i < nseeds; i++) 
+            cvLine (img_1, cseed[i][0],cseed[i][1], CV_RGB(0,50,50), 2);
+        cvShowImage(window[1], img_1);
+    }
+    
+/** decide on how many segments detected, return results */
+/*
+    int line_seperation = (fabs(cseed[0][0].x-cseed[1][0].x)+fabs(cseed[0][1].x-cseed[1][1].x))/2;
+    int ret = -1;
+    
+    if (nseeds == 1) { // if lines are very close (< guessed line length), only 1 line visible
+        printf ("  vision_GATE: One Segment Detected.\n");
+        gateX = (cseed[0][0].x+cseed[0][1].x+cseed[1][0].x+cseed[1][1].x)/4 - img_1->width/2;
+        gateY = (cseed[0][0].y+cseed[0][1].y+cseed[1][0].y+cseed[1][1].y)/4 - img_1->height/2;
+        // estimate range using vertical length? bad?
+        int h = ((cseed[0][1].y+cseed[1][1].y) - (cseed[0][0].y+cseed[1][0].y))/2;
+        float tan_subtended_halfangle = float(h)/img_1->height * tan(FRONT_FOV*CV_PI/180/2);
+        range = GATE_HEIGHT / 2.0 / tan_subtended_halfangle;
+        printf ("  vision_GATE: Range: %f\n",range);
+        ret = 1;
+    }
+    else {
+        printf ("  vision_GATE: Successful.\n");
+        // average the endpoints to get center of gate
+        gateX = (cseed[0][0].x+cseed[0][1].x+cseed[1][0].x+cseed[1][1].x)/4 - img_1->width/2;
+        gateY = (cseed[0][0].y+cseed[0][1].y+cseed[1][0].y+cseed[1][1].y)/4 - img_1->height/2;
+        // estimate range
+        float tan_subtended_halfangle = float(line_seperation)/img_1->width * tan(FRONT_FOV*CV_PI/180/2);
+        range = GATE_WIDTH / 2.0 / tan_subtended_halfangle;
+        printf ("  vision_GATE: Range: %f\n",range);
+        
+        if (line_seperation > img_1->width*0.8) // line seperation > 0.8 of image width 
+            ret = 3;
+        else ret = 2;
+    }
+  */ 
+    int ret = 1;
+    cvReleaseImage (&img_1);  cvReleaseMemStorage (&storage); // no leakingz
+    for (int i = 0; i < nseeds; i++) 
+        delete cseed[i];
+    delete cseed;
+    return ret;
+}
+
+/**######### PATH FOLLOW TASKK ############*/
+
 char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float &length, 
-                  char*window[]) {
+                  HSV_settings HSV, char*window[], char flags) {
 // state guide:
 // 0 = no detection (obj not in view)
 // 1 = partial detection (pipe found, but too much off to the side)
 // 2 = full detection (pipe oriented almost directly below)
 /** HS filter to extract object */
     IplImage* img_1;  
-    HueSat_Filter1 (img, img_1, PATH_HMIN, PATH_HMAX, PATH_SMIN, PATH_SMAX); // need to delete
-    img_1->origin = 1;
-    cvShowImage(window[0], img_1);
+    HSV_Filter (img, img_1, HSV); // need to delete img_1
+    cvMorphologyEx (img_1, img_1, NULL, 
+                    cvCreateStructuringElementEx (5,5,3,3,CV_SHAPE_RECT),
+                    CV_MOP_CLOSE
+                   );
+    
+    if (flags & _INVERT) img_1->origin = 1;
+    if (flags & _DISPLAY) cvShowImage(window[0], img_1);
 
     // check to see if there are enough pixels to do line finding
     int pix = cvCountNonZero (img_1); 
@@ -155,7 +287,7 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
     }
 /** take gradient of image */    
     cvGradient_Custom (img_1, img_1, 3, 3, 1);
-    cvShowImage(window[1], img_1);
+    if (flags & _DISPLAY) cvShowImage(window[1], img_1);
     
 /** probabilistic Hough line finder. Determine the threshold using the number of high pixels */
     int thresh = (int)(sqrt(pix/PATH_SKINNYNESS)); // guessed length of pipe in pixels
@@ -199,9 +331,11 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
     CvPoint** cseed=0;
     KMcluster_auto_K (cseed, nseeds, 1,4, lines, nlines, 2);    // 2 iterations needed I think
 // display clustered lines
-    for (int i = 0; i < nseeds; i++) 
-        cvLine (img_1, cseed[i][0],cseed[i][1], CV_RGB(0,50,50), 2);
-    cvShowImage(window[1], img_1);
+    if (flags & _DISPLAY) {
+        for (int i = 0; i < nseeds; i++) 
+            cvLine (img_1, cseed[i][0],cseed[i][1], CV_RGB(0,50,50), 2);
+        cvShowImage(window[1], img_1);
+    }
     
 /** calculations and cleanup */
     if (nseeds == 2) {
@@ -211,7 +345,7 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
         int dx = ((cseed[0][1].x+cseed[1][1].x)-(cseed[0][0].x+cseed[1][0].x))/2; 
         tan_angle = float(dx) / dy; // angle with vertical
         length = sqrt(dx*dx + dy*dy);
-        printf ("  vision_PATH: Successful.\n  Length: %f\n",length);
+        if (!(flags & _QUIET)) printf ("  vision_PATH: Successful.\n  Length: %f\n",length);
     }
     
     cvReleaseMemStorage(&storage);
@@ -221,13 +355,32 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
 char controller_GATE (IplImage* img, char &state, char* window[]) {
     if (state == 0) // initiation character for controllers
         state = 'F';
     char vcode;
     int gateX, gateY; float range;
     
-    vcode = vision_GATE (img, gateX,gateY,range, window);
+    HSV_settings HSV(0, 50, 10, 255, 0, 255);
+    printf ("aa: %d %d\n", HSV.H_MIN, HSV.H_MAX);
+    vcode = vision_GATE (img, gateX,gateY,range, HSV, window, _INVERT);
         
     /** state machine
      * F: "Gate too far"
@@ -315,7 +468,8 @@ char controller_PATH (IplImage* img, char &state, char* window[]) {
     char vcode;
     int pathX, pathY; float tan_angle, length;
     
-    vcode = vision_PATH (img, pathX,pathY,tan_angle,length, window);
+    HSV_settings HSV(10, 30, 130, 255, 40, 255);
+    vcode = vision_PATH (img, pathX,pathY,tan_angle,length, HSV, window);
         
     /** state machine
      * F: "Path too far (cant see it)"
@@ -385,6 +539,9 @@ char controller_PATH (IplImage* img, char &state, char* window[]) {
     // should never happen
     return '\0';
 }
+
+
+
 
 
 
