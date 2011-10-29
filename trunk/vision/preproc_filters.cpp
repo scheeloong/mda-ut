@@ -125,7 +125,7 @@ float HSV_Filter (IplImage* img, IplImage* &dst, // source and dest images. Do n
             // note that saturation values are from 0 to 255 but is interpreted as 
             if ((*huePtr >= HSV.H_MIN) && (*huePtr <= HSV.H_MAX) && 
                 (*satPtr >= HSV.S_MIN) && (*satPtr <= HSV.S_MAX) &&
-                (*valPtr >= HSV.V_MIN) && (*valPtr <= HSV.V_MIN)) {
+                (*valPtr >= HSV.V_MIN) && (*valPtr <= HSV.V_MAX)) {
                 *huePtr = 255;
                 goodpix++;
             }
