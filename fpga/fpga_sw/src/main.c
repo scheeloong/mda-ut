@@ -129,7 +129,10 @@ void process_command(char *st)
     case COMMAND_FREQ:
       i = read_hex(st);
       set_pwm_freq(i);
-      printf("PWM frequency set\n");
+      for (i = 1; i < NUM_MOTORS; i++) {
+        set_motor_duty_cycle(i, get_motor_duty_cycle(i));
+      }
+      printf("PWM frequency set to: %d\n", i);
       break;
     case COMMAND_ACCEL:
       get_accel(&accel_data);
