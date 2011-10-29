@@ -119,7 +119,7 @@ void set_pwm_freq(int freq)
 {
   // 50000 is 50MHz in KHz
   pwm_period = 50000 / freq;
-  IOWR(MOTOR_CONTROLLER_0_DUTY_CYCLE, NUM_MOTORS+1, pwm_period);
+  IOWR(MOTOR_CONTROLLER_0_DUTY_CYCLE, NUM_MOTORS, pwm_period);
 }
 
 // get motor duty cycle
