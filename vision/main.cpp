@@ -33,7 +33,6 @@
 
 HSV_settings HSV (40, 70, 70, 150, 80, 200);
 
-
 int main( int argc, char** argv ) {
     cvNamedWindow(WIN0,1);   // create 3 windows for cv to use
     cvMoveWindow(WIN0, 650, 0);
@@ -49,8 +48,6 @@ int main( int argc, char** argv ) {
     /** your code here */
     int gateX, gateY; float range;    
     // webcam video
-    
-    printf ("%d %d\n", HSV.H_MAX, HSV.V_MAX);
     
     CvCapture* capture = cvCreateCameraCapture(1) ;    // create a webcam video capture
     IplImage* frame = cvQueryFrame( capture );         // read a single frame from the cam
