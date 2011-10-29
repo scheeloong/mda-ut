@@ -19,7 +19,7 @@ sim:	$(OBJS)
 	make -C $(LZFDIR)
 	make -C $(PROTOCOLDIR)
 	make -C $(CVDIR) all_but_main
-	g++ $(FLAGS) -o $@ $(OBJS) $(CVOBJS) $(LIBS) $(QTL)
+	g++ -o $@ $(OBJS) $(CVOBJS) $(FLAGS) $(LIBS) $(QTL)
 
 include ../common/common.mk
 
