@@ -18,6 +18,7 @@ class HSV_settings {
     void setHue (int hmin, int hmax); // set hue
     void setSat (unsigned smin, unsigned smax); // set saturation
     void setVal (unsigned vmin, unsigned vmax);
+    void setRange1 (); // for green tape at home
 };
 
 // holds functions that will be used to do basic image processing.

@@ -8,7 +8,7 @@
 #include "obj_detection.h"
 #include "calc_draw.h"
 
-#define FRONT_FOV 37.0 // FOV of front camera, 37 is FOV of sim camera
+#define TAN_FRONT_FOV 1.20 // Tan of the FOV of front cam. Equal to full_width/range, 37 is FOV of sim camera
 
 // flags
 #define _DISPLAY 1

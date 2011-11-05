@@ -31,7 +31,7 @@
 
 #define PATH_SKINNYNESS 0.12
 
-HSV_settings HSV (40, 70, 70, 150, 80, 200);
+HSV_settings HSV (40, 90, 100, 250, 80, 250);
 
 int main( int argc, char** argv ) {
     cvNamedWindow(WIN0,1);   // create 3 windows for cv to use
@@ -40,6 +40,8 @@ int main( int argc, char** argv ) {
     cvMoveWindow(WIN1, 1000, 0);
     cvNamedWindow(WIN2,1);
     cvMoveWindow(WIN2, 650, 300);
+    
+    HSV.setRange1();
     
     char* cv_windows[3];
     cv_windows[0]=(char*)malloc(10); cv_windows[1]=(char*)malloc(10); cv_windows[2]=(char*)malloc(10);
@@ -65,9 +67,9 @@ int main( int argc, char** argv ) {
         
         //cvWriteFrame( vid1, frame );      // write the frame to the video writer
         cvShowImage( WIN2, frame );
-        vision_SQUARE (frame, gateX, gateY, range, HSV, cv_windows, _DISPLAY);
+        vision_GATE (frame, gateX, gateY, range, HSV, cv_windows, _DISPLAY);
     
-        char c = cvWaitKey(50);
+        char c = cvWaitKey(20);
         if( c == 'q' ) break;
     }
         

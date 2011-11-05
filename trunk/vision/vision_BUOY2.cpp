@@ -1,5 +1,5 @@
-#include <highgui.h>
-#include <cv.h>
+#include "highgui.h"
+#include "cv.h"
 #include <iostream>
 #include "preproc_filters.h"
 
