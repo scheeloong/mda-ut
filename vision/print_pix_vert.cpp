@@ -3,7 +3,7 @@
 #include "fstream"
 
 #define FILENAME "pix_vert.txt"
-#define COL 100
+#define COL 10
 #define COL2 200
 #define COL3 300
 

@@ -55,26 +55,18 @@
 
 HSV_settings:: HSV_settings () {
     H_MIN = S_MIN  = V_MIN = 0;
-    H_MAX = 180;
-    S_MAX = V_MAX = 255;
+    H_MAX = 180;    S_MAX = V_MAX = 255;
 }
-
 HSV_settings:: HSV_settings (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax) {
     H_MIN = hmin; H_MAX = hmax; S_MIN = smin; S_MAX = smax; V_MIN = vmin; V_MAX = vmax;
 }
-
 void HSV_settings:: setAll (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax) {
     H_MIN = hmin; H_MAX = hmax; S_MIN = smin; S_MAX = smax; V_MIN = vmin; V_MAX = vmax;
 }
-void HSV_settings:: setHue (int hmin, int hmax) {
-    H_MIN = hmin; H_MAX = hmax;
-}
-void HSV_settings:: setSat (unsigned smin, unsigned smax) {
-    S_MIN = smin; S_MAX = smax;
-}
-void HSV_settings:: setVal (unsigned vmin, unsigned vmax) {
-    V_MIN = vmin; V_MAX = vmax;
-}
+void HSV_settings:: setHue (int hmin, int hmax) { H_MIN = hmin; H_MAX = hmax; }
+void HSV_settings:: setSat (unsigned smin, unsigned smax) { S_MIN = smin; S_MAX = smax; }
+void HSV_settings:: setVal (unsigned vmin, unsigned vmax) { V_MIN = vmin; V_MAX = vmax; }
+void HSV_settings:: setRange1 () { H_MIN=40; H_MAX=70; S_MIN=125; S_MAX=255; V_MIN=110; V_MAX=255;}
 
 // NAME: HueSat_Filter1
 //
@@ -95,6 +87,45 @@ void HSV_settings:: setVal (unsigned vmin, unsigned vmax) {
 //      then steps thru each pixel to see which are acceptable. Then performs a CLOSE operation
 //      with cvMorphologyEx to get rid of stray pixels if CLOSE_DIM > 0.
 //
+float HSV_Filter (IplImage* img, IplImage* &dst, // source and dest images. Do no allocate dst  
+                  HSV_settings HSV,
+                  char flags)              // kernal dimension for close operation
+{
+// convert to HSV, extract Hue and Saturation        
+    cvCvtColor (img, img, CV_BGR2HSV); // convert to Hue,Saturation,Value 
+// create new 1 channel image
+    dst = cvCreateImage (cvGetSize(img), IPL_DEPTH_8U, 1);  // image to return
+// Set all pixels with HSV values within the target range to 1 and non target pixels to 0
+    float goodpix = 0; // keeps track of how many good pixels
+    // look through both H and S images, pick out pixels where Hue is between H_MIN,H_MAX and Sat > S_MIN
+    unsigned char *imgPtr, *dstPtr;
+    for (int r = 0; r < img->height; r++) {                         
+        imgPtr = (unsigned char*) (img->imageData + r*img->widthStep);
+        dstPtr = (unsigned char*) (dst->imageData + r*dst->widthStep);
+        for (int c = 0; c < img->width; c++) {
+            // note that saturation values are from 0 to 255 but is interpreted as 
+            if ((*imgPtr >= HSV.H_MIN) && (*imgPtr <= HSV.H_MAX) && 
+                (*(imgPtr+1) >= HSV.S_MIN) && (*(imgPtr+1) <= HSV.S_MAX) &&
+                (*(imgPtr+2) >= HSV.V_MIN) && (*(imgPtr+2) <= HSV.V_MAX)) {
+                *dstPtr = 255;
+                goodpix++;
+            }
+            else *dstPtr = 0;
+            
+            imgPtr+=3; dstPtr++;
+        }
+    }
+
+    if (flags & _DISPLAY) {
+        cvNamedWindow ("HSV_Filter", CV_WINDOW_AUTOSIZE);
+        cvShowImage("HSV_Filter", dst);
+        cvWaitKey(0);
+        cvDestroyWindow ("HSV_Filter");
+    }
+    
+    return goodpix / img->width / img->height;
+}
+/*
 float HSV_Filter (IplImage* img, IplImage* &dst, // source and dest images. Do no allocate dst  
                   HSV_settings HSV,
                   char flags)              // kernal dimension for close operation
@@ -148,7 +179,7 @@ float HSV_Filter (IplImage* img, IplImage* &dst, // source and dest images. Do n
     
     return goodpix / img->width / img->height;
 }
-
+*/
 // NAME: cvGradient_Custom
 //
 // PURPOSE: Outputs morphological gradient of image. A simple wrapper of cvMorphologyEx

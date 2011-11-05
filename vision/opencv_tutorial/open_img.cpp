@@ -1,18 +1,11 @@
 #include "highgui.h"
 
 int main( int argc, char** argv ) {
-// cvLoadImage determines an image type and creates datastructure with appropriate size
-    IplImage* img = cvLoadImage( argv[1]);
+    IplImage* img = cvLoadImage( argv[1]);  // load an image. Memory is allocated automatically
+    cvNamedWindow( "window1", CV_WINDOW_AUTOSIZE ); // create a window
+    cvShowImage( "window1", img );          // show image using window
+    cvWaitKey(0);                   // wait for user to press a key
 
-// create a window. Window name is determined by a supplied argument
-    cvNamedWindow( argv[1], CV_WINDOW_AUTOSIZE );
-// Display an image inside and window. Window name is determined by a supplied argument
-    cvShowImage( argv[1], img );
-// wait indefinitely for keystroke
-    cvWaitKey(0);
-
-// release pointer to an object
-    cvReleaseImage( &img );
-// Destroy a window
-    cvDestroyWindow( argv[1] );
+    cvReleaseImage( &img );       // deallocate image memory
+    cvDestroyWindow("window1" );  // destroy the window
 }

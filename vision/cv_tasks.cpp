@@ -89,7 +89,8 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range,
     
 /** decide on how many segments detected, return results */
 
-    int line_seperation = (fabs(cseed[0][0].x-cseed[1][0].x)+fabs(cseed[0][1].x-cseed[1][1].x))/2;
+    const float obj_real_width = 54;
+    int obj_pix_width = (fabs(cseed[0][0].x-cseed[1][0].x)+fabs(cseed[0][1].x-cseed[1][1].x))/2;
     int ret = -1;
     
     if (nseeds == 1) { // if lines are very close (< guessed line length), only 1 line visible
@@ -98,7 +99,7 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range,
         gateY = (cseed[0][0].y+cseed[0][1].y+cseed[1][0].y+cseed[1][1].y)/4 - img_1->height/2;
         // estimate range using vertical length? bad?
         int h = ((cseed[0][1].y+cseed[1][1].y) - (cseed[0][0].y+cseed[1][0].y))/2;
-        float tan_subtended_halfangle = float(h)/img_1->height * tan(FRONT_FOV*CV_PI/180/2);
+        float tan_subtended_halfangle = float(h)/img_1->height * tan(TAN_FRONT_FOV*CV_PI/180/2);
         range = GATE_HEIGHT / 2.0 / tan_subtended_halfangle;
         printf ("  vision_GATE: Range: %f\n",range);
         ret = 1;
@@ -108,12 +109,13 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range,
         // average the endpoints to get center of gate
         gateX = (cseed[0][0].x+cseed[0][1].x+cseed[1][0].x+cseed[1][1].x)/4 - img_1->width/2;
         gateY = (cseed[0][0].y+cseed[0][1].y+cseed[1][0].y+cseed[1][1].y)/4 - img_1->height/2;
-        // estimate range
-        float tan_subtended_halfangle = float(line_seperation)/img_1->width * tan(FRONT_FOV*CV_PI/180/2);
-        range = GATE_WIDTH / 2.0 / tan_subtended_halfangle;
-        printf ("  vision_GATE: Range: %f\n",range);
         
-        if (line_seperation > img_1->width*0.8) // line seperation > 0.8 of image width 
+        // estimate range with horiz width
+        range = obj_real_width * float(img_1->width) / obj_pix_width / TAN_FRONT_FOV;
+        printf ("  pix width: %d   %d\n", obj_pix_width, img_1->width);
+        printf ("  vision_GATE: Range: %f\n", range);
+        
+        if (obj_pix_width > img_1->width*0.8) // line seperation > 0.8 of image width 
             ret = 3;
         else ret = 2;
     }
@@ -209,21 +211,24 @@ char vision_SQUARE (IplImage* img, int &gateX, int &gateY, float &range,
     }
     
 /** decide on how many segments detected, return results */
-/*
-    int line_seperation = (fabs(cseed[0][0].x-cseed[1][0].x)+fabs(cseed[0][1].x-cseed[1][1].x))/2;
+
     int ret = -1;
-    
-    if (nseeds == 1) { // if lines are very close (< guessed line length), only 1 line visible
-        printf ("  vision_GATE: One Segment Detected.\n");
-        gateX = (cseed[0][0].x+cseed[0][1].x+cseed[1][0].x+cseed[1][1].x)/4 - img_1->width/2;
-        gateY = (cseed[0][0].y+cseed[0][1].y+cseed[1][0].y+cseed[1][1].y)/4 - img_1->height/2;
-        // estimate range using vertical length? bad?
-        int h = ((cseed[0][1].y+cseed[1][1].y) - (cseed[0][0].y+cseed[1][0].y))/2;
-        float tan_subtended_halfangle = float(h)/img_1->height * tan(FRONT_FOV*CV_PI/180/2);
-        range = GATE_HEIGHT / 2.0 / tan_subtended_halfangle;
-        printf ("  vision_GATE: Range: %f\n",range);
-        ret = 1;
-    }
+
+    if (nseeds == 4) { // 4 lines visible
+        if (nIntersects == 4) {
+            if (!(flags & _QUIET)) printf ("  vision_SQUARE: Successful\n");
+            gateX = (intersects[0].x+intersects[1].x+intersects[2].x+intersects[3].x)/4 - img_1->width/2;
+            gateY = (intersects[0].y+intersects[1].y+intersects[2].y+intersects[3].y)/4 - img_1->height/2;
+            
+            // estimate range using vertical length? bad?
+            /*
+            int h = ((cseed[0][1].y+cseed[1][1].y) - (cseed[0][0].y+cseed[1][0].y))/2;
+            float tan_subtended_halfangle = float(h)/img_1->height * tan(FRONT_FOV*CV_PI/180/2);
+            range = GATE_HEIGHT / 2.0 / tan_subtended_halfangle;
+            printf ("  vision_GATE: Range: %f\n",range);*/
+            ret = 1;
+        }
+    }/*
     else {
         printf ("  vision_GATE: Successful.\n");
         // average the endpoints to get center of gate
@@ -238,8 +243,7 @@ char vision_SQUARE (IplImage* img, int &gateX, int &gateY, float &range,
             ret = 3;
         else ret = 2;
     }
-  */ 
-    int ret = 1;
+  */
     cvReleaseImage (&img_1);  cvReleaseMemStorage (&storage); // no leakingz
     for (int i = 0; i < nseeds; i++) 
         delete cseed[i];
@@ -536,8 +540,6 @@ char controller_PATH (IplImage* img, char &state, char* window[]) {
             printf ("PATH Error\n");
             return '/';
     }
-    // should never happen
-    return '\0';
 }
 
 
