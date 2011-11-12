@@ -28,7 +28,7 @@ struct command_struct my_cmds[] = {
   {"smf", COMMAND_FORWARD, "smf - set motor forward\n  Usage: smf <n>\n\n  Turn on the nth motor in the forward direction\n"},
   {"smr", COMMAND_REVERSE, "smr - set motor reverse\n  Usage: smr <n>\n\n  Turn on the nth motor in the reverse direction\n"},
   {"sms", COMMAND_STOP, "sms - set motor stop\n  Usage: sms <n>\n\n  Turn the nth motor off\n"},
-  {"spf", COMMAND_FREQ, "spf - set PWM frequency\n  Usage: sms <0xn>\n\n  Set the PWM frequency to n in kilohertz\nNote: the frequency is inputted in hex\n"},
+  {"spf", COMMAND_FREQ, "spf - set PWM frequency\n  Usage: spf <0xn>\n\n  Set the PWM frequency to n in kilohertz\nNote: the frequency is inputted in hex\n"},
   {"stop\n", COMMAND_STOP_ALL, "stop\n  Usage: stop\n\n  Stop all motors\n"}
 };
 
