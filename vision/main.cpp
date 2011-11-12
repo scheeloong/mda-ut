@@ -41,17 +41,19 @@ int main( int argc, char** argv ) {
     cvNamedWindow(WIN2,1);
     cvMoveWindow(WIN2, 650, 300);
     
-    HSV.setRange1();
+    //HSV.setRange1();
+    HSV.setAll (35,90, 90,255,90,255);
     
     char* cv_windows[3];
     cv_windows[0]=(char*)malloc(10); cv_windows[1]=(char*)malloc(10); cv_windows[2]=(char*)malloc(10);
     strcpy(cv_windows[0], WIN0); strcpy(cv_windows[1], WIN1); strcpy(cv_windows[2], WIN2);
     
     /** your code here */
-    int gateX, gateY; float range;    
+    int gateX, gateY; float range;
+    float length, angle;
     // webcam video
     
-    CvCapture* capture = cvCreateCameraCapture(1) ;    // create a webcam video capture
+    CvCapture* capture = cvCreateCameraCapture(0) ;    // create a webcam video capture
     IplImage* frame = cvQueryFrame( capture );         // read a single frame from the cam
     IplImage* frame2 = cvCreateImage (cvGetSize(frame), frame->depth, frame->nChannels);
     
@@ -72,11 +74,12 @@ int main( int argc, char** argv ) {
         //if( !frame ) break;
         
         //cvWriteFrame( vid1, frame );      // write the frame to the video writer
-        cvShowImage( WIN2, frame );
-        vision_SQUARE (frame, gateX, gateY, range, HSV, cv_windows, _DISPLAY | _QUIET);
+        //vision_SQUARE (frame, gateX, gateY, range, HSV, cv_windows, _DISPLAY | _QUIET);
+         cvShowImage( WIN2, frame );
+        vision_PATH (frame, gateX,gateY,length,angle, HSV, cv_windows, _DISPLAY);
+       
         
-        
-        c = cvWaitKey(25);
+        c = cvWaitKey(50);
         if( c == 'q' ) break;
     }
         

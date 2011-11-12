@@ -1,8 +1,17 @@
 #include <stdio.h>
 #include "cv_tasks.h"
 
-/**######### MAIN GATE TASKK ############*/
+/**######### HELPER FUNCTIONS ###########*/
+int sqr_length (CvPoint** clusters, int i) {
+// returns square length of index'th line
+    int dx = clusters[i][0].x-clusters[i][1].x,  dy = clusters[i][0].y-clusters[i][1].y;
+    return dx*dx + dy*dy;
+}
+float tangent_angle (CvPoint** clusters, int i) {
+    return float(clusters[i][0].y-clusters[i][1].y) / (clusters[i][0].x-clusters[i][1].x);
+}
 
+/**######### MAIN GATE TASKK ############*/
 char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range, 
                   HSV_settings HSV, char* window[], char flags) {
 // return state guide:
@@ -136,7 +145,6 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range,
 }
 
 /**######### SQUARE WINDOW TASKK ############*/
-
 char vision_SQUARE (IplImage* img, int &gateX, int &gateY, float &range, 
                     HSV_settings HSV, char* window[], char flags) {
 // return state guide:
@@ -262,7 +270,6 @@ char vision_SQUARE (IplImage* img, int &gateX, int &gateY, float &range,
 }
 
 /**######### PATH FOLLOW TASKK ############*/
-
 char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float &length, 
                   HSV_settings HSV, char*window[], char flags) {
 // state guide:
@@ -272,10 +279,12 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
 /** HS filter to extract object */
     IplImage* img_1;  
     HSV_Filter (img, img_1, HSV); // need to delete img_1
+    IplConvKernel* kernel = cvCreateStructuringElementEx (3,3,1,1,CV_SHAPE_RECT);
     cvMorphologyEx (img_1, img_1, NULL, 
-                    cvCreateStructuringElementEx (5,5,3,3,CV_SHAPE_RECT),
-                    CV_MOP_CLOSE
-                   );
+                    kernel, CV_MOP_OPEN);
+    cvMorphologyEx (img_1, img_1, NULL, 
+                    kernel, CV_MOP_CLOSE);
+    cvReleaseStructuringElement (&kernel);
     
     if (flags & _INVERT) img_1->origin = 1;
     if (flags & _DISPLAY) cvShowImage(window[0], img_1);
@@ -301,10 +310,10 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
     }
 /** take gradient of image */    
     cvGradient_Custom (img_1, img_1, 3, 3, 1);
-    if (flags & _DISPLAY) cvShowImage(window[1], img_1);
+    //if (flags & _DISPLAY) cvShowImage(window[1], img_1);
     
 /** probabilistic Hough line finder. Determine the threshold using the number of high pixels */
-    int thresh = (int)(sqrt(pix/PATH_SKINNYNESS)); // guessed length of pipe in pixels
+    int thresh = 10;//(int)(sqrt(pix/PATH_SKINNYNESS)); // guessed length of pipe in pixels
     CvMemStorage* storage = cvCreateMemStorage(0); // create memstorage for line finidng, delete later
     CvSeq* lines = 0;
     
@@ -320,7 +329,7 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
         printf ("  vision_PATH: No Lines Detected. Exiting.\n");
         return 0;
     }
-/** arrange lines by Y value. Will bug if horizontal lines encountered. Assume no horiz lines. */
+/** arrange lines by X and Y value. Will bug if 45 degree lines encountered. Assume no horiz lines. */
     CvPoint* temp; int swap;
     for (int i = 0; i < nlines; i++) { // for each line
         temp = (CvPoint*)cvGetSeqElem(lines, i);  
@@ -343,47 +352,55 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
 /** perform clustering */
     int nseeds=0;
     CvPoint** cseed=0;
-    KMcluster_auto_K (cseed, nseeds, 1,4, lines, nlines, 2);    // 2 iterations needed I think
+    KMcluster_auto_K (cseed, nseeds, 1,4, lines, nlines, 2, _QUIET);    // 2 iterations needed I think
 // display clustered lines
     if (flags & _DISPLAY) {
         for (int i = 0; i < nseeds; i++) 
             cvLine (img_1, cseed[i][0],cseed[i][1], CV_RGB(0,50,50), 2);
-        cvShowImage(window[1], img_1);
     }
     
 /** calculations and cleanup */
-    if (nseeds == 2) {
-        pathX = (cseed[0][0].x+cseed[0][1].x+cseed[1][0].x+cseed[1][1].x)/4 - img_1->width/2;  
-        pathY = (cseed[0][0].y+cseed[0][1].y+cseed[1][0].y+cseed[1][1].y)/4 - img_1->height/2;
-        int dy = ((cseed[0][1].y+cseed[1][1].y)-(cseed[0][0].y+cseed[1][0].y))/2;
-        int dx = ((cseed[0][1].x+cseed[1][1].x)-(cseed[0][0].x+cseed[1][0].x))/2; 
-        tan_angle = float(dx) / dy; // angle with vertical
-        length = sqrt(dx*dx + dy*dy);
-        if (!(flags & _QUIET)) printf ("  vision_PATH: Successful.\n  Length: %f\n",length);
+// if the 2 longest lines are parallel and equal length then OK
+// So first find the length of 2 longest lines
+    int ret=-1;
+    if (nseeds >= 2) { // definitely reject img if less than 2 lines
+        int long1=0, long2=0; // long1 = index of longest line. long2 = index of second longest
+        for (int i = 1; i < nseeds; i++)
+            if (sqr_length(cseed,i) > sqr_length(cseed,long1)) long1 = i;
+        for (int i = 1; i < nseeds && i != long1; i++) 
+            if (sqr_length(cseed,i) > sqr_length(cseed,long2)) long2 = i;
+            
+        // now check that these two lines have similar lengths and angles
+        float len1 = sqr_length(cseed,long1), len2 = sqr_length(cseed,long2); // calculate lengths and tan of angles
+        float ang1 = tangent_angle(cseed,long1), ang2 = tangent_angle(cseed, long2);
+        float len_ratio = len1 / len2; float tan_ratio = ang1 / ang2; // ratios
+      //  printf ("Ratios:  %f  %f\n", len_ratio, tan_ratio);
+        if ((len_ratio < 1.20) && (len_ratio > 0.8333) && (tan_ratio < 1.25) && (tan_ratio > 0.8)) {
+        // lines are OK, we can return good results
+            pathX = (cseed[long1][0].x+cseed[long1][1].x+cseed[long2][0].x+cseed[long2][1].x)/4 - img_1->width/2;  
+            pathY = (cseed[long1][0].y+cseed[long1][1].y+cseed[long2][0].y+cseed[long2][1].y)/4 - img_1->height/2;
+            length = sqrt(len1 / (img_1->width*img_1->width + img_1->height*img_1->height)); // divide len1 by hypotenuse of image
+            tan_angle = (ang1+ang2) / 2;
+            
+            if (!(flags & _QUIET)) printf ("  vision_PATH: Successful.\n  Length&Angle:  %f  %f\n",length,atan(tan_angle));
+            if (flags & _DISPLAY) {
+                CvPoint p1 = cvPoint (pathX+img_1->width/2 - length*400, pathY+img_1->height/2 - length*400*tan_angle);
+                CvPoint p2 = cvPoint (pathX+img_1->width/2 + length*400, pathY+img_1->height/2 + length*400*tan_angle);
+                cvLine (img_1, p1, p2, CV_RGB(255,100,100), 2);
+                cvShowImage(window[1], img_1);
+            }            
+            ret = 2;
+        }
+        else ret = 1;
     }
-    
+
     cvReleaseMemStorage(&storage);
     cvReleaseImage (&img_1); 
     delete cseed[0]; delete cseed;
-    return 2;
+    return ret;
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
 
 
 char controller_GATE (IplImage* img, char &state, char* window[]) {
