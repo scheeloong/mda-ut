@@ -31,7 +31,7 @@
 
 #define PATH_SKINNYNESS 0.12
 
-HSV_settings HSV (40, 90, 100, 250, 80, 250);
+HSV_settings HSV;
 
 int main( int argc, char** argv ) {
     cvNamedWindow(WIN0,1);   // create 3 windows for cv to use
@@ -53,7 +53,9 @@ int main( int argc, char** argv ) {
     
     CvCapture* capture = cvCreateCameraCapture(1) ;    // create a webcam video capture
     IplImage* frame = cvQueryFrame( capture );         // read a single frame from the cam
-/*
+    IplImage* frame2 = cvCreateImage (cvGetSize(frame), frame->depth, frame->nChannels);
+    
+    /*
     CvVideoWriter * vid1 = cvCreateVideoWriter (       // create a video file to store video
         "webcam1.avi",              // name of the video file
         CV_FOURCC('P','I','M','1'), // video codec (don't worry about this one)
@@ -61,15 +63,20 @@ int main( int argc, char** argv ) {
         cvGetSize(frame),           // the resolution. 
         1);                         // 1 here means color video, 0 means not color
 */
+    char c;
     while(1) {                      // play the video like before     
-        frame = cvQueryFrame( capture );
-        if( !frame ) break;
+        frame = cvQueryFrame (capture);
+        //cvWaitKey(20);
+        //frame2 = cvQueryFrame (capture);        
+        //cvAddWeighted (frame, 0.5, frame2, 0.5, 0, frame);
+        //if( !frame ) break;
         
         //cvWriteFrame( vid1, frame );      // write the frame to the video writer
         cvShowImage( WIN2, frame );
-        vision_GATE (frame, gateX, gateY, range, HSV, cv_windows, _DISPLAY);
-    
-        char c = cvWaitKey(20);
+        vision_SQUARE (frame, gateX, gateY, range, HSV, cv_windows, _DISPLAY | _QUIET);
+        
+        
+        c = cvWaitKey(25);
         if( c == 'q' ) break;
     }
         

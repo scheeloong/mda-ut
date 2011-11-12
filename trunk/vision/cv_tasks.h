@@ -17,8 +17,8 @@
 
 // vision_gate
 #define GATE_SKINNYNESS 0.08 // ratio of pipe diameter to length
-#define GATE_WIDTH 3.0 // physical width in meters
-#define GATE_HEIGHT 1.6 // physical width in meters
+#define GATE_WIDTH 300.0 // physical width in centimeters
+#define GATE_HEIGHT 160.0 // physical width in centimeters
 char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range, 
                   HSV_settings HSV, char* window[], char flags=0);
 char vision_SQUARE (IplImage* img, int &X, int &Y, float &range, 

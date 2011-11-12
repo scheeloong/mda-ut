@@ -8,16 +8,19 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range,
 // return state guide:
 // -1 = bad, disregard this image
 // 0 = no detection (not enough pixels to constitute image, or no lines detected)
-// 1 = partial detection (1 segment detected) XY segment center
-// 2 = full detection (2 segments detected). XY gate center.
-// 3 = gate very close, (dist between segments > 3/4 image width). XY gate center.
+// 1 = partial detection (1 segment detected) gateX, gateY correspond to segment center. Range valid
+// 2 = full detection (2 segments detected). gateX, gateY = gate center. Range valid
+// 3 = gate very close, (dist between segments > 3/4 image width). Otherwise same as 2
 /** HS filter to extract gate object */
     IplImage* img_1;  
-    HSV_Filter (img, img_1, HSV); 
+    HSV_Filter (img, img_1, HSV);
+    
+    IplConvKernel* kernel = cvCreateStructuringElementEx (3,3,1,1,CV_SHAPE_RECT);
     cvMorphologyEx (img_1, img_1, NULL, 
-                    cvCreateStructuringElementEx (5,5,3,3,CV_SHAPE_RECT),
-                    CV_MOP_CLOSE
-                   );
+                    kernel, CV_MOP_OPEN);
+    cvMorphologyEx (img_1, img_1, NULL, 
+                    kernel, CV_MOP_CLOSE);
+    cvReleaseStructuringElement (&kernel);
     
     if (flags & _INVERT) img_1->origin = 1;
     if (flags & _DISPLAY) cvShowImage(window[0], img_1);
@@ -78,7 +81,7 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range,
 /** perform clustering */
     int nseeds=0;
     CvPoint** cseed=0;  // this memory needs to be freed later
-    KMcluster_auto_K (cseed, nseeds, 1,2, lines, nlines, 1);
+    float min_valid = KMcluster_auto_K (cseed, nseeds, 1,2, lines, nlines, 2, _QUIET);
     
 // display clustered lines
     if (flags & _DISPLAY) {
@@ -88,36 +91,41 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range,
     }
     
 /** decide on how many segments detected, return results */
+// perform some sort of decision using min_valid
 
-    const float obj_real_width = 54;
-    int obj_pix_width = (fabs(cseed[0][0].x-cseed[1][0].x)+fabs(cseed[0][1].x-cseed[1][1].x))/2;
+    const float obj_real_width = 54, obj_real_height = 40;
     int ret = -1;
     
     if (nseeds == 1) { // if lines are very close (< guessed line length), only 1 line visible
-        printf ("  vision_GATE: One Segment Detected.\n");
-        gateX = (cseed[0][0].x+cseed[0][1].x+cseed[1][0].x+cseed[1][1].x)/4 - img_1->width/2;
-        gateY = (cseed[0][0].y+cseed[0][1].y+cseed[1][0].y+cseed[1][1].y)/4 - img_1->height/2;
-        // estimate range using vertical length? bad?
-        int h = ((cseed[0][1].y+cseed[1][1].y) - (cseed[0][0].y+cseed[1][0].y))/2;
-        float tan_subtended_halfangle = float(h)/img_1->height * tan(TAN_FRONT_FOV*CV_PI/180/2);
-        range = GATE_HEIGHT / 2.0 / tan_subtended_halfangle;
-        printf ("  vision_GATE: Range: %f\n",range);
+        gateX = (cseed[0][0].x+cseed[0][1].x)/2 - img_1->width/2;
+        gateY = (cseed[0][0].y+cseed[0][1].y)/2 - img_1->height/2;
+        int obj_pix_height = fabs(cseed[0][0].y-cseed[0][1].y);
+    
+        // estimate range using vertical length
+        range = obj_real_height * float(img_1->height) / obj_pix_height / TAN_FRONT_FOV;
+        if (!(flags & _QUIET)) {
+            printf ("  vision_GATE: One Segement Detected.\n");
+            printf ("  vision_GATE: Range: %f\n", range);
+        }
+        
         ret = 1;
     }
     else {
-        printf ("  vision_GATE: Successful.\n");
         // average the endpoints to get center of gate
         gateX = (cseed[0][0].x+cseed[0][1].x+cseed[1][0].x+cseed[1][1].x)/4 - img_1->width/2;
         gateY = (cseed[0][0].y+cseed[0][1].y+cseed[1][0].y+cseed[1][1].y)/4 - img_1->height/2;
-        
+        int obj_pix_width = (fabs(cseed[0][0].x-cseed[1][0].x)+fabs(cseed[0][1].x-cseed[1][1].x))/2;
+    
         // estimate range with horiz width
         range = obj_real_width * float(img_1->width) / obj_pix_width / TAN_FRONT_FOV;
-        printf ("  pix width: %d   %d\n", obj_pix_width, img_1->width);
-        printf ("  vision_GATE: Range: %f\n", range);
+        if (!(flags & _QUIET)) {
+            printf ("  vision_GATE: Two Segements Detected.\n");
+            printf ("  vision_GATE: Range: %f\n", range);
+        }
         
         if (obj_pix_width > img_1->width*0.8) // line seperation > 0.8 of image width 
-            ret = 3;
-        else ret = 2;
+            ret = 3; // too close
+        else ret = 2; 
     }
    
     cvReleaseImage (&img_1);  cvReleaseMemStorage (&storage); // no leakingz
@@ -134,14 +142,19 @@ char vision_SQUARE (IplImage* img, int &gateX, int &gateY, float &range,
 // return state guide:
 // -1 = bad, disregard this image
 // 0 = no detection (not enough pixels to constitute image, or no lines detected)
-// 1 = 
+// 1 = one corner, two segments. gateX, gateY = direction to center of object. Range invalid
+// 2 = two corners, three segments. gateX, gateY = direction to center of object. Range invalid
+// 3 = four corners, four segments gateX, gateY = center of object. Range valid.
 /** HS filter to extract gate object */
     IplImage* img_1;  
     HSV_Filter (img, img_1, HSV); // need to delete
+    
+    IplConvKernel* kernel = cvCreateStructuringElementEx (3,3,1,1,CV_SHAPE_RECT);
     cvMorphologyEx (img_1, img_1, NULL, 
-                    cvCreateStructuringElementEx (5,5,3,3,CV_SHAPE_RECT),
-                    CV_MOP_CLOSE
-                   );
+                    kernel, CV_MOP_OPEN);
+    cvMorphologyEx (img_1, img_1, NULL, 
+                    kernel, CV_MOP_CLOSE);
+    cvReleaseStructuringElement (&kernel);
     
     if (flags & _INVERT) img_1->origin = 1;
     if (flags & _DISPLAY) cvShowImage(window[0], img_1);
@@ -149,7 +162,7 @@ char vision_SQUARE (IplImage* img, int &gateX, int &gateY, float &range,
     // check to see if there are enough pixels to do line finding
     int pix = cvCountNonZero (img_1); 
     //printf ("  vision_GATE: Pix Fraction: %f\n", float(pix)/img->width/img->height); 
-    if (float(pix)/img_1->width/img_1->height < 0.01) { // if nothing in the view
+    if (float(pix)/img_1->width/img_1->height < 0.002) { // if nothing in the view
         cvReleaseImage (&img_1);
         printf ("  vision_GATE: Pixel Fraction Too Low. Exiting.\n");
         return 0;
@@ -196,7 +209,7 @@ char vision_SQUARE (IplImage* img, int &gateX, int &gateY, float &range,
 /** perform clustering, line intersect finding */
     int nseeds=0;
     CvPoint** cseed=0;  // this memory needs to be freed later
-    KMcluster_auto_K (cseed, nseeds, 1,5, lines, nlines, 1);
+    KMcluster_auto_K (cseed, nseeds, 1,5, lines, nlines, 2, flags);
     CvPoint* intersects;
     int nIntersects = lineSegment_intersects (cseed, nseeds, cvGetSize(img_1), intersects);
     //printf ("%d\n", nIntersects);
@@ -211,43 +224,40 @@ char vision_SQUARE (IplImage* img, int &gateX, int &gateY, float &range,
     }
     
 /** decide on how many segments detected, return results */
-
+    const float obj_real_width = 54, obj_real_height = 40;
+    float obj_pix_width=-1, obj_pix_height=-1;
     int ret = -1;
 
-    if (nseeds == 4) { // 4 lines visible
-        if (nIntersects == 4) {
-            if (!(flags & _QUIET)) printf ("  vision_SQUARE: Successful\n");
-            gateX = (intersects[0].x+intersects[1].x+intersects[2].x+intersects[3].x)/4 - img_1->width/2;
+    if (nseeds == 4) { // there are 4 lines visible
+        if (nIntersects == 4) { // there are 4 intersects
+            //if (!(flags & _QUIET)) printf ("  vision_SQUARE: Successful\n"); // if user did not specify QUIET flag, print msg
+            gateX = (intersects[0].x+intersects[1].x+intersects[2].x+intersects[3].x)/4 - img_1->width/2; // gate center pos
             gateY = (intersects[0].y+intersects[1].y+intersects[2].y+intersects[3].y)/4 - img_1->height/2;
             
-            // estimate range using vertical length? bad?
-            /*
-            int h = ((cseed[0][1].y+cseed[1][1].y) - (cseed[0][0].y+cseed[1][0].y))/2;
-            float tan_subtended_halfangle = float(h)/img_1->height * tan(FRONT_FOV*CV_PI/180/2);
-            range = GATE_HEIGHT / 2.0 / tan_subtended_halfangle;
-            printf ("  vision_GATE: Range: %f\n",range);*/
-            ret = 1;
+            obj_pix_width = (fabs(intersects[0].x-intersects[1].x) + fabs(intersects[2].x-intersects[3].x))/2;
+            ret = 1; 
         }
-    }/*
-    else {
-        printf ("  vision_GATE: Successful.\n");
-        // average the endpoints to get center of gate
-        gateX = (cseed[0][0].x+cseed[0][1].x+cseed[1][0].x+cseed[1][1].x)/4 - img_1->width/2;
-        gateY = (cseed[0][0].y+cseed[0][1].y+cseed[1][0].y+cseed[1][1].y)/4 - img_1->height/2;
-        // estimate range
-        float tan_subtended_halfangle = float(line_seperation)/img_1->width * tan(FRONT_FOV*CV_PI/180/2);
-        range = GATE_WIDTH / 2.0 / tan_subtended_halfangle;
-        printf ("  vision_GATE: Range: %f\n",range);
-        
-        if (line_seperation > img_1->width*0.8) // line seperation > 0.8 of image width 
-            ret = 3;
-        else ret = 2;
+        else ret = -1; // 4 lines visible but not 4 intersects -> some sort of error
+    } 
+    /** the decision structure continues here */
+    // else if...
+    
+    /** end decision structure */
+    
+    if (obj_pix_width > 0) { // width
+        range = obj_real_width * float(img_1->width) / obj_pix_width / TAN_FRONT_FOV;
+        if (!(flags & _QUIET)) printf ("  vision_GATE: Range: %f\n", range);
     }
-  */
+    else if (obj_pix_height > 0) { // height
+        range = obj_real_height * float(img_1->height) / obj_pix_height / TAN_FRONT_FOV;
+        if (!(flags & _QUIET)) printf ("  vision_GATE: Range: %f\n", range);
+    }
+    
     cvReleaseImage (&img_1);  cvReleaseMemStorage (&storage); // no leakingz
     for (int i = 0; i < nseeds; i++) 
         delete cseed[i];
     delete cseed;
+    delete [] intersects;
     return ret;
 }
 
