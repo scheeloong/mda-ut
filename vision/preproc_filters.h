@@ -12,7 +12,7 @@ class HSV_settings {
     unsigned S_MIN, S_MAX;
     unsigned V_MIN, V_MAX;
     
-    HSV_settings (); // initialize all values to 0
+    HSV_settings ();
     HSV_settings (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax);
     void setAll (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax); // set all values
     void setHue (int hmin, int hmax); // set hue

@@ -172,7 +172,7 @@ float areaQuad (float x1,float y1, float x2,float y2, float x3,float y3, float x
 /** END Clusterseed routines */
 
 
-float KMcluster (CvPoint** &cseed, int nseeds, CvSeq* lines, int nlines, const int kmeans_iterations) {
+float KMcluster (CvPoint** &cseed, int nseeds, CvSeq* lines, int nlines, const int kmeans_iterations, char flags) {
 // cseed is uninitialized pointer. Will be initialized in function
 // nseeds is specified number of clusters
 /** generate cseed matrix */
@@ -257,12 +257,12 @@ float KMcluster (CvPoint** &cseed, int nseeds, CvSeq* lines, int nlines, const i
             }
     }
     validity = average_intra / min_inter; // validity is defined as intracluster dist / min intercluster dist
-    printf ("Clusters: %d  Validity: %f = %f / %f\n", nseeds, validity, average_intra, min_inter);
+    if (!(flags & _QUIET)) printf ("Clusters: %d  Validity: %f = %f / %f\n", nseeds, validity, average_intra, min_inter);
     return validity;
 }
 
-void KMcluster_auto_K (CvPoint** &cseed, int &nseeds, int K_MIN, int K_MAX, 
-                       CvSeq* lines, int nlines, int kmeans_iterations) {   
+float KMcluster_auto_K (CvPoint** &cseed, int &nseeds, int K_MIN, int K_MAX, 
+                       CvSeq* lines, int nlines, const int kmeans_iterations, char flags) {   
 /* tries every value of nseeds between K_min and K_max, returns the clustered set with the lowest
  * validity number */
     int n = K_MAX-K_MIN+1;
@@ -271,7 +271,7 @@ void KMcluster_auto_K (CvPoint** &cseed, int &nseeds, int K_MIN, int K_MAX,
     
     for (int i = 0; i < n; i++) { // for each possible value of nseeds
         // perform clustering with KMIN + i clusters
-        valid = KMcluster (clusters, K_MIN+i, lines, nlines, kmeans_iterations);
+        valid = KMcluster (clusters, K_MIN+i, lines, nlines, kmeans_iterations, flags);
         
         if (valid < min_valid) { // if validity is smaller than the min, swap min with current clusters
             nseeds = K_MIN+i;
@@ -283,7 +283,8 @@ void KMcluster_auto_K (CvPoint** &cseed, int &nseeds, int K_MIN, int K_MAX,
             destroyClusters (clusters);
     }    
     cseed = min_valid_clusters;
-    printf ("  Final: %d clusters, %f validity\n", nseeds, min_valid);
+    if (!(flags & _QUIET)) printf ("  Final: %d clusters, %f validity\n", nseeds, min_valid);
+    return min_valid;
 }
 
 // Let line A be denoted by endpoints P0(x0,y0), P1(x1,y1)
@@ -298,8 +299,6 @@ void KMcluster_auto_K (CvPoint** &cseed, int &nseeds, int K_MIN, int K_MAX,
 //      D  = (dx10*dy23 - dx23*dy10)
 int lineSegment_intersect_1 (CvPoint** lines, int iA, int iB, CvPoint &intersect) {
 // iA, iB are the indices of the 2 lines in the CvPoint matrix
-    
-
     /** retrieve line endpoints */
     int x0=lines[iA][0].x;  int y0=lines[iA][0].y;
     int x1=lines[iA][1].x;  int y1=lines[iA][1].y;
@@ -318,32 +317,33 @@ int lineSegment_intersect_1 (CvPoint** lines, int iA, int iB, CvPoint &intersect
     //float TB = (dx10*dy20 - dx20-dy10) / D;
     int xx = cvRound(x0 + TA*dx10);  int yy = cvRound(y0 + TA*dy10);
     intersect = cvPoint (xx, yy);
-  /*  
-    printf ("  %d %d %d %d\n", x0,y0, x1,y1);
-    printf ("  %d %d %d %d\n", x2,y2, x3,y3);
-    printf ("  %d %d\n\n    ", xx,yy);
-  */  
+
     return 1;
 }
 
 int lineSegment_intersects (CvPoint** lines, int nlines, CvSize imgSize, CvPoint* &points) {
-// returns number of intersects
+// returns number of intersects, remember to free the CvPoint array
     if (nlines <= 1) return 0;
     
-    points = new CvPoint[20];
-    int temp, npoints=0;
-    CvPoint tempPoint;
+    points = new CvPoint[20]; // array to hold the intersect points
+    int temp, npoints=0; // temp holds the output flag from lineSegment_intersect_1, is 1 if successful
+    CvPoint tempPoint; // holds output CvPoint from lineSegment_intersect_1, will be added to array if successful
     
-    for (int i = 0; i < nlines; i++)
-        for (int j = 0; j < nlines-1; j++) {
-            temp = lineSegment_intersect_1 (lines, i,j, tempPoint);
+    for (int i = 0; i < nlines; i++) // loop through every pair of lines
+        for (int j = i+1; j < nlines; j++) {
+            temp = lineSegment_intersect_1 (lines, i,j, tempPoint); // find intersect between the lines
             if ((temp) && (tempPoint.x > 0) && (tempPoint.x < imgSize.width) && 
                 (tempPoint.y > 0) && (tempPoint.y < imgSize.height)) {// if intersect inside img bounds
                 //printf ("%d %d\n", tempPoint.x, tempPoint.y);
                 points[npoints] = tempPoint;
                 npoints++;
             }
-    }
+        }
+        
+    /** insert code here to sort the CvPoint elements in order of x, then y */
+    // to acess the x, y coordinate of the i'th element, use 
+    // points[i].x and points[i].y
+    
     return npoints;
 }
     
