@@ -273,8 +273,10 @@ char vision_SQUARE (IplImage* img, int &gateX, int &gateY, float &range,
 char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float &length, 
                   HSV_settings HSV, char*window[], char flags) {
 // state guide:
+// -2 = found lines in img, but they are not correct number/orientation to represent a pipe
+// -1 = default Error code
 // 0 = no detection (obj not in view)
-// 1 = partial detection (pipe found, but too much off to the side)
+// 1 = partial detection (pipe found, but too much off to the side).
 // 2 = full detection (pipe oriented almost directly below)
 /** HS filter to extract object */
     IplImage* img_1;  
@@ -300,11 +302,10 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
     
 /** check image centroid to see if path is approximately centered */
     CvPoint img_centroid = calcImgCentroid (img_1);
-    int Mx = img_centroid.x, My = img_centroid.y;
-    if (sqrt(Mx*Mx + My*My) > img_1->height / 4) { // not close enough to center
+    if (sqrt(img_centroid.x*img_centroid.x + img_centroid.y*img_centroid.y) > (img_1->height*img_1->height) / 6) { // not close enough to center
         cvReleaseImage (&img_1);
         printf ("  vision_PATH: Pipe Detected. Not Centered.\n");
-        pathX = Mx; pathY = My; 
+        pathX = img_centroid.x; img_centroid.y; 
     
         return 1;
     }
@@ -362,7 +363,7 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
 /** calculations and cleanup */
 // if the 2 longest lines are parallel and equal length then OK
 // So first find the length of 2 longest lines
-    int ret=-1;
+    int ret=-2;
     if (nseeds >= 2) { // definitely reject img if less than 2 lines
         int long1=0, long2=0; // long1 = index of longest line. long2 = index of second longest
         for (int i = 1; i < nseeds; i++)
@@ -375,7 +376,8 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
         float ang1 = tangent_angle(cseed,long1), ang2 = tangent_angle(cseed, long2);
         float len_ratio = len1 / len2; float tan_ratio = ang1 / ang2; // ratios
       //  printf ("Ratios:  %f  %f\n", len_ratio, tan_ratio);
-        if ((len_ratio < 1.20) && (len_ratio > 0.8333) && (tan_ratio < 1.25) && (tan_ratio > 0.8)) {
+        if ((len_ratio < 1.20) && (len_ratio > 0.8333) && (tan_ratio < 1.25) && (tan// -2 = found lines in img, but they are not correct number/orientation to represent a pipe
+// -1 = default Error code_ratio > 0.8)) {
         // lines are OK, we can return good results
             pathX = (cseed[long1][0].x+cseed[long1][1].x+cseed[long2][0].x+cseed[long2][1].x)/4 - img_1->width/2;  
             pathY = (cseed[long1][0].y+cseed[long1][1].y+cseed[long2][0].y+cseed[long2][1].y)/4 - img_1->height/2;
@@ -391,7 +393,7 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
             }            
             ret = 2;
         }
-        else ret = 1;
+        else ret = -2;
     }
 
     cvReleaseMemStorage(&storage);
@@ -400,19 +402,60 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
     return ret;
 }
 
-
-
+/* ##############################################################################################
+   @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+   ############################################################################################## */
+// Control Code below
+// 1. Each control function is expected to call its corresponding vision function, then use the
+//    results to determine what to do.
+// 2. The machine must output a character which controls the simulator (same as keyboard commands for now).
+// 3. The machine can act on a state variable which will be pass in by reference. Basically this allows the 
+//    controller function to behave as a finite state machine, with "state var" being the thing that records
+//    what state the machine is in.
+// 4. When first called "state" will have a value of 0.
+// 5. The vision function will always be of the form:
+//      char code = vision_X (img, data0,data1,data2,...,dataN, HSV, window, flags);
+//    code = a code that tells you how well the object was identified (fully in view vs half in view, etc).
+//           !! Also depending on the code the data may have different meanings. !!
+//    img = IplImage* pointer. Just pass in the image.
+//    data0...dataN = numbers that characterize the object being seen. You need to make decisions based on these.
+//    HSV = the color filter settings. These are done for you.
+//    window = names of windows to allow OpenCV to display stuff. Just pass in the ones passed to the control function.
+//    flags = Bit flags for the vision function
+//            _DISPLAY to display things
+//            _INVERT to invert image (must set to properly display simulator imgs
+//            _QUIET to suppress printed messages.
+//            Multiple flags can be set using the | operator.
+// 6. List of commands to send back:
+//    'w','s' = foward / backward
+//    'a','d' = turn left, right
+//    'i','k' = rise, sink
+//    The above is all the commands the sub can do in real life
+//    'r','f' = roll left, roll right
+//    't','g' = pitch foward, pitch backwards
 
 char controller_GATE (IplImage* img, char &state, char* window[]) {
-    if (state == 0) // initiation character for controllers
-        state = 'F';
+// the gate task. We have to assume we are pointed approximate at the gate from the beginning.        
     char vcode;
-    int gateX, gateY; float range;
+    // vcode table:
+    // -1 = error, disregard this image
+    // 0 = no detection (not enough pixels to constitute image, or no lines detected). Probably have to move closer.
+    // 1 = partial detection (1 segment detected)  gateX, gateY correspond to single segment center. Range valid
+    // 2 = full detection (2 segments detected).   gateX, gateY = gate center. Range valid
+    // 3 = gate very close, (dist between segments > 3/4 image width). Should stop using vision to navigate. data same as 2.
+    //     Alternatively can ignore this and use the range.
     
+    // data below
+        int gateX, gateY; // X and Y location, in pixels, of the gate. (0,0) = image center. 
+        float range; // distance to the gate in centimeters (not calibrated in sim).
+    // end data
     HSV_settings HSV(0, 50, 10, 255, 0, 255);
-    printf ("aa: %d %d\n", HSV.H_MIN, HSV.H_MAX);
     vcode = vision_GATE (img, gateX,gateY,range, HSV, window, _INVERT);
-        
+    
+    
+    /** Control code starts here */
+    
+    // old control code    
     /** state machine
      * F: "Gate too far"
      * r: "Gate to the Right" (go fowards)
@@ -424,6 +467,9 @@ char controller_GATE (IplImage* img, char &state, char* window[]) {
      * X: "Error state" 
     */
     
+    if (state == 0) // initiation character for controllers
+        state = 'F';
+
     if (vcode == 2) {
         if (range < 3.0) state = 'S';
         else state = 'C';
@@ -437,7 +483,9 @@ char controller_GATE (IplImage* img, char &state, char* window[]) {
                 if (gateX > 0) state = 'r';
                 else state = 'l';
             }
-            break;
+            break;//     //float posX, posZ;
+
+   //cos((angle.yaw*PI)/180)
             // if vcode == 0 then case == 'F'
         case 'C': // gate centered
             if (vcode == 1) { 
@@ -496,12 +544,25 @@ char controller_GATE (IplImage* img, char &state, char* window[]) {
 }
 
 char controller_PATH (IplImage* img, char &state, char* window[]) {
+// following the path - fairly complex controls. Need to sink to right depth after acquiring the pipe.
+// Then rotate until pipe aligned. Then rise and move foward.
     char vcode;
-    int pathX, pathY; float tan_angle, length;
+    // vcode guide:
+    // -2 = found lines in img, but they are not correct number/orientation to represent a pipe
+    // -1 = default Error code
+    // 0 = no detection (pipe not in view, not enough pixels)
+    // 1 = partial detection (pipe found, but too much off to the side). pathX,pathY = pixel location of pipe center
+    //     relative to img center. tan_angle and length not defined.
+    // 2 = full detection (pipe oriented almost directly below). pathX,pathY same as befoer. 
+    //     length = length of pipe normalized to the diagonal of the image (so length is 0.5 if pipe is half the diagonal length). 
+    //     tan_angle = tangent of the angle of the pipe. (So ratio of the vertical length to horiz length). Is 0 if pipe 
+    //     is horizontal.
     
+    int pathX, pathY; float tan_angle, length;
     HSV_settings HSV(10, 30, 130, 255, 40, 255);
     vcode = vision_PATH (img, pathX,pathY,tan_angle,length, HSV, window);
         
+    // control starts here
     /** state machine
      * F: "Path too far (cant see it)"
      * P: "Partial Detection"  -  go towards the path
