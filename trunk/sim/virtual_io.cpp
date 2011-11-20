@@ -8,6 +8,7 @@ extern bool verbose_camera;
 
 extern world_vector position;	/* should be deleted*/
 extern orientation angle;	/* should be deleted*/
+extern int fwd_speed;		/* should be deleted*/
 
 bool lights_on;
 
@@ -26,11 +27,6 @@ void update_model(long delta_time)
          (angle.yaw != model.angle.yaw) )
    {
       model.print();
-
-#warning deactivating speed for debugging purposes
-      CMD_FWD_SPEED_store = 0;
-      CMD_SIDE_SPEED_store = 0;
-      verbose_camera = true;
    }
 
 
@@ -40,12 +36,6 @@ void update_model(long delta_time)
 #if BLINK
    lights_on = !lights_on;
 #endif
-}
-
-void aaa()
-{
-   verbose_camera = true;
-   printf("resuming\n");
 }
 
 void reset_pos()
@@ -64,4 +54,15 @@ void update_angle_from_model()
 void update_pos_from_model()
 {
    position = model.position;
+}
+
+void set_model(int speed)
+{
+   CMD_FWD_SPEED_store = (float)speed;
+   CMD_HEADING_store = (int)angle.yaw;
+}
+
+bool is_stationary()
+{
+   return (CMD_FWD_SPEED_store == 0);
 }

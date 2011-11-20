@@ -24,7 +24,7 @@
 /** Flag for whether the program is in interactive mode*/
 extern char is_interactive;
 
-/** Random number to modify the sim layout*/
+/** Random number to modify the sim layout and lighting*/
 extern unsigned int randNum;
 
 /** Current sub position in the sim*/
@@ -38,9 +38,9 @@ typedef struct
 /** Sub orientation in the sim*/
 typedef struct
 {
-   float pitch;	/* spin around x axis in degrees */
-   float yaw;		/* spin around y axis in degrees */
-   float roll;		/* spin around z axis in degrees */
+   float pitch; /* spin around x axis in degrees */
+   float yaw;   /* spin around y axis in degrees */
+   float roll;  /* spin around z axis in degrees */
 } orientation;
 
 
@@ -77,6 +77,8 @@ void reset_angle();
 void reset_pos();
 void update_angle_from_model();
 void update_pos_from_model();
+void set_model(int speed);
+bool is_stationary();
 
 // for main.cpp
 void range_angle(int& angle);
