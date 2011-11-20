@@ -47,8 +47,8 @@ physical_model::~physical_model()
 
 #define DEPTH_SPEED_SCALING 500000.0
 #define ROTATIONSPEED .0001
-#define FWD_SPEED_SCALING 5000000.0
-#define SIDE_SPEED_SCALING 500000.0
+#define FWD_SPEED_SCALING 50000.0
+#define SIDE_SPEED_SCALING 50000.0
 void range_angle_int(int& angle)
 {
    if (angle >= 180)
@@ -104,12 +104,6 @@ void physical_model::update(long delta_time)
 
       angle.yaw = CUR_HEADING_store;
    }
-/* RZ
-   if (!is_interactive){
-      angle.pitch = (CMD_CAMERA_store==0)? 0: 90;
-      printf ("angle.pitch=%d\n",angle.pitch);
-   }
-   */
    CUR_CAMERA_store = CMD_CAMERA_store;
 
 #if ADD_NOISE
@@ -120,13 +114,7 @@ void physical_model::update(long delta_time)
       angle.pitch += noise_sign[ind]*anim_noise[cur_pos];
    noise_sign[ind] = -noise_sign[ind];
 #endif
-
-
-   if (delta_time == 1)
-      printf("dist %f, new pos: %f %f %f\n",
-             distance_traveled, position.x, position.y, position.z);
 }
-
 
 void physical_model::print()
 {

@@ -22,7 +22,7 @@
 #include "types.h"
 //#include "protocol.h"
 //for movement of the sub
-//#include <sys/time.h>
+#include <sys/time.h>
 //for movement of the sub
 //#include <signal.h>
 
@@ -36,24 +36,22 @@
 #define POS_INC .2
 #define PI 3.14159265
 
-//char is_interactive;
 unsigned int randNum;
 
-//struct timeval last, cur;
-//void anim_scene();
+struct timeval last, cur;
+void anim_scene();
 //void init_vision(int start_fifo);
 //void run_vision();
-//void service_fifo_client();
 
 int cur_pos = 0;
 
-/** store of texture references*/
+/* store of texture references*/
 GLuint texName[8];
 /* camera location*/
 world_vector position;
 /* camera orientation*/
 orientation angle;
-char right_mouse=0, left_mouse=0;
+/* window size */
 int window_width, window_height;        // only updates when window resized by user
 
 /**
@@ -106,6 +104,7 @@ void init() {
    glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
    glLineWidth (1.5);
 
+   gettimeofday(&last, NULL);
    reset_pos();
    reset_angle();
    update_model(0);
@@ -209,7 +208,7 @@ void init() {
 // x is pointing right
 // y is pointing up
 // z is pointing towards the programmer
-int verbose_camera = 0; // always true due to virtual_io.cpp
+int verbose_camera = true;
 int camera_display_override = 0;
 
 void set_camera() {
@@ -218,17 +217,13 @@ void set_camera() {
 
    /* allow for translate scene */
    glTranslatef(-position.x, -position.y, -position.z);
-//#ifndef LONGV
    if (verbose_camera && camera_display_override)
    {
-       printf ("%d\n", verbose_camera);
+      printf ("%d\n", verbose_camera);
       printf("position %f %f %f\n",
              position.x, position.y, position.z);
       printf("angle p(y) %f y(z) %f r(x) %f\n",
              angle.pitch, angle.yaw, angle.roll);
-
-      // if (!is_interactive)
-      //   verbose_camera = false;
    }
 }
 
@@ -280,70 +275,14 @@ void range_angle(float& angle)
       angle += 360;
 }
 
-/**
-* @brief Manage mouse input
-*/
-/*
-void mouse(int button, int state, int x, int y)
-{
-   // check for mouse button state changes 
-   //if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
-  //right_mouse = 1;
-
-   if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP)
-   {
-     // toggle mouse state
-     right_mouse = 1&(~right_mouse);
-   }
-
-   if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
-      left_mouse = 1;
-
-   if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
-   {
-      left_mouse = 0;
-   }
-
-   // store mouse position 
-   printf("pos: %d %d\n", x, y);
-}
-*//*
-void glutTimer(int value)
-{
-  if ( right_mouse == 1 )
-  {
-     glutWarpPointer(window_width/2,window_height/2);
-  }
-
-   glutTimerFunc(5, glutTimer, 0);    
-   //printf("value %d\n", value);
-}
-
-void passive_mouse_motion(int x, int y)
-{
-  if ( right_mouse == 1 )
-  {
-    int yaw = x - window_width/2;
-    int pitch = y - window_height/2;
-
-    angle.yaw += yaw/2;
-    angle.pitch += pitch/2;
-
-    //printf("yaw: %d\n",angle.yaw);
-
-  }
-   glutPostRedisplay();
-}
-*/
 // max refresh rate
-/*commented out by RZ. This is so sim does not update by itself (you have to press key)
-#define DELAY 2e5
+#define DELAY 500
 void anim_scene() 
 {
    gettimeofday(&cur, NULL);
    
    long delta = (long)(cur.tv_sec*1e6+cur.tv_usec - (last.tv_sec*1e6+last.tv_usec));
-   if (delta > DELAY)
+   if (delta > DELAY && !is_stationary())
    {
       last = cur;
 
@@ -351,8 +290,7 @@ void anim_scene()
       update_model(delta);
       glutPostRedisplay();
    }
-   service_fifo_client();
-}*/
+}
 
 /**
 * @brief Take a screenshot from current angle and save as bitmap
@@ -468,7 +406,7 @@ void cv_display (void) {
    
    if (CV_VISION_FLAG) {
        CV_COMMAND = 0;
-       if (!CV_CONTROL_ON) state = 0; // reset FSM if no control
+       //cvShowImage (cv_windows[0],cv_img);
        cv_queryFrameGL (cv_img);    // grab the current front buffer
    
        /** OPENCV CODE GOES HERE. RESULT IS CHANGE TO CV_COMMAND */      
@@ -495,9 +433,6 @@ void cv_display (void) {
 
 void cv_keyboard(unsigned char key, int x, int y)
 {
-   //float posX, posZ;
-
-   //cos((angle.yaw*PI)/180)
    if (key == 'q' || key == 27) { // q or escape
       glDeleteTextures( 5, texName );
       terminate_server();
@@ -510,6 +445,18 @@ void cv_keyboard(unsigned char key, int x, int y)
 
    switch (key)
    {
+   case '0': // set forward speed from 0-9
+   case '1':
+   case '2':
+   case '3':
+   case '4':
+   case '5':
+   case '6':
+   case '7':
+   case '8':
+   case '9':
+      set_model((int)(key - '0'));
+      break;
    case 'j': // strafe in yz plane is ijkl
       position.z -=  POS_INC*sin((angle.yaw*PI)/180);
       position.x -=  POS_INC*cos((angle.yaw*PI)/180);
@@ -578,11 +525,7 @@ void cv_keyboard(unsigned char key, int x, int y)
    default:
       break;
    }
-    /* RZ: I have no idea what this does, i think its velocity?
-   position.x += posX*cos((angle.yaw*PI)/180);
-   position.z += posZ*cos((angle.pitch*PI)/180);
-   //position.y += sin((angle.pitch*PI)/180);
-  */ 
+
    range_angle(angle.yaw);
    range_angle(angle.roll);
    range_angle(angle.pitch);
@@ -612,13 +555,6 @@ void cv_reshape(int w, int h)
    }
 }
 
-
-// why is this included here? RZ: I have no idea either!
-/*
-#if LIN_SERV
-#include <signal.h>
-#endif
-*/
 /**
 * @brief Main loop for sim
 *
@@ -675,41 +611,12 @@ int main(int argc, char** argv)
        cv_windows[0]=(char*)malloc(10); cv_windows[1]=(char*)malloc(10); cv_windows[2]=(char*)malloc(10);
        strcpy(cv_windows[0], WIN0); strcpy(cv_windows[1], WIN1); strcpy(cv_windows[2], WIN2);
    }
-   //glutMouseFunc (mouse);
    glutReshapeFunc (cv_reshape);                    // called when window resized
    glutKeyboardFunc (cv_keyboard);                  // called with key pressed
    glutDisplayFunc (cv_display);                    // called when glutPostRedisplay() raises redraw flag
-   //glutSpecialFunc(special_input);                // called when special keys pressed
-
-   //glutPassiveMotionFunc (passive_mouse_motion);    // no idea (mouse related)
-   //glutTimerFunc(5, glutTimer, 0);                  // also mouse
-   //gettimeofday(&last, NULL);                       // mouse
+   glutIdleFunc(anim_scene);                        // called when idle (simulate speed)
    
-/* RZ
-   if (!is_interactive)
-   {
-      printf("WARNING, motion is now controlled by physical model\n");
-      printf("keyboard control will be restored if physical model is disabled\n");
-
-      glutIdleFunc(anim_scene);
-
-#if WIN_SERV
-      HANDLE hThread;
-      DWORD IDThread;
-
-      hThread = CreateThread( NULL, 0, create_server, NULL, 0, &IDThread );
-#elif LIN_SERV
-      printf("Creating server thread\n");
-      pthread_t thread1;
-      int ret = pthread_create( &thread1, NULL, create_server, NULL);
-      if (ret != 0)
-         printf("Error creating thread\n");
-#endif
-   }*/
-   //init_vision(!is_interactive);
    /*start the main glut loop*/
-   
-   
    glutMainLoop();
    
    cvDestroyWindow (WIN0);

@@ -2,8 +2,6 @@
 * @file planks.h
 *
 * @brief Provides location of planks, boxes and exit octogon
-*
-* 5 boxes, 4 boards and 1 exit location are given
 */
 
 // planks:

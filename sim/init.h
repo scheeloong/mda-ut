@@ -19,9 +19,6 @@
 #define TASK_X           0
 #define TASK_BOX         0   // Useful for testing front camera with newPipes
 #define TASK_BIN         0
-#define SURF_TASK_GATE   0
-#define SURF_TASK_BUOYS  0
-#define SURF_TASK_DOCK   0
 
 #if TASK_GATE
 // these define sub position
@@ -131,33 +128,5 @@
 #define REF_Z -8.3
 #define A_P 90
 #define A_Y 45
-#define A_R 0
-#endif
-/********************* SURFACE COMPETITION *********************/
-
-#if SURF_TASK_GATE
-#define REF_X -3
-#define REF_Y 3
-#define REF_Z 10
-#define A_P 0
-#define A_Y 0
-#define A_R 0
-#endif
-
-#if SURF_TASK_BUOYS
-#define REF_X -3.25
-#define REF_Y 3
-#define REF_Z 2.5
-#define A_P 0
-#define A_Y 0
-#define A_R 0
-#endif
-
-#if SURF_TASK_DOCK
-#define REF_X 13.1
-#define REF_Y 3
-#define REF_Z -0.5
-#define A_P 0
-#define A_Y 90
 #define A_R 0
 #endif
