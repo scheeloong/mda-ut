@@ -17,7 +17,7 @@
 // http://www.nar-associates.com/nurbs/c_code.html
 
 #include <GL/glut.h>
-#include "stdlib.h"
+#include <stdlib.h>
 #include "bmp_io.h"
 #include "types.h"
 //#include "protocol.h"
@@ -28,8 +28,8 @@
 
 #include <math.h>
 
-#include "cv.h"     // for some reason this has to come after the other libs
-#include "highgui.h"
+#include <cv.h>     // for some reason this has to come after the other libs
+#include <highgui.h>
 #include "../vision/cv_tasks.h"
 
 #define ANGLE_INC 5.

@@ -36,9 +36,9 @@ void physical_model::reset_pos()
 physical_model::physical_model(float x, float y, float z)
 {
    // simulator coordinates
-   this->position.x = x;
-   this->position.y = y;
-   this->position.z = z;
+   position.x = x;
+   position.y = y;
+   position.z = z;
 }
 
 physical_model::~physical_model()

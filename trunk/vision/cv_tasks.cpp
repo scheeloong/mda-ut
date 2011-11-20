@@ -376,8 +376,7 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
         float ang1 = tangent_angle(cseed,long1), ang2 = tangent_angle(cseed, long2);
         float len_ratio = len1 / len2; float tan_ratio = ang1 / ang2; // ratios
       //  printf ("Ratios:  %f  %f\n", len_ratio, tan_ratio);
-        if ((len_ratio < 1.20) && (len_ratio > 0.8333) && (tan_ratio < 1.25) && (tan// -2 = found lines in img, but they are not correct number/orientation to represent a pipe
-// -1 = default Error code_ratio > 0.8)) {
+        if ((len_ratio < 1.20) && (len_ratio > 0.8333) && (tan_ratio < 1.25) && (tan_ratio > 0.8)) {
         // lines are OK, we can return good results
             pathX = (cseed[long1][0].x+cseed[long1][1].x+cseed[long2][0].x+cseed[long2][1].x)/4 - img_1->width/2;  
             pathY = (cseed[long1][0].y+cseed[long1][1].y+cseed[long2][0].y+cseed[long2][1].y)/4 - img_1->height/2;
