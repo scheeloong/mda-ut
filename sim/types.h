@@ -11,8 +11,6 @@
 
 #define LONGV
 
-#define BLINK 1
-
 #ifndef MATH_TYPES_GL_H__
 #define MATH_TYPES_GL_H__
 

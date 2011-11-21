@@ -60,7 +60,6 @@ void range_angle_int(int& angle)
 // time past since last iteration in seconds
 void physical_model::update(long delta_time)
 {
-   //  printf("DELTA : %f\n",delta_time);
    float distance_traveled = CMD_FWD_SPEED_store * delta_time/ FWD_SPEED_SCALING;
 
    position.x = position.x + sin(CUR_HEADING_store * M_PI/180) * distance_traveled;
@@ -81,29 +80,8 @@ void physical_model::update(long delta_time)
    position.x = position.x + sin((CUR_HEADING_store+90) * M_PI/180) * side_traveled;
    position.z = position.z - cos((CUR_HEADING_store+90) * M_PI/180) * side_traveled;
 
-   int absolute_cmd = CMD_HEADING_store; // was made absolute by a protocol hook in server.cpp
-   range_angle_int(absolute_cmd);
-   /*
-     printf("current %d cmd %d abs_cmd %d\n",
-     CUR_HEADING_store, CMD_HEADING_store, absolute_cmd);
-   */
-
-   if (absolute_cmd != CUR_HEADING_store)
-   {
-      float time_to_rotate = (absolute_cmd - CUR_HEADING_store)/ROTATIONSPEED;
-      if (delta_time < time_to_rotate)
-      {
-         float inc = (delta_time / time_to_rotate)*(absolute_cmd - CUR_HEADING_store);
-         int iinc = (int)(inc + CUR_HEADING_store);
-         CUR_HEADING_store = (iinc < 1)? ((inc>0)?1:-1) : iinc;
-         printf("time to rotate %f delta %d yaw inc %f yaw %d yaw prev %f, iinc %d\n",
-                time_to_rotate, (int)delta_time, inc, CUR_HEADING_store, angle.yaw, iinc);
-      }
-      else
-         CUR_HEADING_store = absolute_cmd;
-
-      angle.yaw = CUR_HEADING_store;
-   }
+   CUR_HEADING_store = CMD_HEADING_store; // was made absolute by a protocol hook in server.cpp
+   angle.yaw = CUR_HEADING_store;
    CUR_CAMERA_store = CMD_CAMERA_store;
 
 #if ADD_NOISE
