@@ -349,7 +349,6 @@ void init_site()
 
 const float post_col[4] = {0.2,0.2,0.2,1};
 const float red_bulb[4] = {1,0,0,1};
-extern bool lights_on;
 
 /** STARTING GATE POS AND COLOR */
 void do_posts()
@@ -394,10 +393,6 @@ void do_posts()
                /*STACKS*/ 10);
 
    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, post_col);
-
-   if (lights_on)
-   {
-   }
 }
 
 #define MACHINETEST_X 10
