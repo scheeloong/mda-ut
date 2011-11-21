@@ -70,6 +70,7 @@ void terminate_server();
 
 
 // for virtual_io.cpp
+void init_model();
 void update_model(long delta_time);
 void reset_angle();
 void reset_pos();

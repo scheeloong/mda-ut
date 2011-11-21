@@ -11,8 +11,16 @@ extern orientation angle;	/* should be deleted*/
 
 /* this is the interface of the simulator with the real world */
 
+void init_model()
+{
+   model.update(0);
+   position = model.position;
+   angle = model.angle;
+}
+
 void update_model(long delta_time)
 {
+   model.position = position;
    model.update(delta_time);
    position = model.position;
    angle = model.angle;

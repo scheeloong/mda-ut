@@ -107,7 +107,7 @@ void init() {
    gettimeofday(&last, NULL);
    reset_pos();
    reset_angle();
-   update_model(0);
+   init_model();
 
    /* set background colour */
    glClearColor(sky[0], sky[1], sky[2], sky[3]);
