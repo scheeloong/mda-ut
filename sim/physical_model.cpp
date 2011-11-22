@@ -1,7 +1,6 @@
 #include <math.h>
 #include "physical_model.h"
 #include <stdio.h>
-#include "protocol.h"
 
 // initial position and angle
 #include "init.h"
@@ -18,10 +17,6 @@ void physical_model::reset_angle()
    angle.pitch = A_P;
    angle.yaw = A_Y;
    angle.roll = A_R;
-   CMD_HEADING_store = A_Y;
-   CUR_HEADING_store = A_Y;
-   if (A_P == 90)
-      CMD_CAMERA_store = 1;
 }
 
 void physical_model::reset_pos()
@@ -29,8 +24,6 @@ void physical_model::reset_pos()
    position.x = REF_X;
    position.y = REF_Y;
    position.z = REF_Z;
-   CUR_DEPTH_store = REF_Y;
-   CMD_DEPTH_store = REF_Y;
 }
 
 physical_model::physical_model(float x, float y, float z)
@@ -60,29 +53,18 @@ void range_angle_int(int& angle)
 // time past since last iteration in seconds
 void physical_model::update(long delta_time)
 {
-   float distance_traveled = CMD_FWD_SPEED_store * delta_time/ FWD_SPEED_SCALING;
+   float distance_traveled = speed * delta_time/ FWD_SPEED_SCALING;
 
-   position.x = position.x + sin(CUR_HEADING_store * M_PI/180) * distance_traveled;
-   position.z = position.z - cos(CUR_HEADING_store * M_PI/180) * distance_traveled;
+   position.x = position.x + sin(angle.yaw * M_PI/180) * distance_traveled;
+   position.z = position.z - cos(angle.yaw * M_PI/180) * distance_traveled;
 
 
-   float dz = CMD_DEPTH_store-CUR_DEPTH_store;
-   position.y = position.y + dz * delta_time/DEPTH_SPEED_SCALING;
+   float dy = 0;
+   position.y = position.y + dy * delta_time/DEPTH_SPEED_SCALING;
 
-   if ((dz > 0) && (position.y > CMD_DEPTH_store))
-      position.y = CMD_DEPTH_store;
-   else if ((dz < 0) && (position.y < CMD_DEPTH_store))
-      position.y = CMD_DEPTH_store;
-
-   CUR_DEPTH_store = position.y;
-
-   float side_traveled = CMD_SIDE_SPEED_store * delta_time/ SIDE_SPEED_SCALING;
-   position.x = position.x + sin((CUR_HEADING_store+90) * M_PI/180) * side_traveled;
-   position.z = position.z - cos((CUR_HEADING_store+90) * M_PI/180) * side_traveled;
-
-   CUR_HEADING_store = CMD_HEADING_store; // was made absolute by a protocol hook in server.cpp
-   angle.yaw = CUR_HEADING_store;
-   CUR_CAMERA_store = CMD_CAMERA_store;
+   float side_traveled = 0 * delta_time/ SIDE_SPEED_SCALING;
+   position.x = position.x + sin((angle.yaw + 90) * M_PI/180) * side_traveled;
+   position.z = position.z - cos((angle.yaw + 90) * M_PI/180) * side_traveled;
 
 #if ADD_NOISE
    int ind = (cur_pos % 2);
@@ -93,18 +75,3 @@ void physical_model::update(long delta_time)
    noise_sign[ind] = -noise_sign[ind];
 #endif
 }
-
-void physical_model::print()
-{
-   printf("CUR_CAMERA %d (= 0 for forward camera)\n", CUR_CAMERA_store);
-   printf("CMD_HEADING %d\tCUR_HEADING %d\n", CMD_HEADING_store, CUR_HEADING_store);
-   printf("CMD_DEPTH %f\tCUR_DEPTH %f\n", CMD_DEPTH_store, CUR_DEPTH_store);
-   printf("CMD_SIDE_SPEED %f\tCMD_FWD_SPEED %f\n", CMD_SIDE_SPEED_store, CMD_FWD_SPEED_store);
-}
-
-void update_readings()
-{
-   CUR_HEADING_store = 0;
-   CUR_DEPTH_store   = 0;
-}
-

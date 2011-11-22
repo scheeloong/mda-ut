@@ -8,6 +8,7 @@ class physical_model
 public:
    world_vector position;
    orientation angle;
+   int speed;
 
 public:
    physical_model();

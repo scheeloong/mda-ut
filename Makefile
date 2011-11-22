@@ -10,7 +10,6 @@
 FPGA_DIR=./fpga
 SIM_DIR=./sim
 VISION_DIR=./vision
-COMMON_DIR=./common
 
 all: fpga sim vision
 
@@ -27,6 +26,5 @@ clean:
 	$(MAKE) -C $(FPGA_DIR) $@
 	$(MAKE) -C $(SIM_DIR) $@
 	$(MAKE) -C $(VISION_DIR) $@
-	$(MAKE) -C $(COMMON_DIR) $@
 
 .PHONY: all clean fpga vision sim
