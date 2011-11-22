@@ -6,9 +6,6 @@
 * Serves as a header for .cpp files without headers
 */
 
-// structures
-#include "machine.h"
-
 #define LONGV
 
 #ifndef MATH_TYPES_GL_H__

@@ -20,11 +20,8 @@
 #include <stdlib.h>
 #include "bmp_io.h"
 #include "types.h"
-//#include "protocol.h"
-//for movement of the sub
+#include "physical_model.h"
 #include <sys/time.h>
-//for movement of the sub
-//#include <signal.h>
 
 #include <math.h>
 
@@ -40,17 +37,15 @@ unsigned int randNum;
 
 struct timeval last, cur;
 void anim_scene();
-//void init_vision(int start_fifo);
-//void run_vision();
 
 int cur_pos = 0;
 
 /* store of texture references*/
 GLuint texName[8];
-/* camera location*/
-world_vector position;
-/* camera orientation*/
-orientation angle;
+/* physical modle*/
+physical_model model;
+orientation &angle = model.angle;
+world_vector &position = model.position;
 /* window size */
 int window_width, window_height;        // only updates when window resized by user
 
@@ -105,9 +100,8 @@ void init() {
    glLineWidth (1.5);
 
    gettimeofday(&last, NULL);
-   reset_pos();
-   reset_angle();
-   init_model();
+   model.reset_pos();
+   model.reset_angle();
 
    /* set background colour */
    glClearColor(sky[0], sky[1], sky[2], sky[3]);
@@ -134,14 +128,14 @@ void init() {
     #define BINNAME3 "img/plane.bmp"
     #define BINNAME4 "img/factory.bmp"
 
-   makeTextureImage(TNAME, 0);
-   makeTextureImage(SNAME, 1);
-   makeTextureImage(SSNAME, 2);
-   makeTextureImage(JVNAME, 3);
-   makeTextureImage(BINNAME1, 4);
-   makeTextureImage(BINNAME2, 5);
-   makeTextureImage(BINNAME3, 6);
-   makeTextureImage(BINNAME4, 7);
+   makeTextureImage((char *)TNAME, 0);
+   makeTextureImage((char *)SNAME, 1);
+   makeTextureImage((char *)SSNAME, 2);
+   makeTextureImage((char *)JVNAME, 3);
+   makeTextureImage((char *)BINNAME1, 4);
+   makeTextureImage((char *)BINNAME2, 5);
+   makeTextureImage((char *)BINNAME3, 6);
+   makeTextureImage((char *)BINNAME4, 7);
 
    /* enable texturing & set texturing function */
    glEnable(GL_TEXTURE_2D);
@@ -282,12 +276,12 @@ void anim_scene()
    gettimeofday(&cur, NULL);
    
    long delta = (long)(cur.tv_sec*1e6+cur.tv_usec - (last.tv_sec*1e6+last.tv_usec));
-   if (delta > DELAY && !is_stationary())
+   if (delta > DELAY)
    {
       last = cur;
 
       delta = (int)DELAY;
-      update_model(delta);
+      model.update(delta);
       glutPostRedisplay();
    }
 }
@@ -435,7 +429,6 @@ void cv_keyboard(unsigned char key, int x, int y)
 {
    if (key == 'q' || key == 27) { // q or escape
       glDeleteTextures( 5, texName );
-      terminate_server();
       exit(0);
    }
    else if (key == '0' && CV_VISION_FLAG) // save an image
@@ -455,7 +448,7 @@ void cv_keyboard(unsigned char key, int x, int y)
    case '7':
    case '8':
    case '9':
-      set_model((int)(key - '0'));
+      model.speed = (int)(key - '0');
       break;
    case 'j': // strafe in yz plane is ijkl
       position.z -=  POS_INC*sin((angle.yaw*PI)/180);
@@ -500,12 +493,10 @@ void cv_keyboard(unsigned char key, int x, int y)
       angle.pitch += ANGLE_INC;
       break;
    case 'x': // reset angle
-      reset_angle();
-      update_angle_from_model();
+      model.reset_angle();
       break;
    case 'z': // reset position
-      reset_pos();
-      update_pos_from_model();
+      model.reset_pos();
       break;
    case ' ': // spacebar switches to downwards cam
        if (CAM_ANGLE == 0) CAM_ANGLE = 90;
