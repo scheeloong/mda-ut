@@ -1,7 +1,7 @@
 OBJS= main.o bmp_io.o  site.o  glQuaternion.o physical_model.o
 
 EECG=-lXt -lSM -lICE -lXext -lX11 -lXi -lm
-LIBS= $(EECG) -lGL -lglut -lGLU -lpthread
+LIBS= $(EECG) -lGL -lglut -lGLU
 
 FLAGS= -Wall `pkg-config opencv --cflags --libs`
 

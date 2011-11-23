@@ -42,10 +42,11 @@ int cur_pos = 0;
 
 /* store of texture references*/
 GLuint texName[8];
-/* physical modle*/
+/* physical model*/
 physical_model model;
 orientation &angle = model.angle;
 world_vector &position = model.position;
+SPEED_DIR speed_direction = FORWARD_DIR;
 /* window size */
 int window_width, window_height;        // only updates when window resized by user
 
@@ -431,14 +432,16 @@ void cv_keyboard(unsigned char key, int x, int y)
       glDeleteTextures( 5, texName );
       exit(0);
    }
-   else if (key == '0' && CV_VISION_FLAG) // save an image
+   else if (key == 'o' && CV_VISION_FLAG) // save an image
        cvSaveImage ("cvSimImg.jpg", cv_img);
        
    if (CV_CONTROL_ON) key = CV_COMMAND;  // use opencv command 
 
+   float input_speed;
+
    switch (key)
    {
-   case '0': // set forward speed from 0-9
+   case '0': // set speed from 0-9
    case '1':
    case '2':
    case '3':
@@ -448,7 +451,46 @@ void cv_keyboard(unsigned char key, int x, int y)
    case '7':
    case '8':
    case '9':
-      model.speed = (int)(key - '0');
+      input_speed = (float)(key - '0');
+      switch (speed_direction)
+      {
+         case FORWARD_DIR:
+           model.speed = input_speed;
+           break;
+         case REVERSE_DIR:
+           model.speed = -input_speed;
+           break;
+         case UP_DIR:
+           model.depth_speed = input_speed;
+           break;
+         case DOWN_DIR:
+           model.depth_speed = -input_speed;
+           break;
+         case POS_ROT:
+           model.angular_speed = input_speed;
+           break;
+         case NEG_ROT:
+           model.angular_speed = -input_speed;
+           break;
+      }
+      break;
+   case '>':
+      speed_direction = FORWARD_DIR;
+      break;
+   case '<':
+      speed_direction = REVERSE_DIR;
+      break;
+   case '+':
+      speed_direction = UP_DIR;
+      break;
+   case '-':
+      speed_direction = DOWN_DIR;
+      break;
+   case '[':
+      speed_direction = NEG_ROT;
+      break;
+   case ']':
+      speed_direction = POS_ROT;
       break;
    case 'j': // strafe in yz plane is ijkl
       position.z -=  POS_INC*sin((angle.yaw*PI)/180);
@@ -571,9 +613,13 @@ int main(int argc, char** argv)
          "*** r and f to roll\n"
          "*** t and g to roll\n"
          "*** x to reset angle, z to reset position\n"
-         "*** 0 to save current window as jpg (VISION MODE ONLY)\n"
+         "*** o to save current window as jpg (VISION MODE ONLY)\n"
          "*** SPACEBAR to switch to downwards cam\n"
-         "*** + other undocumented features\n"
+         "*** 0-9 to set speed\n"
+         "*** <> to set reverse/forward speed\n"
+         "*** -+ to set down/up depth speed\n"
+         "*** [] to set negative/positive angular speed\n"
+         "*** and other undocumented features\n"
          "*** TO CHANGE inital position, see init.h\n"
          "-----------------------------------------\n");
       

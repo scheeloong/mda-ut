@@ -10,6 +10,7 @@ physical_model::physical_model()
    // on top of a box
    reset_angle();
    reset_pos();
+   reset_speed();
 };
 
 void physical_model::reset_angle()
@@ -26,6 +27,13 @@ void physical_model::reset_pos()
    position.z = REF_Z;
 }
 
+void physical_model::reset_speed()
+{
+   speed = 0;
+   depth_speed = 0;
+   angular_speed = 0;
+}
+
 physical_model::physical_model(float x, float y, float z)
 {
    // simulator coordinates
@@ -39,7 +47,6 @@ physical_model::~physical_model()
 }
 
 #define DEPTH_SPEED_SCALING 500000.0
-#define ROTATIONSPEED .0001
 #define FWD_SPEED_SCALING 50000.0
 #define SIDE_SPEED_SCALING 50000.0
 void range_angle_int(int& angle)
@@ -59,12 +66,10 @@ void physical_model::update(long delta_time)
    position.z = position.z - cos(angle.yaw * M_PI/180) * distance_traveled;
 
 
-   float dy = 0;
-   position.y = position.y + dy * delta_time/DEPTH_SPEED_SCALING;
+   position.y += depth_speed * delta_time/DEPTH_SPEED_SCALING;
 
-   float side_traveled = 0 * delta_time/ SIDE_SPEED_SCALING;
-   position.x = position.x + sin((angle.yaw + 90) * M_PI/180) * side_traveled;
-   position.z = position.z - cos((angle.yaw + 90) * M_PI/180) * side_traveled;
+   float dtheta = angular_speed * delta_time/ SIDE_SPEED_SCALING;
+   angle.yaw += dtheta;
 
 #if ADD_NOISE
    int ind = (cur_pos % 2);
