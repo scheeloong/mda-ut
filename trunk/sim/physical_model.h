@@ -8,7 +8,7 @@ class physical_model
 public:
    world_vector position;
    orientation angle;
-   int speed;
+   float speed, depth_speed, angular_speed;
 
 public:
    physical_model();
@@ -17,6 +17,7 @@ public:
    void update(long delta_time);
    void reset_angle();
    void reset_pos();
+   void reset_speed();
    void print();
 };
 #endif

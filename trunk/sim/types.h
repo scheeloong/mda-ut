@@ -38,6 +38,14 @@ typedef struct
    float roll;  /* spin around z axis in degrees */
 } orientation;
 
+enum SPEED_DIR {
+   FORWARD_DIR = 0,
+   REVERSE_DIR,
+   UP_DIR,
+   DOWN_DIR,
+   POS_ROT,
+   NEG_ROT
+};
 
 // for site.cpp
 void init_fog();
@@ -48,36 +56,10 @@ void destroy();
 // for main.cpp
 void screenshot();
 void set_camera();
+void range_angle(int& angle);
 
 // for glQuaternion.cpp
 void quat_camera(float roll, float pitch, float yaw);
-
-// for server.cpp
-#if WIN_SERV
-DWORD WINAPI create_server(  LPVOID pdata);
-#elif LIN_SERV
-void* create_server(  void* pdata);
-
-extern pthread_mutex_t mutex1;
-extern pthread_cond_t cond;
-extern int waiting_for_redraw;
-
-#endif
-void terminate_server();
-
-
-// for virtual_io.cpp
-void init_model();
-void update_model(long delta_time);
-void reset_angle();
-void reset_pos();
-void update_angle_from_model();
-void update_pos_from_model();
-void set_model(int speed);
-bool is_stationary();
-
-// for main.cpp
-void range_angle(int& angle);
 
 #endif
 
