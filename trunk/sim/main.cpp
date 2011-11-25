@@ -369,14 +369,14 @@ int CV_VISION_FLAG=0;  // 1 to show opencv windows
 int CV_CONTROL_ON=0; // 1 to have cv issue commands
 float CAM_ANGLE = 00.;    // set to 90 for down pointing
 char CV_COMMAND=0; // stores the latest command sent by the opencv loop
-IplImage* cv_img;
+IplImage *cv_img, *cv_img2; // stores the front and down camera imgs respectively
 char state=0; // FSM state?
 
 /** end opencv global vars */
 
 void cv_queryFrameGL (IplImage* img) {
 // this function reads the OpenGL buffer and puts the data into an iplimage.
-// Plz create the image before calling
+// Plz allocate the image before calling
 // MAKE SURE the ORIGIN parameter in img is set to 1 !!!
 
     // read the GL buffer. This is a lot easier than that guy on the interwebs said
@@ -388,22 +388,28 @@ void cv_display (void) {
 // this function is called by glutMainLoop every time the window needs to be redrawn 
 // the redraw flag is raised by the function glutPostRedisplay();
 // with CV_VISION_FLAG the cv code will run every time the window is updated.
-
-   glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
-
-   glLoadIdentity();
-   set_camera();
-   draw();          
-   glutSwapBuffers();   // we are using double buffering. Front buffer is displayed. you draw 
-                        // on back buffer, which isnt displayed. This is so theres time to
-                        // draw everything without flicker.
-                        // when done drawing you swap buffers. Front and back swap places. 
    
    if (CV_VISION_FLAG) {
+       // first grab both front and bottom cam images       
+       angle.pitch = 90;      // grab downwards first
+       glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
+       glLoadIdentity();
+       set_camera();
+       draw();
+       cv_queryFrameGL (cv_img2);
+       
+       glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
+       angle.pitch = 0;
+       glLoadIdentity();
+       set_camera();
+       draw();
+       glutSwapBuffers();
+       cv_queryFrameGL (cv_img);       
+       
+       cvShowImage ("Downwards Cam", cv_img2);
+       
        CV_COMMAND = 0;
-       //cvShowImage (cv_windows[0],cv_img);
-       cv_queryFrameGL (cv_img);    // grab the current front buffer
-   
+       
        /** OPENCV CODE GOES HERE. RESULT IS CHANGE TO CV_COMMAND */      
        //cvShowImage (WIN0,cv_img);
        switch (CV_VISION_FLAG) {
@@ -420,6 +426,16 @@ void cv_display (void) {
        cvWaitKey(5); // without 5ms delay the window will not show properly
        //CV_COMMAND='w'; // override cv for now
        /** END OPENCV CODE */ 
+   }
+   else {
+       glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
+       glLoadIdentity();
+       set_camera();
+       draw();              // front camera
+       glutSwapBuffers();   // we are using double buffering. Front buffer is displayed. you draw 
+                        // on back buffer, which isnt displayed. This is so theres time to
+                        // draw everything without flicker.
+                        // when done drawing you swap buffers. Front and back swap places.
    }
    
    glFlush();
@@ -540,11 +556,11 @@ void cv_keyboard(unsigned char key, int x, int y)
    case 'z': // reset position
       model.reset_pos();
       break;
-   case ' ': // spacebar switches to downwards cam
+   /*case ' ': // spacebar switches to downwards cam
        if (CAM_ANGLE == 0) CAM_ANGLE = 90;
        else CAM_ANGLE = 0;
        angle.pitch = CAM_ANGLE;
-       break;
+       break;*/
    case 'v':
        if (CV_CONTROL_ON) { printf ("Vision Control OFF\n");
                             CV_CONTROL_ON=0; } 
@@ -627,23 +643,26 @@ int main(int argc, char** argv)
    glutInit(&argc, argv);
    glutInitDisplayMode(GLUT_SINGLE | GLUT_DEPTH |GLUT_RGB | GLUT_DOUBLE);
    glutInitWindowSize (WINDOW_SIZE_X, WINDOW_SIZE_Y);
-   glutInitWindowPosition(100, 100);
-   glutCreateWindow (argv[0]);
+   glutInitWindowPosition(10, 0);
+   glutCreateWindow ("Fowards Cam");
    init();
    angle.pitch = CAM_ANGLE;
       
    if (CV_VISION_FLAG) {
        // OPENCV INIT
        cv_img = cvCreateImage (cvSize(WINDOW_SIZE_X,WINDOW_SIZE_Y), IPL_DEPTH_8U, 3);
-       printf ("%d %d\n", WINDOW_SIZE_X, WINDOW_SIZE_Y);
        cv_img->origin = 1;
+       cv_img2 = cvCreateImage (cvSize(WINDOW_SIZE_X,WINDOW_SIZE_Y), IPL_DEPTH_8U, 3);
+       cv_img2->origin = 1;
        
+       cvNamedWindow("Downwards Cam",1);
+       cvMoveWindow ("Downwards Cam", 380,0);
        cvNamedWindow(WIN0,1);   // create 3 windows for cv to use
-       cvMoveWindow(WIN0, 650, 0);
+       cvMoveWindow(WIN0, 870, 70);
        cvNamedWindow(WIN1,1);
-       cvMoveWindow(WIN1, 1000, 0);
+       cvMoveWindow(WIN1, 700, 350);
        cvNamedWindow(WIN2,1);
-       cvMoveWindow(WIN2, 650, 300);
+       cvMoveWindow(WIN2, 1100, 350);
        
        cv_windows[0]=(char*)malloc(10); cv_windows[1]=(char*)malloc(10); cv_windows[2]=(char*)malloc(10);
        strcpy(cv_windows[0], WIN0); strcpy(cv_windows[1], WIN1); strcpy(cv_windows[2], WIN2);
@@ -659,6 +678,14 @@ int main(int argc, char** argv)
    cvDestroyWindow (WIN0);
    cvDestroyWindow (WIN1);
    cvDestroyWindow (WIN2);
+   cvDestroyWindow ("Downwards Cam");
+   if (CV_VISION_FLAG) {
+       cvReleaseImage (&cv_img);
+       cvReleaseImage (&cv_img2);
+       delete [] cv_windows[0];
+       delete [] cv_windows[1];
+       delete [] cv_windows[2];
+   }
    destroy();
    return 0;
 }
