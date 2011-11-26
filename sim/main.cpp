@@ -482,7 +482,7 @@ void cv_keyboard(unsigned char key, int x, int y)
    case 'k':
       position.y -=  POS_INC;
       break;
-   case 'w': // fowards/back and turn is is wasd
+   case 'w': // forwards/back and turn is wasd
       position.z -=  POS_INC*cos((angle.yaw*PI)/180)*cos(((angle.pitch-CAM_ANGLE)*PI)/180);
       position.x +=  POS_INC*sin((angle.yaw*PI)/180);
       position.y -=  POS_INC*sin(((angle.pitch-CAM_ANGLE)*PI)/180);
@@ -504,7 +504,7 @@ void cv_keyboard(unsigned char key, int x, int y)
    case 'r':
       angle.roll += ANGLE_INC/4;
       break;
-   case 't': // pitch is rf
+   case 't': // pitch is gt
       angle.pitch -= ANGLE_INC;
       break;
    case 'g':
@@ -587,15 +587,14 @@ int main(int argc, char** argv)
          "*** ijkl to strafe in yz plane\n"
          "*** wasd to move fowards/back and turn on vertical axis\n"
          "*** r and f to roll\n"
-         "*** t and g to roll\n"
+         "*** t and g to pitch\n"
          "*** x to reset angle, z to reset position\n"
          "*** o to save current window as jpg (VISION MODE ONLY)\n"
-         "*** SPACEBAR to switch to downwards cam\n"
          "*** 0-9 to set speed\n"
          "*** <> to set reverse/forward speed\n"
          "*** -+ to set down/up depth speed\n"
          "*** [] to set negative/positive angular speed\n"
-         "*** and other undocumented features\n"
+         "*** (and other undocumented features)\n"
          "*** TO CHANGE inital position, see init.h\n"
          "-----------------------------------------\n");
       
