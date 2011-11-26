@@ -4,11 +4,12 @@ simulator README
 init.h - stores starting location/orientation of sub for various tasks
 site.cpp - defines the pool and its objects
 main.cpp - duh
+physical_model.cpp/h - defines physical_model class, which stores sub position, orientation and velocity, and methods dealing with them
+types.h - General-purpose include file
 
 ***  Files theres no need to touch ***
-physical_model.h - defines physical_model class, which stores sub pos/orient
-    and methods dealing with them.
-virtual_io.cpp - implements functions in physical_model.h
+bmp_io.cpp/h - Utilities for bitmap image processing
+glQuaternion.cpp/h - Fancy math for camera orientation using a quaternion
 
 copy pasted from main.cpp:
 /** OpenCV integration section starts here.

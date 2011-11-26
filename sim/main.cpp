@@ -222,46 +222,6 @@ void set_camera() {
    }
 }
 
-extern GLubyte *pixels_cpy;
-extern int cur_pix_size;
-/*
-// this function is for server.cpp, doesn't seem to work if done by the server thread 
-void copy_bytes()
-{
-   int n = 3*window_width*window_height;
-   //cout << "******nnnnn" << window_width << " " <<window_height << endl;
-
-   if ((n != cur_pix_size) && (pixels_cpy != NULL))
-   {
-      delete []pixels_cpy;
-      delete []CUR_IMAGE_store;
-   }
-
-   if (n != cur_pix_size)
-   {
-      pixels_cpy = new GLubyte[n];
-      CUR_IMAGE_store = new GLubyte[n];
-      cur_pix_size = n;
-   }
-
-
-
-   glReadPixels(0,0,window_width,window_height,
-                GL_RGB,GL_UNSIGNED_BYTE,pixels_cpy);
-
-
-   run_vision();
-
-   
-    // glReadPixels(0,0,window_width,window_height,
-    // GL_RED,GL_UNSIGNED_BYTE,pixels_cpy);
-    // glReadPixels(0,0,window_width,window_height,
-    // GL_GREEN,GL_UNSIGNED_BYTE,&pixels_cpy[window_width*window_height]);
-    // glReadPixels(0,0,window_width,window_height,
-    // GL_BLUE,GL_UNSIGNED_BYTE,&pixels_cpy[2*window_width*window_height]); 
-
-}
-*/
 void range_angle(float& angle)
 {
    if (angle >= 180)
