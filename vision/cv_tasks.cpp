@@ -305,7 +305,8 @@ char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float
     if (sqrt(img_centroid.x*img_centroid.x + img_centroid.y*img_centroid.y) > (img_1->height*img_1->height) / 6) { // not close enough to center
         cvReleaseImage (&img_1);
         printf ("  vision_PATH: Pipe Detected. Not Centered.\n");
-        pathX = img_centroid.x; img_centroid.y; 
+        pathX = img_centroid.x;
+        pathY = img_centroid.y; 
     
         return 1;
     }
