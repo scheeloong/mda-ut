@@ -38,8 +38,6 @@ unsigned int randNum;
 struct timeval last, cur;
 void anim_scene();
 
-int cur_pos = 0;
-
 /* store of texture references*/
 GLuint texName[8];
 /* physical model*/
@@ -254,25 +252,11 @@ void screenshot()
 {
    int n = 3*window_width*window_height;
    GLubyte *pixels = new GLubyte[n];
-   char tmp[64];
-   char zim[4];
 
-   int tmp_pos = cur_pos;
-   for (int t=0, x=100; x!=0; x=x/10)
-   {
-      zim[t] = tmp_pos/x ;
-      tmp_pos -= zim[t] * x;
-      zim[t] |= '0';
-      // printf("%d %d %d\n", x, t, tmp_pos);
-      t++;
-   }
-   zim[3] = 0;
-
-   sprintf(tmp, "test%s.bmp", zim);
    glReadPixels(0,0,window_width,window_height,
                 GL_RGB,GL_UNSIGNED_BYTE,pixels);
 
-   if (bmp_24_write (tmp, window_width, window_height, pixels))
+   if (bmp_24_write ("test.bmp", window_width, window_height, pixels))
       assert(false);
    delete []pixels;
 }
@@ -594,16 +578,17 @@ int main(int argc, char** argv)
          "*** <> to set reverse/forward speed\n"
          "*** -+ to set down/up depth speed\n"
          "*** [] to set negative/positive angular speed\n"
+         "*** p to take a screenshot saved as test.bmp\n"
          "*** (and other undocumented features)\n"
          "*** TO CHANGE inital position, see init.h\n"
          "-----------------------------------------\n");
       
    /*glut inits*/
    glutInit(&argc, argv);
-   glutInitDisplayMode(GLUT_SINGLE | GLUT_DEPTH |GLUT_RGB | GLUT_DOUBLE);
+   glutInitDisplayMode(GLUT_SINGLE | GLUT_DEPTH | GLUT_RGB | GLUT_DOUBLE);
    glutInitWindowSize (WINDOW_SIZE_X, WINDOW_SIZE_Y);
    glutInitWindowPosition(10, 0);
-   glutCreateWindow ("Fowards Cam");
+   glutCreateWindow ("Forwards Cam");
    init();
    angle.pitch = CAM_ANGLE;
       

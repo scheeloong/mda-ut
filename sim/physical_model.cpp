@@ -70,13 +70,4 @@ void physical_model::update(long delta_time)
 
    float dtheta = angular_speed * delta_time/ SIDE_SPEED_SCALING;
    angle.yaw += dtheta;
-
-#if ADD_NOISE
-   int ind = (cur_pos % 2);
-   if (cur_pos % 2)
-      angle.roll += noise_sign[ind]*anim_noise[cur_pos];
-   else
-      angle.pitch += noise_sign[ind]*anim_noise[cur_pos];
-   noise_sign[ind] = -noise_sign[ind];
-#endif
 }
