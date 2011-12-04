@@ -18,14 +18,13 @@
 
 #include <GL/glut.h>
 #include <stdlib.h>
+#include <math.h>
+#include <sys/time.h>
 #include "bmp_io.h"
 #include "types.h"
 #include "physical_model.h"
-#include <sys/time.h>
 
-#include <math.h>
-
-#include <cv.h>     // for some reason this has to come after the other libs
+#include <cv.h>
 #include <highgui.h>
 #include "../vision/cv_tasks.h"
 
@@ -35,8 +34,7 @@
 
 unsigned int randNum;
 
-struct timeval last, cur;
-void anim_scene();
+struct timeval last;
 
 /* store of texture references*/
 GLuint texName[8];
@@ -101,6 +99,7 @@ void init() {
    gettimeofday(&last, NULL);
    model.reset_pos();
    model.reset_angle();
+   angle.pitch = 0;
 
    /* set background colour */
    glClearColor(sky[0], sky[1], sky[2], sky[3]);
@@ -193,7 +192,6 @@ void init() {
    glColorMaterial (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
    init_fog();
-
    init_site();
 }
 
@@ -232,6 +230,7 @@ void range_angle(float& angle)
 #define DELAY 500
 void anim_scene() 
 {
+   struct timeval cur;
    gettimeofday(&cur, NULL);
    
    long delta = (long)(cur.tv_sec*1e6+cur.tv_usec - (last.tv_sec*1e6+last.tv_usec));
@@ -256,7 +255,7 @@ void screenshot()
    glReadPixels(0,0,window_width,window_height,
                 GL_RGB,GL_UNSIGNED_BYTE,pixels);
 
-   if (bmp_24_write ("test.bmp", window_width, window_height, pixels))
+   if (bmp_24_write ((char *)"test.bmp", window_width, window_height, pixels))
       assert(false);
    delete []pixels;
 }
@@ -467,14 +466,14 @@ void cv_keyboard(unsigned char key, int x, int y)
       position.y -=  POS_INC;
       break;
    case 'w': // forwards/back and turn is wasd
-      position.z -=  POS_INC*cos((angle.yaw*PI)/180)*cos(((angle.pitch-CAM_ANGLE)*PI)/180);
+      position.z -=  POS_INC*cos((angle.yaw*PI)/180)*cos(((angle.pitch)*PI)/180);
       position.x +=  POS_INC*sin((angle.yaw*PI)/180);
-      position.y -=  POS_INC*sin(((angle.pitch-CAM_ANGLE)*PI)/180);
+      position.y -=  POS_INC*sin(((angle.pitch)*PI)/180);
       break;
    case 's':
-      position.z +=  POS_INC*cos((angle.yaw*PI)/180)*cos(((angle.pitch-CAM_ANGLE)*PI)/180);
+      position.z +=  POS_INC*cos((angle.yaw*PI)/180)*cos(((angle.pitch)*PI)/180);
       position.x -=  POS_INC*sin((angle.yaw*PI)/180);
-      position.y +=  POS_INC*sin(((angle.pitch-CAM_ANGLE)*PI)/180);
+      position.y +=  POS_INC*sin(((angle.pitch)*PI)/180);
       break;
    case 'a':
       angle.yaw -= ANGLE_INC/2;
@@ -559,13 +558,13 @@ int main(int argc, char** argv)
       CV_VISION_FLAG = argv[1][0];
    if (argc > 2)
    {
-      randNum = atoi(argv[2]);
+      sscanf(argv[2], "%u", &randNum);
       printf("Random number: %d\n", randNum);
    }
    else
       randNum = 0;
 
-      printf(
+   printf(
          "*** USE ./sim v TO USE VISION CODE\n"
          "*** Commands: \n"
          "*** ijkl to strafe in yz plane\n"
@@ -590,7 +589,6 @@ int main(int argc, char** argv)
    glutInitWindowPosition(10, 0);
    glutCreateWindow ("Forwards Cam");
    init();
-   angle.pitch = CAM_ANGLE;
       
    if (CV_VISION_FLAG) {
        // OPENCV INIT
