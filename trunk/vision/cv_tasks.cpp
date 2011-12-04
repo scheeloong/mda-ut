@@ -3,7 +3,7 @@
 
 /**######### HELPER FUNCTIONS ###########*/
 int sqr_length (CvPoint** clusters, int i) {
-// returns square length of index'th line
+// returns square length of ith line
     int dx = clusters[i][0].x-clusters[i][1].x,  dy = clusters[i][0].y-clusters[i][1].y;
     return dx*dx + dy*dy;
 }
