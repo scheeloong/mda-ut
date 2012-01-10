@@ -450,7 +450,7 @@ char controller_GATE (IplImage* img, char &state, char* window[]) {
         float range; // distance to the gate in centimeters (not calibrated in sim).
     // end data
     HSV_settings HSV(0, 50, 10, 255, 0, 255);
-    vcode = vision_GATE (img, gateX,gateY,range, HSV, window, _INVERT);
+    vcode = vision_GATE (img, gateX,gateY,range, HSV, window, _DISPLAY & _INVERT);
     
     
     /** Control code starts here */
@@ -560,7 +560,7 @@ char controller_PATH (IplImage* img, char &state, char* window[]) {
     
     int pathX, pathY; float tan_angle, length;
     HSV_settings HSV(10, 30, 130, 255, 40, 255);
-    vcode = vision_PATH (img, pathX,pathY,tan_angle,length, HSV, window);
+    vcode = vision_PATH (img, pathX,pathY,tan_angle,length, HSV, window, _DISPLAY & _INVERT);
         
     // control starts here
     /** state machine
