@@ -5,7 +5,7 @@ LIBS= $(EECG) -lGL -lglut -lGLU
 
 FLAGS= -Wall `pkg-config opencv --cflags --libs`
 
-INF=init.h  physical_model.h planks.h types.h
+INC=init.h  physical_model.h planks.h types.h $(MISSIONDIR)/mission.h $(CVDIR)/cv_tasks.h
 
 MISSIONDIR=../mission
 MISSIONOBJS=$(MISSIONDIR)/mission.o
@@ -18,8 +18,8 @@ sim:	$(OBJS)
 	make -C $(MISSIONDIR)
 	g++ -o $@ $(OBJS) $(CVOBJS) $(MISSIONOBJS) $(FLAGS) $(LIBS) $(QTL)
 
-.cpp.o:  $(INF)
-	g++ -c $< $(FLAGS) $(INC)
+.cpp.o:  $(INC)
+	g++ -c $< $(FLAGS)
 
 clean:
 	rm -f $(OBJS) sim *.bmp
