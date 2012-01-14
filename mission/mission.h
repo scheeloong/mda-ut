@@ -12,8 +12,8 @@ enum MOVE_DIR {
 
 class Mission {
   public:
-    move(MOVE_DIR dir, int speed);
-    move(MOVE_DIR dir) { move(dir, DEFAULT_SPEED); }
+    void move(MOVE_DIR dir, int speed);
+    void move(MOVE_DIR dir) { move(dir, DEFAULT_SPEED); }
   private:
     int v_forward, v_depth, v_yaw;
 };
