@@ -14,7 +14,7 @@ module motor_controller (input clk, input dir, input on, input [15:0] period, in
       duty_counter <= 0;
     else
       duty_counter <= duty_counter + 1;
-    dir_reg <= (duty_counter < duty_cycle) ? dir : ~dir;
+    dir_reg <= (on && duty_counter < duty_cycle) ? ~dir : dir;
   end
 
   motor_internal mi(clk, dir_reg, on, out);
@@ -34,12 +34,13 @@ module motor_internal (input clk, input dir, input on, output reg [3:0] out);
     if (dead_time_counter != `DEAD_TIME)
       dead_time_counter <= dead_time_counter + 10'd1;
     casex ({dir, on})
-      2'bx0: out_reg <= 4'b0000;
+      2'b00: out_reg <= 4'b0000;
+      2'b10: out_reg <= 4'b1010;
       2'b11: out_reg <= 4'b1001;
       2'b01: out_reg <= 4'b0110;
     endcase
     prev_in <= {dir, on};
-    out <= (dead_time_counter == `DEAD_TIME) ? out_reg : 4'd0;
+    out <= (dead_time_counter != `DEAD_TIME) ? 4'd0 : out_reg;
   end
 
 endmodule

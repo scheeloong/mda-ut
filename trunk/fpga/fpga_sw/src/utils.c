@@ -87,6 +87,10 @@ void set_motor_dir(int motor_num, enum MOTOR_DIR dir)
       IOWR(MOTOR_CONTROLLER_0_BASE, motor_num, 0x0);
       motor_modes[motor_num] = 's';
       break;
+    case MOTOR_DIR_BRAKE:
+      IOWR(MOTOR_CONTROLLER_0_BASE, motor_num, 0x2);
+      motor_modes[motor_num] = 'b';
+      break;
     case MOTOR_DIR_REVERSE:
       IOWR(MOTOR_CONTROLLER_0_BASE, motor_num, 0x1);
       motor_modes[motor_num] = 'r';
