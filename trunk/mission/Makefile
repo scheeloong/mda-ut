@@ -1,4 +1,4 @@
-OBJ=control
+OBJ=mission
 
 all:
 	g++ main.cpp -o $(OBJ)
