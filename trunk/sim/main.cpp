@@ -6,16 +6,6 @@
 * This is the main file for simulator, calls init() from site.cpp
 */
 
-/* code started from the following file
- * aaindex.c (deprecated)
- * This program draws shows how to draw anti-aliased lines in color
- * index mode. It draws two diagonal lines to form an X; when 'r'
- * is typed in the window, the lines are rotated in opposite
- * directions.
- */
-// path interpolation with b-splines
-// http://www.nar-associates.com/nurbs/c_code.html
-
 #include <GL/glut.h>
 #include <stdlib.h>
 #include <math.h>
