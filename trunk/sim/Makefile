@@ -11,9 +11,9 @@ MISSIONDIR=../mission
 MISSIONOBJS=$(MISSIONDIR)/mission.o
 
 CVDIR=../vision
-CVOBJS=$(CVDIR)/cv_tasks.o $(CVDIR)/calc_draw.o $(CVDIR)/preproc_filters.o $(CVDIR)/obj_detection.o
+CVOBJS=$(CVDIR)/common.o $(CVDIR)/task_gate.o $(CVDIR)/task_path.o $(CVDIR)/calc_draw.o $(CVDIR)/preproc_filters.o $(CVDIR)/obj_detection.o
 
-sim:	$(OBJS)
+sim:	$(OBJS) $(CVOBJS)
 	make -C $(CVDIR) all_but_main
 	make -C $(MISSIONDIR)
 	g++ -o $@ $(OBJS) $(CVOBJS) $(MISSIONOBJS) $(FLAGS) $(LIBS) $(QTL)
