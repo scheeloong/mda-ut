@@ -13,8 +13,10 @@ void HSV_settings:: setAll (int hmin, int hmax, unsigned smin, unsigned smax, un
 void HSV_settings:: setHue (int hmin, int hmax) { H_MIN = hmin; H_MAX = hmax; }
 void HSV_settings:: setSat (unsigned smin, unsigned smax) { S_MIN = smin; S_MAX = smax; }
 void HSV_settings:: setVal (unsigned vmin, unsigned vmax) { V_MIN = vmin; V_MAX = vmax; }
-void HSV_settings:: setRange1 () { H_MIN=40; H_MAX=70; S_MIN=125; S_MAX=255; V_MIN=110; V_MAX=255;}
-
+//void HSV_settings:: setRange1 () { H_MIN=40; H_MAX=70; S_MIN=125; S_MAX=255; V_MIN=110; V_MAX=255;}
+void HSV_settings:: setSim1 () { H_MIN=5; H_MAX=30; S_MIN=70; S_MAX=255; V_MIN=150; V_MAX=255;}
+void HSV_settings:: setSim2 () { H_MIN=40; H_MAX=70; S_MIN=80; S_MAX=255; V_MIN=110; V_MAX=255;}
+ 
 
 
 vision_in:: vision_in () {

@@ -590,7 +590,12 @@ int main(int argc, char** argv)
        cv_img->origin = 1;
        cv_img2 = cvCreateImage (cvSize(WINDOW_SIZE_X,WINDOW_SIZE_Y), IPL_DEPTH_8U, 3);
        cv_img2->origin = 1;
-             
+       
+       if (CV_VISION_FLAG == '1')
+           Vin.HSV.setSim1();
+       else if (CV_VISION_FLAG == '2')
+           Vin.HSV.setSim2();
+       
        cvNamedWindow("Downwards Cam",1);
        cvMoveWindow ("Downwards Cam", 380,0);
        create_windows ();
