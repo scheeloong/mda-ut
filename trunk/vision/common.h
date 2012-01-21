@@ -18,7 +18,8 @@ class HSV_settings {
     void setHue (int hmin, int hmax); // set hue
     void setSat (unsigned smin, unsigned smax); // set saturation
     void setVal (unsigned vmin, unsigned vmax);
-    void setRange1 (); // for green tape at home
+    void setSim1 (); // for orange gate in sim
+    void setSim2 (); // for brown pipe in sim
 };
 
 #define TAN_FRONT_FOV 1.20 // Tan of the FOV of front cam. Equal to full_width/range

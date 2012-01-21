@@ -27,6 +27,6 @@ task_path.o: task_path.cpp task_path.h $(LIBO)
 all_but_main: $(TASKS) $(LIBO)
 
 clean:
-	rm -rf $(LIBO) $(TASKS) main.o test_cv
+	rm -rf $(LIBO) $(TASKS) main.o test_cv ./*~
 
 .PHONY: all all_but_main clean
