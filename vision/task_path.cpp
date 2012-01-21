@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "task_path.h"
 #include "common.h"
 
