@@ -16,7 +16,9 @@
 
 #include <cv.h>
 #include <highgui.h>
-#include "../vision/cv_tasks.h"
+#include "../vision/common.h"
+#include "../vision/task_gate.h"
+#include "../vision/task_path.h"
 
 #define ANGLE_INC 5.
 #define POS_INC .2
@@ -589,15 +591,7 @@ int main(int argc, char** argv)
        
        cvNamedWindow("Downwards Cam",1);
        cvMoveWindow ("Downwards Cam", 380,0);
-       cvNamedWindow(WIN0,1);   // create 3 windows for cv to use
-       cvMoveWindow(WIN0, 870, 70);
-       cvNamedWindow(WIN1,1);
-       cvMoveWindow(WIN1, 700, 350);
-       cvNamedWindow(WIN2,1);
-       cvMoveWindow(WIN2, 1100, 350);
-       
-       cv_windows[0]=(char*)malloc(10); cv_windows[1]=(char*)malloc(10); cv_windows[2]=(char*)malloc(10);
-       strcpy(cv_windows[0], WIN0); strcpy(cv_windows[1], WIN1); strcpy(cv_windows[2], WIN2);
+       create_windows ();
    }
    glutReshapeFunc (cv_reshape);                    // called when window resized
    glutKeyboardFunc (cv_keyboard);                  // called with key pressed
@@ -607,16 +601,11 @@ int main(int argc, char** argv)
    /*start the main glut loop*/
    glutMainLoop();
    
-   cvDestroyWindow (WIN0);
-   cvDestroyWindow (WIN1);
-   cvDestroyWindow (WIN2);
+   destroy_windows ();
    cvDestroyWindow ("Downwards Cam");
    if (CV_VISION_FLAG) {
        cvReleaseImage (&cv_img);
        cvReleaseImage (&cv_img2);
-       delete [] cv_windows[0];
-       delete [] cv_windows[1];
-       delete [] cv_windows[2];
    }
    destroy();
    return 0;

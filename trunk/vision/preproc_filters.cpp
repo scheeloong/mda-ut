@@ -1,3 +1,4 @@
+#include "common.h"
 #include "preproc_filters.h"
 
 // holds functions that will be used to do basic image processing.
@@ -53,21 +54,6 @@
     return sat_guess;
 }*/
 
-HSV_settings:: HSV_settings () {
-    H_MIN = S_MIN  = V_MIN = 0;
-    H_MAX = 180;    S_MAX = V_MAX = 255;
-}
-HSV_settings:: HSV_settings (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax) {
-    H_MIN = hmin; H_MAX = hmax; S_MIN = smin; S_MAX = smax; V_MIN = vmin; V_MAX = vmax;
-}
-void HSV_settings:: setAll (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax) {
-    H_MIN = hmin; H_MAX = hmax; S_MIN = smin; S_MAX = smax; V_MIN = vmin; V_MAX = vmax;
-}
-void HSV_settings:: setHue (int hmin, int hmax) { H_MIN = hmin; H_MAX = hmax; }
-void HSV_settings:: setSat (unsigned smin, unsigned smax) { S_MIN = smin; S_MAX = smax; }
-void HSV_settings:: setVal (unsigned vmin, unsigned vmax) { V_MIN = vmin; V_MAX = vmax; }
-void HSV_settings:: setRange1 () { H_MIN=40; H_MAX=70; S_MIN=125; S_MAX=255; V_MIN=110; V_MAX=255;}
-
 // NAME: HueSat_Filter1
 //
 // PURPOSE: converts an image to HSV. All pixels with H in {H_MIN,H_MAX} and S in {S_MIN,S_MAX} are set to
@@ -87,7 +73,7 @@ void HSV_settings:: setRange1 () { H_MIN=40; H_MAX=70; S_MIN=125; S_MAX=255; V_M
 //      then steps thru each pixel to see which are acceptable. Then performs a CLOSE operation
 //      with cvMorphologyEx to get rid of stray pixels if CLOSE_DIM > 0.
 //
-float HSV_Filter (IplImage* img, IplImage* &dst, // source and dest images. Do no allocate dst  
+float HSV_filter (IplImage* img, IplImage* &dst, // source and dest images. Do no allocate dst  
                   HSV_settings HSV,
                   char flags)              // kernal dimension for close operation
 {
@@ -123,63 +109,152 @@ float HSV_Filter (IplImage* img, IplImage* &dst, // source and dest images. Do n
         cvDestroyWindow ("HSV_Filter");
     }
     
-    return goodpix / img->width / img->height;
+    return goodpix / (img->width * img->height);
 }
-/*
-float HSV_Filter (IplImage* img, IplImage* &dst, // source and dest images. Do no allocate dst  
-                  HSV_settings HSV,
-                  char flags)              // kernal dimension for close operation
+
+
+// Generates histogram of all the hue values of pixels in the image. Ignores pixels whose S,V
+// are outside the SV range in HSV variable. Uses histogram to estimate true hue hue range.
+// Algorithm first finds a significant local maximum around the estimated hue value. 
+// 
+//      img = input image
+//      dst = output binary image after HSV filtering. Will only be valid if flag 8 is set
+//      HSV = HSV settings. Hue values are averaged to get the estimate
+//      hueStep = bin size for histogram
+//      flags: 1=display, 8=calculate filtered image.
+float HSV_adjust_filter (IplImage* img, IplImage* &dst, 
+                         HSV_settings &HSV, 
+                         int h_bins, char flags) 
 {
-    //assert (img != NULL);
-    //assert (img->nChannels == 3);
-    
-// convert to HSV, extract Hue and Saturation        
-    IplImage* img_Hue = cvCreateImage ( // image to store the Hue values
-        cvGetSize(img), IPL_DEPTH_8U, 1);
-    IplImage* img_Sat = cvCreateImage ( // image to store the Saturation values
-        cvGetSize(img), IPL_DEPTH_8U, 1);
-    IplImage* img_Val = cvCreateImage ( // image to store the Saturation values
-        cvGetSize(img), IPL_DEPTH_8U, 1);
-    
+    /** extract hue plane. Mark all invalid pixels as Hue=255, which is outside histogram range */
+    // convert to HSV       
     cvCvtColor (img, img, CV_BGR2HSV); // convert to Hue,Saturation,Value 
-    cvSplit (img, img_Hue, img_Sat, img_Val, NULL);   // extract Hue, Saturation
-       
-// Isolate Color. Set all Pipe pixels to 1 and non-Pipe pixels to 0
+    // create image for scratch calc
+    IplImage* hueImg = cvCreateImage (cvGetSize(img), IPL_DEPTH_8U, 1); // delete later
     float goodpix = 0; // keeps track of how many good pixels
-    // look through both H and S images, pick out pixels where Hue is between H_MIN,H_MAX and Sat > S_MIN
-    unsigned char *huePtr, *satPtr, *valPtr;
-    for (int r = 0; r < img_Hue->height; r++) {                         
-        huePtr = (unsigned char*) (img_Hue->imageData + r*img_Hue->widthStep);
-        satPtr = (unsigned char*) (img_Sat->imageData + r*img_Sat->widthStep);
-        valPtr = (unsigned char*) (img_Val->imageData + r*img_Val->widthStep);
-        for (int c = 0; c < img_Hue->width; c++) {
-            // note that saturation values are from 0 to 255 but is interpreted as 
-            if ((*huePtr >= HSV.H_MIN) && (*huePtr <= HSV.H_MAX) && 
-                (*satPtr >= HSV.S_MIN) && (*satPtr <= HSV.S_MAX) &&
-                (*valPtr >= HSV.V_MIN) && (*valPtr <= HSV.V_MAX)) {
-                *huePtr = 255;
+    
+    unsigned char *imgPtr, *huePtr;
+    for (int i = 0; i < img->height; i++) {
+        imgPtr = (unsigned char*) img->imageData + i*img->widthStep;
+        huePtr = (unsigned char*) hueImg->imageData + i*hueImg->widthStep;
+        
+        for (int j = 0; j < img->width; j++) {
+            if ((*(imgPtr+1) >= HSV.S_MIN) && (*(imgPtr+1) <= HSV.S_MAX) &&
+                (*(imgPtr+2) >= HSV.V_MIN) && (*(imgPtr+2) <= HSV.V_MAX)) {
+                *huePtr = *imgPtr;
                 goodpix++;
             }
-            else *huePtr = 0;
+            else
+                *huePtr = 255;
             
-            huePtr++; satPtr++; valPtr++;
+            huePtr++; imgPtr+=3;
         }
     }
     
-    dst = img_Hue;         
+    float good_fraction = goodpix / (img->width * img->height);
+    
+    /** genereate hue histogram */ 
+    int size[] = {h_bins};  // constants required for histogram functions
+    float h_range[] = {0, 180};  float* ranges[] = {h_range};
+    IplImage* planes[] = {hueImg};
+    
+    CvHistogram* hist = cvCreateHist (1, //dims
+        size, // num of bins per dims
+        CV_HIST_ARRAY, // dense matrix
+        ranges, // upper & lower bound for bins
+        1); // uniform
+    
+    cvCalcHist (planes, hist,
+        0,  // accumulate
+        NULL); // possible boolean mask image
+    cvNormalizeHist (hist, 100); // normalize so total count is 100
+       
+    /** find nearby local max, exit if fail to find */
+    int Hguess = (HSV.H_MIN + HSV.H_MAX)/2; // estimated hue
+    int srch_min = Hguess-25, srch_max = Hguess+25; // search estimate +- 20
+    if (srch_min < 0) srch_min += 180;
+    if (srch_max > 179) srch_max -= 180;
+    // the min and max bins to search
+    int bin_min = srch_min*h_bins / 180.0, bin_max = srch_max*h_bins / 180.0; 
+    
+    // now find the local maximum
+    int temp, LM=-1, LMbin; // LMbin = local max bin
+    for (int i = bin_min; i <= bin_max; i++) {
+        if (i == 180) i = 0; // this line allows looping from 170-20, for example
+            
+        temp = cvQueryHistValue_1D (hist, i);
+        if (temp > LM) {
+            LM = temp;
+            LMbin = i;
+        }
+    }
+    
+    /** mark bins neighbouring the max until integral of marked bins >> those of nearby unmarked bins */
+    bin_min = bin_max = LMbin; // bin_min and bin_max now refer to the range of "marked" bins
+    // a marked bin means the hue values inside is part of the target
+    int marked = 1; 
+    for (; marked <= h_bins/6-1; marked++) { // h_bins / 6  =  30 / (180/h_bins)
+        int e_marked=0, e_unmarked=0;
+        // calculate energy of marked bins 
+         for (int i = bin_min; i <= bin_max; i++) {
+             if (i == 180) i = 0;
+             e_marked += cvQueryHistValue_1D (hist, i);
+         }
+         e_marked /= marked; // average of the integral.
+         
+         // caculate integral of neighbouring unmakred bins (those +- 2 from marked bins)
+         int temp, min_1, max_1;
+         temp = bin_min-1;   if (temp < 0) temp += 180;
+          min_1 = cvQueryHistValue_1D (hist, temp);
+          e_unmarked += min_1;
+         temp = bin_max+1;   if (temp >= 180) temp -= 180;
+          max_1 = cvQueryHistValue_1D (hist, temp);
+          e_unmarked += max_1;
+         /*temp = bin_min-2;   if (temp < 0) temp += 180;
+          e_unmarked += cvQueryHistValue_1D (hist, temp);
+         temp = bin_max+2;   if (temp >= 180) temp -= 180;
+          e_unmarked += cvQueryHistValue_1D (hist, temp);
+         */e_unmarked /= 2;
+         
+         // if integral of marked bins >> integral of unmarked
+         if ((e_marked > e_unmarked*4) && (e_marked > e_unmarked + 10)) {
+             marked = -1;
+             break;
+         }
+         // else mark one more bin
+         if (min_1 > max_1)
+             bin_min = (bin_min-1 >= 0) ? (bin_min-1) : 179;
+         else
+             bin_max = (bin_max+1 < 180) ? (bin_max+1) : 0;
+    }
+    
+    if (marked < 0) {// successful
+        HSV.H_MIN = bin_min * 180 / h_bins;
+        HSV.H_MAX = (bin_max+1) * 180 / h_bins;
+    }
+    else { // not enough of a peak => object too faint
+        cvReleaseHist (&hist);
+        cvReleaseImage (&hueImg);
+        return -1;
+    }
     
     if (flags & _DISPLAY) {
-        cvNamedWindow ("Preprocessing_Filter_1", CV_WINDOW_AUTOSIZE);
-        cvShowImage("Preprocessing_Filter_1", dst);
-        cvWaitKey(0);
-        cvDestroyWindow ("Preprocessing_Filter_1");
+        printf ("GoodPix Fraction: %f\n", good_fraction);
+        for (int i = 0; i < h_bins; i++) {
+            int val = cvQueryHistValue_1D (hist, i);
+            printf ("Bin %2.1d (%3.1d-%3.1d): %d\n", i, 180/h_bins*i, 180/h_bins*(i+1)-1, val);    
+        }
+        printf ("\nGuess: %d\nLocal Max Bin: %d\n", Hguess, LMbin);
+        printf ("Bin Range: %d-%d\n", bin_min, bin_max);
+        printf ("Hue Range: %d-%d\n", HSV.H_MIN, HSV.H_MAX);
     }
-    cvReleaseImage (&img_Sat);
-    cvReleaseImage (&img_Val);
     
-    return goodpix / img->width / img->height;
+    cvReleaseHist (&hist);
+    cvReleaseImage (&hueImg);
+    return good_fraction;
 }
-*/
+
+
 // NAME: cvGradient_Custom
 //
 // PURPOSE: Outputs morphological gradient of image. A simple wrapper of cvMorphologyEx

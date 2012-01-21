@@ -1,7 +1,8 @@
 CC=g++
 FLAGS=-c -Wall $(CVFLAGS)
 CVFLAGS=`pkg-config --cflags --libs opencv`
-LIBO= preproc_filters.o obj_detection.o calc_draw.o histograms.o
+LIBO=preproc_filters.o obj_detection.o calc_draw.o histograms.o
+TASKS=common.o task_gate.o task_path.o
 INC= calc_draw.h cv_tasks.h histograms.h obj_detection.h preproc_filters.h
 
 # each .o file depends on its .cpp file
@@ -11,15 +12,21 @@ INC= calc_draw.h cv_tasks.h histograms.h obj_detection.h preproc_filters.h
 all: test_cv
 
 # test_cv depends on the objects, no -c
-test_cv: main.o cv_tasks.o $(LIBO)		
-	$(CC) $(LIBO) main.o cv_tasks.o -o $@ -Wall $(CVFLAGS)
+test_cv: main.o $(TASKS) $(LIBO)		
+	$(CC) $(LIBO) $(TASKS) main.o -o $@ -Wall $(CVFLAGS)
 
-cv_tasks.o: cv_tasks.cpp cv_tasks.h $(LIBO)
+#cv_tasks.o: cv_tasks.cpp cv_tasks.h $(LIBO)
+#	$(CC) $< -o $@ $(FLAGS)
+common.o: common.cpp common.h $(LIBO)
+	$(CC) $< -o $@ $(FLAGS)
+task_gate.o: task_gate.cpp task_gate.h $(LIBO)
+	$(CC) $< -o $@ $(FLAGS)
+task_path.o: task_path.cpp task_path.h $(LIBO)
 	$(CC) $< -o $@ $(FLAGS)
 
-all_but_main: cv_tasks.o $(LIBO)
+all_but_main: $(TASKS) $(LIBO)
 
 clean:
-	rm -rf $(LIBO) cv_tasks.o main.o test_cv
+	rm -rf $(LIBO) $(TASKS) main.o test_cv
 
 .PHONY: all all_but_main clean

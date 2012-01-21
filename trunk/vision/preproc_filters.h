@@ -3,23 +3,7 @@
 
 #include <cv.h>
 #include <highgui.h>
-
-#define _DISPLAY 1
-
-class HSV_settings {
-    public:
-    int H_MIN, H_MAX;
-    unsigned S_MIN, S_MAX;
-    unsigned V_MIN, V_MAX;
-    
-    HSV_settings ();
-    HSV_settings (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax);
-    void setAll (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax); // set all values
-    void setHue (int hmin, int hmax); // set hue
-    void setSat (unsigned smin, unsigned smax); // set saturation
-    void setVal (unsigned vmin, unsigned vmax);
-    void setRange1 (); // for green tape at home
-};
+#include "common.h"
 
 // holds functions that will be used to do basic image processing.
 // For example extract object of interest from background, pick out outline of object
@@ -32,9 +16,17 @@ int satThreshold (IplImage* img, int sat_guess=90,
 // PURPOSE: converts an image to HSV. All pixels with H in {H_MIN,H_MAX} and S > S_MIN are set to
 //      255 and others to 0. Does a close operation to get rid of stray pixels. Returns fraction of
 //      high pixels (approximate).
-float HSV_Filter (IplImage* img, IplImage* &dst, // source and dest images. Do no allocate dst  
+float HSV_filter (IplImage* img, IplImage* &dst, // source and dest images. Do no allocate dst  
                   HSV_settings HSV,             
                   char flags = 0);              
+
+// PURPOSE: given an estimated hue range (inside variable HSV), examines image and corrects for
+//      effects of changing light conditions and adjust the Hue range.
+float HSV_adjust_filter (IplImage* img,
+               IplImage* &dst,
+               HSV_settings &HSV, // Hue #s are estimates of hue. S/V numbers used to exclude pixels. 
+               int h_bins,       // step or bin size in histogram generation
+               char flags=0);
 
 // PURPOSE: Outputs morphological gradient of image. A simple wrapper of cvMorphologyEx
 void cvGradient_Custom (IplImage* img, IplImage* &dst,
