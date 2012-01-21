@@ -24,8 +24,10 @@
 #define POS_INC .2
 #define PI 3.14159265
 
-unsigned int randNum;
+vision_in Vin;
+vision_out Vout;
 
+unsigned int randNum;
 struct timeval last;
 
 /* store of texture references*/
@@ -349,10 +351,10 @@ void cv_display (void) {
        //cvShowImage (WIN0,cv_img);
        switch (CV_VISION_FLAG) {
             case '1':
-                CV_COMMAND = controller_GATE (cv_img, state, cv_windows);
+                CV_COMMAND = controller_GATE (Vin, state);
                 break;
             case '2':
-                CV_COMMAND = controller_PATH (cv_img, state, cv_windows);
+                CV_COMMAND = controller_PATH (Vin, state);
                 break;
        }
        if (state == 'X') // Error state 
@@ -588,7 +590,7 @@ int main(int argc, char** argv)
        cv_img->origin = 1;
        cv_img2 = cvCreateImage (cvSize(WINDOW_SIZE_X,WINDOW_SIZE_Y), IPL_DEPTH_8U, 3);
        cv_img2->origin = 1;
-       
+             
        cvNamedWindow("Downwards Cam",1);
        cvMoveWindow ("Downwards Cam", 380,0);
        create_windows ();
