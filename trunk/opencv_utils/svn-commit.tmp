@@ -1,0 +1,13 @@
+for some reason i have to commit every directoy seperately
+--This line, and those below, will be ignored--
+
+D    gate1.avi
+M    webcam.cpp
+AM   video_getframe
+AM   webcam1.avi
+AM   open_img
+AM   webcam
+AM   show_HSV
+M    video_getframe.c
+D    drawing_progs
+M    open_img.cpp
