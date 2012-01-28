@@ -23,7 +23,7 @@ char vision_GATE (IplImage* img, int &gateX, int &gateY, float &range,
                   HSV_settings HSV, char* window[], char flags=0);
 char vision_SQUARE (IplImage* img, int &X, int &Y, float &range, 
                     HSV_settings HSV, char* window[], char flags=0);
-char controller_GATE (IplImage* img, char &state, char* window[]);
+void controller_GATE (IplImage* img, Mission &m);
 
 #define PATH_SKINNYNESS 0.12 // ratio of pipe diameter to length
 char vision_PATH (IplImage* img, int &pathX, int &pathY, float &tan_angle, float &length, 
