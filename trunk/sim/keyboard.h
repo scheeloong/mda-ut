@@ -1,3 +1,6 @@
+#ifndef KEYBOARD_H
+#define KEYBOARD_H
+
 #include "../mission/mission.h"
 
 class KeyboardInput {
@@ -8,3 +11,5 @@ class KeyboardInput {
     Mission m;
     int speed;
 };
+
+#endif
