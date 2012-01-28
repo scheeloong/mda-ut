@@ -501,7 +501,7 @@ int main(int argc, char** argv)
          "*** x to reset angle, z to reset position\n"
          "*** o to save current window as jpg (VISION MODE ONLY)\n"
          "*** 0-9 to set speed\n"
-         "*** . to set stop\n"
+         "*** . to stop (set speed to 0)\n"
          "*** <> to set reverse/forward speed\n"
          "*** -+ to set down/up depth speed\n"
          "*** [] to set negative/positive angular speed\n"
