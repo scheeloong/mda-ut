@@ -47,7 +47,7 @@ void KeyboardInput::read_input(char key)
       m.translate(RIGHT);
       break;
    case '.':
-      m.translate(STOP);
+      m.move(STOP);
       break;
    default:
       break;
