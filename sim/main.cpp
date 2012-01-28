@@ -13,6 +13,7 @@
 #include "bmp_io.h"
 #include "types.h"
 #include "physical_model.h"
+#include "keyboard.h"
 
 #include <cv.h>
 #include <highgui.h>
@@ -20,9 +21,7 @@
 #include "../vision/task_gate.h"
 #include "../vision/task_path.h"
 
-#define ANGLE_INC 5.
-#define POS_INC .2
-#define PI 3.14159265
+#include "../mission/mission.h"
 
 vision_in Vin;
 vision_out Vout;
@@ -36,7 +35,9 @@ GLuint texName[8];
 physical_model model;
 orientation &angle = model.angle;
 world_vector &position = model.position;
-SPEED_DIR speed_direction = FORWARD_DIR;
+Mission m(&model);
+KeyboardInput keyboard(m);
+
 /* window size */
 int window_width, window_height;        // only updates when window resized by user
 
@@ -390,61 +391,8 @@ void cv_keyboard(unsigned char key, int x, int y)
        
    if (CV_CONTROL_ON) key = CV_COMMAND;  // use opencv command 
 
-   float input_speed;
-
    switch (key)
    {
-   case '0': // set speed from 0-9
-   case '1':
-   case '2':
-   case '3':
-   case '4':
-   case '5':
-   case '6':
-   case '7':
-   case '8':
-   case '9':
-      input_speed = (float)(key - '0');
-      switch (speed_direction)
-      {
-         case FORWARD_DIR:
-           model.speed = input_speed;
-           break;
-         case REVERSE_DIR:
-           model.speed = -input_speed;
-           break;
-         case UP_DIR:
-           model.depth_speed = input_speed;
-           break;
-         case DOWN_DIR:
-           model.depth_speed = -input_speed;
-           break;
-         case POS_ROT:
-           model.angular_speed = input_speed;
-           break;
-         case NEG_ROT:
-           model.angular_speed = -input_speed;
-           break;
-      }
-      break;
-   case '>':
-      speed_direction = FORWARD_DIR;
-      break;
-   case '<':
-      speed_direction = REVERSE_DIR;
-      break;
-   case '+':
-      speed_direction = UP_DIR;
-      break;
-   case '-':
-      speed_direction = DOWN_DIR;
-      break;
-   case '[':
-      speed_direction = NEG_ROT;
-      break;
-   case ']':
-      speed_direction = POS_ROT;
-      break;
    case 'j': // strafe in yz plane is ijkl
       position.z -=  POS_INC*sin((angle.yaw*PI)/180);
       position.x -=  POS_INC*cos((angle.yaw*PI)/180);
@@ -458,22 +406,6 @@ void cv_keyboard(unsigned char key, int x, int y)
       break;
    case 'k':
       position.y -=  POS_INC;
-      break;
-   case 'w': // forwards/back and turn is wasd
-      position.z -=  POS_INC*cos((angle.yaw*PI)/180)*cos(((angle.pitch)*PI)/180);
-      position.x +=  POS_INC*sin((angle.yaw*PI)/180);
-      position.y -=  POS_INC*sin(((angle.pitch)*PI)/180);
-      break;
-   case 's':
-      position.z +=  POS_INC*cos((angle.yaw*PI)/180)*cos(((angle.pitch)*PI)/180);
-      position.x -=  POS_INC*sin((angle.yaw*PI)/180);
-      position.y +=  POS_INC*sin(((angle.pitch)*PI)/180);
-      break;
-   case 'a':
-      angle.yaw -= ANGLE_INC/2;
-      break;
-   case 'd':
-      angle.yaw += ANGLE_INC/2;
       break;
    case 'f': // roll is rf
       angle.roll -= ANGLE_INC/4;
@@ -509,6 +441,7 @@ void cv_keyboard(unsigned char key, int x, int y)
       break;
    }
    default:
+      keyboard.read_input(key);
       break;
    }
 

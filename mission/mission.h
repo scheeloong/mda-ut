@@ -1,3 +1,9 @@
+#ifndef MISSION_H
+#define MISSION_H
+
+#include "../sim/physical_model.h"
+#include <stdlib.h>
+
 #define DEFAULT_SPEED 1
 
 enum MOVE_DIR {
@@ -19,6 +25,7 @@ enum DEBUG_CMD {
 
 class Mission {
   public:
+    Mission (physical_model *m = NULL) : model(m) {}
     void move(MOVE_DIR dir, int speed);
     void move(MOVE_DIR dir) { move(dir, DEFAULT_SPEED); }
 
@@ -26,5 +33,7 @@ class Mission {
     void translate(MOVE_DIR dir);
     void debug(DEBUG_CMD cmd);
   private:
-    int v_forward, v_depth, v_yaw;
+    physical_model *model;
 };
+
+#endif

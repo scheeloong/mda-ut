@@ -35,16 +35,19 @@ void KeyboardInput::read_input(char key)
       m.move(RIGHT, speed);
       break;
    case 'w': // forwards/back and turn is wasd
-      m.move(FORWARD);
+      m.translate(FORWARD);
       break;
    case 's':
-      m.move(REVERSE);
+      m.translate(REVERSE);
       break;
    case 'a':
-      m.move(LEFT);
+      m.translate(LEFT);
       break;
    case 'd':
-      m.move(RIGHT);
+      m.translate(RIGHT);
+      break;
+   case '.':
+      m.translate(STOP);
       break;
    default:
       break;

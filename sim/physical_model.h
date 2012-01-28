@@ -3,6 +3,10 @@
 
 #include "types.h"
 
+#define ANGLE_INC 5.
+#define POS_INC .2
+#define PI 3.14159265
+
 class physical_model
 {
 public:
