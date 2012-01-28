@@ -13,7 +13,8 @@ all: test_cv
 
 # test_cv depends on the objects, no -c
 test_cv: main.o $(TASKS) $(LIBO)		
-	$(CC) $(LIBO) $(TASKS) main.o -o $@ -Wall $(CVFLAGS)
+	make -C ../mission
+	$(CC) $(LIBO) $(TASKS) main.o ../mission/mission.o -o $@ -Wall $(CVFLAGS)
 
 #cv_tasks.o: cv_tasks.cpp cv_tasks.h $(LIBO)
 #	$(CC) $< -o $@ $(FLAGS)

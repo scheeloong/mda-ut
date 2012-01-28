@@ -177,7 +177,7 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
 //    'r','f' = roll left, roll right
 //    't','g' = pitch foward, pitch backwards
 
-char controller_GATE (vision_in Input, char &state) {
+void controller_GATE (vision_in Input, Mission &m) {
 // the gate task. We have to assume we are pointed approximate at the gate from the beginning.        
     retcode vcode;
     // vcode table:
@@ -194,6 +194,11 @@ char controller_GATE (vision_in Input, char &state) {
     
     /** Control code starts here */
     
+    /* TODO: Re-implement old control code */
+    // Input: vcode from the above call to vision_GATE and Output
+    // Output: give commands to the submarine, ie:
+    m.translate(FORWARD);
+
     // old control code    
     /** state machine
      * F: "Gate too far"
@@ -212,6 +217,7 @@ char controller_GATE (vision_in Input, char &state) {
     if (vcode == 2) {
         if (Output.range < 3.0) state = 'S';
         else state = 'C';
+	m.translate(RIGHT);
     }
     else if (vcode == 3) state = 'S';
     else if (vcode == -1) state = 'X';
@@ -281,6 +287,5 @@ char controller_GATE (vision_in Input, char &state) {
             return '\0';
     }
     */
-    return '\0';
 }
 
