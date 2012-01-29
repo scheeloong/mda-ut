@@ -22,7 +22,8 @@ class HSV_settings {
     void setSim2 (); // for brown pipe in sim
 };
 
-#define TAN_FRONT_FOV 1.20 // Tan of the FOV of front cam. Equal to full_width/range
+#define TAN_FOV_X 1.2 // Tan of the horizontal FOV of cam. Equal to full_width/range
+#define TAN_FOV_Y 1.0
 
 // flags for vision functions
 #define _DISPLAY 1

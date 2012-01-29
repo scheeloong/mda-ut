@@ -1,4 +1,4 @@
-#include <stdio.h>
+//#include <stdio.h>
 #include "task_path.h"
 #include "common.h"
 
@@ -12,21 +12,20 @@ retcode vision_PATH (vision_in Input, vision_out &Output, char flags) {
 // DETECT_2 = full detection (pipe oriented almost directly below)
 /** HS filter to extract object */
     IplImage* img_1;  
-    HSV_filter (Input.img, img_1, Input.HSV); // need to delete img_1
+    float pix_fraction = HSV_filter (Input.img, img_1, Input.HSV); // need to delete img_1
+    /*
     IplConvKernel* kernel = cvCreateStructuringElementEx (3,3,1,1,CV_SHAPE_RECT);
     cvMorphologyEx (img_1, img_1, NULL, 
                     kernel, CV_MOP_OPEN);
     cvMorphologyEx (img_1, img_1, NULL, 
                     kernel, CV_MOP_CLOSE);
     cvReleaseStructuringElement (&kernel);
-    
+    */
     if (flags & _INVERT) img_1->origin = 1;
     if (flags & _DISPLAY) cvShowImage(Input.window[0], img_1);
 
     // check to see if there are enough pixels to do line finding
-    int pix = cvCountNonZero (img_1); 
-    //printf ("  vision_GATE: Pix Fraction: %f\n", float(pix)/img->width/img->height); 
-    if (float(pix)/img_1->width/img_1->height < 0.001) { // if nothing in the view
+    if (pix_fraction < 0.001) { // if nothing in the view
         cvReleaseImage (&img_1);
         printf ("  vision_PATH: Pixel Fraction Too Low. Exiting.\n");
         return NO_DETECT;
@@ -34,7 +33,7 @@ retcode vision_PATH (vision_in Input, vision_out &Output, char flags) {
     
 /** check image centroid to see if path is approximately centered */
     CvPoint img_centroid = calcImgCentroid (img_1);
-    if (sqrt(img_centroid.x*img_centroid.x + img_centroid.y*img_centroid.y) > (img_1->height*img_1->height) / 6) { // not close enough to center
+    if ((img_centroid.x*img_centroid.x + img_centroid.y*img_centroid.y) > (img_1->height*img_1->height)*0.25) { // not close enough to center
         cvReleaseImage (&img_1);
         printf ("  vision_PATH: Pipe Detected. Not Centered.\n");
         Output.real_x = img_centroid.x;
@@ -51,7 +50,7 @@ retcode vision_PATH (vision_in Input, vision_out &Output, char flags) {
     CvMemStorage* storage = cvCreateMemStorage(0); // create memstorage for line finidng, delete later
     CvSeq* lines = 0;
     
-    int minlen=20, mindist=50;
+    int minlen=img_1->height*0.1, mindist=img_1->height*0.1;
     lines = cvHoughLines2(img_1, storage,
         CV_HOUGH_PROBABILISTIC,
         1, CV_PI/360.0,
@@ -79,7 +78,6 @@ retcode vision_PATH (vision_in Input, vision_out &Output, char flags) {
                 swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
                 swap=temp[1].x; temp[1].x=temp[0].x; temp[0].x=swap;
             }
-            //cvLine (img_1, temp[0],temp[1], CV_RGB(100,200,100), 1);
         }
     }
 
@@ -115,12 +113,11 @@ retcode vision_PATH (vision_in Input, vision_out &Output, char flags) {
         // lines are OK, we can return good results
             int pix_x = (cseed[long1][0].x+cseed[long1][1].x+cseed[long2][0].x+cseed[long2][1].x)/4 - img_1->width/2;  
             int pix_y = (cseed[long1][0].y+cseed[long1][1].y+cseed[long2][0].y+cseed[long2][1].y)/4 - img_1->height/2;
-            Output.real_x = 0;
-            Output.real_y = 0;
-            Output.tan_PA = (ang1+ang2) / 2;
+            Output.range = obj_real_len * float(img_1->width) / (len1 * TAN_FOV_X);
+            Output.real_x = pix_x * obj_real_len / len1;
+            Output.real_y = pix_y * obj_real_len / len1;
+            Output.tan_PA = (ang1+ang2) * 0.5;
             
-        /**    Output.range = obj_real_len * float(img_1->width) / len1 / TAN_FRONT_FOV;
-        */
             if (!(flags & _QUIET)) printf ("  vision_PATH: Successful.\n  Range&Angle:  %f  %f\n",Output.range,atan(Output.tan_PA));
             if (flags & _DISPLAY) {
                 float ang = atan(Output.tan_PA);

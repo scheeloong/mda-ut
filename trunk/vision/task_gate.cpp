@@ -1,4 +1,4 @@
-#include <stdio.h>
+//#include <stdio.h>
 #include "task_gate.h"
 #include "common.h"
 
@@ -13,29 +13,27 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
 //  DONE = gate very close, (dist between segments > 3/4 image width). Otherwise same as 2
 /** HS filter to extract gate object */
     IplImage* img_1;  
-    HSV_filter (Input.img, img_1, Input.HSV);
-
+    float pix_fraction = HSV_filter (Input.img, img_1, Input.HSV);
+/*
     IplConvKernel* kernel = cvCreateStructuringElementEx (3,3,1,1,CV_SHAPE_RECT);
     cvMorphologyEx (img_1, img_1, NULL, 
                     kernel, CV_MOP_OPEN);
     cvMorphologyEx (img_1, img_1, NULL, 
                     kernel, CV_MOP_CLOSE);
     cvReleaseStructuringElement (&kernel);
-    
+  */  
     if (flags & _INVERT) img_1->origin = 1;
     if (flags & _DISPLAY) cvShowImage(Input.window[0], img_1);
 
     // check to see if there are enough pixels to do line finding
-    int pix = cvCountNonZero (img_1); 
-    //printf ("  vision_GATE: Pix Fraction: %f\n", float(pix)/img->width/img->height); 
-    if (float(pix)/(img_1->width*img_1->height) < 0.002) { // if nothing in the view
+    if (pix_fraction < 0.002) { // if nothing in the view
         cvReleaseImage (&img_1);
         printf ("  vision_GATE: Pixel Fraction Too Low. Exiting.\n");
         return NO_DETECT;
     }
 
 /** probabilistic Hough line finder. Determine the threshold using the number of high pixels */
-    int thresh = (int)(sqrt(pix/GATE_SKINNYNESS) / 4.0); // guessed length of gate segment in pixels
+    int thresh = (int)(sqrt(pix_fraction*img_1->imageSize * GATE_SKINNYNESS) / 4.0); // guessed length of gate segment in pixels
     CvMemStorage* storage = cvCreateMemStorage(0); // create memstorage for line finidng, delete later
     CvSeq* lines = 0;
     
@@ -104,9 +102,9 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
         int obj_pix_height = fabs(cseed[0][0].y-cseed[0][1].y);
     
         // estimate range using vertical length
-        Output.range = obj_real_height * float(img_1->height) / (obj_pix_height * TAN_FRONT_FOV);
-        Output.real_x = Output.range * TAN_FRONT_FOV * pix_x / img_1->width;
-        Output.real_y = Output.range * TAN_FRONT_FOV * pix_y / img_1->height;
+        Output.range = obj_real_height * float(img_1->width) / (obj_pix_height * TAN_FOV_X);
+        Output.real_x = pix_x * obj_real_height / obj_pix_height;
+        Output.real_y = pix_y * obj_real_height / obj_pix_height;
         
         if (!(flags & _QUIET)) {
             printf ("  vision_GATE: One Segement Detected.\n");
@@ -123,9 +121,9 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
         int obj_pix_width = (fabs(cseed[0][0].x-cseed[1][0].x)+fabs(cseed[0][1].x-cseed[1][1].x))/2;
     
         // estimate range with horiz width
-        Output.range = obj_real_width * float(img_1->width) / obj_pix_width / TAN_FRONT_FOV;
-        Output.real_x = Output.range * TAN_FRONT_FOV * pix_x / img_1->width;
-        Output.real_y = Output.range * TAN_FRONT_FOV * pix_y / img_1->height;
+        Output.range = obj_real_width * float(img_1->width) / obj_pix_width / TAN_FOV_X;
+        Output.real_x = pix_x * obj_real_width / obj_pix_width;
+        Output.real_y = pix_y * obj_real_width / obj_pix_width;
         
         if (!(flags & _QUIET)) {
             printf ("  vision_GATE: Two Segements Detected.\n");
