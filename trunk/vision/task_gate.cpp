@@ -1,4 +1,4 @@
-//#include <stdio.h>
+#include <stdio.h>
 #include "task_gate.h"
 #include "common.h"
 

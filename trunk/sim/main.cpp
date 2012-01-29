@@ -352,8 +352,8 @@ void cv_display (void) {
        //cvShowImage (WIN0,cv_img);
        switch (CV_VISION_FLAG) {
             case '1':
-                CV_COMMAND = controller_GATE (Vin, state);
-                break;
+                controller_GATE (Vin, m);
+		return;
             case '2':
                 CV_COMMAND = controller_PATH (Vin, state);
                 break;
