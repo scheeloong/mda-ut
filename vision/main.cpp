@@ -8,6 +8,7 @@
 #include "common.h"
 #include "task_gate.h"
 #include "task_path.h"
+#include "task_buoy.h"
 
 #define ANG_RNG(X) (((X) > 90) ? ((X)-180) : (X))
 /*
@@ -25,8 +26,19 @@ int main( int argc, char** argv ) {
     vision_in Vin;
     vision_out Vout;
     create_windows ();
-    Vin.HSV.setAll (35,90, 90,255,90,255);
+    //Vin.HSV.setAll (35,90, 90,255,90,255);
+    Vin.HSV.setAll (80,160, 10,255, 5,255); 
     
+    if (argc == 2) {
+        IplImage *img = cvLoadImage(argv[1], 1);
+        Vin.img = img;
+        
+        //vision_GATE (Vin, Vout, _DISPLAY);
+        vision_BUOY (Vin, Vout, _DISPLAY);
+
+        cvWaitKey(0);
+    }
+    else {
     // webcam video
     CvCapture* capture = cvCreateCameraCapture(1);    // create a webcam video capture
     IplImage* frame = cvQueryFrame( capture );         // read a single frame from the cam
@@ -56,13 +68,14 @@ int main( int argc, char** argv ) {
         Vin.img = frame;
 	    //cvResize(frame,Vin.img);
         cvShowImage(WIN2, Vin.img);
-      printf ("str %s\n", Vin.window[0]);    
-        vision_GATE (Vin, Vout, _DISPLAY);
-        //vision_GATE (frame2, gateX,gateY, range, HSV, cv_windows, _DISPLAY);
-      printf ("str2 %s\n", Vin.window[0]);  
+    
+        //vision_GATE (Vin, Vout, _DISPLAY);
+        vision_BUOY (Vin, Vout, _DISPLAY);
+
         c = cvWaitKey(10);
         if( c == 'q' ) break;
     
+    }
     }
     
     destroy_windows();
