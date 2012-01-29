@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "task_buoy.h"
 #include "common.h"
 
