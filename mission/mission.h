@@ -20,7 +20,7 @@ enum DEBUG_CMD {
   SCREENSHOT,
   RESET_POS,
   RESET_ALL,
-  EXIT
+  CMD_EXIT
 };
 
 class Mission {
