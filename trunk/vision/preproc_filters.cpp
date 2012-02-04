@@ -91,7 +91,7 @@ float HSV_filter (IplImage* img, IplImage* &dst, // source and dest images. Do n
         dstPtr = (unsigned char*) (dst->imageData + r*dst->widthStep);
         for (int c = 0; c < img->width; c++) {
             // note that saturation values are from 0 to 255 but is interpreted as 
-            if ((*imgPtr >= HSV.H_MIN) && (*imgPtr <= HSV.H_MAX) && 
+            if ( HSV.HueInRange (*imgPtr) && 
                 (*(imgPtr+1) >= HSV.S_MIN) && (*(imgPtr+1) <= HSV.S_MAX) &&
                 (*(imgPtr+2) >= HSV.V_MIN) && (*(imgPtr+2) <= HSV.V_MAX)) {
                 *dstPtr = 255;
@@ -230,10 +230,10 @@ float HSV_adjust_filter (IplImage* img, IplImage* &dst,
         for (int i = 0; i < img->height; i++) {
             huePtr = (unsigned char*) hueImg->imageData + i*hueImg->widthStep;
             for (int j = 0; j < img->width; j++) {
-                if ((*huePtr == 255) || (*huePtr > HSV.H_MAX) || (*huePtr < HSV.H_MAX))
-                    *huePtr = 0;
-                else {                    
+                if ((*huePtr != 255) && HSV.HueInRange (*huePtr))
                     *huePtr = 255;
+                else {                    
+                    *huePtr = 0;
                     goodPix++;
                 }
                 huePtr++; 

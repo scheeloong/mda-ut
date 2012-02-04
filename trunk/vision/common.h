@@ -18,6 +18,7 @@ class HSV_settings {
     void setHue (int hmin, int hmax); // set hue
     void setSat (unsigned smin, unsigned smax); // set saturation
     void setVal (unsigned vmin, unsigned vmax);
+    int HueInRange (unsigned hue);
     void setSim1 (); // for orange gate in sim
     void setSim2 (); // for brown pipe in sim
 };
@@ -35,7 +36,7 @@ class HSV_settings {
 #define WIN1 "window1"
 #define WIN2 "window2"
 
-enum retcode {ERROR, NO_DETECT, DETECT_0, DETECT_1, DETECT_2, DONE};
+enum retcode {NO_DETECT, DETECT_0, DETECT_1, DETECT_2, ERROR, DONE};
 
 // a struct to hold all the inputs to the task functions
 class vision_in {

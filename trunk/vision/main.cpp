@@ -6,7 +6,7 @@
 #include "calc_draw.h"
 #include "preproc_filters.h"
 #include "common.h"
-#include "task_gate.h"
+//#include "task_gate.h"
 #include "task_path.h"
 #include "task_buoy.h"
 
@@ -26,8 +26,8 @@ int main( int argc, char** argv ) {
     vision_in Vin;
     vision_out Vout;
     create_windows ();
-    //Vin.HSV.setAll (35,90, 90,255,90,255);
-    Vin.HSV.setAll (80,160, 10,255, 5,255); 
+    Vin.HSV.setAll (-20,5, 160,255,30,255);
+    //Vin.HSV.setAll (80,160, 10,255, 5,255); 
     
     if (argc == 2) {
         IplImage *img = cvLoadImage(argv[1], 1);
@@ -66,7 +66,7 @@ int main( int argc, char** argv ) {
         //vision_SQUARE (frame, gateX, gateY, range, HSV, cv_windows, _DISPLAY | _QUIET);
         
         Vin.img = frame;
-	    //cvResize(frame,Vin.img);
+        //cvResize(frame,Vin.img);
         cvShowImage(WIN2, Vin.img);
     
         //vision_GATE (Vin, Vout, _DISPLAY);

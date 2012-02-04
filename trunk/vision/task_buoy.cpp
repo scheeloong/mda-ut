@@ -5,11 +5,11 @@
 retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
 // Will change real_x, real_y, range in Output.
 // return state guide:
-//  ERROR = bad, disregard this image
-//  NO_DETECT = no detection (not enough pixels to constitute image, or no lines detected)
-//  DETECT_1 = partial detection (1 segment detected) gateX, gateY correspond to segment center. Range valid
-//  DETECT_2 = full detection (2 segments detected). gateX, gateY = gate center. Range valid
-//  DONE = gate very close, (dist between segments > 3/4 image width). Otherwise same as 2
+//  ERROR = bad, disregard this image. Happens if multiple circles found.
+//  NO_DETECT = no detection (not enough pixels to constitute image)
+//  DETECT_1 = partial detection (significant number of pixels, but shape did not trigger circle detector. 
+//              Returns pixel center of mass of filtered image
+//  DETECT_2 = full detection 
 /** HS filter to extract gate object */
     IplImage* img_1;  
     float pix_fraction = HSV_filter (Input.img, img_1, Input.HSV);
@@ -46,9 +46,12 @@ retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
     /** check that circles were found */
     int ncircles=circles->total; 
     if (ncircles < 1) {
+        CvPoint img_centroid = calcImgCentroid (img_1);
+        Output.real_x = img_centroid.x;  Output.real_y = img_centroid.y;
+        
         cvReleaseImage (&img_1);  cvReleaseMemStorage (&storage);
         printf ("  vision_BUOY: No Circles Detected. Exiting.\n");
-        return NO_DETECT;
+        return DETECT_1;
     }
     printf("Number of Circles: %d\n", ncircles);
     
@@ -77,7 +80,7 @@ retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
             printf ("  vision_GATE: Range: %f\n", Output.range);
         }
         cvReleaseImage (&img_1);  cvReleaseMemStorage (&storage);
-        return DETECT_1;        
+        return DETECT_2;        
     }
 }
 

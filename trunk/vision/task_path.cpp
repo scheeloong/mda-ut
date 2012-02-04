@@ -72,7 +72,14 @@ retcode vision_PATH (vision_in Input, vision_out &Output, char flags) {
                 swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
                 swap=temp[1].x; temp[1].x=temp[0].x; temp[0].x=swap;
             }
-        }
+        }    if ((img_centroid.x*img_centroid.x + img_centroid.y*img_centroid.y) > (img_1->height*img_1->height)*0.25) { // not close enough to center
+        cvReleaseImage (&img_1);
+        printf ("  vision_PATH: Pipe Detected. Not Centered.\n");
+        Output.real_x = img_centroid.x;
+        Output.real_y = img_centroid.y; 
+    
+        return DETECT_1;
+    }
         else {
             if (temp[0].y > temp[1].y) { // sort so lower Y value comes first
                 swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
@@ -186,48 +193,47 @@ char controller_PATH (vision_in Input, char &state) {
         
     // control starts here
     /** state machine
-     * F: "Path too far (cant see it)"
-     * P: "Partial Detection"  -  go towards the path
-     * c: "Fully centered high depth"  -  sink
-     * 1: sink 1
-     * 2: ..
-     * 3: ..
-     * 4: ..
-     * 5: ..
-     * D: "Correct Depth"  -  Recenter
-     * C: "Centered at correct depth"  -  Align
-     * A: "Aligned"  - stop
-     * S: "Reached front of gate. Stop vision"
-     * X: "Error state" 
+     * START = starting state
+     * NO_PIPE = cannot see pipe, assume it is directly in front
+     * OFF_CENTER = pipe too off center
+     * CENTERED = pipe centered but not correct depth
+     * UNALIGNED = pipe correct depth but unaligned
+     * ALIGNED = pipe aligned.
+     * ERROR 
+     * PAUSE = state with no output. Go here if unsure of correctness of vision but not ERROR.
     */
     
-    enum ESTATE {NOPATH,PARTIAL,CENTERED, SINK, DPARTIAL,DCENTERED,STOP,ERR};
+    enum ESTATE {START, NO_PIPE, OFF_CENTER, CENTERED, UNALIGNED, ALIGNED, ERROR, PAUSE};
     ESTATE lookup[8][3] = {
-            {NOPATH,  PARTIAL,   CENTERED},  // returns 'w'
-            {NOPATH,  PARTIAL,   PARTIAL},  // tries to center, math
-            {ERR,     PARTIAL,   SINK},        // sinks
-/*SINK*/    {ERR,     DPARTIAL,  DCENTERED},  // sinks, needs math
-/*DPARTIAL*/{ERR,     DPARTIAL,  DCENTERED},  // tries to center
-/*DCENTER*/ {ERR,     DPARTIAL,  DCENTERED},  // need math
-            {STOP,    STOP,      STOP},
-            {ERR,     ERR,       ERR}};
+// vcode =         NO_DETECT,  DETECT_1,     DETECT_2
+/* START */       {NO_PIPE,    OFF_CENTER,   CENTERED},  
+/* NO_PIPE */     {NO_PIPE,    OFF_CENTER,   CENTERED},  
+/* OFF_CENTER */  {NO_PIPE,    OFF_CENTER,   CENTERED},  // variable output
+/* CENTERED */    {PAUSE,      OFF_CENTER,   ERROR},     // variable state for DETECT_2
+/* UNALIGNED */   {PAUSE,      OFF_CENTER,   ERROR},     // variable state for DETECT_2
+/* ALIGNED */     {ALIGNED,    ALIGNED,      ALIGNED},   
+/* ERROR */       {ERROR,      ERROR,        ERROR},
+/* PAUSE */       {PAUSE,      OFF_CENTER,   CENTERED}};
     
-    ESTATE estate = (ESTATE) state;  
-    /*
-    // the only state that needs additional processing is DCENTERED
-    if (estate == PARTIAL && sqrt(pathX*pathX + pathY*pathY) < 30)
-        estate = CENTERED;    
-    else if (estate == DCENTERED) {
-        if (fabs(tan_angle) < 0.05) // 3ish degrees
-            estate = STOP;
+    ESTATE estate = (ESTATE) state; // temporary variable  
+
+    // first check for state that need additional processing 
+    if ((estate == CENTERED) && (vcode == DETECT_2)) {
+        if (Output.range < 100) // check depth somehow
+            estate = UNALIGNED; // sufficient depth
+        else 
+            estate = CENTERED;  // insufficient depth
     }
-    else if ((estate == SINK) && (length < 100)) {
-        // continue to sink
+    else if (estate == UNALIGNED) {
+        if (fabs(Output.tan_PA) < 0.05) // within 3ish degrees of vertical
+            estate = ALIGNED;
+        else 
+            estate = UNALIGNED;
     }
-    else */estate = lookup[estate][(int)vcode];
+    else estate = lookup[estate][(int)vcode];
     
     state = estate;
-    printf ("%d\n",state);
+    printf ("State: %d\n",state);
     
     /** figure out output */
     /*
