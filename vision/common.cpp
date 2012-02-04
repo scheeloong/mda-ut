@@ -2,22 +2,34 @@
 
 HSV_settings:: HSV_settings () {
     H_MIN = S_MIN  = V_MIN = 0;
-    H_MAX = 180;    S_MAX = V_MAX = 255;
+    H_MAX = 179;    S_MAX = V_MAX = 255;
 }
 HSV_settings:: HSV_settings (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax) {
-    H_MIN = hmin; H_MAX = hmax; S_MIN = smin; S_MAX = smax; V_MIN = vmin; V_MAX = vmax;
+    H_MIN = (hmin>=0) ? hmin : hmin+180; 
+    H_MAX = (hmax<180) ? hmax : hmax-180; 
+    S_MIN = smin; S_MAX = smax; V_MIN = vmin; V_MAX = vmax;
 }
 void HSV_settings:: setAll (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax) {
-    H_MIN = hmin; H_MAX = hmax; S_MIN = smin; S_MAX = smax; V_MIN = vmin; V_MAX = vmax;
+    H_MIN = (hmin>=0) ? hmin : hmin+180; 
+    H_MAX = (hmax<180) ? hmax : hmax-180;
+    S_MIN = smin; S_MAX = smax; V_MIN = vmin; V_MAX = vmax;
 }
-void HSV_settings:: setHue (int hmin, int hmax) { H_MIN = hmin; H_MAX = hmax; }
+void HSV_settings:: setHue (int hmin, int hmax) { 
+    H_MIN = (hmin>=0) ? hmin : hmin+180; 
+    H_MAX = (hmax<180) ? hmax : hmax-180; 
+}
 void HSV_settings:: setSat (unsigned smin, unsigned smax) { S_MIN = smin; S_MAX = smax; }
 void HSV_settings:: setVal (unsigned vmin, unsigned vmax) { V_MIN = vmin; V_MAX = vmax; }
 //void HSV_settings:: setRange1 () { H_MIN=40; H_MAX=70; S_MIN=125; S_MAX=255; V_MIN=110; V_MAX=255;}
 void HSV_settings:: setSim1 () { H_MIN=5; H_MAX=30; S_MIN=70; S_MAX=255; V_MIN=150; V_MAX=255;}
 void HSV_settings:: setSim2 () { H_MIN=40; H_MAX=70; S_MIN=80; S_MAX=255; V_MIN=110; V_MAX=255;}
  
-
+int HSV_settings:: HueInRange (unsigned hue) { 
+    if (H_MAX > H_MIN) 
+        return ((hue >= unsigned(H_MIN)) && (hue <= unsigned(H_MAX)));
+    else
+        return (((hue <= unsigned(H_MIN))&&(hue <= unsigned(H_MAX))) || ((hue >= unsigned(H_MIN))&&(hue >= unsigned(H_MAX)))); 
+}
 
 vision_in:: vision_in () {
     window = (char**) malloc(3*sizeof(char*));
