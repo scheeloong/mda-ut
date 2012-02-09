@@ -166,18 +166,18 @@ retcode vision_PATH (vision_in Input, vision_out &Output, char flags) {
 //            _QUIET to suppress printed messages.
 //            Multiple flags can be set using the | operator.
 // 6. List of commands to send back:
-//    'w','s' = foward / backward
+//    'w','s' = forward / backward
 //    'a','d' = turn left, right
 //    'i','k' = rise, sink
 //    The above is all the commands the sub can do in real life
 //    'r','f' = roll left, roll right
 //    't','g' = pitch foward, pitch backwards
 
-char controller_PATH (vision_in Input, char &state) {
+void controller_PATH (vision_in Input, Mission &m) {
 // following the path - fairly complex controls. Need to sink to right depth after acquiring the pipe.
-// Then rotate until pipe aligned. Then rise and move foward.
+// Then rotate until pipe aligned. Then rise and move foward. 
     retcode vcode;
-    // vcode guide:
+    // cvode guide:
     // ERROR = found lines in img, but they are not correct number/orientation to represent a pipe
     // NO_DETECT = no detection (pipe not in view, not enough pixels)
     // DETECT_1 = partial detection (pipe found, but too much off to the side). pathX,pathY = pixel location of pipe center
@@ -204,7 +204,7 @@ char controller_PATH (vision_in Input, char &state) {
     */
     
     enum ESTATE {START, NO_PIPE, OFF_CENTER, CENTERED, UNALIGNED, ALIGNED, ERROR, PAUSE};
-    ESTATE lookup[8][3] = {
+    static const ESTATE lookup[8][3] = {
 // vcode =         NO_DETECT,  DETECT_1,     DETECT_2
 /* START */       {NO_PIPE,    OFF_CENTER,   CENTERED},  
 /* NO_PIPE */     {NO_PIPE,    OFF_CENTER,   CENTERED},  
@@ -215,52 +215,70 @@ char controller_PATH (vision_in Input, char &state) {
 /* ERROR */       {ERROR,      ERROR,        ERROR},
 /* PAUSE */       {PAUSE,      OFF_CENTER,   CENTERED}};
     
-    ESTATE estate = (ESTATE) state; // temporary variable  
-
+    static ESTATE state = START; // starting state is start
+    
     // first check for state that need additional processing 
-    if ((estate == CENTERED) && (vcode == DETECT_2)) {
-        if (Output.range < 100) // check depth somehow
-            estate = UNALIGNED; // sufficient depth
+    if ((state == CENTERED) && (vcode == DETECT_2)) {
+        if (Output.range < 200) // check depth somehow
+            state = UNALIGNED; // sufficient depth
         else 
-            estate = CENTERED;  // insufficient depth
+            state = CENTERED;  // insufficient depth
     }
-    else if (estate == UNALIGNED) {
-        if (fabs(Output.tan_PA) < 0.05) // within 3ish degrees of vertical
-            estate = ALIGNED;
+    else if (state == UNALIGNED) {
+        if (fabs(Output.tan_PA) < 0.08) // within 5ish degrees of vertical
+            state = ALIGNED;
         else 
-            estate = UNALIGNED;
+            state = UNALIGNED;
     }
-    else estate = lookup[estate][(int)vcode];
-    
-    state = estate;
+    else state = lookup[state][(int)vcode];
+
     printf ("State: %d\n",state);
-    
+ 
     /** figure out output */
-    /*
-    switch (estate) {
-        case NOPATH: return 'w';
-        case PARTIAL: case DPARTIAL:
-            if (fabs(pathY/(pathX+0.01)) < 11.5) { // if centroid outside of +-5 degrees from vertical
-                if (pathX > 0) return 'd'; // turn towards the centroid
-                else return 'a';
+    
+    switch (state) {
+        case START: // no change to output
+            return;
+        case NO_PIPE: 
+            m.move(FORWARD);
+            return;
+        case OFF_CENTER:
+	    if (Output.real_x == 0) Output.real_x = 0.0001;
+            if (fabs(Output.real_y/Output.real_x) < 11.5) { // if centroid outside of +-5 degrees from vertical
+                m.move(STOP);	       // stop
+                if (Output.real_x > 0) // turn towards the centroid
+                    m.move(RIGHT);
+                else
+                    m.move(LEFT);
             }
-            else return 'w'; // move towards centroid
-        case CENTERED: case SINK:
-            return 'k';
-        case DCENTERED:
-            if (tan_angle > 0) // first quadrant
-                return 'd';
-            else return 'a'; // second quadrant
-        case STOP:
-            printf ("PATH Task Complete!\n");
-            return '/';
-        case ERR:
-            printf ("PATH Error\n");
-            return '/';
+            else {
+                m.move(STOP);
+                if (Output.real_y > 0)
+                    m.move(FORWARD);
+                else
+                    m.move(REVERSE);
+            }
+	    return;
+	case CENTERED:
+	    m.move(STOP);
+	    m.move(SINK);
+	    return;
+ 	case UNALIGNED:
+	    m.move(STOP);
+	    if (Output.tan_PA > 0.08)
+		m.move(LEFT);
+	    else 
+		m.move(RIGHT);
+    	    return;
+	case ALIGNED:
+	    m.move(FORWARD);
+	    m.move(RISE);
+	    return;       
         default:
-            return '/';
-    }*/
-    return '/';
+ 	    printf ("\n\ntask_path: NO IDEA WHAT STATE I'M IN!\n\n");
+	    for (;;);
+    }
+    return;
 }
 
 

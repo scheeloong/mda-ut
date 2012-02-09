@@ -8,11 +8,12 @@
 #include "preproc_filters.h"
 #include "obj_detection.h"
 #include "calc_draw.h"
+#include "../mission/mission.h"
 
 #define PATH_SKINNYNESS 0.12 // ratio of pipe diameter to length
 
 retcode vision_PATH (vision_in Input, vision_out &Output, char flags=0);
 
-char controller_PATH (vision_in Input, char &state);
+void controller_PATH (vision_in Input, Mission &m);
 
 #endif

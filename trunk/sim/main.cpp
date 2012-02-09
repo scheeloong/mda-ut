@@ -355,7 +355,7 @@ void cv_display (void) {
                 controller_GATE (Vin, m);
 		return;
             case '2':
-                CV_COMMAND = controller_PATH (Vin, state);
+                controller_PATH (Vin, m);
                 break;
        }
        if (state == 'X') // Error state 
