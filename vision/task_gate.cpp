@@ -13,22 +13,20 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
 //  DONE = gate very close, (dist between segments > 3/4 image width). Otherwise same as 2
 /** HS filter to extract gate object */
     IplImage* img_1;  
-    float pix_fraction = HSV_filter (Input.img, img_1, Input.HSV);
-/*
-    IplConvKernel* kernel = cvCreateStructuringElementEx (3,3,1,1,CV_SHAPE_RECT);
-    cvMorphologyEx (img_1, img_1, NULL, 
-                    kernel, CV_MOP_OPEN);
-    cvMorphologyEx (img_1, img_1, NULL, 
-                    kernel, CV_MOP_CLOSE);
-    cvReleaseStructuringElement (&kernel);
-  */  
+    float pix_fraction;
+    if (flags & _ADJ_COLOR)
+        pix_fraction = HSV_adjust_filter (Input.img, img_1, Input.HSV);
+    else
+        pix_fraction = HSV_filter (Input.img, img_1, Input.HSV);
+    assert ((pix_fraction) >= 0);
+
     if (flags & _INVERT) img_1->origin = 1;
     if (flags & _DISPLAY) cvShowImage(Input.window[0], img_1);
 
     // check to see if there are enough pixels to do line finding
     if (pix_fraction < 0.002) { // if nothing in the view
         cvReleaseImage (&img_1);
-        printf ("  vision_GATE: Pixel Fraction Too Low. Exiting.\n");
+        printf ("  vision_GATE: Pixel Fraction %5.3f Too Low. Exiting.\n", pix_fraction);
         return NO_DETECT;
     }
 

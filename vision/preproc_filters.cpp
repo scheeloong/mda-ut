@@ -125,7 +125,7 @@ float HSV_filter (IplImage* img, IplImage* &dst, // source and dest images. Do n
 //      flags: 1=display, 8=calculate filtered image.
 float HSV_adjust_filter (IplImage* img, IplImage* &dst, 
                          HSV_settings &HSV, 
-                         int h_bins, char flags) 
+                         char flags, int h_bins) 
 {
     /** extract hue plane. Mark all invalid pixels as Hue=255, which is outside histogram range */
     // convert to HSV       
@@ -146,7 +146,7 @@ float HSV_adjust_filter (IplImage* img, IplImage* &dst,
             huePtr++; imgPtr+=3;
         }
     }
-    
+ 
     /** genereate hue histogram */ 
     int size[] = {h_bins};  // constants required for histogram functions
     float h_range[] = {0, 180};  float* ranges[] = {h_range};
@@ -162,7 +162,7 @@ float HSV_adjust_filter (IplImage* img, IplImage* &dst,
         0,  // accumulate
         NULL); // possible boolean mask image
     cvNormalizeHist (hist, 100); // normalize so total count is 100
-       
+     
     /** find nearby local max, exit if fail to find */
     //int Hguess = (HSV.H_MIN + HSV.H_MAX)/2; // estimated hue
     int srch_min = HSV.H_MIN-20, srch_max = HSV.H_MAX+20; // search estimate +- 20
@@ -173,41 +173,41 @@ float HSV_adjust_filter (IplImage* img, IplImage* &dst,
     
     // now find the local maximum
     int temp, LM=-1, LMbin; // LMbin = local max bin
-    for (int i = bin_min; i <= bin_max; i++) {
-        if (i == 180) i = 0; // this line allows looping from 170-20, for example
-            
-        temp = cvQueryHistValue_1D (hist, i);
+    for (int i = bin_min; ; i++) {
+        if (i >= h_bins) i = 0; // this line allows looping from bin16 to bin2, for example
+            temp = cvQueryHistValue_1D (hist, i);
         if (temp > LM) {
             LM = temp;
             LMbin = i;
         }
+        
+        if (i == bin_max) break; // loop from bin_min to bin_max inclusive
     }
-    
+
     /** mark bins neighbouring the max until integral of marked bins >> those of nearby unmarked bins */
     bin_min = bin_max = LMbin; // bin_min and bin_max now refer to the range of "marked" bins
     // a marked bin means the hue values inside is part of the target
     int marked = 1; 
     for (; marked <= h_bins/6-1; marked++) { // h_bins / 6  =  30 / (180/h_bins)
-        int e_marked=0, e_unmarked=0;
+         int e_marked=0, e_unmarked=0;
         // calculate energy of marked bins 
-         for (int i = bin_min; i <= bin_max; i++) {
-             if (i == 180) i = 0;
+         for (int i = bin_min; ; i++) {
+             if (i >= h_bins) i = 0;
              e_marked += cvQueryHistValue_1D (hist, i);
+             
+             if (i == bin_max) break; // loop from bin_min to bin_max inclusive
          }
-         e_marked /= marked; // average of the integral.
-         
+         e_marked /= marked; // average energy of a marked bin.
+
          // caculate integral of neighbouring unmakred bins (those +- 2 from marked bins)
          int temp, min_1, max_1;
-         temp = bin_min-1;   if (temp < 0) temp += 180;
+         temp = bin_min-1;   if (temp < 0) temp += h_bins;
           min_1 = cvQueryHistValue_1D (hist, temp);   e_unmarked += min_1;
-         temp = bin_max+1;   if (temp >= 180) temp -= 180;
+         temp = bin_max+1;   if (temp >= h_bins) temp -= h_bins;
           max_1 = cvQueryHistValue_1D (hist, temp);   e_unmarked += max_1;
-         /*temp = bin_min-2;   if (temp < 0) temp += 180;
-          e_unmarked += cvQueryHistValue_1D (hist, temp);
-         temp = bin_max+2;   if (temp >= 180) temp -= 180;
-          e_unmarked += cvQueryHistValue_1D (hist, temp);
-         */e_unmarked /= 2;
          
+         e_unmarked /= 2;
+
          // if integral of marked bins >> integral of unmarked
          if ((e_marked > e_unmarked*4) && (e_marked > e_unmarked + 10)) {
              marked = -1;
@@ -219,27 +219,28 @@ float HSV_adjust_filter (IplImage* img, IplImage* &dst,
          else
              bin_max = (bin_max+1 < 180) ? (bin_max+1) : 0;
     }
-    
+
     /** if successful, generate dst image */
-    int goodPix=0;  float good_fraction;
+    int goodpix=0;;  float good_fraction;
     if (marked < 0) {// successful
         HSV.H_MIN = bin_min * 180 / h_bins;
         HSV.H_MAX = (bin_max+1) * 180 / h_bins;
     
-        int goodpix=0;
+
         for (int i = 0; i < img->height; i++) {
             huePtr = (unsigned char*) hueImg->imageData + i*hueImg->widthStep;
             for (int j = 0; j < img->width; j++) {
-                if ((*huePtr != 255) && HSV.HueInRange (*huePtr))
+                if ((*huePtr != 255) && HSV.HueInRange (*huePtr)) {
                     *huePtr = 255;
+                    goodpix++;
+                }
                 else {                    
                     *huePtr = 0;
-                    goodPix++;
                 }
                 huePtr++; 
             }
         }
-        good_fraction = goodpix / (img->imageSize);
+        good_fraction = (float) goodpix / img->imageSize;
         dst = hueImg;
     }
     else { // not enough of a peak => object too faint
@@ -255,8 +256,9 @@ float HSV_adjust_filter (IplImage* img, IplImage* &dst,
             printf ("Bin %2.1d (%3.1d-%3.1d): %d\n", i, 180/h_bins*i, 180/h_bins*(i+1)-1, val);    
         }
         printf ("Bin Range: %d-%d\n", bin_min, bin_max);
-        printf ("Hue Range: %d-%d\n", HSV.H_MIN, HSV.H_MAX);
     }
+    
+    if (!(flags & _QUIET)) printf ("Hue Range: %d-%d\n", HSV.H_MIN, HSV.H_MAX);
     
     cvReleaseHist (&hist);
     //cvReleaseImage (&hueImg);

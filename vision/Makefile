@@ -2,7 +2,7 @@ CC=g++
 FLAGS=-c -Wall $(CVFLAGS)
 CVFLAGS=`pkg-config --cflags --libs opencv`
 LIBO=preproc_filters.o obj_detection.o calc_draw.o histograms.o
-TASKS=common.o task_path.o task_buoy.o
+TASKS=common.o task_gate.o task_path.o task_buoy.o
 INC= calc_draw.h cv_tasks.h histograms.h obj_detection.h preproc_filters.h
 
 # each .o file depends on its .cpp file

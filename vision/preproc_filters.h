@@ -25,8 +25,9 @@ float HSV_filter (IplImage* img, IplImage* &dst, // source and dest images. Do n
 float HSV_adjust_filter (IplImage* img,
                IplImage* &dst,
                HSV_settings &HSV, // Hue #s are estimates of hue. S/V numbers used to exclude pixels. 
-               int h_bins,       // step or bin size in histogram generation
-               char flags=0);
+               char flags=0, 
+               int h_bins=18       // step or bin size in histogram generation
+               );
 
 // PURPOSE: Outputs morphological gradient of image. A simple wrapper of cvMorphologyEx
 void cvGradient_Custom (IplImage* img, IplImage* &dst,
