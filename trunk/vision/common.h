@@ -30,7 +30,8 @@ class HSV_settings {
 #define _DISPLAY 1
 #define _INVERT 2
 #define _QUIET 4
-#define _RETURN_OBJ 8
+#define _ADJ_COLOR 8
+//#define _RETURN_OBJ 8
 
 #define WIN0 "window0"
 #define WIN1 "window1"

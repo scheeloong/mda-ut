@@ -3,7 +3,7 @@
 #include "common.h"
 
 /**######### PATH FOLLOW TASKK ############*/
-retcode vision_PATH (vision_in Input, vision_out &Output, char flags) {
+retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
 // state guide:
 // ERROR = found lines in img, but they are not correct number/orientation to represent a pipe
 // NO_DETECT = no detection (obj not in view)

@@ -6,7 +6,7 @@
 #include "calc_draw.h"
 #include "preproc_filters.h"
 #include "common.h"
-//#include "task_gate.h"
+#include "task_gate.h"
 #include "task_path.h"
 #include "task_buoy.h"
 
@@ -26,7 +26,7 @@ int main( int argc, char** argv ) {
     vision_in Vin;
     vision_out Vout;
     create_windows ();
-    Vin.HSV.setAll (-20,5, 160,255,30,255);
+    Vin.HSV.setAll (-10,10, 160,255,30,255);
     //Vin.HSV.setAll (80,160, 10,255, 5,255); 
     
     if (argc == 2) {
@@ -42,7 +42,7 @@ int main( int argc, char** argv ) {
     // webcam video
     CvCapture* capture = cvCreateCameraCapture(1);    // create a webcam video capture
     IplImage* frame = cvQueryFrame( capture );         // read a single frame from the cam
-    Vin.img = cvCreateImage (cvSize(frame->width/2,frame->height/2), 
+    Vin.img = cvCreateImage (cvSize(frame->width*3/4,frame->height*3/4), 
                                       frame->depth, frame->nChannels);
 /*
     CvVideoWriter * vid1 = cvCreateVideoWriter (       // create a video file to store video
@@ -55,8 +55,10 @@ int main( int argc, char** argv ) {
     cvReleaseCapture(&capture);
     capture = cvCreateCameraCapture(1);
     char c;
+    
     while(1) {                      // play the video like before     
         frame = cvQueryFrame (capture);
+        
         //cvWaitKey(20);
         //frame2 = cvQueryFrame (capture);        
         //cvAddWeighted (frame, 0.5, frame2, 0.5, 0, frame);
@@ -65,14 +67,16 @@ int main( int argc, char** argv ) {
         //cvWriteFrame( vid1, frame );      // write the frame to the video writer
         //vision_SQUARE (frame, gateX, gateY, range, HSV, cv_windows, _DISPLAY | _QUIET);
         
-        Vin.img = frame;
-        //cvResize(frame,Vin.img);
+        //Vin.img = frame;
+        cvResize(frame,Vin.img);
         cvShowImage(WIN2, Vin.img);
     
-        //vision_GATE (Vin, Vout, _DISPLAY);
-        vision_BUOY (Vin, Vout, _DISPLAY);
-
-        c = cvWaitKey(10);
+        vision_GATE (Vin, Vout, _DISPLAY);
+        //vision_BUOY (Vin, Vout, _DISPLAY);
+        //vision_PATH (Vin, Vout, _DISPLAY);
+        
+        frame = cvQueryFrame (capture);       
+        c = cvWaitKey(4);
         if( c == 'q' ) break;
     
     }
