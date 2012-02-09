@@ -84,7 +84,7 @@ retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
     }
 }
 
-char controller_BUOY (vision_in Input, char &state) {
+void controller_BUOY (vision_in Input, Mission &m) {
     retcode vcode;
     // vcode table:
     // -1 = error, disregard this image
@@ -97,5 +97,6 @@ char controller_BUOY (vision_in Input, char &state) {
     Input.HSV.setAll(0, 50, 10, 255, 0, 255);
     vision_out Output;
     vcode = vision_BUOY (Input, Output, _INVERT);
-    return '/';
+
+    return;
 };
