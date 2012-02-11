@@ -84,7 +84,7 @@ retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
     }
 }
 
-void controller_BUOY (vision_in Input, Mission &m) {
+void controller_BUOY (vision_in &Input, Mission &m) {
     retcode vcode;
     // vcode table:
     // -1 = error, disregard this image

@@ -173,7 +173,7 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
 //    'r','f' = roll left, roll right
 //    't','g' = pitch foward, pitch backwards
 
-void controller_PATH (vision_in Input, Mission &m) {
+void controller_PATH (vision_in &Input, Mission &m) {
 // following the path - fairly complex controls. Need to sink to right depth after acquiring the pipe.
 // Then rotate until pipe aligned. Then rise and move foward. 
     retcode vcode;
@@ -188,8 +188,8 @@ void controller_PATH (vision_in Input, Mission &m) {
     //     is horizontal.
     
     vision_out Output;
-    Input.HSV.setAll(10, 30, 130, 255, 40, 255);
-    vcode = vision_PATH (Input, Output);
+    //Input.HSV.setAll(10, 30, 130, 255, 40, 255);
+    vcode = vision_PATH (Input, Output, _DISPLAY);
         
     // control starts here
     /** state machine
@@ -232,7 +232,7 @@ void controller_PATH (vision_in Input, Mission &m) {
     }
     else state = lookup[state][(int)vcode];
 
-    printf ("State: %d\n",state);
+    printf ("   State: %d\n",state);
  
     /** figure out output */
     

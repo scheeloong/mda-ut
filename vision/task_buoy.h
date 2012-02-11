@@ -12,6 +12,6 @@
 #define BUOY_REAL_RAD 12.0 // in centimeters
 
 retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags=0);
-void controller_BUOY (vision_in Input, Mission &m);
+void controller_BUOY (vision_in &Input, Mission &m);
 
 #endif

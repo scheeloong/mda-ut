@@ -14,6 +14,6 @@
 
 retcode vision_PATH (vision_in &Input, vision_out &Output, char flags=0);
 
-void controller_PATH (vision_in Input, Mission &m);
+void controller_PATH (vision_in &Input, Mission &m);
 
 #endif

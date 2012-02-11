@@ -23,9 +23,6 @@
 
 #include "../mission/mission.h"
 
-vision_in Vin;
-vision_out Vout;
-
 unsigned int randNum;
 struct timeval last;
 
@@ -304,19 +301,34 @@ void screenshot()
 
 char* cv_windows[3]; // string names for 3 windows cv can use
 int CV_VISION_FLAG=0;  // 1 to show opencv windows
-int CV_CONTROL_ON=0; // 1 to have cv issue commands
-float CAM_ANGLE = 00.;    // set to 90 for down pointing
-char CV_COMMAND=0; // stores the latest command sent by the opencv loop
+//int CV_CONTROL_ON=0; // 1 to have cv issue commands
 IplImage *cv_img, *cv_img2; // stores the front and down camera imgs respectively
-char state=0; // FSM state?
+
+vision_in Vin, Vin2;
+vision_out Vout;
 
 /** end opencv global vars */
+
+void cv_init () {
+       cv_img = cvCreateImage (cvSize(WINDOW_SIZE_X,WINDOW_SIZE_Y), IPL_DEPTH_8U, 3);
+       cv_img->origin = 1;
+       cv_img2 = cvCreateImage (cvSize(WINDOW_SIZE_X,WINDOW_SIZE_Y), IPL_DEPTH_8U, 3);
+       cv_img2->origin = 1;
+       
+       if (CV_VISION_FLAG == '1')
+           Vin.HSV.setSim1();
+       else if (CV_VISION_FLAG == '2')
+           Vin.HSV.setSim2();
+       
+       cvNamedWindow("Downwards Cam",1);
+       cvMoveWindow ("Downwards Cam", 380,0);
+       create_windows ();
+}
 
 void cv_queryFrameGL (IplImage* img) {
 // this function reads the OpenGL buffer and puts the data into an iplimage.
 // Plz allocate the image before calling
 // MAKE SURE the ORIGIN parameter in img is set to 1 !!!
-
     // read the GL buffer. This is a lot easier than that guy on the interwebs said
     glReadPixels(0,0,img->width-1,img->height-1,GL_BGR,GL_UNSIGNED_BYTE,img->imageData);
     // srsly the guy on the interwebs had like 20 lines for this
@@ -346,23 +358,21 @@ void cv_display (void) {
        
        cvShowImage ("Downwards Cam", cv_img2);
        
-       CV_COMMAND = 0;
+       Vin.img = cv_img;
+       Vin2.img = cv_img2;
        
-       /** OPENCV CODE GOES HERE. RESULT IS CHANGE TO CV_COMMAND */      
+       /** OPENCV CODE GOES HERE. */      
        //cvShowImage (WIN0,cv_img);
        switch (CV_VISION_FLAG) {
             case '1':
                 controller_GATE (Vin, m);
-		return;
+                break;
             case '2':
-                controller_PATH (Vin, m);
+                controller_PATH (Vin2, m);
                 break;
        }
-       if (state == 'X') // Error state 
-            for (;;); // do something
-
+  
        cvWaitKey(5); // without 5ms delay the window will not show properly
-       //CV_COMMAND='w'; // override cv for now
        /** END OPENCV CODE */ 
    }
    else {
@@ -386,10 +396,8 @@ void cv_keyboard(unsigned char key, int x, int y)
       glDeleteTextures( 5, texName );
       exit(0);
    }
-   else if (key == 'o' && CV_VISION_FLAG) // save an image
-       cvSaveImage ("cvSimImg.jpg", cv_img);
-       
-   if (CV_CONTROL_ON) key = CV_COMMAND;  // use opencv command 
+      
+   //if (CV_CONTROL_ON) key = CV_COMMAND;  // use opencv command 
 
    switch (key)
    {
@@ -430,14 +438,16 @@ void cv_keyboard(unsigned char key, int x, int y)
        else CAM_ANGLE = 0;
        angle.pitch = CAM_ANGLE;
        break;*/
-   case 'v':
+   /*case 'v':
        if (CV_CONTROL_ON) { printf ("Vision Control OFF\n");
                             CV_CONTROL_ON=0; } 
        else { printf ("Vision Control ON\n");
-              CV_CONTROL_ON=1; }
+              CV_CONTROL_ON=1; }*/
    case 'p':
    {
-      screenshot();
+      //screenshot();
+      cvSaveImage ("cvSimImg.jpg", cv_img);
+      cvSaveImage ("cvSimImg2.jpg", cv_img2);
       break;
    }
    default:
@@ -519,21 +529,10 @@ int main(int argc, char** argv)
    init();
       
    if (CV_VISION_FLAG) {
-       // OPENCV INIT
-       cv_img = cvCreateImage (cvSize(WINDOW_SIZE_X,WINDOW_SIZE_Y), IPL_DEPTH_8U, 3);
-       cv_img->origin = 1;
-       cv_img2 = cvCreateImage (cvSize(WINDOW_SIZE_X,WINDOW_SIZE_Y), IPL_DEPTH_8U, 3);
-       cv_img2->origin = 1;
-       
-       if (CV_VISION_FLAG == '1')
-           Vin.HSV.setSim1();
-       else if (CV_VISION_FLAG == '2')
-           Vin.HSV.setSim2();
-       
-       cvNamedWindow("Downwards Cam",1);
-       cvMoveWindow ("Downwards Cam", 380,0);
-       create_windows ();
+       cv_init();
    }
+   
+   /** register callback functions for glut */
    glutReshapeFunc (cv_reshape);                    // called when window resized
    glutKeyboardFunc (cv_keyboard);                  // called with key pressed
    glutDisplayFunc (cv_display);                    // called when glutPostRedisplay() raises redraw flag

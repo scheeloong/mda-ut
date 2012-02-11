@@ -16,6 +16,6 @@
 
 retcode vision_GATE (vision_in &Input, vision_out &Output, char flags=0);
 
-void controller_GATE (vision_in Input, Mission &m);
+void controller_GATE (vision_in &Input, Mission &m);
 
 #endif
