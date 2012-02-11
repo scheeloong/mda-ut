@@ -82,6 +82,7 @@ float HSV_filter (IplImage* img, IplImage* &dst, // source and dest images. Do n
     cvCvtColor (img, img, CV_BGR2HSV); // convert to Hue,Saturation,Value 
 // create new 1 channel image
     dst = cvCreateImage (cvGetSize(img), IPL_DEPTH_8U, 1);  // image to return
+    dst->origin = img->origin;
 // Set all pixels with HSV values within the target range to 1 and non target pixels to 0
     float goodpix = 0; // keeps track of how many good pixels
     // look through both H and S images, pick out pixels where Hue is between H_MIN,H_MAX and Sat > S_MIN
@@ -131,6 +132,7 @@ float HSV_adjust_filter (IplImage* img, IplImage* &dst,
     // convert to HSV       
     cvCvtColor (img, img, CV_BGR2HSV); // convert to Hue,Saturation,Value 
     IplImage* hueImg = cvCreateImage (cvGetSize(img), IPL_DEPTH_8U, 1); // will be converted to dst later if successful
+    hueImg->origin = img->origin;
     
     unsigned char *imgPtr, *huePtr;
     for (int i = 0; i < img->height; i++) {
