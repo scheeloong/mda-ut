@@ -173,7 +173,7 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
 //    'r','f' = roll left, roll right
 //    't','g' = pitch foward, pitch backwards
 
-void controller_GATE (vision_in Input, Mission &m) {
+void controller_GATE (vision_in &Input, Mission &m) {
 // the gate task. We have to assume we are pointed approximate at the gate from the beginning.        
     retcode vcode;
     // vcode table:
@@ -184,10 +184,10 @@ void controller_GATE (vision_in Input, Mission &m) {
     // 3 = gate very close, (dist between segments > 3/4 image width). Should stop using vision to navigate. data same as 2.
     //     Alternatively can ignore this and use the range.
     
-    Input.HSV.setAll(0, 50, 10, 255, 0, 255);
+//    Input.HSV.setAll(0, 50, 10, 255, 0, 255);
     vision_out Output;
     vcode = vision_GATE (Input, Output, _INVERT);
-    
+  printf ("yo\n");
     /** Control code starts here */
     
     /* TODO: Re-implement old control code */

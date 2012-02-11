@@ -22,7 +22,7 @@ void HSV_settings:: setSat (unsigned smin, unsigned smax) { S_MIN = smin; S_MAX 
 void HSV_settings:: setVal (unsigned vmin, unsigned vmax) { V_MIN = vmin; V_MAX = vmax; }
 //void HSV_settings:: setRange1 () { H_MIN=40; H_MAX=70; S_MIN=125; S_MAX=255; V_MIN=110; V_MAX=255;}
 void HSV_settings:: setSim1 () { H_MIN=5; H_MAX=30; S_MIN=70; S_MAX=255; V_MIN=150; V_MAX=255;}
-void HSV_settings:: setSim2 () { H_MIN=40; H_MAX=70; S_MIN=80; S_MAX=255; V_MIN=110; V_MAX=255;}
+void HSV_settings:: setSim2 () { H_MIN=20; H_MAX=40; S_MIN=80; S_MAX=255; V_MIN=110; V_MAX=255;}
  
 int HSV_settings:: HueInRange (unsigned hue) { 
     if (H_MAX > H_MIN) 
