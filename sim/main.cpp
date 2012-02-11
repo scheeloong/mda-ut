@@ -315,11 +315,17 @@ void cv_init () {
        cv_img2 = cvCreateImage (cvSize(WINDOW_SIZE_X,WINDOW_SIZE_Y), IPL_DEPTH_8U, 3);
        cv_img2->origin = 1;
        
-       if (CV_VISION_FLAG == '1')
-           Vin.HSV.setSim1();
-       else if (CV_VISION_FLAG == '2')
-           Vin.HSV.setSim2();
-       
+       switch (CV_VISION_FLAG) {
+           case '1':
+           case '2':
+               Vin.HSV.setSim1();
+               Vin2.HSV.setSim2();
+               break;
+           default:
+               printf ("Unrecognized CV_VISION_FLAG. Shutting Down\n");
+               exit(1);
+               break;
+       }
        cvNamedWindow("Downwards Cam",1);
        cvMoveWindow ("Downwards Cam", 380,0);
        create_windows ();
@@ -355,11 +361,11 @@ void cv_display (void) {
        draw();
        glutSwapBuffers();
        cv_queryFrameGL (cv_img);       
-       
-       cvShowImage ("Downwards Cam", cv_img2);
-       
+
        Vin.img = cv_img;
        Vin2.img = cv_img2;
+              
+       cvShowImage ("Downwards Cam", Vin2.img);//cv_img2);
        
        /** OPENCV CODE GOES HERE. */      
        //cvShowImage (WIN0,cv_img);

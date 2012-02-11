@@ -25,21 +25,22 @@ void HSV_settings:: setSim1 () { H_MIN=5; H_MAX=30; S_MIN=70; S_MAX=255; V_MIN=1
 void HSV_settings:: setSim2 () { H_MIN=20; H_MAX=40; S_MIN=80; S_MAX=255; V_MIN=110; V_MAX=255;}
  
 int HSV_settings:: HueInRange (unsigned hue) { 
-    if (H_MAX > H_MIN) 
+    if (H_MAX >= H_MIN) 
         return ((hue >= unsigned(H_MIN)) && (hue <= unsigned(H_MAX)));
     else
-        return (((hue <= unsigned(H_MIN))&&(hue <= unsigned(H_MAX))) || ((hue >= unsigned(H_MIN))&&(hue >= unsigned(H_MAX)))); 
+        return (((hue <= unsigned(H_MIN))&&(hue <= unsigned(H_MAX))) 
+             || ((hue >= unsigned(H_MIN))&&(hue >= unsigned(H_MAX)))); 
 }
 
 vision_in:: vision_in () {
-    window = (char**) malloc(3*sizeof(char*));
-    window[0]=(char*)malloc(10); window[1]=(char*)malloc(10); window[2]=(char*)malloc(10);
+    window = new char*[3]; //(char**) malloc(3*sizeof(char*));
+    window[0]=new char[10]; window[1]=new char[10]; window[2]=new char[10];
     strcpy(window[0], WIN0); strcpy(window[1], WIN1); strcpy(window[2], WIN2);
 }
 vision_in:: ~vision_in () {
     for (int i = 0; i < 3; i++) 
-        free (window[i]);
-    free (window);
+        delete[] (window[i]);
+    delete[] (window);
 }
 
 void create_windows () {

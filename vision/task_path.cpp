@@ -12,6 +12,8 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
 // DETECT_2 = full detection (pipe oriented almost directly below)
 /** HS filter to extract object */
     IplImage* img_1;  
+    if (flags & _DISPLAY) cvShowImage(Input.window[0], Input.img);
+   
     float pix_fraction = HSV_filter (Input.img, img_1, Input.HSV); // need to delete img_1
     /*
     IplConvKernel* kernel = cvCreateStructuringElementEx (3,3,1,1,CV_SHAPE_RECT);
@@ -23,7 +25,6 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
     */
     if (flags & _INVERT) img_1->origin = 1;
     if (flags & _DISPLAY) cvShowImage(Input.window[0], img_1);
-
     // check to see if there are enough pixels to do line finding
     if (pix_fraction < 0.001) { // if nothing in the view
         cvReleaseImage (&img_1);
@@ -32,8 +33,10 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
     }
     
 /** check image centroid to see if path is approximately centered */
-    CvPoint img_centroid = calcImgCentroid (img_1);
-    if ((img_centroid.x*img_centroid.x + img_centroid.y*img_centroid.y) > (img_1->height*img_1->height)*0.25) { // not close enough to center
+    CvPoint img_centroid = calcImgCentroid (img_1);    
+  
+    if ((img_centroid.x*img_centroid.x + img_centroid.y*img_centroid.y) 
+        > (img_1->height*img_1->height) / 25) { // not close enough to center
         cvReleaseImage (&img_1);
         printf ("  vision_PATH: Pipe Detected. Not Centered.\n");
         Output.real_x = img_centroid.x;
@@ -62,6 +65,7 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
         printf ("  vision_PATH: No Lines Detected. Exiting.\n");
         return NO_DETECT;
     }
+    
 /** arrange lines by X and Y value. Will bug if 45 degree lines encountered. Assume no horiz lines. */
     CvPoint* temp; int swap;
     for (int i = 0; i < nlines; i++) { // for each line
@@ -72,14 +76,7 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
                 swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
                 swap=temp[1].x; temp[1].x=temp[0].x; temp[0].x=swap;
             }
-        }    if ((img_centroid.x*img_centroid.x + img_centroid.y*img_centroid.y) > (img_1->height*img_1->height)*0.25) { // not close enough to center
-        cvReleaseImage (&img_1);
-        printf ("  vision_PATH: Pipe Detected. Not Centered.\n");
-        Output.real_x = img_centroid.x;
-        Output.real_y = img_centroid.y; 
-    
-        return DETECT_1;
-    }
+        }   
         else {
             if (temp[0].y > temp[1].y) { // sort so lower Y value comes first
                 swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
@@ -238,6 +235,7 @@ void controller_PATH (vision_in &Input, Mission &m) {
     
     switch (state) {
         case START: // no change to output
+        case PAUSE:
             return;
         case NO_PIPE: 
             m.move(FORWARD);
@@ -247,9 +245,9 @@ void controller_PATH (vision_in &Input, Mission &m) {
             if (fabs(Output.real_y/Output.real_x) < 11.5) { // if centroid outside of +-5 degrees from vertical
                 m.move(STOP);	       // stop
                 if (Output.real_x > 0) // turn towards the centroid
-                    m.move(RIGHT);
+                    m.move(RIGHT,6);
                 else
-                    m.move(LEFT);
+                    m.move(LEFT,6);
             }
             else {
                 m.move(STOP);
@@ -266,9 +264,9 @@ void controller_PATH (vision_in &Input, Mission &m) {
  	case UNALIGNED:
 	    m.move(STOP);
 	    if (Output.tan_PA > 0.08)
-		m.move(LEFT);
+		m.move(LEFT,6);
 	    else 
-		m.move(RIGHT);
+		m.move(RIGHT,6);
     	    return;
 	case ALIGNED:
 	    m.move(FORWARD);
