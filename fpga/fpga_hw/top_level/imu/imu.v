@@ -25,7 +25,6 @@
 
 module imu(
    input reset_n,
-   input dly_rst,
    input spi_clk,
    input sys_clk,
    input no_external_force,

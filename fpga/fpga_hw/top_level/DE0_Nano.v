@@ -179,7 +179,11 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
 
 			
                       // GPIO pins to Avalon slave(s)
-                       .GPIO_out_from_the_motor_controller_0 ({LED[7:0], GPIO_1[7], GPIO_1[5], GPIO_1[3], GPIO_1[1], GPIO_0[11:0]}),
+                       .GPIO_out_from_the_motor_controller_0({LED[7:0], GPIO_1[7], GPIO_1[5], GPIO_1[3], GPIO_1[1], GPIO_0[11:0]}),
+
+                      // Clocks for the IMU
+                      .spi_clk_to_the_imu_controller_0(spi_clk),
+                      .sys_clk_to_the_imu_controller_0(CLOCK_50),
 							  
                       // the_select_i2c_clk
                        .out_port_from_the_select_i2c_clk(select_i2c_clk),							  
