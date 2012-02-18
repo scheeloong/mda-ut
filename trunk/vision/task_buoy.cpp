@@ -94,7 +94,7 @@ void controller_BUOY (vision_in &Input, Mission &m) {
     // 3 = gate very close, (dist between segments > 3/4 image width). Should stop using vision to navigate. data same as 2.
     //     Alternatively can ignore this and use the range.
     
-    Input.HSV.setAll(0, 50, 10, 255, 0, 255);
+    //Input.HSV.setAll(0, 50, 10, 255, 0, 255);
     vision_out Output;
     vcode = vision_BUOY (Input, Output, _INVERT);
 
