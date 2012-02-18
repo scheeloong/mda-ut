@@ -22,6 +22,10 @@ struct command_struct my_cmds[] = {
   {"gax\n", COMMAND_ACCEL_X, "gax - get x-acceleration\n  Usage: gax\n\n  Print x-acceleration\n"},
   {"gay\n", COMMAND_ACCEL_Y, "gay - get y-acceleration\n  Usage: gay\n\n  Print y-acceleration\n"},
   {"gaz\n", COMMAND_ACCEL_Z, "gaz - get z-acceleration\n  Usage: gaz\n\n  Print z-acceleration\n"},
+  {"gg\n", COMMAND_GYRO, "gg - get gyroscope info\n  Usage: gg\n\n  Print (x,y,z) gyroscope info\n"},
+  {"ggx\n", COMMAND_GYRO_X, "ggx - get x-gyroscope heading\n  Usage: ggx\n\n  Print x-gyroscope heading\n"},
+  {"ggy\n", COMMAND_GYRO_Y, "ggy - get y-gyroscope heading\n  Usage: ggy\n\n  Print y-gyroscope heading\n"},
+  {"ggz\n", COMMAND_GYRO_Z, "ggz - get z-gyroscope heading\n  Usage: ggz\n\n  Print z-gyroscope heading\n"},
   {"gm\n", COMMAND_MOTORS, "gm - get motor data\n  Usage: gm\n\n  Print all motor settings (direction on one line and duty cycle on the next)\n"},
   {"h", COMMAND_HELP, "h - help\n  Usage: h <cmd>\n\n  Print the help message for all commands that start with cmd, leave empty to print all help messages\n"},
   {"smd", COMMAND_DUTY_CYCLE, "smd - set motor duty cycle\n  Usage: smd <n> <0xdc>\n\n  Set the duty cycle of the nth motor to dc\nNote: the duty cycle is inputted in hex out of 0x3ff (1024 in decimal)\n"},
@@ -71,7 +75,7 @@ void process_command(char *st)
 
   // variables used in case statement
   struct t_accel_data accel_data;
-  int dc;
+  int dc, x, y, z;
 
   switch (cid) {
     case COMMAND_INVALID:
@@ -166,6 +170,30 @@ void process_command(char *st)
     case COMMAND_ACCEL_Z:
       get_accel(&accel_data);
       print_int(accel_data.z);
+      alt_putchar('\n');
+      break;
+    case COMMAND_GYRO:
+      get_gyro(&x, &y, &z);
+      print_int(x);
+      alt_putchar(',');
+      print_int(y);
+      alt_putchar(',');
+      print_int(z);
+      alt_putchar('\n');
+      break;
+    case COMMAND_GYRO_X:
+      get_gyro(&x, &y, &z);
+      print_int(x);
+      alt_putchar('\n');
+      break;
+    case COMMAND_GYRO_Y:
+      get_gyro(&x, &y, &z);
+      print_int(y);
+      alt_putchar('\n');
+      break;
+    case COMMAND_GYRO_Z:
+      get_gyro(&x, &y, &z);
+      print_int(z);
       alt_putchar('\n');
       break;
     case COMMAND_MOTORS:

@@ -140,6 +140,14 @@ int get_freq()
   return  50000 / pwm_period;
 }
 
+// returns a x,y,z gyroscope values
+void get_gyro(int *x, int *y, int *z)
+{
+  *x = IORD(IMU_CONTROLLER_0_BASE, 0);
+  *y = IORD(IMU_CONTROLLER_0_BASE, 1);
+  *z = IORD(IMU_CONTROLLER_0_BASE, 2);
+}
+
 // returns a struct of x,y,z acceleration values
 void get_accel(struct t_accel_data *accel_data)
 {
