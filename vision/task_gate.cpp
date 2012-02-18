@@ -187,7 +187,7 @@ void controller_GATE (vision_in &Input, Mission &m) {
 //    Input.HSV.setAll(0, 50, 10, 255, 0, 255);
     vision_out Output;
     vcode = vision_GATE (Input, Output, _INVERT);
-  printf ("yo\n");
+  
     /** Control code starts here */
     
     /* TODO: Re-implement old control code */

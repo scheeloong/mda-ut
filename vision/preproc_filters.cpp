@@ -267,7 +267,6 @@ float HSV_adjust_filter (IplImage* img, IplImage* &dst,
     return good_fraction;
 }
 
-
 // NAME: cvGradient_Custom
 //
 // PURPOSE: Outputs morphological gradient of image. A simple wrapper of cvMorphologyEx

@@ -32,18 +32,6 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
         return NO_DETECT;
     }
     
-/** check image centroid to see if path is approximately centered */
-    CvPoint img_centroid = calcImgCentroid (img_1);    
-  
-    if ((img_centroid.x*img_centroid.x + img_centroid.y*img_centroid.y) 
-        > (img_1->height*img_1->height) / 25) { // not close enough to center
-        cvReleaseImage (&img_1);
-        printf ("  vision_PATH: Pipe Detected. Not Centered.\n");
-        Output.real_x = img_centroid.x;
-        Output.real_y = img_centroid.y; 
-    
-        return DETECT_1;
-    }
 /** take gradient of image */    
     cvGradient_Custom (img_1, img_1, 3, 3, 1);
     //if (flags & _DISPLAY) cvShowImage(window[1], img_1);
@@ -99,8 +87,7 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
 // if the 2 longest lines are parallel and equal length then OK
 // So first find the length of 2 longest lines
     retcode ret=ERROR;
-    const int obj_real_len = 200; // centimeters
-    
+  
     if (nseeds >= 2) { // definitely reject img if less than 2 lines
         int long1=0, long2=0; // long1 = index of longest line. long2 = index of second longest
         for (int i = 1; i < nseeds; i++)
@@ -110,28 +97,43 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
             
         // now check that these two lines have similar lengths and angles
         float len1 = sqr_length(cseed,long1), len2 = sqr_length(cseed,long2); // calculate lengths and tan of angles
-        float ang1 = tangent_angle(cseed,long1), ang2 = tangent_angle(cseed, long2);
-        float len_ratio = len1 / len2; float tan_ratio = ang1 / ang2; // ratios
-      //  printf ("Ratios:  %f  %f\n", len_ratio, tan_ratio);
-        if ((len_ratio < 1.20) && (len_ratio > 0.8333) && (tan_ratio < 1.25) && (tan_ratio > 0.8)) {
-        // lines are OK, we can return good results
+        float ang1 = tangent_angle(cseed,long1), ang2 = tangent_angle(cseed, long2); 
+        float len_ratio = len1 / len2; 
+        float tan_ratio = ang1 / ang2; // ratios used to calculate shape of the object
+
+        /** check for rectangular-ness and correctness of dimensions */
+        if ((len_ratio < 1.33) && (len_ratio > 0.75) && (tan_ratio < 1.25) && (tan_ratio > 0.8)) {
+        // lines appear to form a pipe, so calculate range and angle
             int pix_x = (cseed[long1][0].x+cseed[long1][1].x+cseed[long2][0].x+cseed[long2][1].x)/4 - img_1->width/2;  
             int pix_y = (cseed[long1][0].y+cseed[long1][1].y+cseed[long2][0].y+cseed[long2][1].y)/4 - img_1->height/2;
-            Output.range = obj_real_len * float(img_1->width) / (len1 * TAN_FOV_X);
-            Output.real_x = pix_x * obj_real_len / len1;
-            Output.real_y = pix_y * obj_real_len / len1;
+            Output.range = PIPE_REAL_LEN * float(img_1->width) / (len1 * TAN_FOV_X);
+            Output.real_x = pix_x * PIPE_REAL_LEN / len1;
+            Output.real_y = pix_y * PIPE_REAL_LEN / len1;
             Output.tan_PA = (ang1+ang2) * 0.5;
             
-            if (!(flags & _QUIET)) printf ("  vision_PATH: Successful.\n  Range&Angle:  %f  %f\n",Output.range,atan(Output.tan_PA));
+            if (!(flags & _QUIET)) {
+                printf ("  vision_PATH: Successful.\n  Range&Angle:  %f  %f\n",Output.range,atan(Output.tan_PA));
+                printf ("  RealX,RealY:  %f  %f\n", Output.real_x, Output.real_y);
+            }
             if (flags & _DISPLAY) {
-                float ang = atan(Output.tan_PA);
-                CvPoint p1 = cvPoint (pix_x+img_1->width/2 - len1*cos(ang),pix_x+img_1->height/2 - len1*sin(ang));
+                float ang = atan(Output.tan_PA) - CV_PI/2;
+                CvPoint p1 = cvPoint (pix_x+img_1->width/2 - len1*cos(ang),pix_y+img_1->height/2 - len1*sin(ang));
                 CvPoint p2 = cvPoint (pix_x+img_1->width/2 + len1*cos(ang),pix_y+img_1->height/2 + len1*sin(ang));
                 cvLine (img_1, p1, p2, CV_RGB(255,100,100), 2);
                 cvShowImage(Input.window[1], img_1);
             }            
             ret = DETECT_2;
         }
+    }
+    
+    if (ret == ERROR) { // the object is not a pipe?
+        /** can only return pixel space info based on img centroid */
+        printf ("  vision_PATH: Cant Identify Object.\n");
+        CvPoint img_centroid = calcImgCentroid (img_1);  
+        Output.real_x = float(img_centroid.x) / img_1->width;
+        Output.real_y = float(img_centroid.y) / img_1->height; 
+    
+        ret = DETECT_1;
     }
 
     cvReleaseMemStorage(&storage);
@@ -200,54 +202,68 @@ void controller_PATH (vision_in &Input, Mission &m) {
      * PAUSE = state with no output. Go here if unsure of correctness of vision but not ERROR.
     */
     
+    /// remember tan_angle is 0 if a line is vertical, and +ve in the counter clockwise dir
+    
     enum ESTATE {START, NO_PIPE, OFF_CENTER, CENTERED, UNALIGNED, ALIGNED, ERROR, PAUSE};
     static const ESTATE lookup[8][3] = {
 // vcode =         NO_DETECT,  DETECT_1,     DETECT_2
-/* START */       {NO_PIPE,    OFF_CENTER,   CENTERED},  
-/* NO_PIPE */     {NO_PIPE,    OFF_CENTER,   CENTERED},  
-/* OFF_CENTER */  {NO_PIPE,    OFF_CENTER,   CENTERED},  // variable output
-/* CENTERED */    {PAUSE,      OFF_CENTER,   ERROR},     // variable state for DETECT_2
-/* UNALIGNED */   {PAUSE,      OFF_CENTER,   ERROR},     // variable state for DETECT_2
+/* START */       {NO_PIPE,    OFF_CENTER,   OFF_CENTER},  
+/* NO_PIPE */     {NO_PIPE,    OFF_CENTER,   OFF_CENTER},  
+/* OFF_CENTER */  {NO_PIPE,    OFF_CENTER,   ERROR},  // variable output
+/* CENTERED */    {PAUSE,      PAUSE,   ERROR},     // variable state for DETECT_2
+/* UNALIGNED */   {PAUSE,      PAUSE,   ERROR},     // variable state for DETECT_2
 /* ALIGNED */     {ALIGNED,    ALIGNED,      ALIGNED},   
 /* ERROR */       {ERROR,      ERROR,        ERROR},
 /* PAUSE */       {PAUSE,      OFF_CENTER,   CENTERED}};
     
     static ESTATE state = START; // starting state is start
     
-    // first check for state that need additional processing 
-    if ((state == CENTERED) && (vcode == DETECT_2)) {
-        if (Output.range < 200) // check depth somehow
-            state = UNALIGNED; // sufficient depth
-        else 
-            state = CENTERED;  // insufficient depth
+    if ((state == ERROR) || (state == ALIGNED)) {
     }
-    else if (state == UNALIGNED) {
-        if (fabs(Output.tan_PA) < 0.08) // within 5ish degrees of vertical
-            state = ALIGNED;
+    else if (vcode == NO_DETECT) { // cant see anything
+        if ((state == START) || (state == NO_PIPE))
+            state = NO_PIPE;
         else 
+            state = PAUSE;
+    }
+    else if (vcode == DETECT_2) { // can recognize object as pipe
+        if (Output.real_x*Output.real_x + Output.real_y*Output.real_y > 1)
+            state = OFF_CENTER;
+        else if (Output.range > 3.0)
+            state = CENTERED; // but too high up
+        else if (fabs(Output.tan_PA) > 0.03) // within 5ish degrees of vertical
             state = UNALIGNED;
+        else
+            state = ALIGNED;
     }
-    else state = lookup[state][(int)vcode];
-
-    printf ("   State: %d\n",state);
- 
-    /** figure out output */
+    else if (vcode == DETECT_1) { // cannot recognize obj
+        if (Output.real_x*Output.real_x + Output.real_y*Output.real_y > 0.1)
+            state = OFF_CENTER;
+        else 
+            state = CENTERED;
+    }
     
+    /** figure out output */
     switch (state) {
         case START: // no change to output
-        case PAUSE:
             return;
-        case NO_PIPE: 
+        case PAUSE:
+            printf ("    State: PAUSE\n");
+            return;
+        case NO_PIPE:
+            printf ("    State: NO_PIPE\n");
             m.move(FORWARD);
             return;
         case OFF_CENTER:
-	    if (Output.real_x == 0) Output.real_x = 0.0001;
-            if (fabs(Output.real_y/Output.real_x) < 11.5) { // if centroid outside of +-5 degrees from vertical
-                m.move(STOP);	       // stop
-                if (Output.real_x > 0) // turn towards the centroid
-                    m.move(RIGHT,6);
+            printf ("    State: OFF_CENTER\n");
+            if (Output.real_x == 0) Output.real_x = 0.0001;
+            if (fabs(Output.real_y/Output.real_x) < 11.5) { // if obj outside of +-5 degrees from vertical
+                m.move(STOP);	       
+                m.move(FORWARD);
+                if (Output.real_x > 0) // turn towards the obj
+                    m.move(RIGHT,4);
                 else
-                    m.move(LEFT,6);
+                    m.move(LEFT,4);
             }
             else {
                 m.move(STOP);
@@ -256,25 +272,32 @@ void controller_PATH (vision_in &Input, Mission &m) {
                 else
                     m.move(REVERSE);
             }
-	    return;
-	case CENTERED:
-	    m.move(STOP);
-	    m.move(SINK);
-	    return;
- 	case UNALIGNED:
-	    m.move(STOP);
-	    if (Output.tan_PA > 0.08)
-		m.move(LEFT,6);
-	    else 
-		m.move(RIGHT,6);
-    	    return;
-	case ALIGNED:
-	    m.move(FORWARD);
-	    m.move(RISE);
-	    return;       
+            return;
+        case CENTERED:
+            printf ("    State: CENTERED\n");
+            m.move(STOP);
+            m.move(SINK,4);
+            return;
+        case UNALIGNED:
+            printf ("    State: UNALIGNED\n");
+            m.move(STOP);
+            if (Output.tan_PA > 0)
+                m.move(LEFT,6);
+            else 
+                m.move(RIGHT,6);
+            return;
+        case ALIGNED:
+            printf ("    State: ALIGNED\n");
+            m.move(STOP);
+            m.move(FORWARD);
+            m.move(RISE,3);
+            return;       
+        case ERROR:
+            printf ("    ERROR!!\n");
+            return;
         default:
- 	    printf ("\n\ntask_path: NO IDEA WHAT STATE I'M IN!\n\n");
-	    for (;;);
+            printf ("\ntask_path: NO IDEA WHAT STATE I'M IN!\n\n");
+            for (;;);
     }
     return;
 }

@@ -64,5 +64,15 @@ int sqr_length (CvPoint** clusters, int i) {
 }
 
 float tangent_angle (CvPoint** clusters, int i) {
-    return float(clusters[i][0].y-clusters[i][1].y) / (clusters[i][0].x-clusters[i][1].x);
+// positive y direction is UP, positive X direction is LEFT
+// finds tangent of angle between your vector and the Y AXIS
+    int dx = -clusters[i][0].x + clusters[i][1].x;
+    int dy = clusters[i][0].y - clusters[i][1].y;
+    if (dy == 0) { // horizontal line
+        if (dx > 0) 
+            return 10000; // this is like 0.001 degrees
+        else 
+            return -10000;
+    }
+    return float(dx)/dy;
 }
