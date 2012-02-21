@@ -37,7 +37,8 @@ class HSV_settings {
 #define WIN1 "window1"
 #define WIN2 "window2"
 
-enum retcode {NO_DETECT, DETECT_1, DETECT_2, ERROR, DONE};
+enum retcode {NO_DETECT, DETECT_1, DETECT_2, DETECT_3, 
+	      ERROR, DONE};
 
 // a struct to hold all the inputs to the task functions
 class vision_in {

@@ -10,7 +10,6 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
 //  NO_DETECT = no detection (not enough pixels to constitute image, or no lines detected)
 //  DETECT_1 = partial detection (1 segment detected) gateX, gateY correspond to segment center. Range valid
 //  DETECT_2 = full detection (2 segments detected). gateX, gateY = gate center. Range valid
-//  DONE = gate very close, (dist between segments > 3/4 image width). Otherwise same as 2
 /** HS filter to extract gate object */
     IplImage* img_1;  
     float pix_fraction;
@@ -62,9 +61,7 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
             swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
             swap=temp[1].x; temp[1].x=temp[0].x; temp[0].x=swap;
         }
-            //cvLine (img_1, temp[0],temp[1], CV_RGB(100,200,100), 1);
     }
-    //cvShowImage(window[1], img_1);
 /** recheck that there are lines found */
     nlines=lines->total; // recalculate number of lines
     if (nlines == 0) { 
@@ -79,6 +76,7 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
     CvPoint** cseed=0;  // this memory needs to be freed later
     //float min_valid = KMcluster_auto_K (cseed, nseeds, 1,2, lines, nlines, 2, _QUIET);
     KMcluster_auto_K (cseed, nseeds, 1,2, lines, nlines, 2, _QUIET);
+    cvReleaseMemStorage (&storage);    
 
 // display clustered lines
     if (flags & _DISPLAY) {
@@ -129,9 +127,7 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
             printf ("  vision_GATE: Range: %f\n", Output.range);
         }
         
-        if (obj_pix_width > img_1->width*0.8) // line seperation > 0.8 of image width 
-            ret = DONE; // too close
-        else ret = DETECT_2; 
+        ret = DETECT_2; 
     }
    
     cvReleaseImage (&img_1);  cvReleaseMemStorage (&storage); // no leakingz
