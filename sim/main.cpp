@@ -20,6 +20,7 @@
 #include "../vision/common.h"
 #include "../vision/task_gate.h"
 #include "../vision/task_path.h"
+#include "../vision/task_U.h"
 
 #include "../mission/mission.h"
 
@@ -321,6 +322,10 @@ void cv_init () {
                Vin.HSV.setSim1();
                Vin2.HSV.setSim2();
                break;
+           case '3':
+               Vin.HSV.setSim1();
+               Vin2.HSV.setSim2();
+               break;
            default:
                printf ("Unrecognized CV_VISION_FLAG. Shutting Down\n");
                exit(1);
@@ -375,6 +380,9 @@ void cv_display (void) {
                 break;
             case '2':
                 controller_PATH (Vin2, m);
+                break;
+            case '3':
+                controller_U (Vin, m);
                 break;
        }
   

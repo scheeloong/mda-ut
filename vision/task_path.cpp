@@ -7,8 +7,9 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
 // state guide:
 // ERROR = found lines in img, but they are not correct number/orientation to represent a pipe
 // NO_DETECT = no detection (obj not in view)
-// DETECT_1 = partial detection (pipe found, but too much off to the side). Will return pixel x,y and
-//            not real x,y since range cannot be determined.
+// DETECT_1 = partial detection (pipe found, but too much off to the side). Will return pixel_x and
+//            not real x,y since range cannot be determined. The returned pix_x will have origin at the
+//            center of the img and normalized so a pixel at the edge of the image has pix_x == 1.0;
 // DETECT_2 = full detection (pipe oriented almost directly below)
 /** HS filter to extract object */
     IplImage* img_1;  
@@ -130,8 +131,8 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
         /** can only return pixel space info based on img centroid */
         printf ("  vision_PATH: Cant Identify Object.\n");
         CvPoint img_centroid = calcImgCentroid (img_1);  
-        Output.real_x = float(img_centroid.x) / img_1->width;
-        Output.real_y = float(img_centroid.y) / img_1->height; 
+        Output.real_x = 2*float(img_centroid.x) / img_1->width;
+        Output.real_y = 2*float(img_centroid.y) / img_1->height; 
     
         ret = DETECT_1;
     }
@@ -205,23 +206,23 @@ void controller_PATH (vision_in &Input, Mission &m) {
     /// remember tan_angle is 0 if a line is vertical, and +ve in the counter clockwise dir
     
     enum ESTATE {START, NO_PIPE, OFF_CENTER, CENTERED, UNALIGNED, ALIGNED, ERROR, PAUSE};
-    static const ESTATE lookup[8][3] = {
+//     static const ESTATE lookup[8][3] = {
 // vcode =         NO_DETECT,  DETECT_1,     DETECT_2
-/* START */       {NO_PIPE,    OFF_CENTER,   OFF_CENTER},  
-/* NO_PIPE */     {NO_PIPE,    OFF_CENTER,   OFF_CENTER},  
-/* OFF_CENTER */  {NO_PIPE,    OFF_CENTER,   ERROR},  // variable output
-/* CENTERED */    {PAUSE,      PAUSE,   ERROR},     // variable state for DETECT_2
-/* UNALIGNED */   {PAUSE,      PAUSE,   ERROR},     // variable state for DETECT_2
-/* ALIGNED */     {ALIGNED,    ALIGNED,      ALIGNED},   
-/* ERROR */       {ERROR,      ERROR,        ERROR},
-/* PAUSE */       {PAUSE,      OFF_CENTER,   CENTERED}};
+// /* START */       {NO_PIPE,    OFF_CENTER,   OFF_CENTER},  
+// /* NO_PIPE */     {NO_PIPE,    OFF_CENTER,   OFF_CENTER},  
+// /* OFF_CENTER */  {NO_PIPE,    OFF_CENTER,   ERROR},  // variable output
+// /* CENTERED */    {PAUSE,      PAUSE,   ERROR},     // variable state for DETECT_2
+// /* UNALIGNED */   {PAUSE,      PAUSE,   ERROR},     // variable state for DETECT_2
+// /* ALIGNED */     {ALIGNED,    ALIGNED,      ALIGNED},   
+// /* ERROR */       {ERROR,      ERROR,        ERROR},
+// /* PAUSE */       {PAUSE,      OFF_CENTER,   CENTERED}};
     
     static ESTATE state = START; // starting state is start
     
     if ((state == ERROR) || (state == ALIGNED)) {
     }
     else if (vcode == NO_DETECT) { // cant see anything
-        if ((state == START) || (state == NO_PIPE))
+        if ((state == START) || (state == NO_PIPE) || (state == OFF_CENTER))
             state = NO_PIPE;
         else 
             state = PAUSE;
@@ -237,12 +238,13 @@ void controller_PATH (vision_in &Input, Mission &m) {
             state = ALIGNED;
     }
     else if (vcode == DETECT_1) { // cannot recognize obj
-        if (Output.real_x*Output.real_x + Output.real_y*Output.real_y > 0.1)
+        if (Output.real_x*Output.real_x + Output.real_y*Output.real_y > 0.4)
             state = OFF_CENTER;
         else 
             state = CENTERED;
     }
     
+    float temp;
     /** figure out output */
     switch (state) {
         case START: // no change to output
@@ -256,10 +258,14 @@ void controller_PATH (vision_in &Input, Mission &m) {
             return;
         case OFF_CENTER:
             printf ("    State: OFF_CENTER\n");
-            if (Output.real_x == 0) Output.real_x = 0.0001;
-            if (fabs(Output.real_y/Output.real_x) < 11.5) { // if obj outside of +-5 degrees from vertical
-                m.move(STOP);	       
-                m.move(FORWARD);
+            if (Output.real_x == 0) Output.real_x = 0.00001;
+            
+            temp = fabs(Output.real_y/Output.real_x);
+            if (temp < 11.5) { // if obj outside of +-5 degrees from vertical
+                m.move(STOP);	
+                if (temp > 1.7) // if not more than +- 30 degrees
+                    m.move(FORWARD);
+                
                 if (Output.real_x > 0) // turn towards the obj
                     m.move(RIGHT,4);
                 else
