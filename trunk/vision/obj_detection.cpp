@@ -212,17 +212,18 @@ float KMcluster (CvPoint** &cseed, int nseeds, CvSeq* lines, int nlines, const i
             total_intra_1 = 0;
             
             float x1=0,y1=0,x2=0,y2=0; // cluster mean
-            float len, weight, totalweight=0;
+            float weight, totalweight=0;
             
             for (int i = 0; i < indexArraySize[s]; i++) { // step thru lines in cluster s
                 CvPoint* temp = (CvPoint*)cvGetSeqElem(lines, indexArray[s][i]);   
                 
-                // do a weighted average of lines in cluster s. Weight = line length
+                // do a weighted average of lines in cluster s. Weight = line length^2
                 float dy = temp[1].y-temp[0].y, dx = temp[1].x-temp[0].x;
-                len = sqrt(dy*dy + dx*dx);
+                float len_sqr = dy*dy + dx*dx;
                 
-                if (SDmat[s][indexArray[s][i]]/len > 300) weight = 0.0;
-                else weight = len;               
+                // Compare SD (seed-line area) with line-line area 
+                if (SDmat[s][indexArray[s][i]] > 5*len_sqr) weight = 0; 
+                else weight = len_sqr;               
                 
                 x1+=temp[0].x * weight;      y1+=temp[0].y * weight;
                 x2+=temp[1].x * weight;      y2+=temp[1].y * weight;

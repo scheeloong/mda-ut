@@ -4,6 +4,8 @@
 #include <cv.h>
 #include <highgui.h>
 
+#define ABS(x) ((x>0) ? (x) : (-(x)))
+
 /** this file containts constants universal to all vision/task functions */
 
 class HSV_settings {

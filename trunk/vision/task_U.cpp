@@ -10,6 +10,8 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
 //  NO_DETECT = no detection (not enough pixels to constitute image, or no lines detected)
 //  DETECT_1 = sufficient pixels, but unable to recognize object. real_x,real_y refer to pixel 
 //	    coordinates of the image centroid. No other valid output.
+//      The returned pix_x will have origin at the center of the img and normalized so a 
+//      pixel at the edge of the image has pix_x == 1.0;
 //  DETECT_2 = object recognized as U, but can only see part of it. real_x,real_y refer to real
 //	    space coordinates of U center (best guess), range is valid. 
 //  DETECT_3 = object recofnized as U and all parts visible. Same as DETECT_2 but
@@ -34,7 +36,7 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
     }
 
 /** probabilistic Hough line finder. Determine the threshold using the number of high pixels */
-    int thresh = (int)(sqrt(pix_fraction*img_1->imageSize * U_SKINNYNESS) / 4.0); // guessed length of gate segment in pixels
+    int thresh = 60; //(int)(sqrt(pix_fraction*img_1->imageSize * U_SKINNYNESS) / 4.0); // guessed length of gate segment in pixels
     CvMemStorage* storage = cvCreateMemStorage(0); // create memstorage for line finidng, delete later
     CvSeq* lines = 0;
     
@@ -92,23 +94,42 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
     // we automatically calculate centroid and return DETECT_1
 
     if (nseeds == 1) { 
-        pix_x = (cseed[0][0].x+cseed[0][1].x)/2 - img_1->width/2; 
-        pix_y = (cseed[0][0].y+cseed[0][1].y)/2 - img_1->height/2;
-
+        int dx = ABS(cseed[0][1].x-cseed[0][0].x)+1; // +1 to make sure not zero 
+        int dy = ABS(cseed[0][1].y-cseed[0][1].y)+1;
+        
         // first check if single line is horiz or vert
-	if (cseed[0][1].x-cseed[0][0].x > cseed[0][1].y-cseed[0][1].y) { // horiz line
-	    if (pix_y > img_1->height/5)  // line is not near top of image
-	    	goto RETURN_ERROR; // doesnt make sense, so throw error
-	}
+        if (float(dx)/dy > 5.0) { // horiz line, a bit more than tan(10deg)
+            if (float(dx) > img_1->width*0.3) { // use horiz seperation to estimate range and (x,y)
+                int obj_pix_width = cseed[0][1].x - cseed[0][0].x;
+                pix_x = (cseed[0][1].x + cseed[0][0].x)/2 - img_1->width/2;
+                // displace pix_y to estimated location of U center
+                pix_y = (cseed[0][1].y + cseed[0][0].y)/2 + obj_pix_width * U_HEIGHT/(2*U_WIDTH) - img_1->height/2; 
+                
+                Output.range = U_WIDTH * float(img_1->width) / obj_pix_width / TAN_FOV_X;
+                Output.real_x = pix_x * U_HEIGHT / obj_pix_width;
+                Output.real_y = pix_y * U_WIDTH / obj_pix_width;
+        
+                if (!(flags & _QUIET)) {
+                    printf ("  vision_U: Single Horiz Segements.\n");
+                    printf ("  vision_U: Lateral Pos: %f , %f\n", Output.real_x, Output.real_y);
+                    printf ("  vision_U: Range: %f\n", Output.range);
+                }
+                ret = DETECT_2;
+            }
+            else 
+                goto RETURN_ERROR;
+        }
         else { // vertical line
-	    if ((pix_x > img_1->width/5) && (pix_x < img_1->width*5/6)) 
-		goto RETURN_ERROR;
-	}
+            pix_x = (cseed[0][0].x+cseed[0][1].x)/2;
+            if ((pix_x > img_1->width/5) && (pix_x < img_1->width*5/6)) 
+                goto RETURN_ERROR;
+        }
     }
     else if (nseeds == 2) {
-	int v_len_ratio = (cseed[0][1].y-cseed[0][0].y) / (cseed[1][1].y-cseed[1][0].y);
-	if (v_len_ratio < 1.25 && v_len_ratio > 0.8) {// two vertical lines
-	    // average the points to get center of gate
+        float v_len_ratio = float(cseed[0][1].y-cseed[0][0].y) / (cseed[1][1].y-cseed[1][0].y+1);
+        printf ("%f\n", v_len_ratio);
+        if (v_len_ratio < 1.4 && v_len_ratio > 0.75) {// two vertical lines
+        // average the points to get center of gate
             pix_x = (cseed[0][0].x+cseed[0][1].x+cseed[1][0].x+cseed[1][1].x)/4 - img_1->width/2;
             pix_y = (cseed[0][0].y+cseed[0][1].y+cseed[1][0].y+cseed[1][1].y)/4 - img_1->height/2;
             int obj_pix_width = (fabs(cseed[0][0].x-cseed[1][0].x)+fabs(cseed[0][1].x-cseed[1][1].x))/2;
@@ -123,17 +144,61 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
                 printf ("  vision_U: Lateral Pos: %f , %f\n", Output.real_x, Output.real_y);
                 printf ("  vision_U: Range: %f\n", Output.range);
             }
-	    ret = DETECT_2;
+            ret = DETECT_2;
         }
-	else { // 1 horiz and 1 vertical line  
-	    // dont need to do anything
-	} 
+        else { // 1 horiz and 1 vertical line  
+            // dont need to do anything
+        } 
     }
     else if (nseeds == 3) {
-    }
+        int long1=0; // long1 = index of longest line
+        for (int i = 1; i < nseeds; i++)
+            if (sqr_length(cseed,i) > sqr_length(cseed,long1)) long1 = i;
+            
+        int i2 = (long1+1)%3,   i3 = (long1+2)%3; // index of other 2 lines
+            
+        int dx = ABS(cseed[long1][1].x-cseed[long1][0].x)+1;
+        int dy = ABS(cseed[long1][1].y-cseed[long1][1].y)+1;
+        int dx2 = ABS(cseed[i2][1].x-cseed[i2][0].x)+1;
+        int dy2 = ABS(cseed[i2][1].y-cseed[i2][1].y)+1;
+        int dx3 = ABS(cseed[i3][1].x-cseed[i3][0].x)+1;
+        int dy3 = ABS(cseed[i3][1].y-cseed[i3][1].y)+1;
+        
+        if ((float(dx)/dy > 5) && // longest line = horiz
+            (float(dy2)/dx2 > 4) && (float(dy3)/dx3 > 5) && // other 2 lines = vert
+            (cseed[i2][1].y > cseed[long1][0].y) && (cseed[i3][1].y > cseed[long1][0].y)) // vert segments above horiz
+        {
+            // estimate range using vertical line seperation
+            pix_x = (cseed[i2][0].x+cseed[i2][1].x+cseed[i3][0].x+cseed[i3][1].x)/4 - img_1->width/2;
+            pix_y = (cseed[long1][0].y+cseed[long1][1].y+cseed[i2][0].y+cseed[i3][0].y)/4 - img_1->height/2;
+            int obj_pix_width = (ABS(cseed[i2][0].x-cseed[i3][0].x)+ABS(cseed[i2][1].x-cseed[i3][1].x))/2;
+    
+            // estimate range using horiz seperation
+            Output.range = U_WIDTH * float(img_1->width) / obj_pix_width / TAN_FOV_X;
+            Output.real_x = pix_x * U_HEIGHT / obj_pix_width;
+            Output.real_y = pix_y * U_WIDTH / obj_pix_width;
+        
+            if (!(flags & _QUIET)) {
+                printf ("  vision_U: Full 3 Segements Detected.\n");
+                printf ("  vision_U: Lateral Pos: %f , %f\n", Output.real_x, Output.real_y);
+                printf ("  vision_U: Range: %f\n", Output.range);
+            }
+            ret = DETECT_2;
+        }
+   }
     else 
-	goto RETURN_ERROR;
+        goto RETURN_ERROR;
    
+    if (ret == ERROR) { // no idea what the object is
+        /** can only return pixel space info based on img centroid */
+        printf ("  vision_U: Cant Identify Object.\n");
+        CvPoint img_centroid = calcImgCentroid (img_1);  
+        Output.real_x = 2*float(img_centroid.x) / img_1->width;
+        Output.real_y = 2*float(img_centroid.y) / img_1->height; 
+    
+        ret = DETECT_1;
+    }
+    
     RETURN_ERROR:
     cvReleaseImage (&img_1);  cvReleaseMemStorage (&storage); // no leakingz
     for (int i = 0; i < nseeds; i++) 
@@ -182,9 +247,9 @@ void controller_U (vision_in &Input, Mission &m) {
     // 0 = no detection (not enough pixels to constitute image, or no lines detected). Probably have to move closer.
     
     vision_out Output;
-    vcode = vision_U (Input, Output, _INVERT);
+    vcode = vision_U (Input, Output, _INVERT | _DISPLAY);
   
     /** Control code starts here */    
-    m.translate(FORWARD);
+    //m.translate(FORWARD);
 }
 
