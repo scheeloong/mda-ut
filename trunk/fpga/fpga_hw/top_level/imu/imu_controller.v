@@ -2,7 +2,7 @@
 // Registers 0-2 store the gyroscope
 // Registers 4-6 stores the magnetometer
 
-module imu_controller(input clk, input chipselect, input [2:0]addr, input read, output reg [31:0] readdata, input spi_clk, input sys_clk);
+module imu_controller(input clk, input chipselect, input [2:0]addr, input read, output reg [31:0] readdata, input spi_clk, input sys_clk, input ADC_SDAT, output ADC_CS_N, output ADC_SADDR, ADC_SCLK);
   wire [31:0] gyr_x;
   wire [31:0] gyr_y;
   wire [31:0] gyr_z;
@@ -10,7 +10,7 @@ module imu_controller(input clk, input chipselect, input [2:0]addr, input read, 
   wire [31:0] mag_y;
   wire [31:0] mag_z;
 
-  imu imu(1'b1, spi_clk, sys_clk, 1'b0, gyr_x, gyr_y, gyr_z, mag_x, mag_y, mag_z);
+  imu imu(1'b1, spi_clk, sys_clk, 1'b0, gyr_x, gyr_y, gyr_z, mag_x, mag_y, mag_z, ADC_SDAT, ADC_CS_N, ADC_SADDR, ADC_SCLK);
 
   always @(posedge clk)
     if (chipselect & read)

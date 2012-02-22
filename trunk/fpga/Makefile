@@ -48,6 +48,6 @@ gdb_client:
 	(cd $(SW_DIR) && nios2-elf-gdb $(ELF_NAME))
 
 terminal:
-	nios2-terminal
+	nios2-terminal -q
 
 .PHONY: dl_hw dl_sw dl_both gdb_server gdb_client terminal
