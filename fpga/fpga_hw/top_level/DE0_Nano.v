@@ -179,22 +179,19 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
 
 			
                       // GPIO pins to Avalon slave(s)
-                       .GPIO_out_from_the_motor_controller_0({LED[7:0], GPIO_1[7], GPIO_1[5], GPIO_1[3], GPIO_1[1], GPIO_0[11:0]}),
+                       .GPIO_out_from_the_motor_controller_0({LED[7:4], GPIO_2[6], GPIO_2[8], GPIO_0[24], GPIO_0[25], GPIO_0[18], GPIO_0[19], GPIO_0[12], GPIO_0[13], GPIO_0[16], GPIO_0[17], GPIO_0[10], GPIO_0[11], GPIO_2[2], GPIO_2[4], GPIO_0[22], GPIO_0[23], GPIO_0[4], GPIO_0[5], GPIO_0[2], GPIO_0[0]}),
 
                       // Clocks for the IMU
                       .spi_clk_to_the_imu_controller_0(spi_clk),
                       .sys_clk_to_the_imu_controller_0(CLOCK_50),
+                      .ADC_CS_N_from_the_imu_controller_0(ADC_CS_N),
+                      .ADC_SADDR_from_the_imu_controller_0(ADC_SADDR),
+                      .ADC_SCLK_from_the_imu_controller_0(ADC_SCLK),
+                      .ADC_SDAT_to_the_imu_controller_0(ADC_SDAT),
 							  
                       // the_select_i2c_clk
                        .out_port_from_the_select_i2c_clk(select_i2c_clk),							  
 
-							  
-                      // the_adc_spi_read
-                       .SPI_CLK_from_the_adc_spi_read(ADC_SCLK),
-                       .SPI_CS_n_from_the_adc_spi_read(ADC_CS_N),
-                       .SPI_IN_to_the_adc_spi_read(ADC_SDAT),
-                       .SPI_OUT_from_the_adc_spi_read(ADC_SADDR),
-							  
 							  
                       // the_altpll_0
                        .locked_from_the_altpll_0(),
@@ -224,9 +221,6 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
 
                       // the_key
                        .in_port_to_the_key(KEY),
-
-                      // the_led
-                       .out_port_from_the_led(GPIO_0[23:16]),
 
                       // the_sdram
                        .zs_addr_from_the_sdram(DRAM_ADDR),

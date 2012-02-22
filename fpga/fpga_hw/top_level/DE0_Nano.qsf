@@ -429,3 +429,15 @@ set_global_assignment -name TCL_SCRIPT_FILE ../../../../../../altera/11.0/ip/alt
 set_global_assignment -name VERILOG_FILE motor_controller_0.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name SDC_FILE ../../../../../../altera/11.0/ip/altera/sopc_builder_ip/altera_avalon_clock_adapter/altera_avalon_clock_adapter.sdc -qip DE0_Nano_SOPC.qip
 set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000134DDB4FF6D -qip DE0_Nano_SOPC.qip
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A000001359129239D -qip DE0_Nano_SOPC.qip
+set_global_assignment -name TCL_SCRIPT_FILE imu/imu_controller_hw.tcl -qip DE0_Nano_SOPC.qip
+set_global_assignment -name VERILOG_FILE imu/imu_controller.v -qip DE0_Nano_SOPC.qip
+set_global_assignment -name VERILOG_FILE imu/ADC_CTRL.v -qip DE0_Nano_SOPC.qip
+set_global_assignment -name VERILOG_FILE imu/divider_signed_32.v -qip DE0_Nano_SOPC.qip
+set_global_assignment -name VERILOG_FILE imu/gyro_lookup_table.v -qip DE0_Nano_SOPC.qip
+set_global_assignment -name VERILOG_FILE imu/gyroscope_data_to_degrees.v -qip DE0_Nano_SOPC.qip
+set_global_assignment -name VERILOG_FILE imu/imu.v -qip DE0_Nano_SOPC.qip
+set_global_assignment -name VERILOG_FILE imu/integrator_signed_32bits.v -qip DE0_Nano_SOPC.qip
+set_global_assignment -name VERILOG_FILE imu/magnetometer_i2c_interface.v -qip DE0_Nano_SOPC.qip
+set_global_assignment -name VERILOG_FILE imu_controller_0.v -qip DE0_Nano_SOPC.qip
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A0000013591366DBD -qip DE0_Nano_SOPC.qip
