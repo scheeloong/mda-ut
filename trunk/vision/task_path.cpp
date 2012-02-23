@@ -230,7 +230,7 @@ void controller_PATH (vision_in &Input, Mission &m) {
     else if (vcode == DETECT_2) { // can recognize object as pipe
         if (Output.real_x*Output.real_x + Output.real_y*Output.real_y > 1)
             state = OFF_CENTER;
-        else if (Output.range > 3.0)
+        else if (Output.range > 3.4)
             state = CENTERED; // but too high up
         else if (fabs(Output.tan_PA) > 0.03) // within 5ish degrees of vertical
             state = UNALIGNED;

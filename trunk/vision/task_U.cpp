@@ -16,7 +16,7 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
 //	    space coordinates of U center (best guess), range is valid. 
 //  DETECT_3 = object recofnized as U and all parts visible. Same as DETECT_2 but
 //	    real_x,real_y should be very accurate
-/** HS filter to extract gate object */
+/** HS filter to extract object */
     IplImage* img_1;  
     float pix_fraction;
     if (flags & _ADJ_COLOR)
@@ -36,7 +36,7 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
     }
 
 /** probabilistic Hough line finder. Determine the threshold using the number of high pixels */
-    int thresh = 60; //(int)(sqrt(pix_fraction*img_1->imageSize * U_SKINNYNESS) / 4.0); // guessed length of gate segment in pixels
+    int thresh = 60; //(int)(sqrt(pix_fraction*img_1->imageSize * U_SKINNYNESS) / 4.0); 
     CvMemStorage* storage = cvCreateMemStorage(0); // create memstorage for line finidng, delete later
     CvSeq* lines = 0;
     
@@ -129,7 +129,7 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
         float v_len_ratio = float(cseed[0][1].y-cseed[0][0].y) / (cseed[1][1].y-cseed[1][0].y+1);
         printf ("%f\n", v_len_ratio);
         if (v_len_ratio < 1.4 && v_len_ratio > 0.75) {// two vertical lines
-        // average the points to get center of gate
+        // average the points to get center of U
             pix_x = (cseed[0][0].x+cseed[0][1].x+cseed[1][0].x+cseed[1][1].x)/4 - img_1->width/2;
             pix_y = (cseed[0][0].y+cseed[0][1].y+cseed[1][0].y+cseed[1][1].y)/4 - img_1->height/2;
             int obj_pix_width = (fabs(cseed[0][0].x-cseed[1][0].x)+fabs(cseed[0][1].x-cseed[1][1].x))/2;

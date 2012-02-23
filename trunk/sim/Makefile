@@ -11,7 +11,7 @@ MISSIONDIR=../mission
 MISSIONOBJS=$(MISSIONDIR)/mission.o
 
 CVDIR=../vision
-CVOBJS=$(CVDIR)/common.o $(CVDIR)/task_gate.o $(CVDIR)/task_path.o $(CVDIR)/task_U.o $(CVDIR)/calc_draw.o $(CVDIR)/preproc_filters.o $(CVDIR)/obj_detection.o
+CVOBJS=$(CVDIR)/common.o $(CVDIR)/task_gate.o $(CVDIR)/task_path.o $(CVDIR)/task_buoy.o $(CVDIR)/task_U.o $(CVDIR)/calc_draw.o $(CVDIR)/preproc_filters.o $(CVDIR)/obj_detection.o
 
 sim:	$(OBJS) $(CVOBJS)
 	make -C $(CVDIR) #all_but_main

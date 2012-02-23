@@ -9,24 +9,38 @@ void callBack (int event, int x, int y, int flags, void* param) {
     
     if (event == CV_EVENT_LBUTTONDOWN) {
         // print the HSV values at x,y
-        cvCvtColor (img, img, CV_BGR2HSV);
         imgPtr = (unsigned char*) img->imageData + y*img->widthStep + x*img->nChannels;
         printf ("(%d,%d):  %u  %u  %u\n", x,y,imgPtr[0],imgPtr[1],imgPtr[2]);
-        cvCvtColor (img, img, CV_HSV2BGR);
     }
 }
 
 int main (int argc, char** argv) {
-    if (argc != 2) {
+ 		IplImage* img;
+
+  	if (argc == 2) {
+			  printf ("Loading %s\n", argv[1]);
+        img = cvLoadImage (argv[1]);
+    		cvNamedWindow ("Image");
+    		cvShowImage ("Image", img);
+
+				printf ("Assuming image is BGR. Use -c as second arg for HSV image.\n");
+        cvCvtColor (img, img, CV_BGR2HSV);
+		}
+		else if (argc == 3) {
+			  printf ("Loading %s\n", argv[2]);
+        img = cvLoadImage (argv[2]);
+    	  cvNamedWindow ("Image");
+    		cvShowImage ("Image", img);
+
+				cvCvtColor (img,img, CV_HSV2BGR);
+	  }
+		else {
         printf ("Indicate name of image as argument\n");
         return 1;
     } 
-    else 
-        printf ("Click to Print HSV values. 'q' to Exit\n");
     
-    IplImage* img = cvLoadImage (argv[1]);
-    cvNamedWindow ("Image");
-    cvShowImage ("Image", img);
+		printf ("\nClick to Print HSV values. 'q' to Exit\n");
+    
     
     cvSetMouseCallback ("Image", callBack, img);
     
