@@ -12,7 +12,7 @@ int main (int argc, char** argv) {
     CvMemStorage* storage = cvCreateMemStorage (0);
     
     int nContours = cvFindContours (
-        temp,    // input image
+        temp,    // input image, will be scratched
         storage, // storage
         &contours, // output pointer to CvSeq*, root node of contour tree
         sizeof (CvContour), // header size, must be this

@@ -20,6 +20,7 @@
 #include "../vision/common.h"
 #include "../vision/task_gate.h"
 #include "../vision/task_path.h"
+#include "../vision/task_buoy.h"
 #include "../vision/task_U.h"
 
 #include "../mission/mission.h"
@@ -73,7 +74,7 @@ void makeTextureImage(char filename[], GLuint tex_name) {
                 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 }
 
-#define CAMERA_FIELD_OF_VIEW 37
+#define CAMERA_FIELD_OF_VIEW 35
 
 /** sky's color*/
 const float sky[4] = { .527343, .804687, 5/*1*/, 1.0f};
@@ -316,15 +317,17 @@ void cv_init () {
        cv_img2 = cvCreateImage (cvSize(WINDOW_SIZE_X,WINDOW_SIZE_Y), IPL_DEPTH_8U, 3);
        cv_img2->origin = 1;
        
+       Vin2.HSV.setSim_path();
        switch (CV_VISION_FLAG) {
            case '1':
            case '2':
-               Vin.HSV.setSim1();
-               Vin2.HSV.setSim2();
+               Vin.HSV.setSim_gate();
                break;
-           case '3':
-               Vin.HSV.setSim1();
-               Vin2.HSV.setSim2();
+           case '3': 
+               Vin.HSV.setSim_buoyR();
+               break;
+           case '4':
+               Vin.HSV.setSim_gate (); // should be set to U, but we dont have that obstacle yet
                break;
            default:
                printf ("Unrecognized CV_VISION_FLAG. Shutting Down\n");
@@ -382,6 +385,9 @@ void cv_display (void) {
                 controller_PATH (Vin2, m);
                 break;
             case '3':
+                controller_BUOY (Vin, m);
+                break;
+            case '4':
                 controller_U (Vin, m);
                 break;
        }
@@ -529,7 +535,7 @@ int main(int argc, char** argv)
          "*** <> to set reverse/forward speed\n"
          "*** -+ to set down/up depth speed\n"
          "*** [] to set negative/positive angular speed\n"
-         "*** p to take a screenshot saved as test.bmp\n"
+         "*** p to take a screenshot saved as cvSimImg.jpg\n"
          "*** (and other undocumented features)\n"
          "*** TO CHANGE inital position, see init.h\n"
          "-----------------------------------------\n");

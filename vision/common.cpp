@@ -21,9 +21,12 @@ void HSV_settings:: setHue (int hmin, int hmax) {
 void HSV_settings:: setSat (unsigned smin, unsigned smax) { S_MIN = smin; S_MAX = smax; }
 void HSV_settings:: setVal (unsigned vmin, unsigned vmax) { V_MIN = vmin; V_MAX = vmax; }
 //void HSV_settings:: setRange1 () { H_MIN=40; H_MAX=70; S_MIN=125; S_MAX=255; V_MIN=110; V_MAX=255;}
-void HSV_settings:: setSim1 () { H_MIN=5; H_MAX=30; S_MIN=70; S_MAX=255; V_MIN=150; V_MAX=255;}
-void HSV_settings:: setSim2 () { H_MIN=20; H_MAX=40; S_MIN=80; S_MAX=255; V_MIN=110; V_MAX=255;}
- 
+void HSV_settings:: setSim_gate () { H_MIN=5; H_MAX=30; S_MIN=70; S_MAX=255; V_MIN=150; V_MAX=255;}
+void HSV_settings:: setSim_path () { H_MIN=20; H_MAX=50; S_MIN=80; S_MAX=255; V_MIN=110; V_MAX=255;}
+void HSV_settings:: setSim_buoyR () { H_MIN=170; H_MAX=10; S_MIN=70; S_MAX=255; V_MIN=110; V_MAX=255;}
+void HSV_settings:: setSim_buoyG () { H_MIN=50; H_MAX=70; S_MIN=70; S_MAX=255; V_MIN=110; V_MAX=255;}
+void HSV_settings:: setSim_buoyY () { H_MIN=15; H_MAX=45; S_MIN=70; S_MAX=255; V_MIN=110; V_MAX=255;}
+
 int HSV_settings:: HueInRange (unsigned hue) { 
     if (H_MAX >= H_MIN) 
         return ((hue >= unsigned(H_MIN)) && (hue <= unsigned(H_MAX)));

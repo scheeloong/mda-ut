@@ -21,8 +21,11 @@ class HSV_settings {
     void setSat (unsigned smin, unsigned smax); // set saturation
     void setVal (unsigned vmin, unsigned vmax);
     int HueInRange (unsigned hue);
-    void setSim1 (); // for orange gate in sim
-    void setSim2 (); // for brown pipe in sim
+    void setSim_gate (); // for orange gate in sim
+    void setSim_path (); // for brown pipe in sim
+    void setSim_buoyR (); // for brown pipe in sim
+    void setSim_buoyG (); // for brown pipe in sim
+    void setSim_buoyY (); // for brown pipe in sim
 };
 
 #define TAN_FOV_X 1.2 // Tan of the horizontal FOV of cam. Equal to full_width/range
