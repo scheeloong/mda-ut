@@ -160,7 +160,10 @@ wire reset_n;
 wire select_i2c_clk;
 wire i2c_clk;
 wire spi_clk;
-
+wire [33:0] gpio_0_wire;
+wire [33:0] gpio_1_wire;
+wire [12:0] gpio_2_wire;
+wire [7:0]  led_wire;
 
 
 //=======================================================
@@ -168,6 +171,16 @@ wire spi_clk;
 //=======================================================
 
 assign reset_n = 1'b1;
+
+power_management #(
+  .NUM_IN(2),
+  .NUM_IOS(34+34+13+8)
+) pm_inst (
+  .clk(CLOCK_50),
+  .shutdown(~KEY),
+  .gpio_in({gpio_0_wire, gpio_1_wire, gpio_2_wire, led_wire}),
+  .gpio_out({GPIO_0, GPIO_1, GPIO_2, LED})
+);
 
 DE0_Nano_SOPC DE0_Nano_SOPC_inst(
                       // 1) global signals:
@@ -179,7 +192,7 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
 
 			
                       // GPIO pins to Avalon slave(s)
-                       .GPIO_out_from_the_motor_controller_0({LED[7:4], GPIO_2[6], GPIO_2[8], GPIO_0[24], GPIO_0[25], GPIO_0[18], GPIO_0[19], GPIO_0[12], GPIO_0[13], GPIO_0[16], GPIO_0[17], GPIO_0[10], GPIO_0[11], GPIO_2[2], GPIO_2[4], GPIO_0[22], GPIO_0[23], GPIO_0[4], GPIO_0[5], GPIO_0[2], GPIO_0[0]}),
+                       .GPIO_out_from_the_motor_controller_0({led_wire[7:4], gpio_2_wire[6], gpio_2_wire[8], gpio_0_wire[24], gpio_0_wire[25], gpio_0_wire[18], gpio_0_wire[19], gpio_0_wire[12], gpio_0_wire[13], gpio_0_wire[16], gpio_0_wire[17], gpio_0_wire[10], gpio_0_wire[11], gpio_2_wire[2], gpio_2_wire[4], gpio_0_wire[22], gpio_0_wire[23], gpio_0_wire[4], gpio_0_wire[5], gpio_0_wire[2], gpio_0_wire[0]}),
 
                       // Clocks for the IMU
                       .spi_clk_to_the_imu_controller_0(spi_clk),
