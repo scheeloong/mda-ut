@@ -441,3 +441,7 @@ set_global_assignment -name VERILOG_FILE imu/integrator_signed_32bits.v -qip DE0
 set_global_assignment -name VERILOG_FILE imu/magnetometer_i2c_interface.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE imu_controller_0.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A0000013591366DBD -qip DE0_Nano_SOPC.qip
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000135A7E58112 -qip DE0_Nano_SOPC.qip
+set_global_assignment -name VERILOG_FILE power_management/power_management.v
+
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000135B651790C -qip DE0_Nano_SOPC.qip
