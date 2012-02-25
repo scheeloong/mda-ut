@@ -166,13 +166,17 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
 //            _QUIET to suppress printed messages.
 //            Multiple flags can be set using the | operator.
 // 6. List of commands to send back:
-//    'w','s' = forward / backward
-//    'a','d' = turn left, right
-//    'i','k' = rise, sink
-//    The above is all the commands the sub can do in real life
-//    'r','f' = roll left, roll right
-//    't','g' = pitch foward, pitch backwards
-
+//    m.move(FOWARD), m.move(REVERSE)  to go foward or back
+//    m.move(RIGHT),  m.move(LEFT)
+//    m.move(FORWARD, 3)               to go fowards at 3 times the speed of normal!
+//    m.move(STOP)                     to stop movement
+// Note that if you dont run stop, previous commands are "remembered", so:
+//    If you do m.move(FOWARD) and m.move(RIGHT)	
+//    the sub will be moving FOWARD plus RIGHT
+//    m.move(REVERSE) cancels m.move(FOWARD), m.move(LEFT) cancels m.move(RIGHT)
+//    m.move(STOP) will stop all motion.
+//
+//
 void controller_PATH (vision_in &Input, Mission &m) {
 // following the path - fairly complex controls. Need to sink to right depth after acquiring the pipe.
 // Then rotate until pipe aligned. Then rise and move foward. 
@@ -259,21 +263,35 @@ void controller_PATH (vision_in &Input, Mission &m) {
         case OFF_CENTER:
             printf ("    State: OFF_CENTER\n");
             if (Output.real_x == 0) Output.real_x = 0.00001;
-            
-            temp = fabs(Output.real_y/Output.real_x);
-            if (temp < 11.5) { // if obj outside of +-5 degrees from vertical
+            temp = Output.real_y/Output.real_x; // temp is y/x ratio
+
+            if ((temp < 11.5) && (temp >= 0)) { 
+	    // more than 5 degrees from vertical, 1st or 3rd quadrant
                 m.move(STOP);	
-                if (temp > 1.7) // if not more than +- 30 degrees
-                    m.move(FORWARD);
-                
-                if (Output.real_x > 0) // turn towards the obj
-                    m.move(RIGHT,4);
-                else
-                    m.move(LEFT,4);
+		m.move (RIGHT,3);
+
+		if (temp > 1.7) { // not more than 30 degrees from vert
+		    if (Output.real_y >= 0)
+		    	m.move(FORWARD);
+		    else 
+			m.move(REVERSE);
+		}
             }
+	    else if ((temp < 0) && (temp > -11.5)) {
+	    // 2nd or 4th quadrant
+		m.move(STOP);
+		m.move (LEFT,3);
+
+		if (temp > 1.7) { // not more than 30 degrees off
+		    if (Output.real_y >= 0)
+			m.move (FORWARD);
+		    else
+			m.move (REVERSE);
+		}
+	    }
             else {
                 m.move(STOP);
-                if (Output.real_y > 0)
+                if (Output.real_y >= 0)
                     m.move(FORWARD);
                 else
                     m.move(REVERSE);
@@ -282,21 +300,21 @@ void controller_PATH (vision_in &Input, Mission &m) {
         case CENTERED:
             printf ("    State: CENTERED\n");
             m.move(STOP);
-            m.move(SINK,4);
+            m.move(SINK,2);
             return;
         case UNALIGNED:
             printf ("    State: UNALIGNED\n");
             m.move(STOP);
             if (Output.tan_PA > 0)
-                m.move(LEFT,6);
+                m.move(LEFT,3);
             else 
-                m.move(RIGHT,6);
+                m.move(RIGHT,3);
             return;
         case ALIGNED:
             printf ("    State: ALIGNED\n");
             m.move(STOP);
             m.move(FORWARD);
-            m.move(RISE,3);
+            m.move(RISE);
             return;       
         case ERROR:
             printf ("    ERROR!!\n");

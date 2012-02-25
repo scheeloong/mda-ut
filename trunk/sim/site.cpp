@@ -494,9 +494,9 @@ void do_buoys()
       
       glTranslatef(buoys_v[i].x, buoys_v[i].y, buoys_v[i].z);
       gluSphere(buoys[2 * i],
-                /* radius*/ .115,
-                /* slices*/ 10,
-                /* stacks*/ 10);
+                /* radius*/ .2,//.115, made them bigger for easier testing
+                /* slices*/ 40,
+                /* stacks*/ 40);
       glRotatef(90, 1.0, 0.0, 0.0);
       glColor3f ( 0.0f, 0.0f, 0.0f );
       gluCylinder(buoys[2 * i + 1],

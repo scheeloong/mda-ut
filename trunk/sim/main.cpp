@@ -73,7 +73,7 @@ void makeTextureImage(char filename[], GLuint tex_name) {
    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,
                 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 }
-
+	
 #define CAMERA_FIELD_OF_VIEW 35
 
 /** sky's color*/
@@ -241,6 +241,7 @@ void anim_scene()
 /**
 * @brief Take a screenshot from current angle and save as bitmap
 */
+/*
 void screenshot()
 {
    int n = 3*window_width*window_height;
@@ -253,7 +254,7 @@ void screenshot()
       assert(false);
    delete []pixels;
 }
-
+*/
 /** OpenCV integration section starts here.
  *  Info:
  *  The glut model of code goes revolves around the function glutMainLoop(). A
