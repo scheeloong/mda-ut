@@ -29,4 +29,4 @@ $(MISSIONDIR)$(MISSIONA):
 clean:
 	rm -f $(OBJS) sim *.bmp
 
-.PHONY: clean $(CVDIR)$(CVA) $(MISSIONDIR)$(MISSIONA) sim
+.PHONY: clean

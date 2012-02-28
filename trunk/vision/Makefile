@@ -27,4 +27,4 @@ $(A): $(TASKS) $(LIBO)
 clean:
 	rm -rf $(LIBO) $(TASKS) $(A) test_cv ./*~
 
-.PHONY: all clean test_cv $(MISSIONDIR)$(MISSIONA)
+.PHONY: all clean
