@@ -9,7 +9,7 @@ A=libmission.a
 .cpp.o: $(INC)
 	$(CC) $< -o $@ -c $(FLAGS)
 
-all: $(OBJ)
+all: $(OBJ) $(A)
 
 $(A): $(OBJ)
 	ar -cqv $@ $(LIBO)
