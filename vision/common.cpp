@@ -26,6 +26,7 @@ void HSV_settings:: setSim_path () { H_MIN=20; H_MAX=50; S_MIN=80; S_MAX=255; V_
 void HSV_settings:: setSim_buoyR () { H_MIN=170; H_MAX=10; S_MIN=70; S_MAX=255; V_MIN=110; V_MAX=255;}
 void HSV_settings:: setSim_buoyG () { H_MIN=50; H_MAX=70; S_MIN=70; S_MAX=255; V_MIN=110; V_MAX=255;}
 void HSV_settings:: setSim_buoyY () { H_MIN=15; H_MAX=45; S_MIN=70; S_MAX=255; V_MIN=110; V_MAX=255;}
+void HSV_settings:: setSim_U () { H_MIN=50; H_MAX=70; S_MIN=75; S_MAX=255; V_MIN=110; V_MAX=255;}
 
 int HSV_settings:: HueInRange (unsigned hue) { 
     if (H_MAX >= H_MIN) 

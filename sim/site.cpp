@@ -12,7 +12,7 @@
 #define NUM_BUOYS 3
 #define EXIT_SIDES 8
 #define MACHINE_GUN_PARTS 9
-#define BARBED_WIRE_PARTS 3
+#define BARBED_WIRE_PARTS 5
 
 int list;
 GLUquadricObj *g1/**Side gate post*/, *g2/**Other side gate post*/, *g3/**Top gate post*/, *buoys[2 * NUM_BUOYS], *EXIT[2 * EXIT_SIDES], *machine_test[MACHINE_GUN_PARTS], *barbed_wire[2 * BARBED_WIRE_PARTS];
@@ -516,6 +516,8 @@ void do_buoys()
 #define BARB_X 5.20
 #define BARB_Z -6.45
 #define BARBWIRE_RADIUS 0.05
+#define VERT_SPACE 1.1
+#define VERT_FILL 0.3
 
 /**
 * @brief Define barbed wire obstacle
@@ -531,7 +533,7 @@ void do_barbed_wire(double x, double z, int offset) // draw barbed wire
                /*HEIGHT*/ BARBHEIGHT,
                /*SLICES*/ 10,
                /*STACKS*/ 10);
-
+      
    glRotatef(90, 1.0, 0.0, 0.0);
    glTranslatef(0, 0, BARBWIDTH);
    glRotatef(-90, 1.0, 0.0, 0.0);
@@ -551,6 +553,24 @@ void do_barbed_wire(double x, double z, int offset) // draw barbed wire
                /*HEIGHT*/ BARBWIDTH,
                /*SLICES*/ 10,
                /*STACKS*/ 10);
+   // far side vertical piece
+   glTranslatef (0, VERT_SPACE, 0); // up
+   glRotatef(-90, 1.0, 0.0, 0.0); // pointing up
+   gluCylinder(machine_test[3 + offset],
+               /*BASE_RADIUS*/ BARBWIRE_RADIUS,
+               /*TOP_RADIUS*/ BARBWIRE_RADIUS,
+               /*HEIGHT*/ VERT_FILL,
+               /*SLICES*/ 10,
+               /*STACKS*/ 10);
+   // near side vertical piece
+   glTranslatef (0, -BARBWIDTH, 0);
+   gluCylinder(machine_test[4 + offset],
+                /*BASE_RADIUS*/ BARBWIRE_RADIUS,
+                /*TOP_RADIUS*/ BARBWIRE_RADIUS,
+                /*HEIGHT*/ VERT_FILL,
+                /*SLICES*/ 10,
+                /*STACKS*/ 10);
+    
 }
 
 #define EXIT_radius 0.0254
@@ -700,9 +720,9 @@ void draw()
 #define BARBWIRE_OFFSET_X 0.8f
 #define BARBWIRE_OFFSET_Z -0.45f
 
-   glPushMatrix();
-   do_barbed_wire(BARBWIRE_OFFSET_X, BARBWIRE_OFFSET_Z, BARBED_WIRE_PARTS);
-   glPopMatrix();
+   //glPushMatrix();
+   //do_barbed_wire(BARBWIRE_OFFSET_X, BARBWIRE_OFFSET_Z, BARBED_WIRE_PARTS);
+   //glPopMatrix();
 
 #define EXIT_OFFSET_X -2.34f
 #define EXIT_OFFSET_Z 3.36f

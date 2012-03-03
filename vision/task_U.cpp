@@ -144,7 +144,7 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
                 printf ("  vision_U: Lateral Pos: %f , %f\n", Output.real_x, Output.real_y);
                 printf ("  vision_U: Range: %f\n", Output.range);
             }
-            ret = DETECT_2;
+            ret = DETECT_3;
         }
         else { // 1 horiz and 1 vertical line  
             // dont need to do anything
@@ -158,14 +158,14 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
         int i2 = (long1+1)%3,   i3 = (long1+2)%3; // index of other 2 lines
             
         int dx = ABS(cseed[long1][1].x-cseed[long1][0].x)+1;
-        int dy = ABS(cseed[long1][1].y-cseed[long1][1].y)+1;
+        int dy = ABS(cseed[long1][1].y-cseed[long1][0].y)+1;
         int dx2 = ABS(cseed[i2][1].x-cseed[i2][0].x)+1;
-        int dy2 = ABS(cseed[i2][1].y-cseed[i2][1].y)+1;
+        int dy2 = ABS(cseed[i2][1].y-cseed[i2][0].y)+1;
         int dx3 = ABS(cseed[i3][1].x-cseed[i3][0].x)+1;
-        int dy3 = ABS(cseed[i3][1].y-cseed[i3][1].y)+1;
+        int dy3 = ABS(cseed[i3][1].y-cseed[i3][0].y)+1;
         
         if ((float(dx)/dy > 5) && // longest line = horiz
-            (float(dy2)/dx2 > 4) && (float(dy3)/dx3 > 5) && // other 2 lines = vert
+            (float(dy2)/dx2 > 4) && (float(dy3)/dx3 > 4) && // other 2 lines = vert
             (cseed[i2][1].y > cseed[long1][0].y) && (cseed[i3][1].y > cseed[long1][0].y)) // vert segments above horiz
         {
             // estimate range using vertical line seperation
@@ -173,7 +173,6 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
             pix_y = (cseed[long1][0].y+cseed[long1][1].y+cseed[i2][0].y+cseed[i3][0].y)/4 - img_1->height/2;
             int obj_pix_width = (ABS(cseed[i2][0].x-cseed[i3][0].x)+ABS(cseed[i2][1].x-cseed[i3][1].x))/2;
     
-            // estimate range using horiz seperation
             Output.range = U_WIDTH * float(img_1->width) / obj_pix_width / TAN_FOV_X;
             Output.real_x = pix_x * U_HEIGHT / obj_pix_width;
             Output.real_y = pix_y * U_WIDTH / obj_pix_width;
@@ -183,7 +182,7 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
                 printf ("  vision_U: Lateral Pos: %f , %f\n", Output.real_x, Output.real_y);
                 printf ("  vision_U: Range: %f\n", Output.range);
             }
-            ret = DETECT_2;
+            ret = DETECT_3;
         }
    }
     else 
