@@ -131,7 +131,7 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
         /** can only return pixel space info based on img centroid */
         printf ("  vision_PATH: Cant Identify Object.\n");
         CvPoint img_centroid = calcImgCentroid (img_1);  
-        Output.real_x = 2*float(img_centroid.x) / img_1->width;
+        Output.real_x = 2*float(img_centroid.x) / img_1->width; // equal to 1 if point at the edge
         Output.real_y = 2*float(img_centroid.y) / img_1->height; 
     
         ret = DETECT_1;
@@ -142,6 +142,10 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
     delete cseed[0]; delete cseed;
     return ret;
 }
+
+#define FWD_SPEED 1
+#define SINK_SPEED 1
+#define TURN_SPEED 3
 
 /* ##############################################################################################
    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -258,63 +262,61 @@ void controller_PATH (vision_in &Input, Mission &m) {
             return;
         case NO_PIPE:
             printf ("    State: NO_PIPE\n");
-            m.move(FORWARD);
+            m.move(FORWARD, FWD_SPEED);
             return;
         case OFF_CENTER:
             printf ("    State: OFF_CENTER\n");
             if (Output.real_x == 0) Output.real_x = 0.00001;
             temp = Output.real_y/Output.real_x; // temp is y/x ratio
+            m.move(STOP);
 
             if ((temp < 11.5) && (temp >= 0)) { 
-	    // more than 5 degrees from vertical, 1st or 3rd quadrant
-                m.move(STOP);	
-		m.move (RIGHT,3);
+            // more than 5 degrees from vertical, 1st or 3rd quadrant
+                m.move (RIGHT,TURN_SPEED);
 
-		if (temp > 1.7) { // not more than 30 degrees from vert
-		    if (Output.real_y >= 0)
-		    	m.move(FORWARD);
-		    else 
-			m.move(REVERSE);
-		}
+                if (temp > 1.7) { // not more than 30 degrees from vert
+                    if (Output.real_y >= 0)
+                        m.move(FORWARD, FWD_SPEED);
+                    else 
+                        m.move(REVERSE, FWD_SPEED);
+                }
             }
-	    else if ((temp < 0) && (temp > -11.5)) {
-	    // 2nd or 4th quadrant
-		m.move(STOP);
-		m.move (LEFT,3);
+            else if ((temp < 0) && (temp > -11.5)) {
+            // 2nd or 4th quadrant
+                m.move (LEFT,TURN_SPEED);
 
-		if (temp > 1.7) { // not more than 30 degrees off
-		    if (Output.real_y >= 0)
-			m.move (FORWARD);
-		    else
-			m.move (REVERSE);
-		}
-	    }
+                if (temp > 1.7) { // not more than 30 degrees off
+                    if (Output.real_y >= 0)
+                        m.move (FORWARD, FWD_SPEED);
+                    else
+                    m.move (REVERSE, FWD_SPEED);
+                }
+            }
             else {
-                m.move(STOP);
                 if (Output.real_y >= 0)
-                    m.move(FORWARD);
+                    m.move(FORWARD, FWD_SPEED);
                 else
-                    m.move(REVERSE);
+                    m.move(REVERSE, FWD_SPEED);
             }
             return;
         case CENTERED:
             printf ("    State: CENTERED\n");
             m.move(STOP);
-            m.move(SINK,2);
+            m.move(SINK, SINK_SPEED);
             return;
         case UNALIGNED:
             printf ("    State: UNALIGNED\n");
             m.move(STOP);
             if (Output.tan_PA > 0)
-                m.move(LEFT,3);
+                m.move(LEFT,TURN_SPEED);
             else 
-                m.move(RIGHT,3);
+                m.move(RIGHT,TURN_SPEED);
             return;
         case ALIGNED:
             printf ("    State: ALIGNED\n");
             m.move(STOP);
-            m.move(FORWARD);
-            m.move(RISE);
+            m.move(FORWARD, FWD_SPEED);
+            m.move(RISE, SINK_SPEED);
             return;       
         case ERROR:
             printf ("    ERROR!!\n");

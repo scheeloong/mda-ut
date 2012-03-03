@@ -27,6 +27,6 @@ $(MISSIONDIR)$(MISSIONA):
 	g++ -c $< $(FLAGS)
 
 clean:
-	rm -f $(OBJS) sim *.bmp
+	rm -f $(OBJS) *.o sim *.bmp
 
 .PHONY: clean
