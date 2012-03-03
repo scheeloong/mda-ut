@@ -29,7 +29,7 @@ unsigned int randNum;
 struct timeval last;
 
 /* store of texture references*/
-GLuint texName[8];
+GLuint texName[10];
 /* physical model*/
 physical_model model;
 orientation &angle = model.angle;
@@ -107,7 +107,9 @@ void init() {
    texName[5] = 5;
    texName[6] = 6;
    texName[7] = 7;
-   glGenTextures(8, texName);
+   texName[8] = 8;
+   texName[9] = 9;
+   glGenTextures(10, texName);
 
    /* load textures */
     //#define TNAME "img/green_resized.bmp"
@@ -119,6 +121,8 @@ void init() {
     #define BINNAME2 "img/tank.bmp"
     #define BINNAME3 "img/plane.bmp"
     #define BINNAME4 "img/factory.bmp"
+    #define RED_CUTOUT "img/red_cutout.bmp"
+    #define BLUE_CUTOUT "img/blue_cutout.bmp"
 
    makeTextureImage((char *)TNAME, 0);
    makeTextureImage((char *)SNAME, 1);
@@ -128,6 +132,8 @@ void init() {
    makeTextureImage((char *)BINNAME2, 5);
    makeTextureImage((char *)BINNAME3, 6);
    makeTextureImage((char *)BINNAME4, 7);
+   makeTextureImage((char *)RED_CUTOUT, 8);
+   makeTextureImage((char *)BLUE_CUTOUT, 9);
 
    /* enable texturing & set texturing function */
    glEnable(GL_TEXTURE_2D);
