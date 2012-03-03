@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 #include "task_buoy.h"
 #include "common.h"
 
@@ -34,21 +35,22 @@ retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
     CvMemStorage* storage=cvCreateMemStorage(0);  
     CvSeq* circles = 0;
   
-    cvSmooth(img_1,img_1, CV_BLUR, 5,5); // smooth to ensure canny will "catch" the circle
+    cvSmooth(img_1,img_1, CV_BLUR, 3,3); // smooth to ensure canny will "catch" the circle
     if (flags & _DISPLAY) cvShowImage(Input.window[0], img_1);
-        
+     
     circles = cvHoughCircles(img_1, storage, CV_HOUGH_GRADIENT,
                              1, //  resolution in accumulator img. > 1 means lower res
                              100, // mindist
-                             40, // canny high threshold
-                             20 ); // accumulator threshold
+                             60, // canny high threshold
+                             30 ); // accumulator threshold
 
     /** decide on output */
     int ncircles=circles->total; 
     printf ("ncircles: %d\n", ncircles);
     if (ncircles != 1) { 
         CvPoint img_centroid = calcImgCentroid (img_1); // always return pixel coords of centroid
-        Output.real_x = img_centroid.x;  Output.real_y = img_centroid.y;
+        Output.real_x = 2*float(img_centroid.x) / img_1->width; // equal to 1 if point at the edge
+        Output.real_y = 2*float(img_centroid.y) / img_1->height; 
         
         cvReleaseImage (&img_1);  cvReleaseMemStorage (&storage); 
         
@@ -82,7 +84,157 @@ retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
     }
 }
 
-/** uses contour tests to determine if there are circles */
+
+#define NB_t        6   // after travelling foward for this long in NB, go to PAN
+#define PAN_t       8   // stay in PAN for this long (pan and back)
+#define CHARGE_t    1   
+#define RET_t       3   // return for this much time
+
+#define FWD_SPEED 1
+#define SINK_SPEED 1
+#define TURN_SPEED 3
+#define DONE_RANGE 40
+
+void controller_BUOY (vision_in &Input, Mission &m) {
+    retcode vcode;
+    // vcode table:
+//  ERROR = bad, disregard this image. Happens if multiple circles found.
+//  NO_DETECT = no detection (not enough pixels to constitute image)
+//  DETECT_1 = partial detection (significant number of pixels, but shape did not trigger circle detector. 
+//              Returns pixel center of mass of filtered image
+//  DETECT_2 = full detection 
+    
+    vision_out Output;
+    vcode = vision_BUOY (Input, Output, _INVERT | _DISPLAY);
+    
+    static int dt = time(NULL); // dt is a time offset, used to find how much time since last event
+    int t = time(NULL);         // read the current time. The "true" timer reading is t-dt
+    
+    enum ESTATE {NO_BUOY, GOOD, PAN, CHARGE, RET, DONE, PAUSE};
+    /** State Guide:
+     * The sub starts in NB and travels foward. If it sees something, it goes to GOOD to 
+     * home in on that object.
+     * If travels in NB for NB_t without seeing anything, start panning to search for object
+     * Once we are close enough to the object, go to CHARGE, which will charge at the buoy
+     * for CHARGE_t, and then go to RET, which will go backwards for a bit
+     */
+    
+    static ESTATE state = NO_BUOY;
+        
+    if (state == NO_BUOY) {
+        if (vcode == DETECT_2) { // found something!
+            state = GOOD;
+            dt = t; // reset timer
+        }
+       else if (t-dt > NB_t) { // we travelled a long time without finding anything
+            state = PAN;
+            dt = t;
+        }
+    }
+    else if (state == GOOD) {
+        if ((vcode == NO_DETECT) || (vcode == DETECT_1)) { // lost object
+            state = NO_BUOY;
+            dt = t;
+        }
+        else if (Output.range < DONE_RANGE) // we are close enough to be considered done
+            state = RET;
+    }
+    else if (state == PAN) {
+        if ((vcode == DETECT_2) || (t-dt >= PAN_t)) {
+            state = NO_BUOY;
+            dt = t;
+        }
+    }
+    else if (state == CHARGE) {
+        if (t-dt > CHARGE_t) {
+            state = RET;
+            dt = t;
+        }
+    }
+    else if (state == RET) {
+        if (t-dt > RET_t) 
+            state = DONE;
+    }
+    
+    /// output logic
+    
+    switch (state) {
+        case NO_BUOY:
+            printf ("   buoy: NO_BUOY\n");
+            m.move (STOP);
+            m.move (FORWARD, FWD_SPEED);
+            
+            if (vcode == DETECT_1) {
+                if (Output.real_x > 0.5)
+                    m.move (RIGHT, TURN_SPEED);
+                else if (Output.real_x < -0.5)
+                    m.move (LEFT, TURN_SPEED);
+                if (Output.real_y > 0.5)
+                    m.move (RISE, SINK_SPEED);
+                else if (Output.real_y < -0.5)
+                    m.move (SINK, SINK_SPEED);
+            }
+            break;
+        case GOOD:
+            printf ("   buoy: DETECTED\n");
+            printf ("   (%f,%f), R=%f\n", Output.real_x,Output.real_y,Output.range);
+            
+            m.move(STOP);
+            if (Output.real_x > 0.4) 
+                m.move (RIGHT, TURN_SPEED);
+            else if (Output.real_x < -0.4)
+                m.move (LEFT, TURN_SPEED);
+            if (Output.real_y > 0.3)
+                m.move (RISE, SINK_SPEED);
+            else if (Output.real_y < -0.3)
+                m.move (SINK, SINK_SPEED);
+            
+            if ((Output.real_x*Output.real_x + Output.real_y*Output.real_y) / (Output.range*Output.range) < 0.35)  
+                m.move (FORWARD, FWD_SPEED); // less than 20 degrees
+            break;
+        case CHARGE:
+            printf ("   buoy: FINISHED\n");
+            m.move (FORWARD, FWD_SPEED);
+            break;
+        case RET:
+            printf ("   buoy: FINISHED\n");
+            m.move (REVERSE, FWD_SPEED);
+            break;
+        case PAUSE:
+            break;
+        case DONE:
+            m.move (STOP);
+            break;
+        case PAN:
+            printf ("   buoy: PANNING\n");
+            m.move (STOP);
+            if (t-dt < PAN_t/2)  // pan left for first half
+                m.move(LEFT, TURN_SPEED);
+            else 
+                m.move (RIGHT, TURN_SPEED);
+            break;
+        default:
+            printf ("\n\n I dont know what state Im in!!\n");
+            while (1);
+    }       
+                          
+    return;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+/** uses contour tests to determine if there are circles.
+ * This was coded as an experiment and will not be actually used */
 retcode vision_BUOY2 (vision_in &Input, vision_out &Output, char flags) {
 // Will change real_x, real_y, range in Output.
 // return state guide:
@@ -156,26 +308,3 @@ retcode vision_BUOY2 (vision_in &Input, vision_out &Output, char flags) {
     cvReleaseImage (&img_1);
     return ERROR;
 }
-
-
-
-
-
-
-
-void controller_BUOY (vision_in &Input, Mission &m) {
-    retcode vcode;
-    // vcode table:
-//  ERROR = bad, disregard this image. Happens if multiple circles found.
-//  NO_DETECT = no detection (not enough pixels to constitute image)
-//  DETECT_1 = partial detection (significant number of pixels, but shape did not trigger circle detector. 
-//              Returns pixel center of mass of filtered image
-//  DETECT_2 = full detection 
-    
-    vision_out Output;
-    vcode = vision_BUOY2 (Input, Output, _INVERT | _DISPLAY);
-    
-    //enum ESTATE = {START, OFF_CENTER, CENTERED, PAUSE};
-
-    return;
-};
