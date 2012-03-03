@@ -37,9 +37,9 @@ retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
   
     cvSmooth(img_1,img_1, CV_BLUR, 3,3); // smooth to ensure canny will "catch" the circle
     if (flags & _DISPLAY) cvShowImage(Input.window[0], img_1);
-     
+    
     circles = cvHoughCircles(img_1, storage, CV_HOUGH_GRADIENT,
-                             1, //  resolution in accumulator img. > 1 means lower res
+                             2, //  resolution in accumulator img. > 1 means lower res
                              100, // mindist
                              60, // canny high threshold
                              30 ); // accumulator threshold
@@ -68,7 +68,7 @@ retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
         
         if (flags & _DISPLAY) {
             CvPoint pt = cvPoint(data[0],data[1]); // x and y coordinate of circle    
-            cvCircle(img_1, pt, cvRound(data[2]), CV_RGB(100,200,100), 2, 8);
+            cvCircle(img_1, pt, cvRound(data[2]), CV_RGB(100,200,100), 1, 8);
             cvShowImage(Input.window[1], img_1);
         }
         Output.range = BUOY_REAL_RAD * float(img_1->width) / (buoy_pix_rad * TAN_FOV_X);
@@ -86,14 +86,14 @@ retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
 
 
 #define NB_t        6   // after travelling foward for this long in NB, go to PAN
-#define PAN_t       8   // stay in PAN for this long (pan and back)
-#define CHARGE_t    1   
-#define RET_t       3   // return for this much time
+#define PAN_t       3   // stay in PAN for this long (pan and back)
+#define CHARGE_t    2   
+#define RET_t       6   // return for this much time
 
-#define FWD_SPEED 1
-#define SINK_SPEED 1
-#define TURN_SPEED 3
-#define DONE_RANGE 40
+#define FWD_SPEED 	4//1
+#define SINK_SPEED 	4//1
+#define TURN_SPEED 	12//3
+#define DONE_RANGE 	40
 
 void controller_BUOY (vision_in &Input, Mission &m) {
     retcode vcode;
@@ -136,11 +136,13 @@ void controller_BUOY (vision_in &Input, Mission &m) {
             state = NO_BUOY;
             dt = t;
         }
-        else if (Output.range < DONE_RANGE) // we are close enough to be considered done
-            state = RET;
+        else if (Output.range < DONE_RANGE) { // we are close enough to be considered done
+            state = CHARGE;
+            dt = t;
+	}
     }
     else if (state == PAN) {
-        if ((vcode == DETECT_2) || (t-dt >= PAN_t)) {
+        if ((vcode == DETECT_2) || (t-dt > 4*PAN_t)) {
             state = NO_BUOY;
             dt = t;
         }
@@ -157,7 +159,6 @@ void controller_BUOY (vision_in &Input, Mission &m) {
     }
     
     /// output logic
-    
     switch (state) {
         case NO_BUOY:
             printf ("   buoy: NO_BUOY\n");
@@ -194,6 +195,7 @@ void controller_BUOY (vision_in &Input, Mission &m) {
             break;
         case CHARGE:
             printf ("   buoy: FINISHED\n");
+            m.move (STOP);
             m.move (FORWARD, FWD_SPEED);
             break;
         case RET:
@@ -208,7 +210,7 @@ void controller_BUOY (vision_in &Input, Mission &m) {
         case PAN:
             printf ("   buoy: PANNING\n");
             m.move (STOP);
-            if (t-dt < PAN_t/2)  // pan left for first half
+            if ((t-dt < PAN_t) || (t-dt >= 3*PAN_t))  // pan left for first half
                 m.move(LEFT, TURN_SPEED);
             else 
                 m.move (RIGHT, TURN_SPEED);
@@ -308,3 +310,4 @@ retcode vision_BUOY2 (vision_in &Input, vision_out &Output, char flags) {
     cvReleaseImage (&img_1);
     return ERROR;
 }
+
