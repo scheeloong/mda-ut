@@ -26,6 +26,7 @@ class HSV_settings {
     void setSim_buoyR (); // for brown pipe in sim
     void setSim_buoyG (); // for brown pipe in sim
     void setSim_buoyY (); // for brown pipe in sim
+		void setSim_U ();
 };
 
 #define TAN_FOV_X 1.2 // Tan of the horizontal FOV of cam. Equal to full_width/range

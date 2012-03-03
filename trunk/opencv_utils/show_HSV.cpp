@@ -15,11 +15,11 @@ void callBack (int event, int x, int y, int flags, void* param) {
 }
 
 int main (int argc, char** argv) {
- 		IplImage* img;
+	  IplImage* img;
 
   	if (argc == 2) {
 			  printf ("Loading %s\n", argv[1]);
-        img = cvLoadImage (argv[1]);
+        img = cvLoadImage (argv[1], 1);
     		cvNamedWindow ("Image");
     		cvShowImage ("Image", img);
 
@@ -28,11 +28,12 @@ int main (int argc, char** argv) {
 		}
 		else if (argc == 3) {
 			  printf ("Loading %s\n", argv[2]);
-        img = cvLoadImage (argv[2]);
+        img = cvLoadImage (argv[2], 1);
+				//cvCvtColor (img,img, CV_HSV2RGB);
     	  cvNamedWindow ("Image");
     		cvShowImage ("Image", img);
 
-				cvCvtColor (img,img, CV_HSV2BGR);
+				//cvCvtColor (img,img, CV_RBG2HSV);
 	  }
 		else {
         printf ("Indicate name of image as argument\n");

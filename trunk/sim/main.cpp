@@ -320,6 +320,8 @@ void cv_init () {
        
        Vin2.HSV.setSim_path();
        switch (CV_VISION_FLAG) {
+				   case '0':
+						   break;
            case '1':
            case '2':
                Vin.HSV.setSim_gate();
@@ -328,7 +330,7 @@ void cv_init () {
                Vin.HSV.setSim_buoyR();
                break;
            case '4':
-               Vin.HSV.setSim_gate (); // should be set to U, but we dont have that obstacle yet
+               Vin.HSV.setSim_U (); // should be set to U, but we dont have that obstacle yet
                break;
            default:
                printf ("Unrecognized CV_VISION_FLAG. Shutting Down\n");
@@ -379,6 +381,8 @@ void cv_display (void) {
        /** OPENCV CODE GOES HERE. */      
        //cvShowImage (WIN0,cv_img);
        switch (CV_VISION_FLAG) {
+				    case '0':
+								break;
             case '1':
                 controller_GATE (Vin, m);
                 break;
@@ -512,7 +516,7 @@ void cv_reshape(int w, int h)
 */
 int main(int argc, char** argv)
 {
-   if ((argc > 1) && (argv[1][0] >= '1') && (argv[1][0] <= '9'))
+   if ((argc > 1) && (argv[1][0] >= '0') && (argv[1][0] <= '9'))
       CV_VISION_FLAG = argv[1][0];
    if (argc > 2)
    {
