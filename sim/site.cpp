@@ -11,14 +11,14 @@
 
 #define NUM_BUOYS 3
 #define EXIT_SIDES 8
-#define MACHINE_GUN_PARTS 9
-#define BARBED_WIRE_PARTS 5
+#define WINDOW_CUTOUT_PARTS 1
+#define U_GATE_PARTS 5
 
 int list;
-GLUquadricObj *g1/**Side gate post*/, *g2/**Other side gate post*/, *g3/**Top gate post*/, *buoys[2 * NUM_BUOYS], *EXIT[2 * EXIT_SIDES], *machine_test[MACHINE_GUN_PARTS], *barbed_wire[2 * BARBED_WIRE_PARTS];
+GLUquadricObj *g1/**Side gate post*/, *g2/**Other side gate post*/, *g3/**Top gate post*/, *buoys[2 * NUM_BUOYS], *EXIT[2 * EXIT_SIDES], *window_cutout[WINDOW_CUTOUT_PARTS], *u_gate[U_GATE_PARTS];
 #define NLIST 4
 
-extern GLuint texName[8];
+extern GLuint texName[10];
 extern unsigned int randNum;
 
 #define FOG_PANEL 0
@@ -318,10 +318,10 @@ void init_site()
    g1 = gluNewQuadric();
    g2 = gluNewQuadric();
    g3 = gluNewQuadric();
-   for (int i=0; i<MACHINE_GUN_PARTS; i++)
-      machine_test[i] = gluNewQuadric();
-   for (int i=0; i<BARBED_WIRE_PARTS * 2; i++)
-      barbed_wire[i] = gluNewQuadric();
+   for (int i=0; i<WINDOW_CUTOUT_PARTS; i++)
+      window_cutout[i] = gluNewQuadric();
+   for (int i=0; i<U_GATE_PARTS * 2; i++)
+      u_gate[i] = gluNewQuadric();
    for (int i=0; i<NUM_BUOYS * 2; i++)
    {
       buoys[i] = gluNewQuadric();
@@ -395,90 +395,65 @@ void do_posts()
    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, post_col);
 }
 
-#define MACHINETEST_X 10
-#define MACHINETEST_Y 2
-#define MACHINETEST_Z -1
-#define MACHINETEST_LENGTH 0.46
-#define MACHINETEST_RADIUS 0.015
+#define WINDOW_CUTOUT_X 10
+#define WINDOW_CUTOUT_Y 2
+#define WINDOW_CUTOUT_Z -1
+#define WINDOW_CUTOUT_LENGTH 0.61
+#define WINDOW_CUTOUT_RADIUS 0.015
 
 /**
-* @brief Define machine gun test obstacle
+* @brief Define window cutout test obstacle
 */
-void do_machinetest()
+void do_window_cutout()
 {
    // base
    glColor3f( 0.0f, 0.0, 0.0f );
-   glTranslatef(MACHINETEST_X, 0, MACHINETEST_Z);
+   glTranslatef(WINDOW_CUTOUT_X, 0.0, WINDOW_CUTOUT_Z);
 
    // random rotation
    glRotatef(60 + randNum % 80 - 40, 0.0, 1.0, 0.0);
 
    glRotatef(-90, 1.0, 0.0, 0.0);
-   gluCylinder(machine_test[0],
-               /*BASE_RADIUS*/ MACHINETEST_RADIUS,
-               /*TOP_RADIUS*/ MACHINETEST_RADIUS,
-               /*HEIGHT*/ MACHINETEST_Y,
-               /*SLICES*/ 10,
-               /*STACKS*/ 10);
-
-   // square target
-   glColor3f( 0.0f, 1.0, 0.0f );
-   glRotatef(90, 1.0, 0.0, 0.0);
-   glTranslatef(0, MACHINETEST_Y, -MACHINETEST_LENGTH/2);
-   gluCylinder(machine_test[1],
-               /*BASE_RADIUS*/ MACHINETEST_RADIUS,
-               /*TOP_RADIUS*/ MACHINETEST_RADIUS,
-               /*HEIGHT*/ MACHINETEST_LENGTH,
-               /*SLICES*/ 10,
-               /*STACKS*/ 10);
-
-   gluSphere(machine_test[2],
-             /* radius*/ MACHINETEST_RADIUS,
-             /* slices*/ 10,
-             /* stacks*/ 10);
-
-   glRotatef(-90, 1.0, 0.0, 0.0);
-   gluCylinder(machine_test[3],
-               /*BASE_RADIUS*/ MACHINETEST_RADIUS,
-               /*TOP_RADIUS*/ MACHINETEST_RADIUS,
-               /*HEIGHT*/ MACHINETEST_LENGTH,
+   gluCylinder(window_cutout[0],
+               /*BASE_RADIUS*/ WINDOW_CUTOUT_RADIUS,
+               /*TOP_RADIUS*/ WINDOW_CUTOUT_RADIUS,
+               /*HEIGHT*/ WINDOW_CUTOUT_Y,
                /*SLICES*/ 10,
                /*STACKS*/ 10);
 
    glRotatef(90, 1.0, 0.0, 0.0);
-   glTranslatef(0, MACHINETEST_LENGTH, 0);
-   gluSphere(machine_test[4],
-             /* radius*/ MACHINETEST_RADIUS,
-             /* slices*/ 10,
-             /* stacks*/ 10);
+   glTranslatef(0, WINDOW_CUTOUT_Y, 0);
 
-   gluCylinder(machine_test[5],
-               /*BASE_RADIUS*/ MACHINETEST_RADIUS,
-               /*TOP_RADIUS*/ MACHINETEST_RADIUS,
-               /*HEIGHT*/ MACHINETEST_LENGTH,
-               /*SLICES*/ 10,
-               /*STACKS*/ 10);
+   // red window cutout
+   glEnable(GL_TEXTURE_2D);
+   glBindTexture(GL_TEXTURE_2D, texName[8]);
+   glBegin(GL_QUADS);
+   glTexCoord2f(0.0, 0.0);
+   glVertex2f(WINDOW_CUTOUT_LENGTH/2, 0.0);
+   glTexCoord2f(1.0, 0.0);
+   glVertex2f(WINDOW_CUTOUT_LENGTH/2, WINDOW_CUTOUT_LENGTH);
+   glTexCoord2f(1.0, 1.0);
+   glVertex2f(-WINDOW_CUTOUT_LENGTH/2, WINDOW_CUTOUT_LENGTH);
+   glTexCoord2f(0.0, 1.0);
+   glVertex2f(-WINDOW_CUTOUT_LENGTH/2, 0.0);
+   glEnd();
 
-   glTranslatef(0, 0, MACHINETEST_LENGTH);
-   gluSphere(machine_test[6],
-             /* radius*/ MACHINETEST_RADIUS,
-             /* slices*/ 10,
-             /* stacks*/ 10);
+   glTranslatef(0.0, 0.0, 0.01);
 
-   glRotatef(90, 1.0, 0.0, 0.0);
-   gluCylinder(machine_test[7],
-               /*BASE_RADIUS*/ MACHINETEST_RADIUS,
-               /*TOP_RADIUS*/ MACHINETEST_RADIUS,
-               /*HEIGHT*/ MACHINETEST_LENGTH,
-               /*SLICES*/ 10,
-               /*STACKS*/ 10);
+   // blue window cutout
+   glBindTexture(GL_TEXTURE_2D, texName[9]);
+   glBegin(GL_QUADS);
+   glTexCoord2f(0.0, 0.0);
+   glVertex2f(WINDOW_CUTOUT_LENGTH/2, 0.0);
+   glTexCoord2f(1.0, 0.0);
+   glVertex2f(WINDOW_CUTOUT_LENGTH/2, WINDOW_CUTOUT_LENGTH);
+   glTexCoord2f(1.0, 1.0);
+   glVertex2f(-WINDOW_CUTOUT_LENGTH/2, WINDOW_CUTOUT_LENGTH);
+   glTexCoord2f(0.0, 1.0);
+   glVertex2f(-WINDOW_CUTOUT_LENGTH/2, 0.0);
+   glEnd();
 
-   glRotatef(-90, 1.0, 0.0, 0.0);
-   glTranslatef(0, -MACHINETEST_LENGTH, 0);
-   gluSphere(machine_test[8],
-             /* radius*/ MACHINETEST_RADIUS,
-             /* slices*/ 10,
-             /* stacks*/ 10);
+   glDisable(GL_TEXTURE_2D);
 }
 
 /**
@@ -511,62 +486,62 @@ void do_buoys()
 
 }
 
-#define BARBHEIGHT 2.25
-#define BARBWIDTH 1.8
-#define BARB_X 5.20
-#define BARB_Z -6.45
-#define BARBWIRE_RADIUS 0.05
+#define U_GATEHEIGHT 2.25
+#define U_GATEWIDTH 1.8
+#define U_GATE_X 5.20
+#define U_GATE_Z -6.45
+#define U_GATE_RADIUS 0.05
 #define VERT_SPACE 1.1
 #define VERT_FILL 0.3
 
 /**
-* @brief Define barbed wire obstacle
+* @brief Define U gate obstacle
 */
-void do_barbed_wire(double x, double z, int offset) // draw barbed wire
+void do_u_gate()
 {
    glColor3f (0.0f, 0.0f, 0.0f);
-   glTranslatef(BARB_X + x, 0, BARB_Z + z);
+   glTranslatef(U_GATE_X, 0, U_GATE_Z);
    glRotatef(-90, 1.0, 0.0, 0.0);
-   gluCylinder(machine_test[0 + offset],
+   gluCylinder(u_gate[0],
                /*BASE_RADIUS*/ 0.01,
                /*TOP_RADIUS*/ 0.01,
-               /*HEIGHT*/ BARBHEIGHT,
+               /*HEIGHT*/ U_GATEHEIGHT,
                /*SLICES*/ 10,
                /*STACKS*/ 10);
       
    glRotatef(90, 1.0, 0.0, 0.0);
-   glTranslatef(0, 0, BARBWIDTH);
+   glTranslatef(0, 0, U_GATEWIDTH);
    glRotatef(-90, 1.0, 0.0, 0.0);
-   gluCylinder(machine_test[1 + offset],
+   gluCylinder(u_gate[1],
                /*BASE_RADIUS*/ 0.01,
                /*TOP_RADIUS*/ 0.01,
-               /*HEIGHT*/ BARBHEIGHT,
+               /*HEIGHT*/ U_GATEHEIGHT,
                /*SLICES*/ 10,
                /*STACKS*/ 10);
 
    glColor3f (0.0f, 1.0f, 0.0f);
    glRotatef(90, 1.0, 0.0, 0.0);
-   glTranslatef(0, BARBHEIGHT, -BARBWIDTH);
-   gluCylinder(machine_test[2 + offset],
-               /*BASE_RADIUS*/ BARBWIRE_RADIUS,
-               /*TOP_RADIUS*/ BARBWIRE_RADIUS,
-               /*HEIGHT*/ BARBWIDTH,
+   glTranslatef(0, U_GATEHEIGHT, -U_GATEWIDTH);
+   gluCylinder(u_gate[2],
+               /*BASE_RADIUS*/ U_GATE_RADIUS,
+               /*TOP_RADIUS*/ U_GATE_RADIUS,
+               /*HEIGHT*/ U_GATEWIDTH,
                /*SLICES*/ 10,
                /*STACKS*/ 10);
    // far side vertical piece
    glTranslatef (0, VERT_SPACE, 0); // up
    glRotatef(-90, 1.0, 0.0, 0.0); // pointing up
-   gluCylinder(machine_test[3 + offset],
-               /*BASE_RADIUS*/ BARBWIRE_RADIUS,
-               /*TOP_RADIUS*/ BARBWIRE_RADIUS,
+   gluCylinder(u_gate[3],
+               /*BASE_RADIUS*/ U_GATE_RADIUS,
+               /*TOP_RADIUS*/ U_GATE_RADIUS,
                /*HEIGHT*/ VERT_FILL,
                /*SLICES*/ 10,
                /*STACKS*/ 10);
    // near side vertical piece
-   glTranslatef (0, -BARBWIDTH, 0);
-   gluCylinder(machine_test[4 + offset],
-                /*BASE_RADIUS*/ BARBWIRE_RADIUS,
-                /*TOP_RADIUS*/ BARBWIRE_RADIUS,
+   glTranslatef (0, -U_GATEWIDTH, 0);
+   gluCylinder(u_gate[4],
+                /*BASE_RADIUS*/ U_GATE_RADIUS,
+                /*TOP_RADIUS*/ U_GATE_RADIUS,
                 /*HEIGHT*/ VERT_FILL,
                 /*SLICES*/ 10,
                 /*STACKS*/ 10);
@@ -710,19 +685,12 @@ void draw()
    glPopMatrix();
 
    glPushMatrix();
-   do_machinetest();
+   do_window_cutout();
    glPopMatrix();
 
    glPushMatrix();
-   do_barbed_wire(0.0f, 0.0f, 0);
+   do_u_gate();
    glPopMatrix();
-
-#define BARBWIRE_OFFSET_X 0.8f
-#define BARBWIRE_OFFSET_Z -0.45f
-
-   //glPushMatrix();
-   //do_barbed_wire(BARBWIRE_OFFSET_X, BARBWIRE_OFFSET_Z, BARBED_WIRE_PARTS);
-   //glPopMatrix();
 
 #define EXIT_OFFSET_X -2.34f
 #define EXIT_OFFSET_Z 3.36f
