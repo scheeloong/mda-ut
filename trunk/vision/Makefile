@@ -12,7 +12,7 @@ A=libvision.a
 .cpp.o: $(INC)
 	$(CC) $< -o $@ $(FLAGS)
 
-all: test_cv
+all: test_cv $(A)
 
 # test_cv depends on the objects, no -c
 test_cv: $(TASKS) $(LIBO) $(MISSIONDIR)$(MISSIONA)
