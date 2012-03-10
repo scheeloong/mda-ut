@@ -88,6 +88,13 @@ struct t_accel_data {
   alt_16 x, y, z;
 };
 
+struct orientation{
+	int pitch;
+	int roll;
+	int depth;
+	int heading;
+};
+
 bool ADXL345_SPI_Init(alt_u32 device_base);
 bool ADXL345_SPI_IsDataReady(alt_u32 device_base);
 bool ADXL345_SPI_XYZ_Read(alt_u32 device_base, struct t_accel_data *szData16);

@@ -26,7 +26,7 @@ void set_motor_duty_cycle(int, int);
 void set_pwm_freq(int);
 int get_motor_duty_cycle(int);
 int get_pwm_freq();
-void get_accel(struct t_accel_data *);
+void get_accel(struct t_accel_data *, struct orientation *);
 void get_gyro(int *, int *, int *);
 
 // API to give commands to NIOS

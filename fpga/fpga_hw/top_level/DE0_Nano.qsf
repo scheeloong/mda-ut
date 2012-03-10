@@ -433,15 +433,21 @@ set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000135912923
 set_global_assignment -name TCL_SCRIPT_FILE imu/imu_controller_hw.tcl -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE imu/imu_controller.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE imu/ADC_CTRL.v -qip DE0_Nano_SOPC.qip
+set_global_assignment -name VERILOG_FILE imu/arcsine_lookup_table.v -qip DE0_Nano_SOPC.qip
+set_global_assignment -name VERILOG_FILE imu/divider_20bits.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE imu/divider_signed_32.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE imu/gyro_lookup_table.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE imu/gyroscope_data_to_degrees.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE imu/imu.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE imu/integrator_signed_32bits.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE imu/magnetometer_i2c_interface.v -qip DE0_Nano_SOPC.qip
+set_global_assignment -name VERILOG_FILE imu/raw_data_to_degree.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE imu_controller_0.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A0000013591366DBD -qip DE0_Nano_SOPC.qip
 set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000135A7E58112 -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE power_management/power_management.v
 
 set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000135B651790C -qip DE0_Nano_SOPC.qip
+
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000135FDD346EA -qip DE0_Nano_SOPC.qip
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000135FDE99C93 -qip DE0_Nano_SOPC.qip

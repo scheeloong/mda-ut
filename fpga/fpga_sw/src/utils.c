@@ -135,7 +135,7 @@ int get_motor_duty_cycle(int motor_num)
 }
 
 // get PWM frequency
-int get_freq()
+int get_pwm_freq()
 {
   return  50000 / pwm_period;
 }
@@ -149,7 +149,7 @@ void get_gyro(int *x, int *y, int *z)
 }
 
 // returns a struct of x,y,z acceleration values
-void get_accel(struct t_accel_data *accel_data)
+void get_accel(struct t_accel_data *accel_data, struct orientation *orientation)
 {
   IOWR(SELECT_I2C_CLK_BASE, 0, 0x00);
 
@@ -164,6 +164,16 @@ void get_accel(struct t_accel_data *accel_data)
       break;
     }
   }
+  // With the accleration data, calculate the orientation as well.
+  IOWR(IMU_CONTROLLER_0_BASE,0,accel_data->x);
+  IOWR(IMU_CONTROLLER_0_BASE,1,accel_data->y);
+  IOWR(IMU_CONTROLLER_0_BASE,2,accel_data->z);
+  // Delay 10 cycles for hardware processing
+  int z;
+  for ( z = 0; z < 10; z++ ){}
+  // Write to output orientation structure
+  orientation->pitch = IORD(IMU_CONTROLLER_0_BASE,7);
+  orientation->roll = IORD(IMU_CONTROLLER_0_BASE,8);
 
   return;
 }
