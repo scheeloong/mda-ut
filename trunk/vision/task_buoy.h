@@ -9,7 +9,7 @@
 #include "calc_draw.h"
 #include "../mission/mission.h"
 
-#define BUOY_REAL_RAD 8.0 //12.0 // in centimeters
+#define BUOY_REAL_RAD 12 // in centimeters
 
 retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags=0);
 void controller_BUOY (vision_in &Input, Mission &m);

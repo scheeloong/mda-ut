@@ -27,7 +27,7 @@ mission:
 	$(MAKE) -C $(MISSION_DIR)
 
 clean:
-	$(MAKE) -C $(FPGA_DIR) $@
+	#$(MAKE) -C $(FPGA_DIR) $@
 	$(MAKE) -C $(SIM_DIR) $@
 	$(MAKE) -C $(VISION_DIR) $@
 	$(MAKE) -C $(MISSION_DIR) $@

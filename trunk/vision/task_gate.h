@@ -10,9 +10,9 @@
 
 #include "../mission/mission.h"
 
-#define GATE_SKINNYNESS 0.08 // ratio of pipe diameter to length
+#define GATE_SKINNYNESS 0.017 // ratio of pipe diameter to length
 #define GATE_WIDTH 300.0 // physical width in centimeters
-#define GATE_HEIGHT 160.0 // physical width in centimeters
+#define GATE_HEIGHT 120.0 // physical width in centimeters
 
 retcode vision_GATE (vision_in &Input, vision_out &Output, char flags=0);
 

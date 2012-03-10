@@ -13,7 +13,6 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
 // DETECT_2 = full detection (pipe oriented almost directly below)
 /** HS filter to extract object */
     IplImage* img_1;  
-    if (flags & _DISPLAY) cvShowImage(Input.window[0], Input.img);
    
     float pix_fraction = HSV_filter (Input.img, img_1, Input.HSV); // need to delete img_1
     /*
@@ -25,7 +24,6 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
     cvReleaseStructuringElement (&kernel);
     */
     if (flags & _INVERT) img_1->origin = 1;
-    if (flags & _DISPLAY) cvShowImage(Input.window[0], img_1);
     // check to see if there are enough pixels to do line finding
     if (pix_fraction < 0.001) { // if nothing in the view
         cvReleaseImage (&img_1);
@@ -83,7 +81,7 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
         for (int i = 0; i < nseeds; i++) 
             cvLine (img_1, cseed[i][0],cseed[i][1], CV_RGB(0,50,50), 2);
     }
-    
+    if (flags & _DISPLAY) cvShowImage(Input.window[0], img_1);
 /** calculations and cleanup */
 // if the 2 longest lines are parallel and equal length then OK
 // So first find the length of 2 longest lines
@@ -107,9 +105,9 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
         // lines appear to form a pipe, so calculate range and angle
             int pix_x = (cseed[long1][0].x+cseed[long1][1].x+cseed[long2][0].x+cseed[long2][1].x)/4 - img_1->width/2;  
             int pix_y = (cseed[long1][0].y+cseed[long1][1].y+cseed[long2][0].y+cseed[long2][1].y)/4 - img_1->height/2;
-            Output.range = PIPE_REAL_LEN * float(img_1->width) / (len1 * TAN_FOV_X);
-            Output.real_x = pix_x * PIPE_REAL_LEN / len1;
-            Output.real_y = pix_y * PIPE_REAL_LEN / len1;
+            Output.range = float(PIPE_REAL_LEN * img_1->width) / (len1 * TAN_FOV_X);
+            Output.real_x = float(pix_x * PIPE_REAL_LEN) / len1;
+            Output.real_y = float(pix_y * PIPE_REAL_LEN) / len1;
             Output.tan_PA = (ang1+ang2) * 0.5;
             
             if (!(flags & _QUIET)) {
@@ -143,9 +141,10 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
     return ret;
 }
 
-#define FWD_SPEED 1
-#define SINK_SPEED 1
-#define TURN_SPEED 3
+#define FWD_SPEED 3
+#define SINK_SPEED 3
+#define TURN_SPEED 5
+#define OBS_DEPTH -6 // depth to look for path
 
 /* ##############################################################################################
    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -226,7 +225,7 @@ void controller_PATH (vision_in &Input, Mission &m) {
 // /* PAUSE */       {PAUSE,      OFF_CENTER,   CENTERED}};
     
     static ESTATE state = START; // starting state is start
-    
+
     if ((state == ERROR) || (state == ALIGNED)) {
     }
     else if (vcode == NO_DETECT) { // cant see anything
@@ -238,7 +237,7 @@ void controller_PATH (vision_in &Input, Mission &m) {
     else if (vcode == DETECT_2) { // can recognize object as pipe
         if (Output.real_x*Output.real_x + Output.real_y*Output.real_y > 1)
             state = OFF_CENTER;
-        else if (Output.range > 3.4)
+        else if (Output.range > 4.0)
             state = CENTERED; // but too high up
         else if (fabs(Output.tan_PA) > 0.03) // within 5ish degrees of vertical
             state = UNALIGNED;
@@ -327,7 +326,4 @@ void controller_PATH (vision_in &Input, Mission &m) {
     }
     return;
 }
-
-
-
 

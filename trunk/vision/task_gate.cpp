@@ -30,7 +30,8 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
     }
 
 /** probabilistic Hough line finder. Determine the threshold using the number of high pixels */
-    int thresh = (int)(sqrt(pix_fraction*img_1->imageSize * GATE_SKINNYNESS) / 4.0); // guessed length of gate segment in pixels
+    //int thresh = 1+(int)(sqrt(pix_fraction*img_1->imageSize * GATE_SKINNYNESS) * 0.5); // guessed length of gate segment in pixels
+    int thresh = 10;
     CvMemStorage* storage = cvCreateMemStorage(0); // create memstorage for line finidng, delete later
     CvSeq* lines = 0;
     
@@ -88,7 +89,7 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
 /** decide on how many segments detected, return results */
 // perform some sort of decision using min_valid
 
-    const float obj_real_width = 54, obj_real_height = 40;
+    const float obj_real_width = GATE_WIDTH, obj_real_height = GATE_HEIGHT;
     int pix_x, pix_y; // x and y location and Range of target in pixel space
     retcode ret = ERROR;
     
@@ -189,7 +190,7 @@ void controller_GATE (vision_in &Input, Mission &m) {
     /* TODO: Re-implement old control code */
     // Input: vcode from the above call to vision_GATE and Output
     // Output: give commands to the submarine, ie:
-    m.translate(FORWARD);
+ //   m.translate(FORWARD);
 
     // old control code    
     /** state machine
