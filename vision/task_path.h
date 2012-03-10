@@ -10,8 +10,8 @@
 #include "calc_draw.h"
 #include "../mission/mission.h"
 
-#define PATH_SKINNYNESS 0.12 // ratio of pipe diameter to length
-#define PIPE_REAL_LEN 100
+#define PATH_SKINNYNESS 0.125 // ratio of pipe diameter to length
+#define PIPE_REAL_LEN 120
 
 retcode vision_PATH (vision_in &Input, vision_out &Output, char flags=0);
 

@@ -5,6 +5,8 @@
 #include <highgui.h>
 
 #define ABS(x) ((x>0) ? (x) : (-(x)))
+#define TAN_FOV_X 1.2 // Tan of the horizontal FOV of cam. Equal to full_width/range
+#define TAN_FOV_Y 1.0
 
 /** this file containts constants universal to all vision/task functions */
 
@@ -28,9 +30,6 @@ class HSV_settings {
     void setSim_buoyY (); // for brown pipe in sim
 		void setSim_U ();
 };
-
-#define TAN_FOV_X 1.2 // Tan of the horizontal FOV of cam. Equal to full_width/range
-#define TAN_FOV_Y 1.0
 
 // flags for vision functions
 #define _DISPLAY 1

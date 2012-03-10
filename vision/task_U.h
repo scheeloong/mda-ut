@@ -11,8 +11,8 @@
 #include "../mission/mission.h"
 
 //#define U_SKINNYNESS 0.08 // ratio of pipe diameter to length
-#define U_WIDTH 180.0 // physical width in centimeters
-#define U_HEIGHT 120.0 // physical width in centimeters
+#define U_WIDTH 180 // physical width in centimeters
+#define U_HEIGHT 100 // physical width in centimeters
 
 retcode vision_U (vision_in &Input, vision_out &Output, char flags=0);
 

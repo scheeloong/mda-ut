@@ -71,13 +71,13 @@ retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
             cvCircle(img_1, pt, cvRound(data[2]), CV_RGB(100,200,100), 1, 8);
             cvShowImage(Input.window[1], img_1);
         }
-        Output.range = BUOY_REAL_RAD * float(img_1->width) / (buoy_pix_rad * TAN_FOV_X);
-        Output.real_x = (data[0] - img_1->width*0.5) * BUOY_REAL_RAD / buoy_pix_rad;
-        Output.real_y = (data[1] - img_1->height*0.5) * BUOY_REAL_RAD / buoy_pix_rad;
+        Output.range = float(BUOY_REAL_RAD * img_1->width) / (buoy_pix_rad * TAN_FOV_X);
+        Output.real_x = float(data[0] - img_1->width*0.5) * BUOY_REAL_RAD / buoy_pix_rad;
+        Output.real_y = float(data[1] - img_1->height*0.5) * BUOY_REAL_RAD / buoy_pix_rad;
         
         if (!(flags & _QUIET)) {
             printf ("  vision_BUOY: Lateral Pos: %f , %f\n", Output.real_x, Output.real_y);
-            printf ("  vision_BUOY: Range: %f\n", Output.range);
+            printf ("             : Range: %f\n", Output.range);
         }
         cvReleaseImage (&img_1);  cvReleaseMemStorage (&storage);
         return DETECT_2;        

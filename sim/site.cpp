@@ -337,15 +337,13 @@ void init_site()
    gluQuadricDrawStyle(g1,   GLU_FILL);
    gluQuadricDrawStyle(g2,   GLU_FILL);
    gluQuadricDrawStyle(g3,   GLU_FILL);
-   /***********************************************************/
 }
 
-#define RADIUS 0.05
-
-#define GHEIGHT 1.83
+#define RADIUS 0.04
+#define GHEIGHT 1.2
 #define G1_X -5
 #define G2_X -2
-#define G1_Y  -5
+#define G1_Y -5
 
 const float post_col[4] = {0.2,0.2,0.2,1};
 const float red_bulb[4] = {1,0,0,1};
@@ -354,13 +352,12 @@ const float red_bulb[4] = {1,0,0,1};
 void do_posts()
 {
    /* gate */
-   glColor3f ( 1.0f, 0.35f, 0.1f ) ;
+   glColor3f ( 0.3f, 0.3f, 0.3f ) ;
    //  glNewList(list+3, GL_COMPILE);
    glRotatef(-90, 1.0, 0.0, 0.0);
 
    // horizontal bar
    glTranslatef(G2_X, G1_Y, POOL_HEIGHT);
-
 
    // random rotation and translation
    glRotatef(randNum % 50, 0.0, 0.0, -1.0);
@@ -375,6 +372,7 @@ void do_posts()
                /*STACKS*/ 10);
    glRotatef(90, 0.0, 1.0, 0.0);
 
+   glColor3f ( 1.0f, 0.35f, 0.1f ) ;
    // axes are rotated, careful!!!
    glTranslatef(G1_X-G2_X, 0, -GHEIGHT);
    gluCylinder(g1,
@@ -486,13 +484,13 @@ void do_buoys()
 
 }
 
-#define U_GATEHEIGHT 2.25
+#define U_GATEHEIGHT 1.2
 #define U_GATEWIDTH 1.8
 #define U_GATE_X 5.20
 #define U_GATE_Z -6.45
-#define U_GATE_RADIUS 0.05
-#define VERT_SPACE 1.1
-#define VERT_FILL 0.3
+#define U_GATE_RADIUS 0.025
+#define VERT_SPACE 0.6
+#define VERT_FILL 0.6
 
 /**
 * @brief Define U gate obstacle

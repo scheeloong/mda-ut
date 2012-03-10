@@ -36,11 +36,11 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
     }
 
 /** probabilistic Hough line finder. Determine the threshold using the number of high pixels */
-    int thresh = 60; //(int)(sqrt(pix_fraction*img_1->imageSize * U_SKINNYNESS) / 4.0); 
+    int thresh = 40; //(int)(sqrt(pix_fraction*img_1->imageSize * U_SKINNYNESS) / 4.0); 
     CvMemStorage* storage = cvCreateMemStorage(0); // create memstorage for line finidng, delete later
     CvSeq* lines = 0;
     
-    int minlen=img_1->height/10, mindist=minlen;
+    int minlen=img_1->height/15, mindist=minlen;
     lines = cvHoughLines2(img_1, storage,
         CV_HOUGH_PROBABILISTIC,
         2, CV_PI/180.0,
@@ -105,9 +105,9 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
                 // displace pix_y to estimated location of U center
                 pix_y = (cseed[0][1].y + cseed[0][0].y)/2 + obj_pix_width * U_HEIGHT/(2*U_WIDTH) - img_1->height/2; 
                 
-                Output.range = U_WIDTH * float(img_1->width) / obj_pix_width / TAN_FOV_X;
-                Output.real_x = pix_x * U_HEIGHT / obj_pix_width;
-                Output.real_y = pix_y * U_WIDTH / obj_pix_width;
+                Output.range = float(U_WIDTH * img_1->width) / obj_pix_width / TAN_FOV_X;
+                Output.real_x = float(pix_x * U_HEIGHT) / obj_pix_width;
+                Output.real_y = float(pix_y * U_WIDTH) / obj_pix_width;
         
                 if (!(flags & _QUIET)) {
                     printf ("  vision_U: Single Horiz Segements.\n");
@@ -135,14 +135,14 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
             int obj_pix_width = (fabs(cseed[0][0].x-cseed[1][0].x)+fabs(cseed[0][1].x-cseed[1][1].x))/2;
     
             // estimate range using horiz seperation
-            Output.range = U_WIDTH * float(img_1->width) / obj_pix_width / TAN_FOV_X;
-            Output.real_x = pix_x * U_HEIGHT / obj_pix_width;
-            Output.real_y = pix_y * U_WIDTH / obj_pix_width;
+            Output.range = float(U_WIDTH * img_1->width) / obj_pix_width / TAN_FOV_X;
+            Output.real_x = float(pix_x * U_HEIGHT) / obj_pix_width;
+            Output.real_y = float(pix_y * U_WIDTH) / obj_pix_width;
         
             if (!(flags & _QUIET)) {
                 printf ("  vision_U: Two Segements Detected.\n");
-                printf ("  vision_U: Lateral Pos: %f , %f\n", Output.real_x, Output.real_y);
-                printf ("  vision_U: Range: %f\n", Output.range);
+                printf ("          : Lateral Pos: %f , %f\n", Output.real_x, Output.real_y);
+                printf ("          : Range: %f\n", Output.range);
             }
             ret = DETECT_3;
         }
@@ -170,12 +170,13 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
         {
             // estimate range using vertical line seperation
             pix_x = (cseed[i2][0].x+cseed[i2][1].x+cseed[i3][0].x+cseed[i3][1].x)/4 - img_1->width/2;
-            pix_y = (cseed[long1][0].y+cseed[long1][1].y+cseed[i2][0].y+cseed[i3][0].y)/4 - img_1->height/2;
+            pix_y = (0.5*(cseed[long1][0].y+cseed[long1][1].y)+cseed[i2][0].y+cseed[i3][0].y)/3 
+		    - (img_1->height - dy2)/2;
             int obj_pix_width = (ABS(cseed[i2][0].x-cseed[i3][0].x)+ABS(cseed[i2][1].x-cseed[i3][1].x))/2;
     
-            Output.range = U_WIDTH * float(img_1->width) / obj_pix_width / TAN_FOV_X;
-            Output.real_x = pix_x * U_HEIGHT / obj_pix_width;
-            Output.real_y = pix_y * U_WIDTH / obj_pix_width;
+            Output.range = float(U_WIDTH * img_1->width) / obj_pix_width / TAN_FOV_X;
+            Output.real_x = float(pix_x * U_HEIGHT) / obj_pix_width;
+            Output.real_y = float(pix_y * U_WIDTH) / obj_pix_width;
         
             if (!(flags & _QUIET)) {
                 printf ("  vision_U: Full 3 Segements Detected.\n");

@@ -74,7 +74,7 @@ void makeTextureImage(char filename[], GLuint tex_name) {
                 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 }
 	
-#define CAMERA_FIELD_OF_VIEW 35
+#define CAMERA_FIELD_OF_VIEW 52 //37
 
 /** sky's color*/
 const float sky[4] = { .527343, .804687, 5/*1*/, 1.0f};
@@ -244,23 +244,6 @@ void anim_scene()
    }
 }
 
-/**
-* @brief Take a screenshot from current angle and save as bitmap
-*/
-/*
-void screenshot()
-{
-   int n = 3*window_width*window_height;
-   GLubyte *pixels = new GLubyte[n];
-
-   glReadPixels(0,0,window_width,window_height,
-                GL_RGB,GL_UNSIGNED_BYTE,pixels);
-
-   if (bmp_24_write ((char *)"test.bmp", window_width, window_height, pixels))
-      assert(false);
-   delete []pixels;
-}
-*/
 /** OpenCV integration section starts here.
  *  Info:
  *  The glut model of code goes revolves around the function glutMainLoop(). A
@@ -512,6 +495,9 @@ void cv_reshape(int w, int h)
        cvReleaseImage (&cv_img);
        cv_img = cvCreateImage (cvSize(window_width,window_height), IPL_DEPTH_8U, 3);
        cv_img->origin=1;
+       cvReleaseImage (&cv_img2);
+       cv_img2 = cvCreateImage (cvSize(window_width,window_height), IPL_DEPTH_8U, 3);
+       cv_img2->origin=1;
    }
 }
 
@@ -569,6 +555,7 @@ int main(int argc, char** argv)
    glutDisplayFunc (cv_display);                    // called when glutPostRedisplay() raises redraw flag
    glutIdleFunc(anim_scene);                        // called when idle (simulate speed)
    
+   cv_reshape (600, 400);
    /*start the main glut loop*/
    glutMainLoop();
    

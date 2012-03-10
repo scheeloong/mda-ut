@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "obj_detection.h"
+#include "common.h"
 
 // NAME: cvCornerST_Custom
 //
@@ -70,14 +71,14 @@ void cvCornerST_Custom (IplImage* img, IplImage* eigenImg,
 // METHOD: take any 3 of the 4 points. They form a triangle. The area of this triangle can be
 //      found via cross products. Repeat this for every unique combination of 3 points among the 4.
 //      Then divide to find the area of the quadrilateral.
-float areaQuad (float x1,float y1, float x2,float y2, float x3,float y3, float x4,float y4) {
-    float a123 = (x2-x1)*(y3-y1) - (x3-x1)*(y2-y1);   // this is parallelogram area not triangle
-    float a134 = (x3-x1)*(y4-y1) - (x4-x1)*(y3-y1);
-    float a124 = (x2-x1)*(y4-y1) - (x4-x1)*(y2-y1);
-    float a234 = (x3-x2)*(y4-y2) - (x4-x2)*(y3-y2);
+float areaQuad (int x1,int y1, int x2,int y2, int x3,int y3, int x4,int y4) {
+    int a123 = (x2-x1)*(y3-y1) - (x3-x1)*(y2-y1);   // this is parallelogram area not triangle
+    int a134 = (x3-x1)*(y4-y1) - (x4-x1)*(y3-y1);
+    int a124 = (x2-x1)*(y4-y1) - (x4-x1)*(y2-y1);
+    int a234 = (x3-x2)*(y4-y2) - (x4-x2)*(y3-y2);
     
-    a123=fabs(a123); a134=fabs(a134); a124=fabs(a124); a234=fabs(a234);
-    return (a123+a134+a124+a234)/8.0; // not divide by 4.0
+    a123=ABS(a123); a134=ABS(a134); a124=ABS(a124); a234=ABS(a234);
+    return 0.125*(a123+a134+a124+a234); // not divide by 4.0
 }
 
 /** SDmatrix routines */
@@ -347,6 +348,4 @@ int lineSegment_intersects (CvPoint** lines, int nlines, CvSize imgSize, CvPoint
     
     return npoints;
 }
-    
-    
-    
+
