@@ -7,9 +7,11 @@
  */
 
 #include <string.h>
+#include "altera_avalon_timer_regs.h"
 #include "io.h"
 #include "system.h"
 #include "sys/alt_stdio.h"
+#include "sys/alt_irq.h"
 
 #include "settings.h"
 #include "utils.h"
@@ -75,6 +77,7 @@ void process_command(char *st)
 
   // variables used in case statement
   struct t_accel_data accel_data;
+  struct orientation orientation;
   int dc, x, y, z;
 
   switch (cid) {
@@ -149,26 +152,32 @@ void process_command(char *st)
       }
       break;
     case COMMAND_ACCEL:
-      get_accel(&accel_data);
+      get_accel(&accel_data, &orientation);
+      printf("raw: ");
       print_int(accel_data.x);
       alt_putchar(',');
       print_int(accel_data.y);
       alt_putchar(',');
       print_int(accel_data.z);
       alt_putchar('\n');
+      printf("in degrees: ");
+      print_int(orientation.pitch >> 3);
+      alt_putchar(',');
+      print_int(orientation.roll >> 3);
+      alt_putchar('\n');
       break;
     case COMMAND_ACCEL_X:
-      get_accel(&accel_data);
+      get_accel(&accel_data, &orientation);
       print_int(accel_data.x);
       alt_putchar('\n');
       break;
     case COMMAND_ACCEL_Y:
-      get_accel(&accel_data);
+      get_accel(&accel_data, &orientation);
       print_int(accel_data.y);
       alt_putchar('\n');
       break;
     case COMMAND_ACCEL_Z:
-      get_accel(&accel_data);
+      get_accel(&accel_data, &orientation);
       print_int(accel_data.z);
       alt_putchar('\n');
       break;
@@ -197,7 +206,7 @@ void process_command(char *st)
       alt_putchar('\n');
       break;
     case COMMAND_MOTORS:
-      print_int(get_freq());
+      print_int(get_pwm_freq());
       alt_putchar('\n');
       alt_putchar(get_motor_dir(0));
       for (i = 1; i < NUM_MOTORS; i++) {
@@ -215,12 +224,35 @@ void process_command(char *st)
   }
 }
 
+
+// Controller Interrupt Routine, should be 100Hz.
+static void timer_interrupts(void* context, alt_u32 id)
+{
+   // Print pitch/roll data
+   process_command("ga\n");
+
+   // Restart Interrupt for timer_0
+   IOWR_ALTERA_AVALON_TIMER_SNAPL(CONTROLLER_INTERRUPT_COUNTER_BASE, 1);
+   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,0); // Clear interrupt (ITO)
+   IOWR_ALTERA_AVALON_TIMER_STATUS(CONTROLLER_INTERRUPT_COUNTER_BASE, 0); // Clear TO
+   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,7); //Enable IRQ and Start timer
+}
+
 // the main function
 int main()
 {
   char buffer_str[STR_LEN+1];
 
   init();
+
+  // Setup controller interrupt
+  alt_ic_isr_register(CONTROLLER_INTERRUPT_COUNTER_IRQ_INTERRUPT_CONTROLLER_ID,CONTROLLER_INTERRUPT_COUNTER_IRQ,timer_interrupts,0,0);	// Register Interrupt (check system.h for defs)
+  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 0);		// Clear control register
+  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 2);		// Continuous Mode ON
+  IOWR_ALTERA_AVALON_TIMER_PERIODL(CONTROLLER_INTERRUPT_COUNTER_BASE, 0xA120);   // Timer interrupt period is 100ms, 10 Hz refresh rate
+  IOWR_ALTERA_AVALON_TIMER_PERIODH(CONTROLLER_INTERRUPT_COUNTER_BASE, 0x00AF);
+  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 3);	    // Enable timer_0 interrupt
+  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 7);       // Start timer interrupt
 
   // read and process commands continuously
   while(1) {
