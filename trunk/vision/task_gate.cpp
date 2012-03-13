@@ -203,6 +203,124 @@ void controller_GATE (vision_in &Input, Mission &m) {
      * S: "Reached front of gate. Stop vision"
      * X: "Error state" 
     */
+    
+    /** new state machine for gate control 
+     *  vcode = 0 or vcode = 2 ---> (go forward) m.move(forward) 
+     *  vcode = 3 ---> (stop) m.move(stop) 
+     *  vcode = 1 ---> (track left or right to get full detection) 
+     */
+    enum ESTATE {START, NO_GATE, OFF_CENTER, CENTERED, UNALIGNED, ALIGNED, ERROR, PAUSE};
+//     static const ESTATE lookup[8][3] = {
+// vcode =         NO_DETECT,  DETECT_1,     DETECT_2
+// /* START */       {NO_PIPE,    OFF_CENTER,   OFF_CENTER},  
+// /* NO_PIPE */     {NO_PIPE,    OFF_CENTER,   OFF_CENTER},  
+// /* OFF_CENTER */  {NO_PIPE,    OFF_CENTER,   ERROR},  // variable output
+// /* CENTERED */    {PAUSE,      PAUSE,   ERROR},     // variable state for DETECT_2
+// /* UNALIGNED */   {PAUSE,      PAUSE,   ERROR},     // variable state for DETECT_2
+// /* ALIGNED */     {ALIGNED,    ALIGNED,      ALIGNED},   
+// /* ERROR */       {ERROR,      ERROR,        ERROR},
+// /* PAUSE */       {PAUSE,      OFF_CENTER,   CENTERED}};
+    static ESTATE state = START; 
+    
+    // here we check the state of the gate code, depending on what char code it returns, we send a command to the sub using mission
+    if ((state == ERROR) || (state == ALIGNED)) {
+    }
+    else if (vcode == NO_DETECT) { // cant see anything
+        if ((state == START) || (state == NO_GATE) || (state == OFF_CENTER))
+            state = NO_GATE;
+        else 
+            state = PAUSE;
+    }
+    else if (vcode == DETECT_2) { // can recognize object as gate
+        if (Output.real_x*Output.real_x + Output.real_y*Output.real_y > 1)
+            state = OFF_CENTER;
+        else if (Output.range > 3.4)
+            state = CENTERED; // but too high up
+        else if (fabs(Output.tan_PA) > 0.03) // within 5ish degrees of vertical
+            state = UNALIGNED;
+        else
+            state = ALIGNED;
+    }
+    else if (vcode == DETECT_1) { // cannot recognize obj
+        if (Output.real_x*Output.real_x + Output.real_y*Output.real_y > 0.4)
+            state = OFF_CENTER;
+        else 
+            state = CENTERED;
+    }
+    
+    
+    
+        float temp;
+    /** figure out output */
+    switch (state) {
+        case START: // no change to output
+            return;
+        case PAUSE:
+            printf ("    State: PAUSE\n");
+            return;
+        case NO_GATE:
+            printf ("    State: NO_GATE\n");
+            m.move(FORWARD);
+            return;
+        case OFF_CENTER:
+            printf ("    State: OFF_CENTER\n");
+            if (Output.real_x == 0) Output.real_x = 0.00001;
+            
+            temp = fabs(Output.real_y/Output.real_x);
+            if (temp < 11.5) { // if obj outside of +-5 degrees from vertical
+                m.move(STOP);	
+                if (temp > 1.7) // if not more than +- 30 degrees
+                    m.move(FORWARD);
+                
+                if (Output.real_x > 0) // turn towards the obj
+                    m.move(RIGHT,4);
+                else
+                    m.move(LEFT,4);
+            }
+            else {
+                m.move(STOP);
+                if (Output.real_y > 0)
+                    m.move(FORWARD);
+                else
+                    m.move(REVERSE);
+            }
+            return;
+        case CENTERED:
+            printf ("    State: CENTERED\n");
+            m.move(STOP);
+            m.move(SINK,4);
+            return;
+        case UNALIGNED:
+            printf ("    State: UNALIGNED\n");
+            m.move(STOP);
+            if (Output.tan_PA > 0)
+                m.move(LEFT,6);
+            else 
+                m.move(RIGHT,6);
+            return;
+        case ALIGNED:
+            printf ("    State: ALIGNED\n");
+            m.move(STOP);
+            m.move(FORWARD);
+            m.move(RISE,3);
+            return;       
+        case ERROR:
+            printf ("    ERROR!!\n");
+            return;
+        default:
+            printf ("\ntask_gate: NO IDEA WHAT STATE I'M IN!\n\n");
+            for (;;);
+    }
+    return;
+}
+    
+    
+    
+    
+    
+    
+    
+    
     /*
     if (state == 0) // initiation character for controllers
         state = 'F';
@@ -280,5 +398,5 @@ void controller_GATE (vision_in &Input, Mission &m) {
             return '\0';
     }
     */
-}
+//}
 

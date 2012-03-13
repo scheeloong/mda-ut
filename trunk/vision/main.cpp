@@ -9,7 +9,7 @@
 #include "task_gate.h"
 #include "task_path.h"
 #include "task_buoy.h"
-
+#include "task_torp.h" //additional header file for torpedo code
 #define ANG_RNG(X) (((X) > 90) ? ((X)-180) : (X))
 /*
 #define GATE_HMIN 10 
@@ -35,7 +35,7 @@ int main( int argc, char** argv ) {
         
         //vision_GATE (Vin, Vout, _DISPLAY);
         vision_BUOY (Vin, Vout, _DISPLAY);
-
+	//vision_TORP(Vin, Vout, _DISPLAY);
         cvWaitKey(0);
     }
     else {
@@ -71,10 +71,10 @@ int main( int argc, char** argv ) {
         cvResize(frame,Vin.img);
         cvShowImage(WIN2, Vin.img);
     
-        vision_GATE (Vin, Vout, _DISPLAY);
-        //vision_BUOY (Vin, Vout, _DISPLAY);
+        //vision_GATE (Vin, Vout, _DISPLAY);
+        vision_BUOY (Vin, Vout, _DISPLAY);
         //vision_PATH (Vin, Vout, _DISPLAY);
-        
+        //vision_TORP (Vin, Vout, _DISPLAY);
         frame = cvQueryFrame (capture);       
         c = cvWaitKey(4);
         if( c == 'q' ) break;
