@@ -29,6 +29,9 @@ int pwm_period = -1;
 // initialize array values
 void init()
 {
+  // Initialize to power off
+  set_pow(0);
+
   // instantiate motor state as stopped and 0 duty cycle
   memset(motor_modes, (int)'s', NUM_MOTORS);
   memset(motor_duty_cycles, 0, NUM_MOTORS * sizeof(int));
@@ -77,6 +80,12 @@ void print_int(int i)
 #else
   alt_print("%x", i);
 #endif
+}
+
+// set power
+void set_pow(int on_off)
+{
+  IOWR(POWER_MANAGEMENT_SLAVE_0_BASE, 0, on_off);
 }
 
 // set motor direction

@@ -166,7 +166,6 @@ wire [33:0] gpio_1_wire;
 wire [12:0] gpio_2_wire;
 wire [3:0]  led_wire;
 
-wire kill_sw;
 wire error;
 wire [2:0] voltage_mux;
 
@@ -177,7 +176,7 @@ wire [2:0] voltage_mux;
 assign reset_n = 1'b1;
 assign GPIO_1[33] = kill_sw;
 assign {GPIO_1[29], GPIO_1[31], GPIO_1[25]} = voltage_mux;
-assign LED[3:0] = {voltage_mux, error};
+assign LED[3:0] = {voltage_mux, kill_sw};
 
 global_disable #(
   .NUM_IN(2+1),
@@ -187,15 +186,6 @@ global_disable #(
   .shutdown(~{KEY, kill_sw}),
   .gpio_in({gpio_0_wire, gpio_2_wire, led_wire}),
   .gpio_out({GPIO_0, GPIO_2, LED[7:4]})
-);
-
-power_management pm_inst (
-  .kill_sw(kill_sw),
-  .sel(voltage_mux),
-  .data(GPIO_1[27]),
-  .start(SW[0]),
-  .clk(CLOCK_50),
-  .error(error)
 );
 
 DE0_Nano_SOPC DE0_Nano_SOPC_inst(
@@ -218,9 +208,13 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
                       .ADC_SCLK_from_the_imu_controller_0(ADC_SCLK),
                       .ADC_SDAT_to_the_imu_controller_0(ADC_SDAT),
 							  
+                      // Power Management
+                      .data_to_the_power_management_slave_0(GPIO_1[27]),
+                      .mux_from_the_power_management_slave_0(voltage_mux),
+                      .kill_sw_from_the_power_management_slave_0(kill_sw),
+
                       // the_select_i2c_clk
                        .out_port_from_the_select_i2c_clk(select_i2c_clk),							  
-
 							  
                       // the_altpll_0
                        .locked_from_the_altpll_0(),

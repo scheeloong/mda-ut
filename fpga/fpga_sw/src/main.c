@@ -30,6 +30,7 @@ struct command_struct my_cmds[] = {
   {"ggz\n", COMMAND_GYRO_Z, "ggz - get z-gyroscope heading\n  Usage: ggz\n\n  Print z-gyroscope heading\n"},
   {"gm\n", COMMAND_MOTORS, "gm - get motor data\n  Usage: gm\n\n  Print all motor settings (direction on one line and duty cycle on the next)\n"},
   {"h", COMMAND_HELP, "h - help\n  Usage: h <cmd>\n\n  Print the help message for all commands that start with cmd, leave empty to print all help messages\n"},
+  {"p", COMMAND_POW, "p - power off/on\n  Usage: p (0|1)\n\n Turn off/on power to all the voltage fails\n"},
   {"smd", COMMAND_DUTY_CYCLE, "smd - set motor duty cycle\n  Usage: smd <n> <0xdc>\n\n  Set the duty cycle of the nth motor to dc\nNote: the duty cycle is inputted in hex out of 0x3ff (1024 in decimal)\n"},
   {"smf", COMMAND_FORWARD, "smf - set motor forward\n  Usage: smf <n>\n\n  Turn on the nth motor in the forward direction\n"},
   {"smr", COMMAND_REVERSE, "smr - set motor reverse\n  Usage: smr <n>\n\n  Turn on the nth motor in the reverse direction\n"},
@@ -86,6 +87,11 @@ void process_command(char *st)
       break;
     case COMMAND_HELP:
       print_help(st+1);
+      break;
+    case COMMAND_POW:
+      i = read_hex(st);
+      set_pow(i);
+      printf("setting power %s\n", (i % 2  == 0) ? "off" : "on");
       break;
     case COMMAND_STOP_ALL:
       for (i = 0; i < NUM_MOTORS; i++) {
@@ -235,7 +241,48 @@ static void timer_interrupts(void* context, alt_u32 id)
    IOWR_ALTERA_AVALON_TIMER_SNAPL(CONTROLLER_INTERRUPT_COUNTER_BASE, 1);
    IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,0); // Clear interrupt (ITO)
    IOWR_ALTERA_AVALON_TIMER_STATUS(CONTROLLER_INTERRUPT_COUNTER_BASE, 0); // Clear TO
-   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,7); //Enable IRQ and Start timer
+   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,7); // Enable IRQ and Start timer
+}
+
+// Power management Interrupt routine
+//
+// If this triggers, something went wrong with one of the voltage lines
+// Turn off power to all the voltage rails and print out what caused
+// the problem
+static void pm_interrupt(void *context, alt_u32 id)
+{
+   // Get failing voltage line
+   int which_failed = IORD(POWER_MANAGEMENT_SLAVE_0_BASE, 0);
+   // Turn off power
+   IOWR(POWER_MANAGEMENT_SLAVE_0_BASE, 0, 0);
+
+   // Might be in the middle of printing, send a newline
+   alt_putchar('\n');
+   switch(which_failed) {
+     case 0:
+       alt_putstr("24 V under-voltage failed");
+       break;
+     case 1:
+       alt_putstr("12 V over-voltage failed");
+       break;
+     case 2:
+       alt_putstr("12 V under-voltage failed");
+       break;
+     case 3:
+       alt_putstr("5 over-voltage failed");
+       break;
+     case 4:
+       alt_putstr("5 V under-voltage failed");
+       break;
+     case 5:
+       alt_putstr("3.3 V over-voltage failed");
+       break;
+     case 6:
+       alt_putstr("3.3 V under-voltage failed");
+       break;
+   }
+   alt_putchar('\n');
+
 }
 
 // the main function
@@ -247,6 +294,7 @@ int main()
 
   // Setup controller interrupt
   alt_ic_isr_register(CONTROLLER_INTERRUPT_COUNTER_IRQ_INTERRUPT_CONTROLLER_ID,CONTROLLER_INTERRUPT_COUNTER_IRQ,timer_interrupts,0,0);	// Register Interrupt (check system.h for defs)
+  alt_ic_isr_register(POWER_MANAGEMENT_SLAVE_0_IRQ_INTERRUPT_CONTROLLER_ID, POWER_MANAGEMENT_SLAVE_0_IRQ,pm_interrupt,0,0);	// Register Interrupt (check system.h for defs)
   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 0);		// Clear control register
   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 2);		// Continuous Mode ON
   IOWR_ALTERA_AVALON_TIMER_PERIODL(CONTROLLER_INTERRUPT_COUNTER_BASE, 0xA120);   // Timer interrupt period is 100ms, 10 Hz refresh rate
