@@ -24,6 +24,7 @@ struct command_struct my_cmds[] = {
   {"gax\n", COMMAND_ACCEL_X, "gax - get x-acceleration\n  Usage: gax\n\n  Print x-acceleration\n"},
   {"gay\n", COMMAND_ACCEL_Y, "gay - get y-acceleration\n  Usage: gay\n\n  Print y-acceleration\n"},
   {"gaz\n", COMMAND_ACCEL_Z, "gaz - get z-acceleration\n  Usage: gaz\n\n  Print z-acceleration\n"},
+  {"gd\n", COMMAND_DEPTH, "gd - get depth\n  Usage: gd\n\n  Print depth (not converted)\n"},
   {"gg\n", COMMAND_GYRO, "gg - get gyroscope info\n  Usage: gg\n\n  Print (x,y,z) gyroscope info\n"},
   {"ggx\n", COMMAND_GYRO_X, "ggx - get x-gyroscope heading\n  Usage: ggx\n\n  Print x-gyroscope heading\n"},
   {"ggy\n", COMMAND_GYRO_Y, "ggy - get y-gyroscope heading\n  Usage: ggy\n\n  Print y-gyroscope heading\n"},
@@ -185,6 +186,11 @@ void process_command(char *st)
     case COMMAND_ACCEL_Z:
       get_accel(&accel_data, &orientation);
       print_int(accel_data.z);
+      alt_putchar('\n');
+      break;
+    case COMMAND_DEPTH:
+      i = get_depth();
+      print_int(i);
       alt_putchar('\n');
       break;
     case COMMAND_GYRO:

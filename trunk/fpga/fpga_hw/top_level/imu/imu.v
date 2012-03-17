@@ -28,12 +28,15 @@ module imu(
    input spi_clk,
    input sys_clk,
    input no_external_force,
+   inout sda,
+   output scl,
    output [31:0] gyroscope_degree_x,
    output [31:0] gyroscope_degree_y,
    output [31:0] gyroscope_degree_z,
-   output [31:0]  magnetometer_data_x,
-   output [31:0]  magnetometer_data_y,
-   output [31:0]  magnetometer_data_z,
+   output [31:0] raw_depth,
+   output [31:0] magnetometer_data_x,
+   output [31:0] magnetometer_data_y,
+   output [31:0] magnetometer_data_z,
 
    //////////// ADC //////////
    input                                  ADC_SDAT,
@@ -74,9 +77,9 @@ gyroscope_data_to_degrees gyroscope_data_to_degrees(
    .clk(sys_clk),
    .reset_n(reset_n),
    .no_external_force(no_external_force),
-   .gyroscope_data_x({20'd0,ADC_12_bit_channel_3}),
-   .gyroscope_data_y({20'd0,ADC_12_bit_channel_4}),
-   .gyroscope_data_z({20'd0,ADC_12_bit_channel_7}),
+   .gyroscope_data_x({20'd0,ADC_12_bit_channel_2}),
+   .gyroscope_data_y({20'd0,ADC_12_bit_channel_7}),
+   .gyroscope_data_z({20'd0,ADC_12_bit_channel_5}),
    .gyroscope_degree_x(gyroscope_degree_x),
    .gyroscope_degree_y(gyroscope_degree_y),
    .gyroscope_degree_z(gyroscope_degree_z)
@@ -110,7 +113,11 @@ magnetometer_i2c_interface magnetometer_i2c_interface(
    .clk(spi_clk),
    .magnetometer_data_x(magnetometer_data_x),
    .magnetometer_data_y(magnetometer_data_y),
-   .magnetometer_data_z(magnetometer_data_z)
+   .magnetometer_data_z(magnetometer_data_z),
+   .sda_magnetometer(sda),
+   .scl_magnetometer(scl)
 );	
+
+assign raw_depth = {20'd0, ADC_12_bit_channel_0};
 	
 endmodule

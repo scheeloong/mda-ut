@@ -149,6 +149,12 @@ int get_pwm_freq()
   return  50000 / pwm_period;
 }
 
+// returns depth
+int get_depth()
+{
+  return IORD(IMU_CONTROLLER_0_BASE, 3);
+}
+
 // returns a x,y,z gyroscope values
 void get_gyro(int *x, int *y, int *z)
 {
@@ -173,6 +179,7 @@ void get_accel(struct t_accel_data *accel_data, struct orientation *orientation)
       break;
     }
   }
+
   // With the accleration data, calculate the orientation as well.
   IOWR(IMU_CONTROLLER_0_BASE,0,accel_data->x);
   IOWR(IMU_CONTROLLER_0_BASE,1,accel_data->y);
