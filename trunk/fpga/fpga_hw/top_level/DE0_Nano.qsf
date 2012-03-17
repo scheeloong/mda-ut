@@ -441,3 +441,8 @@ set_global_assignment -name VERILOG_FILE power_management/global_disable.v
 set_global_assignment -name VERILOG_FILE DE0_Nano.v
 
 set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000135FDE99C93 -qip DE0_Nano_SOPC.qip
+
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A0000013621C9BC3A -qip DE0_Nano_SOPC.qip
+set_global_assignment -name TCL_SCRIPT_FILE power_management/power_management_slave_hw.tcl -qip DE0_Nano_SOPC.qip
+set_global_assignment -name VERILOG_FILE power_management/power_management_slave.v -qip DE0_Nano_SOPC.qip
+set_global_assignment -name VERILOG_FILE power_management_slave_0.v -qip DE0_Nano_SOPC.qip

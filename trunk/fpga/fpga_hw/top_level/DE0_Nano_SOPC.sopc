@@ -21,6 +21,14 @@
          type = "long";
       }
    }
+   element motor_controller_0.avalon_slave_0
+   {
+      datum baseAddress
+      {
+         value = "2176";
+         type = "long";
+      }
+   }
    element imu_controller_0.avalon_slave_0
    {
       datum baseAddress
@@ -29,11 +37,11 @@
          type = "long";
       }
    }
-   element motor_controller_0.avalon_slave_0
+   element power_management_slave_0.avalon_slave_0
    {
       datum baseAddress
       {
-         value = "2176";
+         value = "2400";
          type = "long";
       }
    }
@@ -271,6 +279,14 @@
          type = "long";
       }
    }
+   element power_management_slave_0
+   {
+      datum _sortIndex
+      {
+         value = "20";
+         type = "int";
+      }
+   }
    element g_sensor_int.s1
    {
       datum baseAddress
@@ -279,11 +295,67 @@
          type = "long";
       }
    }
+   element key.s1
+   {
+      datum baseAddress
+      {
+         value = "32";
+         type = "long";
+      }
+   }
+   element sw.s1
+   {
+      datum baseAddress
+      {
+         value = "64";
+         type = "long";
+      }
+   }
+   element i2c_sda.s1
+   {
+      datum baseAddress
+      {
+         value = "2112";
+         type = "long";
+      }
+   }
+   element select_i2c_clk.s1
+   {
+      datum baseAddress
+      {
+         value = "96";
+         type = "long";
+      }
+   }
    element led.s1
    {
       datum baseAddress
       {
          value = "48";
+         type = "long";
+      }
+   }
+   element controller_interrupt_counter.s1
+   {
+      datum baseAddress
+      {
+         value = "2368";
+         type = "long";
+      }
+   }
+   element clock_crossing_io.s1
+   {
+      datum baseAddress
+      {
+         value = "67108864";
+         type = "long";
+      }
+   }
+   element i2c_scl.s1
+   {
+      datum baseAddress
+      {
+         value = "2128";
          type = "long";
       }
    }
@@ -297,62 +369,6 @@
       datum baseAddress
       {
          value = "33554432";
-         type = "long";
-      }
-   }
-   element controller_interrupt_counter.s1
-   {
-      datum baseAddress
-      {
-         value = "2368";
-         type = "long";
-      }
-   }
-   element i2c_sda.s1
-   {
-      datum baseAddress
-      {
-         value = "2112";
-         type = "long";
-      }
-   }
-   element sw.s1
-   {
-      datum baseAddress
-      {
-         value = "64";
-         type = "long";
-      }
-   }
-   element select_i2c_clk.s1
-   {
-      datum baseAddress
-      {
-         value = "96";
-         type = "long";
-      }
-   }
-   element clock_crossing_io.s1
-   {
-      datum baseAddress
-      {
-         value = "67108864";
-         type = "long";
-      }
-   }
-   element key.s1
-   {
-      datum baseAddress
-      {
-         value = "32";
-         type = "long";
-      }
-   }
-   element i2c_scl.s1
-   {
-      datum baseAddress
-      {
-         value = "2128";
          type = "long";
       }
    }
@@ -436,8 +452,8 @@
  <parameter name="maxAdditionalLatency" value="0" />
  <parameter name="projectName" value="DE0_Nano.qpf" />
  <parameter name="sopcBorderPoints" value="true" />
- <parameter name="systemHash" value="45244214039" />
- <parameter name="timeStamp" value="1331404734399" />
+ <parameter name="systemHash" value="39812197933" />
+ <parameter name="timeStamp" value="1332006715224" />
  <module kind="clock_source" version="11.0" enabled="1" name="clk_50">
   <parameter name="clockFrequency" value="50000000" />
   <parameter name="clockFrequencyKnown" value="true" />
@@ -512,7 +528,7 @@
   <parameter name="mmu_TLBMissExcSlave" value="" />
   <parameter name="mmu_TLBMissExcOffset" value="0" />
   <parameter name="manuallyAssignCpuID" value="false" />
-  <parameter name="internalIrqMaskSystemInfo" value="126" />
+  <parameter name="internalIrqMaskSystemInfo" value="254" />
   <parameter name="instSlaveMapParam"><![CDATA[<address-map><slave name='sdram.s1' start='0x2000000' end='0x4000000' /><slave name='cpu.jtag_debug_module' start='0x6000800' end='0x6001000' /></address-map>]]></parameter>
   <parameter name="instAddrWidth" value="27" />
   <parameter name="impl" value="Tiny" />
@@ -537,7 +553,7 @@
   <parameter name="dcache_numTCDM" value="_0" />
   <parameter name="dcache_lineSize" value="_32" />
   <parameter name="dcache_bursts" value="false" />
-  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='motor_controller_0.avalon_slave_0' start='0x880' end='0x8C0' /><slave name='imu_controller_0.avalon_slave_0' start='0x900' end='0x940' /><slave name='controller_interrupt_counter.s1' start='0x940' end='0x960' /><slave name='sdram.s1' start='0x2000000' end='0x4000000' /><slave name='key.s1' start='0x4000020' end='0x4000030' /><slave name='led.s1' start='0x4000030' end='0x4000040' /><slave name='sw.s1' start='0x4000040' end='0x4000050' /><slave name='g_sensor_int.s1' start='0x4000050' end='0x4000060' /><slave name='select_i2c_clk.s1' start='0x4000060' end='0x4000070' /><slave name='sysid.control_slave' start='0x4000070' end='0x4000078' /><slave name='epcs.epcs_control_port' start='0x5000000' end='0x5000800' /><slave name='gsensor_spi.slave' start='0x5000800' end='0x5000840' /><slave name='i2c_sda.s1' start='0x5000840' end='0x5000850' /><slave name='i2c_scl.s1' start='0x5000850' end='0x5000860' /><slave name='cpu.jtag_debug_module' start='0x6000800' end='0x6001000' /><slave name='altpll_sys.pll_slave' start='0x6001000' end='0x6001010' /><slave name='jtag_uart.avalon_jtag_slave' start='0x6001010' end='0x6001018' /></address-map>]]></parameter>
+  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='motor_controller_0.avalon_slave_0' start='0x880' end='0x8C0' /><slave name='imu_controller_0.avalon_slave_0' start='0x900' end='0x940' /><slave name='controller_interrupt_counter.s1' start='0x940' end='0x960' /><slave name='power_management_slave_0.avalon_slave_0' start='0x960' end='0x964' /><slave name='sdram.s1' start='0x2000000' end='0x4000000' /><slave name='key.s1' start='0x4000020' end='0x4000030' /><slave name='led.s1' start='0x4000030' end='0x4000040' /><slave name='sw.s1' start='0x4000040' end='0x4000050' /><slave name='g_sensor_int.s1' start='0x4000050' end='0x4000060' /><slave name='select_i2c_clk.s1' start='0x4000060' end='0x4000070' /><slave name='sysid.control_slave' start='0x4000070' end='0x4000078' /><slave name='epcs.epcs_control_port' start='0x5000000' end='0x5000800' /><slave name='gsensor_spi.slave' start='0x5000800' end='0x5000840' /><slave name='i2c_sda.s1' start='0x5000840' end='0x5000850' /><slave name='i2c_scl.s1' start='0x5000850' end='0x5000860' /><slave name='cpu.jtag_debug_module' start='0x6000800' end='0x6001000' /><slave name='altpll_sys.pll_slave' start='0x6001000' end='0x6001010' /><slave name='jtag_uart.avalon_jtag_slave' start='0x6001010' end='0x6001018' /></address-map>]]></parameter>
   <parameter name="dataAddrWidth" value="27" />
   <parameter name="customInstSlavesSystemInfo" value="&lt;info/&gt;" />
   <parameter name="cpuReset" value="false" />
@@ -940,6 +956,11 @@
   <parameter name="timeoutPulseOutput" value="false" />
   <parameter name="timerPreset" value="CUSTOM" />
  </module>
+ <module
+   kind="power_management_slave"
+   version="1.0"
+   enabled="1"
+   name="power_management_slave_0" />
  <connection
    kind="avalon"
    version="11.0"
@@ -1195,5 +1216,25 @@
    start="cpu.d_irq"
    end="controller_interrupt_counter.irq">
   <parameter name="irqNumber" value="6" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="11.0"
+   start="cpu.data_master"
+   end="power_management_slave_0.avalon_slave_0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0960" />
+ </connection>
+ <connection
+   kind="clock"
+   version="11.0"
+   start="clk_50.clk"
+   end="power_management_slave_0.clock" />
+ <connection
+   kind="interrupt"
+   version="11.0"
+   start="cpu.d_irq"
+   end="power_management_slave_0.interrupt_sender">
+  <parameter name="irqNumber" value="7" />
  </connection>
 </system>
