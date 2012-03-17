@@ -28,6 +28,7 @@ void set_pow(int);
 int get_motor_duty_cycle(int);
 int get_pwm_freq();
 void get_accel(struct t_accel_data *, struct orientation *);
+int get_depth();
 void get_gyro(int *, int *, int *);
 
 // API to give commands to NIOS
@@ -46,6 +47,7 @@ enum COMMAND_ID {
   COMMAND_ACCEL_X,
   COMMAND_ACCEL_Y,
   COMMAND_ACCEL_Z,
+  COMMAND_DEPTH,
   COMMAND_GYRO,
   COMMAND_GYRO_X,
   COMMAND_GYRO_Y,
