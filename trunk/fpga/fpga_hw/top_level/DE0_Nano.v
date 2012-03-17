@@ -164,9 +164,11 @@ wire spi_clk;
 wire [33:0] gpio_0_wire;
 wire [33:0] gpio_1_wire;
 wire [12:0] gpio_2_wire;
-wire [7:0]  led_wire;
+wire [3:0]  led_wire;
 
 wire kill_sw;
+wire error;
+wire [2:0] voltage_mux;
 
 //=======================================================
 //  Structural coding
@@ -174,24 +176,26 @@ wire kill_sw;
 
 assign reset_n = 1'b1;
 assign GPIO_1[33] = kill_sw;
-assign led_wire[0] = 1'b1;
+assign {GPIO_1[29], GPIO_1[31], GPIO_1[25]} = voltage_mux;
+assign LED[3:0] = {voltage_mux, error};
 
 global_disable #(
   .NUM_IN(2+1),
-  .NUM_IOS(34+13+8)
+  .NUM_IOS(34+13+4)
 ) dis_inst (
   .clk(CLOCK_50),
   .shutdown(~{KEY, kill_sw}),
   .gpio_in({gpio_0_wire, gpio_2_wire, led_wire}),
-  .gpio_out({GPIO_0, GPIO_2, LED})
+  .gpio_out({GPIO_0, GPIO_2, LED[7:4]})
 );
 
 power_management pm_inst (
   .kill_sw(kill_sw),
-  .sel({GPIO_1[29], GPIO_1[31], GPIO_1[25]}),
+  .sel(voltage_mux),
   .data(GPIO_1[27]),
   .start(SW[0]),
-  .clk(CLOCK_50)
+  .clk(CLOCK_50),
+  .error(error)
 );
 
 DE0_Nano_SOPC DE0_Nano_SOPC_inst(
@@ -204,7 +208,7 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
 
 			
                       // GPIO pins to Avalon slave(s)
-                       .GPIO_out_from_the_motor_controller_0({led_wire[7:4], gpio_2_wire[6], gpio_2_wire[8], gpio_0_wire[24], gpio_0_wire[25], gpio_0_wire[18], gpio_0_wire[19], gpio_0_wire[12], gpio_0_wire[13], gpio_0_wire[16], gpio_0_wire[17], gpio_0_wire[10], gpio_0_wire[11], gpio_2_wire[2], gpio_2_wire[4], gpio_0_wire[22], gpio_0_wire[23], gpio_0_wire[4], gpio_0_wire[5], gpio_0_wire[2], gpio_0_wire[0]}),
+                       .GPIO_out_from_the_motor_controller_0({led_wire[3:0], gpio_2_wire[6], gpio_2_wire[8], gpio_0_wire[24], gpio_0_wire[25], gpio_0_wire[18], gpio_0_wire[19], gpio_0_wire[12], gpio_0_wire[13], gpio_0_wire[16], gpio_0_wire[17], gpio_0_wire[10], gpio_0_wire[11], gpio_2_wire[2], gpio_2_wire[4], gpio_0_wire[22], gpio_0_wire[23], gpio_0_wire[4], gpio_0_wire[5], gpio_0_wire[2], gpio_0_wire[0]}),
 
                       // Clocks for the IMU
                       .spi_clk_to_the_imu_controller_0(spi_clk),
