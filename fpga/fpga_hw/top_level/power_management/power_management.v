@@ -42,7 +42,6 @@ module power_management (
           ((data == 1'b0 && sel[0] == 1'b0)
           || data == 1'b1 && sel[0] == 1'b1))
       begin
-        kill_sw = 1'b0;
         state = 1'd0;
       end
     end
