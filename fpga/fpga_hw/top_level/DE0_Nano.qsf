@@ -6,7 +6,7 @@ set_global_assignment -name FAMILY CycloneIVE
 set_global_assignment -name DEVICE EP4CE22F17C6
 set_global_assignment -name TOP_LEVEL_ENTITY "DE0_Nano"
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 9.1
-set_global_assignment -name LAST_QUARTUS_VERSION "11.1 SP1"
+set_global_assignment -name LAST_QUARTUS_VERSION 11.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "15:32:15 NOVEMBER 25,2010"
 set_global_assignment -name DEVICE_FILTER_PACKAGE FBGA
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 256
@@ -410,10 +410,6 @@ set_global_assignment -name VERILOG_FILE ip/TARASIC_SPI_3WIRE/gsensor_fifo.v -qi
 set_global_assignment -name SDC_FILE cpu.sdc -qip DE0_Nano_SOPC.qip
 set_global_assignment -name SOURCE_FILE cpu.ocp -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE altpll_sys.v -qip DE0_Nano_SOPC.qip
-set_global_assignment -name TCL_SCRIPT_FILE ip/TERASIC_ADC_READ/TERASIC_ADC_READ_hw.tcl -qip DE0_Nano_SOPC.qip
-set_global_assignment -name VERILOG_FILE ip/TERASIC_ADC_READ/TERASIC_ADC_READ.v -qip DE0_Nano_SOPC.qip
-set_global_assignment -name VHDL_FILE ip/TERASIC_ADC_READ/ADC_READ.vhd -qip DE0_Nano_SOPC.qip
-set_global_assignment -name VERILOG_FILE adc_spi_read.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name TCL_SCRIPT_FILE ip/TARASIC_SPI_3WIRE/TERASIC_SPI_3WIRE_hw.tcl -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE ip/TARASIC_SPI_3WIRE/TERASIC_SPI_3WIRE.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE ip/TARASIC_SPI_3WIRE/SPI_3WIRE.v -qip DE0_Nano_SOPC.qip
@@ -424,12 +420,9 @@ set_global_assignment -name VERILOG_FILE motor_controller/slave_controller.v -qi
 set_global_assignment -name VERILOG_FILE motor_controller/defines.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE motor_controller/motor_controller.v -qip DE0_Nano_SOPC.qip
 
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000133C944F5B2 -qip DE0_Nano_SOPC.qip
 set_global_assignment -name TCL_SCRIPT_FILE ../../../../../../altera/11.0/ip/altera/sopc_builder_ip/altera_avalon_altpll/altera_avalon_altpll_hw.tcl -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE motor_controller_0.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name SDC_FILE ../../../../../../altera/11.0/ip/altera/sopc_builder_ip/altera_avalon_clock_adapter/altera_avalon_clock_adapter.sdc -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000134DDB4FF6D -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A000001359129239D -qip DE0_Nano_SOPC.qip
 set_global_assignment -name TCL_SCRIPT_FILE imu/imu_controller_hw.tcl -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE imu/imu_controller.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE imu/ADC_CTRL.v -qip DE0_Nano_SOPC.qip
@@ -443,11 +436,8 @@ set_global_assignment -name VERILOG_FILE imu/integrator_signed_32bits.v -qip DE0
 set_global_assignment -name VERILOG_FILE imu/magnetometer_i2c_interface.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE imu/raw_data_to_degree.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE imu_controller_0.v -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A0000013591366DBD -qip DE0_Nano_SOPC.qip
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000135A7E58112 -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE power_management/power_management.v
+set_global_assignment -name VERILOG_FILE power_management/global_disable.v
+set_global_assignment -name VERILOG_FILE DE0_Nano.v
 
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000135B651790C -qip DE0_Nano_SOPC.qip
-
-set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000135FDD346EA -qip DE0_Nano_SOPC.qip
 set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A00000135FDE99C93 -qip DE0_Nano_SOPC.qip

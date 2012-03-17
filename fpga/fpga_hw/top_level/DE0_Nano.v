@@ -160,26 +160,38 @@ wire reset_n;
 wire select_i2c_clk;
 wire i2c_clk;
 wire spi_clk;
+
 wire [33:0] gpio_0_wire;
 wire [33:0] gpio_1_wire;
 wire [12:0] gpio_2_wire;
 wire [7:0]  led_wire;
 
+wire kill_sw;
 
 //=======================================================
 //  Structural coding
 //=======================================================
 
 assign reset_n = 1'b1;
+assign GPIO_1[33] = kill_sw;
+assign led_wire[0] = 1'b1;
 
-power_management #(
-  .NUM_IN(2),
-  .NUM_IOS(34+34+13+8)
-) pm_inst (
+global_disable #(
+  .NUM_IN(2+1),
+  .NUM_IOS(34+13+8)
+) dis_inst (
   .clk(CLOCK_50),
-  .shutdown(~KEY),
-  .gpio_in({gpio_0_wire, gpio_1_wire, gpio_2_wire, led_wire}),
-  .gpio_out({GPIO_0, GPIO_1, GPIO_2, LED})
+  .shutdown(~{KEY, kill_sw}),
+  .gpio_in({gpio_0_wire, gpio_2_wire, led_wire}),
+  .gpio_out({GPIO_0, GPIO_2, LED})
+);
+
+power_management pm_inst (
+  .kill_sw(kill_sw),
+  .sel({GPIO_1[29], GPIO_1[31], GPIO_1[25]}),
+  .data(GPIO_1[27]),
+  .start(SW[0]),
+  .clk(CLOCK_50)
 );
 
 DE0_Nano_SOPC DE0_Nano_SOPC_inst(

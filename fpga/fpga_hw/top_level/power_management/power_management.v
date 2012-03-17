@@ -1,23 +1,51 @@
 // Power management
 //
-// If any of the shutdown inputs goes high, all GPIO outputs will be set to 0
+// Allows the FPGA to turn on and off power, as well as monitor voltage levels
 
-module power_management #(
-  parameter NUM_IN = 1,
-  parameter NUM_IOS = 1
-) (
-  input clk,
-  input [NUM_IN-1:0] shutdown,
-  input [NUM_IOS-1:0] gpio_in,
-  output reg [NUM_IOS-1:0] gpio_out
+module power_management (
+  output reg kill_sw,
+  output reg [2:0] sel,
+  input data,
+  input start, /* Signal to turn on power */
+  input clk /* 50 MHz */
 );
 
+  reg [9:0] wait_cnt = 10'd0; /* Overflow at ~49 KHz */
+  reg state = 1'd0;
+
   always @(posedge clk)
-    if (|shutdown)
-      // Set all GPIO outputs to low
-      gpio_out = {NUM_IOS{1'b0}};
-    else
-      // Set all GPIO outputs to the input
-      gpio_out = gpio_in;
+  // Wait state (until start is high)
+  if (state == 1'd0)
+  begin
+    kill_sw <= 1'b0;
+    sel <= 3'b000;
+    if (start)
+    begin
+      state <= 1'd1;
+    end
+  end
+  else
+  begin
+    wait_cnt <= wait_cnt + 10'd1;
+    if (wait_cnt == 10'd0)
+    begin
+      if (sel == 3'd6)
+      begin
+        kill_sw = 1'b1;
+        sel <= 3'd000;
+      end
+      else
+        sel <= sel + 3'b001;
+      // Check input after waiting a ~49 KHz cycle
+      // Power off if data is Low on an Even check or High on an Odd check
+      if (!start || (wait_cnt == 10'd1023) &&
+          ((data == 1'b0 && sel[0] == 1'b0)
+          || data == 1'b1 && sel[0] == 1'b1))
+      begin
+        kill_sw = 1'b0;
+        state = 1'd0;
+      end
+    end
+  end
 
 endmodule
