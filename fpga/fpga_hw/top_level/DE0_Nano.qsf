@@ -11,7 +11,7 @@ set_global_assignment -name PROJECT_CREATION_TIME_DATE "15:32:15 NOVEMBER 25,201
 set_global_assignment -name DEVICE_FILTER_PACKAGE FBGA
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 256
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 6
-set_global_assignment -name SDC_FILE DE0_Nano.SDC
+set_global_assignment -name SDC_FILE DE0_Nano.sdc
 #set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS PROGRAMMING PIN"
 
 #============================================================
