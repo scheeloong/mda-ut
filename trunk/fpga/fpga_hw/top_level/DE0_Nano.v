@@ -166,7 +166,7 @@ wire [33:0] gpio_1_wire;
 wire [12:0] gpio_2_wire;
 wire [3:0]  led_wire;
 
-wire error;
+wire error, kill_sw;
 wire [2:0] voltage_mux;
 
 //=======================================================
