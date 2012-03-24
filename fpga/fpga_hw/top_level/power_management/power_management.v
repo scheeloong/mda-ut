@@ -2,6 +2,11 @@
 //
 // Allows the FPGA to turn on and off power, as well as monitor voltage levels
 
+// Ignore overvoltage errors for 10 cycles or 5kHz
+`define OVERVOLT_GRACE 4'd10
+// Ignore undervoltage errors for 50000 cycles or 10s
+`define UNDERVOLT_GRACE 16'd50000
+
 module power_management (
   output reg kill_sw,
   output reg [2:0] sel,
@@ -12,6 +17,8 @@ module power_management (
 );
 
   reg [9:0] wait_cnt; /* Overflow at ~49 KHz */
+  reg [3:0] overvolt_grace_cnt;
+  reg [15:0] undervolt_grace_cnt;
   reg error_reg;
 
   always @(posedge clk)
@@ -22,18 +29,23 @@ module power_management (
     sel <= 3'b111;
     wait_cnt = 10'd0;
     error_reg = 1'b0;
+    overvolt_grace_cnt = `OVERVOLT_GRACE;
+    undervolt_grace_cnt = `UNDERVOLT_GRACE;
   end
   // Monitor voltage levels continuously
   else
   begin
+    kill_sw <= !error;
     if (!error_reg)
       wait_cnt <= wait_cnt + 10'd1;
     if (!error_reg && wait_cnt == 10'd0)
     begin
+      if (overvolt_grace_cnt != 4'd0)
+        overvolt_grace_cnt <= overvolt_grace_cnt - 4'd1;
+      if (undervolt_grace_cnt != 16'd0)
+        undervolt_grace_cnt <= undervolt_grace_cnt - 16'd1;
       if (sel == 3'd6)
       begin
-        // Power on when all voltage tests are successful
-        kill_sw = 1'b1;
         sel <= 3'b000;
       end
       else
@@ -42,11 +54,10 @@ module power_management (
     // Check input after waiting a ~49 KHz cycle (ignore when sel is 111)
     // Power off if data is Low on an Even check or High on an Odd check
     if (&wait_cnt && !(&sel)
-        && ((data == 1'b0 && sel[0] == 1'b0)
-        || (data == 1'b1 && sel[0] == 1'b1)))
+        && ((data == 1'b0 && sel[0] == 1'b0 && undervolt_grace_cnt == 6'd0)
+        || (data == 1'b1 && sel[0] == 1'b1 && overvolt_grace_cnt == 20'd0)))
     begin
       error_reg <= 1'd1;
-      kill_sw = 1'b0;
     end
   end
 
