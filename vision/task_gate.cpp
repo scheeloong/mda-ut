@@ -280,9 +280,9 @@ void controller_GATE (vision_in &Input, Mission &m) {
             else {
                 m.move(STOP);
                 if (Output.real_y > 0)
-                    m.move(FORWARD);
+                    m.move(RISE);
                 else
-                    m.move(REVERSE);
+                    m.move(SINK);
             }
             return;
         case CENTERED:

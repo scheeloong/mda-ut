@@ -25,10 +25,11 @@ class HSV_settings {
     int HueInRange (unsigned hue);
     void setSim_gate (); // for orange gate in sim
     void setSim_path (); // for brown pipe in sim
-    void setSim_buoyR (); // for brown pipe in sim
-    void setSim_buoyG (); // for brown pipe in sim
-    void setSim_buoyY (); // for brown pipe in sim
-		void setSim_U ();
+    void setSim_buoyR (); // for red buoy
+    void setSim_buoyG (); // for green
+    void setSim_buoyY (); // for yellow
+    void setSim_torp (); // for red side of torpedo target
+    void setSim_U (); // for green U obstacle
 };
 
 // flags for vision functions

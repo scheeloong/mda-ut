@@ -309,8 +309,8 @@ void cv_init () {
        
        Vin2.HSV.setSim_path();
        switch (CV_VISION_FLAG) {
-				   case '0':
-						   break;
+           case '0':
+               break;
            case '1':
            case '2':
                Vin.HSV.setSim_gate();
@@ -370,8 +370,8 @@ void cv_display (void) {
        /** OPENCV CODE GOES HERE. */      
        //cvShowImage (WIN0,cv_img);
        switch (CV_VISION_FLAG) {
-				    case '0':
-								break;
+            case '0':
+                break;
             case '1':
                 controller_GATE (Vin, m);
                 break;
@@ -384,6 +384,9 @@ void cv_display (void) {
             case '4':
                 controller_U (Vin, m);
                 break;
+	    case '5':
+		//controller_torp (Vin, m);
+		break;
        }
   
        cvWaitKey(5); // without 5ms delay the window will not show properly
@@ -519,14 +522,14 @@ int main(int argc, char** argv)
       randNum = 0;
 
    printf(
-         "*** USE ./sim v TO USE VISION CODE\n"
+         "*** USE ./sim 0-4 TO USE VISION CODE\n"
          "*** Commands: \n"
          "*** ijkl to strafe in yz plane\n"
          "*** wasd to move fowards/back and turn on vertical axis\n"
          "*** r and f to roll\n"
          "*** t and g to pitch\n"
          "*** x to reset angle, z to reset position\n"
-         "*** o to save current window as jpg (VISION MODE ONLY)\n"
+         "*** p to save current windows as jpg\n"
          "*** 0-9 to set speed\n"
          "*** . to stop (set speed to 0)\n"
          "*** <> to set reverse/forward speed\n"
