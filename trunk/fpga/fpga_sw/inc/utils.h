@@ -53,13 +53,42 @@ enum COMMAND_ID {
   COMMAND_GYRO_Y,
   COMMAND_GYRO_Z,
   COMMAND_MOTORS,
-  COMMAND_HELP
+  COMMAND_MOTORS_MIXED,
+  COMMAND_HELP,
+  COMMAND_INTERRUPT_DEBUG,
+  COMMAND_SPEED,
+  COMMAND_HEADING_CHANGE,
+  COMMAND_VERTICAL_OFFSET
 };
 
 struct command_struct {
   char *name;
   enum COMMAND_ID id;
   char *help_string;
+};
+
+struct PD_controller_error_values{
+    int pitch_P;
+	int roll_P;
+	int depth_P;
+	int heading_P;
+	
+	int pitch_D;
+	int roll_D;
+	int depth_D;
+	int heading_D;
+};
+
+struct PD_controller_inputs{
+    int pitch_P;
+	int roll_P;
+	int depth_P;
+	int heading_P;
+	
+	int pitch_D;
+	int roll_D;
+	int depth_D;
+	int heading_D;
 };
 
 #endif

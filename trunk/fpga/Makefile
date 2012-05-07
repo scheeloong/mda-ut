@@ -11,7 +11,7 @@ all: fpga_sw
 
 # This next command just creates the Board Support Pacakge from the sopc file
 # Pretty basic command, it is actually pretty cool
-bsp: fpga_hw
+bsp:
 	nios2-bsp hal $(BSP_DIR) $(FPGA_DIR)
 
 fpga_sw: bsp

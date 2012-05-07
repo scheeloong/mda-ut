@@ -16,6 +16,19 @@
 #include "settings.h"
 #include "utils.h"
 
+// Victor, please determine where these lines should go, I need these global.
+// Structures used by the PD controller for stabilization
+struct orientation target_orientation;
+struct orientation current_orientation;
+struct orientation previous_orientation;
+// Structure containing various PD parameters
+struct PD_controller_inputs PD_controller_inputs;
+// Structure containing PD controller feedback values
+struct PD_controller_error_values PD_controller_error_values;
+// Structure for debugging interrupt data, printf's taking too long
+extern int DEBUG_interrupt[10];
+
+
 // This is the list of all the commands
 // PLEASE KEEP THIS IN ALPHABETICAL ORDER
 // Note: end the first string with a \n to ensure an exact match if no arguments are used
@@ -30,6 +43,7 @@ struct command_struct my_cmds[] = {
   {"ggy\n", COMMAND_GYRO_Y, "ggy - get y-gyroscope heading\n  Usage: ggy\n\n  Print y-gyroscope heading\n"},
   {"ggz\n", COMMAND_GYRO_Z, "ggz - get z-gyroscope heading\n  Usage: ggz\n\n  Print z-gyroscope heading\n"},
   {"gm\n", COMMAND_MOTORS, "gm - get motor data\n  Usage: gm\n\n  Print all motor settings (direction on one line and duty cycle on the next)\n"},
+  {"gmm", COMMAND_MOTORS_MIXED, ""},
   {"h", COMMAND_HELP, "h - help\n  Usage: h <cmd>\n\n  Print the help message for all commands that start with cmd, leave empty to print all help messages\n"},
   {"p", COMMAND_POW, "p - power off/on\n  Usage: p (0|1)\n\n Turn off/on power to all the voltage fails\n"},
   {"smd", COMMAND_DUTY_CYCLE, "smd - set motor duty cycle\n  Usage: smd <n> <0xdc>\n\n  Set the duty cycle of the nth motor to dc\nNote: the duty cycle is inputted in hex out of 0x3ff (1024 in decimal)\n"},
@@ -38,7 +52,11 @@ struct command_struct my_cmds[] = {
   {"sms", COMMAND_STOP, "sms - set motor stop\n  Usage: sms <n>\n\n  Turn the nth motor off\n"},
   {"smb", COMMAND_BRAKE, "smb - set motor brake\n  Usage: smb <n>\n\n  Turn the nth motor off\n"},
   {"spf", COMMAND_FREQ, "spf - set PWM frequency\n  Usage: spf <0xn>\n\n  Set the PWM frequency to n in kilohertz\nNote: the frequency is inputted in hex\n"},
-  {"stop\n", COMMAND_STOP_ALL, "stop\n  Usage: stop\n\n  Stop all motors\n"}
+  {"stop\n", COMMAND_STOP_ALL, "stop\n  Usage: stop\n\n  Stop all motors\n"},
+  {"di\n", COMMAND_INTERRUPT_DEBUG, "di - print interrupt debug values\n  Usage: di\n\n"},
+  {"ss", COMMAND_SPEED, "ss - set forward or backward speed of motor\n positive or negative, range from -157 to 157\n"},
+  {"shc", COMMAND_HEADING_CHANGE, "shc - set forward or backward speed of motor\n positive or negative, range from -157 to 157\n"},
+  {"svo", COMMAND_VERTICAL_OFFSET, "svo - print interrupt debug values\n range from -157 to 157\n"}
 };
 
 // the size of the above array
@@ -81,6 +99,7 @@ void process_command(char *st)
   struct t_accel_data accel_data;
   struct orientation orientation;
   int dc, x, y, z;
+  int inputs[5];
 
   switch (cid) {
     case COMMAND_INVALID:
@@ -233,6 +252,33 @@ void process_command(char *st)
       }
       alt_putchar('\n');
       break;
+    case COMMAND_MOTORS_MIXED:
+      sscanf(st,"%d %d %d %d %d",&inputs[0],&inputs[1],&inputs[2],&inputs[3],&inputs[4]);
+      controller_output(inputs[0],inputs[1],inputs[2],inputs[3],inputs[4]);
+      break;  
+    case COMMAND_INTERRUPT_DEBUG:
+      for ( i = 0; i < 10; i++){
+        printf("Interrupt debug %d: %d\n", i, DEBUG_interrupt[i]); 
+      }
+      break;
+    case COMMAND_SPEED:
+      i = read_hex(st);
+      if (i < -157) { target_orientation.speed = -157; }
+      else if (i > 157) { target_orientation.speed = 157; }
+      else { target_orientation.speed = i; }
+      break;
+    case COMMAND_HEADING_CHANGE:
+      i = read_hex(st);
+      if (i < -157) { target_orientation.heading = -157; }
+      else if (i > 157) { target_orientation.heading = 157; }
+      else { target_orientation.heading = i; }
+      break;
+    case COMMAND_VERTICAL_OFFSET:
+      i = read_hex(st);
+      if (i < -157) { target_orientation.depth_offset = -157; }
+      else if (i > 157) { target_orientation.depth_offset = 157; }
+      else { target_orientation.depth_offset = i; }
+      break;
   }
 }
 
@@ -240,9 +286,43 @@ void process_command(char *st)
 // Controller Interrupt Routine, should be 100Hz.
 static void timer_interrupts(void* context, alt_u32 id)
 {
-   // Print pitch/roll data
-   process_command("ga\n");
-
+   // Get current orientation data
+   struct t_accel_data accel_data;   
+   int pitch_setting = 200;
+   int roll_setting = 200;
+   int depth_setting = 200;
+   int heading = 200;
+   int velocity = 200;
+   
+   // Calculate orientation data
+   previous_orientation = current_orientation;
+   get_accel(&accel_data, &current_orientation);
+	
+   // Calculate PD error values	
+   // I assume that I only want stabilization (target_orientation is set from main notebook master)
+   PD_controller_error_values.pitch_D = current_orientation.pitch - target_orientation.pitch - PD_controller_error_values.pitch_P;
+   PD_controller_error_values.roll_D = current_orientation.roll - target_orientation.roll - PD_controller_error_values.roll_P;
+   PD_controller_error_values.depth_D = current_orientation.depth - target_orientation.depth - PD_controller_error_values.depth_P;
+   PD_controller_error_values.heading_D = current_orientation.heading - target_orientation.heading - PD_controller_error_values.heading_P;
+   PD_controller_error_values.pitch_P = current_orientation.pitch - target_orientation.pitch;
+   PD_controller_error_values.roll_P = current_orientation.roll - target_orientation.roll;
+   PD_controller_error_values.depth_P = current_orientation.depth - target_orientation.depth;
+   PD_controller_error_values.heading_P = current_orientation.heading - target_orientation.heading;
+   
+   // PD values yet to be determined
+   pitch_setting = pitch_setting + (PD_controller_error_values.pitch_D>>4)*8 + (PD_controller_error_values.pitch_P>>4)*8;
+   roll_setting = roll_setting + (PD_controller_error_values.roll_D>>4)*8 + (PD_controller_error_values.roll_P>>4)*8;
+   depth_setting = depth_setting + current_orientation.depth_offset;
+   
+   DEBUG_interrupt[5] = pitch_setting;
+   DEBUG_interrupt[6] = roll_setting;
+   DEBUG_interrupt[7] = depth_setting;
+   DEBUG_interrupt[8] = heading;
+   DEBUG_interrupt[9] = velocity;
+   
+   // Set motor outputs
+   controller_output(pitch_setting, roll_setting, depth_setting, target_orientation.heading, target_orientation.speed);
+   
    // Restart Interrupt for timer_0
    IOWR_ALTERA_AVALON_TIMER_SNAPL(CONTROLLER_INTERRUPT_COUNTER_BASE, 1);
    IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,0); // Clear interrupt (ITO)
@@ -296,6 +376,23 @@ int main()
 {
   char buffer_str[STR_LEN+1];
 
+  // Set inital target orientation
+  target_orientation.pitch = 0;
+  target_orientation.roll = 0;
+  target_orientation.speed = 0;
+  target_orientation.depth_offset = 0;
+  target_orientation.depth = 0;
+  target_orientation.heading = 0;
+  // Set PD values
+  PD_controller_inputs.pitch_D = 0;
+  PD_controller_inputs.roll_D = 0;
+  PD_controller_inputs.depth_D = 0;
+  PD_controller_inputs.heading_D = 0;
+  PD_controller_inputs.pitch_P = 0;
+  PD_controller_inputs.roll_P = 0;
+  PD_controller_inputs.depth_P = 0;
+  PD_controller_inputs.heading_P = 0;
+
   init();
 
   // Setup controller interrupt
@@ -303,8 +400,8 @@ int main()
   alt_ic_isr_register(POWER_MANAGEMENT_SLAVE_0_IRQ_INTERRUPT_CONTROLLER_ID, POWER_MANAGEMENT_SLAVE_0_IRQ,pm_interrupt,0,0);	// Register Interrupt (check system.h for defs)
   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 0);		// Clear control register
   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 2);		// Continuous Mode ON
-  IOWR_ALTERA_AVALON_TIMER_PERIODL(CONTROLLER_INTERRUPT_COUNTER_BASE, 0xA120);   // Timer interrupt period is 100ms, 10 Hz refresh rate
-  IOWR_ALTERA_AVALON_TIMER_PERIODH(CONTROLLER_INTERRUPT_COUNTER_BASE, 0x00AF);
+  IOWR_ALTERA_AVALON_TIMER_PERIODL(CONTROLLER_INTERRUPT_COUNTER_BASE, 0x4B40);   // Timer interrupt period is 100ms, 10 Hz refresh rate
+  IOWR_ALTERA_AVALON_TIMER_PERIODH(CONTROLLER_INTERRUPT_COUNTER_BASE, 0x004C);
   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 3);	    // Enable timer_0 interrupt
   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 7);       // Start timer interrupt
 
@@ -312,6 +409,8 @@ int main()
   while(1) {
     alt_getline(buffer_str, STR_LEN);
     process_command(buffer_str);
+  //process_command("di\n");
+  //printf("\n");
   }
 
   return 0;
