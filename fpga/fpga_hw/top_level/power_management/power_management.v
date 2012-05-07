@@ -61,6 +61,6 @@ module power_management (
     end
   end
 
-  assign error = error_reg;
+  assign error = 1'b0;
 
 endmodule

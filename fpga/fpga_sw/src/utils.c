@@ -17,6 +17,9 @@
 #include "settings.h"
 #include "utils.h"
 
+// Structure for debugging interrupt data, printf's taking too long
+int DEBUG_interrupt[10];
+
 // remember what mode each motor is in ('s' for stopped, 'f' for forward, 'r' for reverse)
 char motor_modes[NUM_MOTORS];
 
@@ -163,6 +166,41 @@ void get_gyro(int *x, int *y, int *z)
   *z = IORD(IMU_CONTROLLER_0_BASE, 2);
 }
 
+// This function is responsible for calling the motor setting signals.
+// An input of 200 is the neutral position for the specific axis input.
+// An input of (200,200,200,200,200) would mean for the object to remain stationary. 
+// Range of input = (0,400)
+// Motor 1 = front, vertical, left; 
+// Motor 2 = front, vertical, right;
+// Motor 3 = center, horizontal, right;
+// Motor 4 = center, horizontal, left;
+// Motor 5 = rear, vertical;
+// duty cycle range = (200,824), centered at 512, dont go full range
+void controller_output(int pitch_setting, int roll_setting, int depth_setting,int heading, int velocity)
+{
+   int motor_duty_cycle[5];
+   int motor_direction[5];  
+   int i;
+   
+   int vertical_thrust_steady_state = 0; //Tune for some number better for better depth controller
+        
+   motor_duty_cycle[0] = 512 + vertical_thrust_steady_state + (depth_setting-200) + (pitch_setting-200) + (roll_setting-200); 
+   motor_duty_cycle[1] = 512 + vertical_thrust_steady_state + (depth_setting-200) + (pitch_setting-200) - (roll_setting-200);
+   motor_duty_cycle[2] = 512 + (velocity) + (heading);
+   motor_duty_cycle[3] = 512 + (velocity) - (heading);
+   motor_duty_cycle[4] = 512 + vertical_thrust_steady_state + (depth_setting-200) - (pitch_setting-200);
+
+   for ( i = 0; i < 5; i++ )
+   {
+      if ( motor_duty_cycle[i] < 200 )
+         motor_duty_cycle[i] = 200;
+      if ( motor_duty_cycle[i] > 824 )
+         motor_duty_cycle[i] = 824;
+      set_motor_duty_cycle(i, motor_duty_cycle[i]);  
+      DEBUG_interrupt[i] = motor_duty_cycle[i];
+   }  
+}
+
 // returns a struct of x,y,z acceleration values
 void get_accel(struct t_accel_data *accel_data, struct orientation *orientation)
 {
@@ -183,13 +221,13 @@ void get_accel(struct t_accel_data *accel_data, struct orientation *orientation)
   // With the accleration data, calculate the orientation as well.
   IOWR(IMU_CONTROLLER_0_BASE,0,accel_data->x);
   IOWR(IMU_CONTROLLER_0_BASE,1,accel_data->y);
-  IOWR(IMU_CONTROLLER_0_BASE,2,accel_data->z);
+  IOWR(IMU_CONTROLLER_0_BASE,2,(-1)*accel_data->z);
   // Delay 10 cycles for hardware processing
   int z;
   for ( z = 0; z < 10; z++ ){}
   // Write to output orientation structure
-  orientation->pitch = IORD(IMU_CONTROLLER_0_BASE,7);
-  orientation->roll = IORD(IMU_CONTROLLER_0_BASE,8);
+  orientation->pitch = -1 * IORD(IMU_CONTROLLER_0_BASE,8);
+  orientation->roll = -1 * IORD(IMU_CONTROLLER_0_BASE,7);
 
   return;
 }

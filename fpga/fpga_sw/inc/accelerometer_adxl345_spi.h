@@ -91,6 +91,8 @@ struct t_accel_data {
 struct orientation{
 	int pitch;
 	int roll;
+	int speed;
+	int depth_offset;
 	int depth;
 	int heading;
 };
