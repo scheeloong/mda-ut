@@ -117,6 +117,8 @@ void process_command(char *st)
       for (i = 0; i < NUM_MOTORS; i++) {
         set_motor_dir(i, MOTOR_DIR_STOPPED);
       }
+      // When the stop all command is received, maintain the current depth
+      target_orientation.depth = get_depth();
       printf("stopping\n");
       break;
     case COMMAND_STOP:
@@ -310,9 +312,16 @@ static void timer_interrupts(void* context, alt_u32 id)
    PD_controller_error_values.heading_P = current_orientation.heading - target_orientation.heading;
    
    // PD values yet to be determined
-   pitch_setting = pitch_setting + (PD_controller_error_values.pitch_D>>4)*8 + (PD_controller_error_values.pitch_P>>4)*8;
-   roll_setting = roll_setting + (PD_controller_error_values.roll_D>>4)*8 + (PD_controller_error_values.roll_P>>4)*8;
-   depth_setting = depth_setting + current_orientation.depth_offset;
+   pitch_setting = pitch_setting + (PD_controller_error_values.pitch_D>>4)*4 + (PD_controller_error_values.pitch_P>>4)*4;
+   roll_setting = roll_setting + (PD_controller_error_values.roll_D>>4)*4 + (PD_controller_error_values.roll_P>>4)*4;
+   if (target_orientation.depth_offset == 0){
+   // The mission computer has set depth change to zero, therefore maintain the target_orientation
+     depth_setting = depth_setting + (current_orientation.depth_offset>>4)*4;
+   }
+   else {
+   // The mission computer has set the depth change value, ignore pd input
+     depth_setting = depth_setting + target_orientation.depth_offset;
+   }
    
    DEBUG_interrupt[5] = pitch_setting;
    DEBUG_interrupt[6] = roll_setting;
