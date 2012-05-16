@@ -28,6 +28,9 @@ struct PD_controller_error_values PD_controller_error_values;
 // Structure for debugging interrupt data, printf's taking too long
 extern int DEBUG_interrupt[10];
 
+// For power management
+int power_failures[7] = {0};
+int old_power_failures[7] = {0};
 
 // This is the list of all the commands
 // PLEASE KEEP THIS IN ALPHABETICAL ORDER
@@ -288,6 +291,16 @@ void process_command(char *st)
 // Controller Interrupt Routine, should be 100Hz.
 static void timer_interrupts(void* context, alt_u32 id)
 {
+   // Power stuff
+   int i;
+   for (i = 0; i < 7; i++) {
+      // Reset to 0 if unchanged
+      if (power_failures[i] == old_power_failures[i]) {
+         power_failures[i] = 0;
+      }
+      old_power_failures[i] = power_failures[i];
+   }
+
    // Get current orientation data
    struct t_accel_data accel_data;   
    int pitch_setting = 200;
@@ -348,36 +361,48 @@ static void pm_interrupt(void *context, alt_u32 id)
 {
    // Get failing voltage line
    int which_failed = IORD(POWER_MANAGEMENT_SLAVE_0_BASE, 0);
+   power_failures[which_failed]++;
+
+   static const int failure_threshold = 100;
+   if (power_failures[which_failed] < failure_threshold) {
+      return;
+   }
+
    // Turn off power
    IOWR(POWER_MANAGEMENT_SLAVE_0_BASE, 0, 0);
 
    // Might be in the middle of printing, send a newline
    alt_putchar('\n');
-   switch(which_failed) {
-     case 0:
-       alt_putstr("24 V under-voltage failed");
-       break;
-     case 1:
-       alt_putstr("12 V over-voltage failed");
-       break;
-     case 2:
-       alt_putstr("12 V under-voltage failed");
-       break;
-     case 3:
-       alt_putstr("5 over-voltage failed");
-       break;
-     case 4:
-       alt_putstr("5 V under-voltage failed");
-       break;
-     case 5:
-       alt_putstr("3.3 V over-voltage failed");
-       break;
-     case 6:
-       alt_putstr("3.3 V under-voltage failed");
-       break;
+   int i;
+   for (i = 0; i < 7; i++) {
+      if (power_failures[i] == 0) {
+         continue;
+      }
+      switch(i) {
+         case 0:
+            alt_putstr("24 V under-voltage failed");
+            break;
+         case 1:
+            alt_putstr("12 V over-voltage failed");
+            break;
+         case 2:
+            alt_putstr("12 V under-voltage failed");
+            break;
+         case 3:
+            alt_putstr("5 over-voltage failed");
+            break;
+         case 4:
+            alt_putstr("5 V under-voltage failed");
+            break;
+         case 5:
+            alt_putstr("3.3 V over-voltage failed");
+            break;
+         case 6:
+            alt_putstr("3.3 V under-voltage failed");
+            break;
+       }
+       printf(" %d times\n", power_failures[i]);
    }
-   alt_putchar('\n');
-
 }
 
 // the main function

@@ -30,6 +30,7 @@ power_management pm_inst (
   .kill_sw(kill_sw),
   .sel(mux),
   .data(data),
+  .ack(chipselect && read),
   .start(start),
   .clk(clk),
   .error(error)

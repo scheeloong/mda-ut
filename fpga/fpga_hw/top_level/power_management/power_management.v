@@ -11,6 +11,7 @@ module power_management (
   output reg kill_sw,
   output reg [2:0] sel,
   output error,
+  input ack,
   input data,
   input start, /* Signal to turn on power */
   input clk /* 50 MHz */
@@ -35,9 +36,11 @@ module power_management (
   // Monitor voltage levels continuously
   else
   begin
-    kill_sw <= !error;
+    kill_sw <= 1'b1;
     if (!error_reg)
       wait_cnt <= wait_cnt + 10'd1;
+    if (ack)
+      error_reg <= 1'b0;
     if (!error_reg && wait_cnt == 10'd0)
     begin
       if (overvolt_grace_cnt != 4'd0)
