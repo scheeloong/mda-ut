@@ -5,56 +5,6 @@
 // holds functions that will be used to do basic image processing.
 // For example extract object of interest from background, pick out outline of object
 
-// NAME: satThreshold (IplImage* img, int sat_guess, 
-//                     int step = 5, float threshold = 0.1)
-//
-// PURPOSE: From a guessed saturation value, Finds the sat value that filters out at least
-//      a given fraction (threshold) of the image.
-//
-// ARGUMENTS:
-//      img: 3 channel image, HSV type
-//      sat_guess: guessed saturation value
-//      step: determines how much the saturation value changes per iteration. The changes
-//            could be larger than step but not smaller. 
-//      threshold: desired fraction of good / total pixels.
-// 
-// METHOD: calculates fraction of pixels accepted by sat_guess. If larger than threshold, then
-//      iteratively increase sat_guess until accept_fraction is less than threshold. Do one 
-//      final check to make sure not too few pixels are accepted.
-/*int satThreshold (IplImage* img, int sat_guess, 
-                  int step, float threshold) {
-    //assert (img != NULL);
-    //assert (img->nChannels == 3);
-
-    int pixCounter, adjStep;
-    float pixFraction;
-    char *satPtr;
-            
-    for (;;) { // step thru 1 out of every 4 pixels, calculate fraction of accepted pixels
-        pixCounter = 0;
-        for (int r = 0; r < img->height/2; r++) {                         
-            satPtr = (char*) (img->imageData + 2*r*img->widthStep + 1); 
-            for (int c = 0; c < img->width/2; c++) {
-                pixCounter += (*satPtr >= sat_guess);
-                satPtr += 2*img->nChannels;
-            }
-        }
-        pixFraction = 4*(float) pixCounter / img->width / img->height; 
-        //printf ("%f\n", pixFraction);
-        
-        //calculate how much to change sat_guess
-        adjStep = (int)(pixFraction-threshold) * 5 * step; // adjStep > step if diff > 0.2
-        if (pixFraction > threshold) 
-            sat_guess += ((adjStep > step) ? adjStep : step); // add larger of step and adjstep
-        else break;
-    }     
-    
-    if (pixFraction < threshold/5.0) // if pixFraction too small subtract step and break
-        sat_guess -= step;
-    
-    return sat_guess;
-}*/
-
 // NAME: HueSat_Filter1
 //
 // PURPOSE: converts an image to HSV. All pixels with H in {H_MIN,H_MAX} and S in {S_MIN,S_MAX} are set to

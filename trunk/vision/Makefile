@@ -17,6 +17,7 @@ all: test_cv $(A)
 # test_cv depends on the objects, no -c
 test_cv: $(TASKS) $(LIBO) $(MISSIONDIR)$(MISSIONA)
 	$(CC) $(LIBO) $(TASKS) -o $@ -L$(MISSIONDIR) -lmission -Wall $(CVFLAGS)
+	rm -f *.a
 
 $(MISSIONDIR)$(MISSIONA):
 	make -C $(MISSIONDIR) $(MISSIONA)

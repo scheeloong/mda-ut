@@ -10,7 +10,9 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
 //  NO_DETECT = no detection (not enough pixels to constitute image, or no lines detected)
 //  DETECT_1 = partial detection (1 segment detected) gateX, gateY correspond to segment center. Range valid
 //  DETECT_2 = full detection (2 segments detected). gateX, gateY = gate center. Range valid
-/** HS filter to extract gate object */
+//  DETECT_3 = close enough to gate. stop using the controller
+	
+	/** HS filter to extract gate object */
     IplImage* img_1;  
     float pix_fraction;
     if (flags & _ADJ_COLOR)
@@ -117,18 +119,23 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
         pix_y = (cseed[0][0].y+cseed[0][1].y+cseed[1][0].y+cseed[1][1].y)/4 - img_1->height/2;
         int obj_pix_width = (fabs(cseed[0][0].x-cseed[1][0].x)+fabs(cseed[0][1].x-cseed[1][1].x))/2;
     
-        // estimate range with horiz width
-        Output.range = obj_real_width * float(img_1->width) / obj_pix_width / TAN_FOV_X;
-        Output.real_x = pix_x * obj_real_width / obj_pix_width;
-        Output.real_y = pix_y * obj_real_width / obj_pix_width;
-        
-        if (!(flags & _QUIET)) {
-            printf ("  vision_GATE: Two Segements Detected.\n");
-            printf ("  vision_GATE: Lateral Pos: %f , %f\n", Output.real_x, Output.real_y);
-            printf ("  vision_GATE: Range: %f\n", Output.range);
+        if (obj_pix_width > img_1->width*0.8) {
+            ret = DETECT_3;
+        } 
+        else {
+            // estimate range with horiz width
+            Output.range = obj_real_width * float(img_1->width) / obj_pix_width / TAN_FOV_X;
+            Output.real_x = pix_x * obj_real_width / obj_pix_width;
+            Output.real_y = pix_y * obj_real_width / obj_pix_width;
+            
+            if (!(flags & _QUIET)) {
+                printf ("  vision_GATE: Two Segements Detected.\n");
+                printf ("  vision_GATE: Lateral Pos: %f , %f\n", Output.real_x, Output.real_y);
+                printf ("  vision_GATE: Range: %f\n", Output.range);
+            }
+            
+            ret = DETECT_2; 
         }
-        
-        ret = DETECT_2; 
     }
    
     cvReleaseImage (&img_1);  cvReleaseMemStorage (&storage); // no leakingz
@@ -173,139 +180,70 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
 void controller_GATE (vision_in &Input, Mission &m) {
 // the gate task. We have to assume we are pointed approximate at the gate from the beginning.        
     retcode vcode;
-    // vcode table:
-    // -1 = error, disregard this image
-    // 0 = no detection (not enough pixels to constitute image, or no lines detected). Probably have to move closer.
-    // 1 = partial detection (1 segment detected)  gateX, gateY correspond to single segment center. Range valid
-    // 2 = full detection (2 segments detected).   gateX, gateY = gate center. Range valid
-    // 3 = gate very close, (dist between segments > 3/4 image width). Should stop using vision to navigate. data same as 2.
-    //     Alternatively can ignore this and use the range.
+//  ERROR = bad, disregard this image
+//  NO_DETECT = no detection (not enough pixels to constitute image, or no lines detected)
+//  DETECT_1 = partial detection (1 segment detected) gateX, gateY correspond to segment center. Range valid
+//  DETECT_2 = full detection (2 segments detected). gateX, gateY = gate center. Range valid
     
 //    Input.HSV.setAll(0, 50, 10, 255, 0, 255);
     vision_out Output;
     vcode = vision_GATE (Input, Output, _INVERT);
   
     /** Control code starts here */
-    
-    /* TODO: Re-implement old control code */
-    // Input: vcode from the above call to vision_GATE and Output
-    // Output: give commands to the submarine, ie:
- //   m.translate(FORWARD);
-
-    // old control code    
-    /** state machine
-     * F: "Gate too far"
-     * r: "Gate to the Right" (go fowards)
-     * R: "Gate to the Right" (go right)
-     * l: "Gate to the left" (go fowards)
-     * L: "Gate to the Left" (go left)
-     * C: "Gate is centered"
-     * S: "Reached front of gate. Stop vision"
-     * X: "Error state" 
-    */
-    
-    /** new state machine for gate control 
-     *  vcode = 0 or vcode = 2 ---> (go forward) m.move(forward) 
-     *  vcode = 3 ---> (stop) m.move(stop) 
-     *  vcode = 1 ---> (track left or right to get full detection) 
-     */
-    enum ESTATE {START, NO_GATE, OFF_CENTER, CENTERED, UNALIGNED, ALIGNED, ERROR, PAUSE};
-//     static const ESTATE lookup[8][3] = {
-// vcode =         NO_DETECT,  DETECT_1,     DETECT_2
-// /* START */       {NO_PIPE,    OFF_CENTER,   OFF_CENTER},  
-// /* NO_PIPE */     {NO_PIPE,    OFF_CENTER,   OFF_CENTER},  
-// /* OFF_CENTER */  {NO_PIPE,    OFF_CENTER,   ERROR},  // variable output
-// /* CENTERED */    {PAUSE,      PAUSE,   ERROR},     // variable state for DETECT_2
-// /* UNALIGNED */   {PAUSE,      PAUSE,   ERROR},     // variable state for DETECT_2
-// /* ALIGNED */     {ALIGNED,    ALIGNED,      ALIGNED},   
-// /* ERROR */       {ERROR,      ERROR,        ERROR},
-// /* PAUSE */       {PAUSE,      OFF_CENTER,   CENTERED}};
+    enum ESTATE {START, NO_GATE, OFF_CENTER, CENTERED, DONE};
     static ESTATE state = START; 
-    
+    PI_Controller PI_x;
+    PI_x.setK1K2 (-20.0/PI, -0.8);
+
+#define FWD_SPEED 2
+#define TURN_SPEED 2
+
+	float angle_x;
     // here we check the state of the gate code, depending on what char code it returns, we send a command to the sub using mission
-    if ((state == ERROR) || (state == ALIGNED)) {
-    }
+    if (state == DONE) {}
     else if (vcode == NO_DETECT) { // cant see anything
-        if ((state == START) || (state == NO_GATE) || (state == OFF_CENTER))
-            state = NO_GATE;
-        else 
-            state = PAUSE;
+      state = NO_GATE;
+        PI_x.reset();
     }
     else if (vcode == DETECT_2) { // can recognize object as gate
-        if (Output.real_x*Output.real_x + Output.real_y*Output.real_y > 1)
-            state = OFF_CENTER;
-        else if (Output.range > 3.4)
-            state = CENTERED; // but too high up
-        else if (fabs(Output.tan_PA) > 0.03) // within 5ish degrees of vertical
-            state = UNALIGNED;
-        else
-            state = ALIGNED;
+        if (state != CENTERED) {
+			state = CENTERED; 
+			PI_x.reset();
+		}
     }
     else if (vcode == DETECT_1) { // cannot recognize obj
-        if (Output.real_x*Output.real_x + Output.real_y*Output.real_y > 0.4)
-            state = OFF_CENTER;
-        else 
-            state = CENTERED;
+		if (state != OFF_CENTER) {
+        state = OFF_CENTER;
+		  PI_x.reset();
+		}
     }
-    
-    
-    
-        float temp;
+    else if (vcode == DETECT_3) {
+		state = DONE;
+	}
+
     /** figure out output */
     switch (state) {
-        case START: // no change to output
-            return;
-        case PAUSE:
-            printf ("    State: PAUSE\n");
+        case START:
             return;
         case NO_GATE:
             printf ("    State: NO_GATE\n");
-            m.move(FORWARD);
+            m.move(FORWARD,FWD_SPEED);
             return;
         case OFF_CENTER:
-            printf ("    State: OFF_CENTER\n");
-            if (Output.real_x == 0) Output.real_x = 0.00001;
-            
-            temp = fabs(Output.real_y/Output.real_x);
-            if (temp < 11.5) { // if obj outside of +-5 degrees from vertical
-                m.move(STOP);	
-                if (temp > 1.7) // if not more than +- 30 degrees
-                    m.move(FORWARD);
-                
-                if (Output.real_x > 0) // turn towards the obj
-                    m.move(RIGHT,4);
-                else
-                    m.move(LEFT,4);
-            }
-            else {
-                m.move(STOP);
-                if (Output.real_y > 0)
-                    m.move(RISE);
-                else
-                    m.move(SINK);
-            }
-            return;
         case CENTERED:
-            printf ("    State: CENTERED\n");
-            m.move(STOP);
-            m.move(SINK,4);
+            printf ("    State: OFF_CENTER\n");
+            angle_x = atan(Output.real_x / Output.range);
+            PI_x.update (angle_x);
+            
+            m.move (STOP);
+            if (ABS(angle_x) < 40)
+                m.move (FORWARD, FWD_SPEED);
+            m.move (LEFT, (int)(TURN_SPEED*PI_x.out()));
             return;
-        case UNALIGNED:
-            printf ("    State: UNALIGNED\n");
-            m.move(STOP);
-            if (Output.tan_PA > 0)
-                m.move(LEFT,6);
-            else 
-                m.move(RIGHT,6);
-            return;
-        case ALIGNED:
-            printf ("    State: ALIGNED\n");
-            m.move(STOP);
-            m.move(FORWARD);
-            m.move(RISE,3);
-            return;       
-        case ERROR:
-            printf ("    ERROR!!\n");
+        case DONE:
+            printf ("    State: DONE!!\n");
+            m.move (STOP);
+            m.move (FORWARD, 3);
             return;
         default:
             printf ("\ntask_gate: NO IDEA WHAT STATE I'M IN!\n\n");
@@ -315,88 +253,3 @@ void controller_GATE (vision_in &Input, Mission &m) {
 }
     
     
-    
-    
-    
-    
-    
-    
-    /*
-    if (state == 0) // initiation character for controllers
-        state = 'F';
-
-    if (vcode == 2) {
-        if (Output.range < 3.0) state = 'S';
-        else state = 'C';
-	m.translate(RIGHT);
-    }
-    else if (vcode == 3) state = 'S';
-    else if (vcode == -1) state = 'X';
-    else
-    switch (state) {
-        case 'F': // gate too far
-            if (vcode == 1) { 
-                if (gateX > 0) state = 'r';
-                else state = 'l';
-            }
-            break;//     //float posX, posZ;
-
-   //cos((angle.yaw*PI)/180)
-            // if vcode == 0 then case == 'F'
-        case 'C': // gate centered
-            if (vcode == 1) { 
-                if (gateX > 0) state = 'r';
-                else state = 'l';
-            };
-            break;
-            // if vcode == 2 then case == 'C'
-        case 'r':
-            if (vcode == 1) { 
-                if (gateX > 0) state = 'R';
-                else state = 'l';
-            } 
-            else if (vcode == 0) state = 'R';
-            break;
-        case 'l':
-            if (vcode == 1) { 
-                if (gateX > 0) state = 'r';
-                else state = 'L';
-            }
-            else if (vcode == 0) state = 'L';
-            break;
-        case 'R':
-            if (vcode == 1) { 
-                if (gateX > 0) state = 'r';
-                else state = 'l';
-            }
-            else if (vcode == 0) state = 'r';
-            break;
-         case 'L':
-            if (vcode == 1) { 
-                if (gateX > 0) state = 'r';
-                else state = 'l';
-            }
-            else if (vcode == 0) state = 'l';
-            break;
-    }
-    
-    switch (state) {
-        case 'F': case 'r': case 'l': return 'w';
-        case 'L': return 'a';
-        case 'R': return 'd';
-        case 'C': 
-            if (gateX > 30) return 'd';
-            else if (gateX < -30) return 'a';
-            else return 'w';
-        case 'S':
-            printf ("Gate Task Complete!\n");
-            return '/';
-        case 'X':
-            printf ("Gate Error\n");
-            return '/';
-        default:
-            return '\0';
-    }
-    */
-//}
-

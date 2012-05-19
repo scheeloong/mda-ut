@@ -8,11 +8,6 @@
 // holds functions that will be used to do basic image processing.
 // For example extract object of interest from background, pick out outline of object
 
-// PURPOSE: From a guessed saturation value, Finds the sat value that filters out at least
-//      a given fraction (threshold) of the image.
-int satThreshold (IplImage* img, int sat_guess=90, 
-                  int step=0, float threshold=0.1);
-
 // PURPOSE: converts an image to HSV. All pixels with H in {H_MIN,H_MAX} and S > S_MIN are set to
 //      255 and others to 0. Does a close operation to get rid of stray pixels. Returns fraction of
 //      high pixels (approximate).

@@ -41,12 +41,12 @@ retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
     circles = cvHoughCircles(img_1, storage, CV_HOUGH_GRADIENT,
                              2, //  resolution in accumulator img. > 1 means lower res
                              100, // mindist
-                             60, // canny high threshold
-                             30 ); // accumulator threshold
+                             50, // canny high threshold
+                             25 ); // accumulator threshold
 
     /** decide on output */
     int ncircles=circles->total; 
-    printf ("ncircles: %d\n", ncircles);
+    if (!(flags & _QUIET)) printf ("ncircles: %d\n", ncircles);
     if (ncircles != 1) { 
         CvPoint img_centroid = calcImgCentroid (img_1); // always return pixel coords of centroid
         Output.real_x = 2*float(img_centroid.x) / img_1->width; // equal to 1 if point at the edge
@@ -84,16 +84,15 @@ retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
     }
 }
 
-
 #define NB_t        6   // after travelling foward for this long in NB, go to PAN
-#define PAN_t       3   // stay in PAN for this long (pan and back)
-#define CHARGE_t    2   
-#define RET_t       6   // return for this much time
+#define PAN_t       12  // stay in PAN for this long (pan and back), must be multiple of 4
+#define CHARGE_t    2   // Charge forwards for this time   
+#define RET_t       10   // return for this much time
 
-#define FWD_SPEED 	4//1
-#define SINK_SPEED 	4//1
-#define TURN_SPEED 	12//3
-#define DONE_RANGE 	40
+#define FWD_SPEED 1
+#define SINK_SPEED 2
+#define TURN_SPEED 3
+#define DONE_RANGE 50
 
 void controller_BUOY (vision_in &Input, Mission &m) {
     retcode vcode;
@@ -102,13 +101,17 @@ void controller_BUOY (vision_in &Input, Mission &m) {
 //  NO_DETECT = no detection (not enough pixels to constitute image)
 //  DETECT_1 = partial detection (significant number of pixels, but shape did not trigger circle detector. 
 //              Returns pixel center of mass of filtered image
-//  DETECT_2 = full detection 
+//              The coordinates returned is relative: x = 1 refers to edge of image. x = 0 refers to center
+//  DETECT_2 = full detection. Coordinates returned are not relative 
     
     vision_out Output;
     vcode = vision_BUOY (Input, Output, _INVERT | _DISPLAY);
     
-    static int dt = time(NULL); // dt is a time offset, used to find how much time since last event
     int t = time(NULL);         // read the current time. The "true" timer reading is t-dt
+    static int dt = t; // dt is a time offset, used to find how much time since last event
+    PI_Controller PI_x, PI_y; // for NO_BUOY and GOOD states, respectively
+    PI_x.setK1K2 (-24.0/PI, -0.8); // K1 is set so output is 0 if input is tan(30degrees)
+    PI_y.setK1K2 (-24.0/PI, -0.8);
     
     enum ESTATE {NO_BUOY, GOOD, PAN, CHARGE, RET, DONE, PAUSE};
     /** State Guide:
@@ -124,6 +127,8 @@ void controller_BUOY (vision_in &Input, Mission &m) {
     if (state == NO_BUOY) {
         if (vcode == DETECT_2) { // found something!
             state = GOOD;
+            PI_x.reset(); // reset PI controllers
+            PI_y.reset();
             dt = t; // reset timer
         }
        else if (t-dt > NB_t) { // we travelled a long time without finding anything
@@ -139,10 +144,10 @@ void controller_BUOY (vision_in &Input, Mission &m) {
         else if (Output.range < DONE_RANGE) { // we are close enough to be considered done
             state = CHARGE;
             dt = t;
-	}
+        }
     }
     else if (state == PAN) {
-        if ((vcode == DETECT_2) || (t-dt > 4*PAN_t)) {
+        if ((vcode == DETECT_2) || (t-dt > PAN_t)) {
             state = NO_BUOY;
             dt = t;
         }
@@ -158,6 +163,8 @@ void controller_BUOY (vision_in &Input, Mission &m) {
             state = DONE;
     }
     
+    float angle_x, angle_y;
+    
     /// output logic
     switch (state) {
         case NO_BUOY:
@@ -166,40 +173,45 @@ void controller_BUOY (vision_in &Input, Mission &m) {
             m.move (FORWARD, FWD_SPEED);
             
             if (vcode == DETECT_1) {
-                if (Output.real_x > 0.5)
-                    m.move (RIGHT, TURN_SPEED);
-                else if (Output.real_x < -0.5)
-                    m.move (LEFT, TURN_SPEED);
-                if (Output.real_y > 0.5)
-                    m.move (RISE, SINK_SPEED);
-                else if (Output.real_y < -0.5)
-                    m.move (SINK, SINK_SPEED);
+                if (Output.real_x > 0.7) m.move (RIGHT, 2*TURN_SPEED);
+                else if (Output.real_x > 0.3) m.move (RIGHT, TURN_SPEED);
+                else if (Output.real_x < -0.7) m.move (LEFT, 2*TURN_SPEED);
+                else if (Output.real_x < -0.3) m.move (LEFT, TURN_SPEED);
+            
+                if (Output.real_y > 0.7) m.move (RISE, 2*SINK_SPEED);
+                else if (Output.real_y > 0.3) m.move (RISE, SINK_SPEED);
+                else if (Output.real_y < -0.7) m.move (SINK, 2*SINK_SPEED);
+                else if (Output.real_y < -0.3) m.move (SINK, SINK_SPEED);
             }
             break;
         case GOOD:
             printf ("   buoy: DETECTED\n");
             printf ("   (%f,%f), R=%f\n", Output.real_x,Output.real_y,Output.range);
             
-            m.move(STOP);
-            if (Output.real_x > 0.4) 
-                m.move (RIGHT, TURN_SPEED);
-            else if (Output.real_x < -0.4)
-                m.move (LEFT, TURN_SPEED);
-            if (Output.real_y > 0.3)
-                m.move (RISE, SINK_SPEED);
-            else if (Output.real_y < -0.3)
-                m.move (SINK, SINK_SPEED);
+            angle_x = atan(Output.real_x / Output.range); // calculate angles for x/z, y/z
+            angle_y = atan(Output.real_y / Output.range);
             
-            if ((Output.real_x*Output.real_x + Output.real_y*Output.real_y) / (Output.range*Output.range) < 0.35)  
-                m.move (FORWARD, FWD_SPEED); // less than 20 degrees
+            PI_x.update (angle_x);
+            PI_y.update (angle_y);
+            
+            printf ("   PI_x.out: %f\n", PI_x.out());
+            printf ("   PI_y.out: %f\n", PI_y.out());
+            
+            m.move(STOP);
+            if (ABS(angle_x) < 40 && ABS(angle_y) < 40)
+                m.move (FORWARD, FWD_SPEED);
+            m.move (LEFT, (int)(TURN_SPEED*PI_x.out()));
+            m.move (SINK, (int)(SINK_SPEED*PI_y.out()));
+            
             break;
         case CHARGE:
-            printf ("   buoy: FINISHED\n");
+            printf ("   buoy: FINISHED. Charging Forward.\n");
+            m.move (STOP);
             m.move (STOP);
             m.move (FORWARD, FWD_SPEED);
             break;
         case RET:
-            printf ("   buoy: FINISHED\n");
+            printf ("   buoy: FINISHED. Returning.\n");
             m.move (REVERSE, FWD_SPEED);
             break;
         case PAUSE:
@@ -210,7 +222,7 @@ void controller_BUOY (vision_in &Input, Mission &m) {
         case PAN:
             printf ("   buoy: PANNING\n");
             m.move (STOP);
-            if ((t-dt < PAN_t) || (t-dt >= 3*PAN_t))  // pan left for first half
+            if (t-dt < PAN_t/4 || t-dt >= 3*PAN_t/4)  // pan left for first half
                 m.move(LEFT, TURN_SPEED);
             else 
                 m.move (RIGHT, TURN_SPEED);
@@ -222,16 +234,6 @@ void controller_BUOY (vision_in &Input, Mission &m) {
                           
     return;
 };
-
-
-
-
-
-
-
-
-
-
 
 
 

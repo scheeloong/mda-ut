@@ -101,7 +101,7 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
         float tan_ratio = ang1 / ang2; // ratios used to calculate shape of the object
 
         /** check for rectangular-ness and correctness of dimensions */
-        if ((len_ratio < 1.33) && (len_ratio > 0.75) && (tan_ratio < 1.25) && (tan_ratio > 0.8)) {
+        if ((len_ratio < 4) && (tan_ratio < 1.5) && (tan_ratio > 0.66)) {
         // lines appear to form a pipe, so calculate range and angle
             int pix_x = (cseed[long1][0].x+cseed[long1][1].x+cseed[long2][0].x+cseed[long2][1].x)/4 - img_1->width/2;  
             int pix_y = (cseed[long1][0].y+cseed[long1][1].y+cseed[long2][0].y+cseed[long2][1].y)/4 - img_1->height/2;
@@ -146,40 +146,6 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
 #define TURN_SPEED 5
 #define OBS_DEPTH -6 // depth to look for path
 
-/* ##############################################################################################
-   @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-   ############################################################################################## */
-// Control Code below
-// 1. Each control function is expected to call its corresponding vision function, then use the
-//    results to determine what to do.
-// 2. The machine must output a character which controls the simulator (same as keyboard commands for now).
-// 3. The machine can act on a state variable which will be pass in by reference. Basically this allows the 
-//    controller function to behave as a finite state machine, with "state var" being the thing that records
-//    what state the machine is in.
-// 4. When first called "state" will have a value of 0.
-// 5. The vision function will always be of the form:
-//      retcode code = vision_X (vision_in, vision_out, flags);
-//    code = a code that tells you how well the object was identified (fully in view vs half in view, etc).
-//           !! Also depending on the code the data may have different meanings. !!
-//           the code is enummed. See common.h
-//    vision_in, vision_out - see common.h
-//    flags = Bit flags for the vision function
-//            _DISPLAY to display things
-//            _INVERT to invert image (must set to properly display simulator imgs
-//            _QUIET to suppress printed messages.
-//            Multiple flags can be set using the | operator.
-// 6. List of commands to send back:
-//    m.move(FOWARD), m.move(REVERSE)  to go foward or back
-//    m.move(RIGHT),  m.move(LEFT)
-//    m.move(FORWARD, 3)               to go fowards at 3 times the speed of normal!
-//    m.move(STOP)                     to stop movement
-// Note that if you dont run stop, previous commands are "remembered", so:
-//    If you do m.move(FOWARD) and m.move(RIGHT)	
-//    the sub will be moving FOWARD plus RIGHT
-//    m.move(REVERSE) cancels m.move(FOWARD), m.move(LEFT) cancels m.move(RIGHT)
-//    m.move(STOP) will stop all motion.
-//
-//
 void controller_PATH (vision_in &Input, Mission &m) {
 // following the path - fairly complex controls. Need to sink to right depth after acquiring the pipe.
 // Then rotate until pipe aligned. Then rise and move foward. 
@@ -212,46 +178,49 @@ void controller_PATH (vision_in &Input, Mission &m) {
     
     /// remember tan_angle is 0 if a line is vertical, and +ve in the counter clockwise dir
     
-    enum ESTATE {START, NO_PIPE, OFF_CENTER, CENTERED, UNALIGNED, ALIGNED, ERROR, PAUSE};
-//     static const ESTATE lookup[8][3] = {
-// vcode =         NO_DETECT,  DETECT_1,     DETECT_2
-// /* START */       {NO_PIPE,    OFF_CENTER,   OFF_CENTER},  
-// /* NO_PIPE */     {NO_PIPE,    OFF_CENTER,   OFF_CENTER},  
-// /* OFF_CENTER */  {NO_PIPE,    OFF_CENTER,   ERROR},  // variable output
-// /* CENTERED */    {PAUSE,      PAUSE,   ERROR},     // variable state for DETECT_2
-// /* UNALIGNED */   {PAUSE,      PAUSE,   ERROR},     // variable state for DETECT_2
-// /* ALIGNED */     {ALIGNED,    ALIGNED,      ALIGNED},   
-// /* ERROR */       {ERROR,      ERROR,        ERROR},
-// /* PAUSE */       {PAUSE,      OFF_CENTER,   CENTERED}};
-    
-    static ESTATE state = START; // starting state is start
+    enum ESTATE {START, NO_PIPE, OFF_CENTER, CENTERED, UNALIGNED, ALIGNED, ERROR, PAUSE};    
+    static ESTATE state = NO_PIPE;
+    PI_Controller C;
+    C.setK1K2 (-12.0/PI, -0.8); 
 
+    float real_rad_sqr;
     if ((state == ERROR) || (state == ALIGNED)) {
     }
     else if (vcode == NO_DETECT) { // cant see anything
-        if ((state == START) || (state == NO_PIPE) || (state == OFF_CENTER))
+        if ((state == START) || (state == OFF_CENTER)) {
             state = NO_PIPE;
-        else 
-            state = PAUSE;
+            C.reset();
+        }
+        else if (state != NO_PIPE) 
+            state = NO_PIPE;
     }
     else if (vcode == DETECT_2) { // can recognize object as pipe
-        if (Output.real_x*Output.real_x + Output.real_y*Output.real_y > 1)
+        real_rad_sqr = Output.real_x*Output.real_x + Output.real_y*Output.real_y;
+        
+        if ((state == CENTERED || state == UNALIGNED) && real_rad_sqr > 1.0) // off center if outside 1.0
             state = OFF_CENTER;
+        else if (state == OFF_CENTER && real_rad_sqr > 0.6) // keep state as off centered until within 0.6
+            state = OFF_CENTER;
+        
         else if (Output.range > 4.0)
             state = CENTERED; // but too high up
-        else if (fabs(Output.tan_PA) > 0.03) // within 5ish degrees of vertical
-            state = UNALIGNED;
+        else if (fabs(Output.tan_PA) > 0.03) { // within 5ish degrees of vertical
+            if (state != UNALIGNED) {
+                C.reset();
+                state = UNALIGNED;
+            }
+        }
         else
             state = ALIGNED;
     }
     else if (vcode == DETECT_1) { // cannot recognize obj
-        if (Output.real_x*Output.real_x + Output.real_y*Output.real_y > 0.4)
+        if (state == CENTERED && Output.real_x*Output.real_x + Output.real_y*Output.real_y > 0.6)
             state = OFF_CENTER;
-        else 
+        if (state == OFF_CENTER && Output.real_x*Output.real_x + Output.real_y*Output.real_y < 0.3)
             state = CENTERED;
     }
     
-    float temp;
+    float angle;
     /** figure out output */
     switch (state) {
         case START: // no change to output
@@ -261,12 +230,25 @@ void controller_PATH (vision_in &Input, Mission &m) {
             return;
         case NO_PIPE:
             printf ("    State: NO_PIPE\n");
+            m.move(STOP);
             m.move(FORWARD, FWD_SPEED);
             return;
         case OFF_CENTER:
             printf ("    State: OFF_CENTER\n");
             if (Output.real_x == 0) Output.real_x = 0.00001;
-            temp = Output.real_y/Output.real_x; // temp is y/x ratio
+            angle = atan (Output.real_y / Output.real_x);
+            C.update (angle);
+            
+            m.move (STOP);
+            if (ABS(angle) < 30) {
+                if (Output.real_y > 0)
+                    m.move (FORWARD, 1);
+                else 
+                    m.move (REVERSE, 1);
+            }
+            m.move (LEFT, (int)(3*C.out()));
+            
+            /*temp = Output.real_y/Output.real_x; // temp is y/x ratio
             m.move(STOP);
 
             if ((temp < 11.5) && (temp >= 0)) { 
@@ -296,20 +278,21 @@ void controller_PATH (vision_in &Input, Mission &m) {
                     m.move(FORWARD, FWD_SPEED);
                 else
                     m.move(REVERSE, FWD_SPEED);
-            }
+            }*/
             return;
         case CENTERED:
             printf ("    State: CENTERED\n");
             m.move(STOP);
-            m.move(SINK, SINK_SPEED);
+            if (!(vcode == DETECT_2 && Output.range < 3.8))
+                m.move(SINK, SINK_SPEED);
             return;
         case UNALIGNED:
             printf ("    State: UNALIGNED\n");
-            m.move(STOP);
-            if (Output.tan_PA > 0)
-                m.move(LEFT,TURN_SPEED);
-            else 
-                m.move(RIGHT,TURN_SPEED);
+            if (vcode == DETECT_2) 
+                C.update(atan(-Output.tan_PA)); // take the negative due to how tangent_angle works
+            
+            m.move (STOP);
+            m.move (LEFT, (int)(3*C.out()));
             return;
         case ALIGNED:
             printf ("    State: ALIGNED\n");

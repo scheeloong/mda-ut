@@ -319,7 +319,7 @@ void cv_init () {
                Vin.HSV.setSim_buoyR();
                break;
            case '4':
-               Vin.HSV.setSim_U (); // should be set to U, but we dont have that obstacle yet
+               Vin.HSV.setSim_U (); 
                break;
            default:
                printf ("Unrecognized CV_VISION_FLAG. Shutting Down\n");
