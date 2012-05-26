@@ -73,7 +73,7 @@ struct vision_out {
 /// CLASS PI_CONTROLLER
 class PI_Controller {
 private:
-    #define ALPHA 0.9
+    #define ALPHA 0.94
     float err, integral; // error and the integral of error
     float target;
     float K1, K2;

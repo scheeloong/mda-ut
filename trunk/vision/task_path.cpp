@@ -87,7 +87,34 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
 // So first find the length of 2 longest lines
     retcode ret=ERROR;
   
-    if (nseeds >= 2) { // definitely reject img if less than 2 lines
+    if (nseeds == 1) {
+        float len1 = sqr_length(cseed,0);
+        float ang1 = tangent_angle(cseed,0); 
+        int pix_x, pix_y;
+        
+        if (len1 > img_1->height/4) {
+            pix_x = (cseed[0][0].x+cseed[0][1].x+cseed[0][0].x+cseed[0][1].x)/4 - img_1->width/2;  
+            pix_y = (cseed[0][0].y+cseed[0][1].y+cseed[0][0].y+cseed[0][1].y)/4 - img_1->height/2;
+            Output.range = float(PIPE_REAL_LEN * img_1->width) / (len1 * TAN_FOV_X);
+            Output.real_x = float(pix_x * PIPE_REAL_LEN) / len1;
+            Output.real_y = float(pix_y * PIPE_REAL_LEN) / len1;
+            Output.tan_PA = ang1;
+        
+            if (!(flags & _QUIET)) {
+                printf ("  vision_PATH: One Segment.\n  Range&Angle:  %f  %f\n",Output.range,atan(Output.tan_PA));
+                printf ("  RealX,RealY:  %f  %f\n", Output.real_x, Output.real_y);
+            }
+            if (flags & _DISPLAY) {
+                float ang = atan(Output.tan_PA) - CV_PI/2;
+                CvPoint p1 = cvPoint (pix_x+img_1->width/2 - len1*cos(ang),pix_y+img_1->height/2 - len1*sin(ang));
+                CvPoint p2 = cvPoint (pix_x+img_1->width/2 + len1*cos(ang),pix_y+img_1->height/2 + len1*sin(ang));
+                cvLine (img_1, p1, p2, CV_RGB(255,100,100), 2);
+                cvShowImage(Input.window[1], img_1);
+            }            
+            ret = DETECT_2;
+        }
+    }
+    else if (nseeds >= 2) {
         int long1=0, long2=0; // long1 = index of longest line. long2 = index of second longest
         for (int i = 1; i < nseeds; i++)
             if (sqr_length(cseed,i) > sqr_length(cseed,long1)) long1 = i;
@@ -141,10 +168,10 @@ retcode vision_PATH (vision_in &Input, vision_out &Output, char flags) {
     return ret;
 }
 
-#define FWD_SPEED 3
+#define FWD_SPEED 2
 #define SINK_SPEED 3
-#define TURN_SPEED 5
-#define OBS_DEPTH -6 // depth to look for path
+#define TURN_SPEED 2
+#define OBS_DEPTH 4.0 // depth (range) to look for path
 
 void controller_PATH (vision_in &Input, Mission &m) {
 // following the path - fairly complex controls. Need to sink to right depth after acquiring the pipe.
@@ -180,8 +207,9 @@ void controller_PATH (vision_in &Input, Mission &m) {
     
     enum ESTATE {START, NO_PIPE, OFF_CENTER, CENTERED, UNALIGNED, ALIGNED, ERROR, PAUSE};    
     static ESTATE state = NO_PIPE;
-    PI_Controller C;
-    C.setK1K2 (-12.0/PI, -0.8); 
+    static PI_Controller C, C2;
+    C.setK1K2 (-8.0/PI, -0.3);
+    C2.setK1K2 (-12.0/PI, -0.8);
 
     float real_rad_sqr;
     if ((state == ERROR) || (state == ALIGNED)) {
@@ -190,6 +218,7 @@ void controller_PATH (vision_in &Input, Mission &m) {
         if ((state == START) || (state == OFF_CENTER)) {
             state = NO_PIPE;
             C.reset();
+            C2.reset();
         }
         else if (state != NO_PIPE) 
             state = NO_PIPE;
@@ -201,12 +230,12 @@ void controller_PATH (vision_in &Input, Mission &m) {
             state = OFF_CENTER;
         else if (state == OFF_CENTER && real_rad_sqr > 0.6) // keep state as off centered until within 0.6
             state = OFF_CENTER;
-        
-        else if (Output.range > 4.0)
+        else if (Output.range > OBS_DEPTH)
             state = CENTERED; // but too high up
         else if (fabs(Output.tan_PA) > 0.03) { // within 5ish degrees of vertical
             if (state != UNALIGNED) {
                 C.reset();
+                C2.reset();
                 state = UNALIGNED;
             }
         }
@@ -221,6 +250,7 @@ void controller_PATH (vision_in &Input, Mission &m) {
     }
     
     float angle;
+    float turn_speed;
     /** figure out output */
     switch (state) {
         case START: // no change to output
@@ -246,53 +276,25 @@ void controller_PATH (vision_in &Input, Mission &m) {
                 else 
                     m.move (REVERSE, 1);
             }
-            m.move (LEFT, (int)(3*C.out()));
+            m.move (LEFT, (int)(1*C.out()));
             
-            /*temp = Output.real_y/Output.real_x; // temp is y/x ratio
-            m.move(STOP);
-
-            if ((temp < 11.5) && (temp >= 0)) { 
-            // more than 5 degrees from vertical, 1st or 3rd quadrant
-                m.move (RIGHT,TURN_SPEED);
-
-                if (temp > 1.7) { // not more than 30 degrees from vert
-                    if (Output.real_y >= 0)
-                        m.move(FORWARD, FWD_SPEED);
-                    else 
-                        m.move(REVERSE, FWD_SPEED);
-                }
-            }
-            else if ((temp < 0) && (temp > -11.5)) {
-            // 2nd or 4th quadrant
-                m.move (LEFT,TURN_SPEED);
-
-                if (temp > 1.7) { // not more than 30 degrees off
-                    if (Output.real_y >= 0)
-                        m.move (FORWARD, FWD_SPEED);
-                    else
-                    m.move (REVERSE, FWD_SPEED);
-                }
-            }
-            else {
-                if (Output.real_y >= 0)
-                    m.move(FORWARD, FWD_SPEED);
-                else
-                    m.move(REVERSE, FWD_SPEED);
-            }*/
             return;
         case CENTERED:
             printf ("    State: CENTERED\n");
             m.move(STOP);
-            if (!(vcode == DETECT_2 && Output.range < 3.8))
+            if (!(vcode == DETECT_2 && Output.range < OBS_DEPTH-0.2))
                 m.move(SINK, SINK_SPEED);
             return;
         case UNALIGNED:
             printf ("    State: UNALIGNED\n");
             if (vcode == DETECT_2) 
-                C.update(atan(-Output.tan_PA)); // take the negative due to how tangent_angle works
+                C2.update(atan(-Output.tan_PA)); // take the negative due to how tangent_angle works
             
             m.move (STOP);
-            m.move (LEFT, (int)(3*C.out()));
+            turn_speed = TURN_SPEED*C2.out();
+            turn_speed += (turn_speed > 0) ? 0.5 : -0.5;
+            
+            m.move (LEFT, (int)(turn_speed)); // need this to be > 0
             return;
         case ALIGNED:
             printf ("    State: ALIGNED\n");
@@ -309,4 +311,3 @@ void controller_PATH (vision_in &Input, Mission &m) {
     }
     return;
 }
-
