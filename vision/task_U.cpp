@@ -234,7 +234,7 @@ void controller_U (vision_in &Input, Mission &m) {
     retcode vcode;    
     vision_out Output;
     vcode = vision_U (Input, Output, _INVERT | _DISPLAY | _QUIET);
-    PI_Controller PI_x, PI_y; // for NO_BUOY and GOOD states, respectively
+    static PI_Controller PI_x, PI_y; // for NO_BUOY and GOOD states, respectively
     PI_x.setK1K2 (-24.0/PI, -0.6); // K1 is set so output is 0 if input is tan(30degrees)
     PI_y.setK1K2 (-24.0/PI, -0.6);
     

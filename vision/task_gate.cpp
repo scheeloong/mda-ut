@@ -192,7 +192,7 @@ void controller_GATE (vision_in &Input, Mission &m) {
     /** Control code starts here */
     enum ESTATE {START, NO_GATE, OFF_CENTER, CENTERED, DONE};
     static ESTATE state = START; 
-    PI_Controller PI_x;
+    static PI_Controller PI_x;
     PI_x.setK1K2 (-20.0/PI, -0.8);
 
 #define FWD_SPEED 2
