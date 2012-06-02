@@ -12,7 +12,7 @@ SIM_DIR=./sim
 VISION_DIR=./vision
 MOTORS_DIR=./motors
 
-all: fpga sim vision motors
+all: fpga vision motors sim
 
 fpga:
 	$(MAKE) -C $(FPGA_DIR)
