@@ -56,10 +56,10 @@ struct command_struct my_cmds[] = {
   {"smb", COMMAND_BRAKE, "smb - set motor brake\n  Usage: smb <n>\n\n  Turn the nth motor off\n"},
   {"spf", COMMAND_FREQ, "spf - set PWM frequency\n  Usage: spf <0xn>\n\n  Set the PWM frequency to n in kilohertz\nNote: the frequency is inputted in hex\n"},
   {"stop\n", COMMAND_STOP_ALL, "stop\n  Usage: stop\n\n  Stop all motors\n"},
-  {"di\n", COMMAND_INTERRUPT_DEBUG, "di - print interrupt debug values\n  Usage: di\n\n"},
+  {"di\n", COMMAND_INTERRUPT_DEBUG, "di - print interrupt debug values\n  Usage: di\n"},
   {"ss", COMMAND_SPEED, "ss - set forward or backward speed of motor\n positive or negative, range from -157 to 157\n"},
-  {"shc", COMMAND_HEADING_CHANGE, "shc - set forward or backward speed of motor\n positive or negative, range from -157 to 157\n"},
-  {"svo", COMMAND_VERTICAL_OFFSET, "svo - print interrupt debug values\n range from -157 to 157\n"}
+  {"shc", COMMAND_HEADING_CHANGE, "shc - set heading change of motor\n positive or negative, range from -157 to 157\n"},
+  {"svo", COMMAND_VERTICAL_OFFSET, "svo - set vertical offset of motor\n positive or negative, range from -157 to 157\n"}
 };
 
 // the size of the above array
@@ -101,8 +101,9 @@ void process_command(char *st)
   // variables used in case statement
   struct t_accel_data accel_data;
   struct orientation orientation;
-  int dc, x, y, z;
+  int c, dc, x, y, z;
   int inputs[5];
+  const int ALL = 10; // 10 is a in hex
 
   switch (cid) {
     case COMMAND_INVALID:
@@ -117,16 +118,19 @@ void process_command(char *st)
       printf("setting power %s\n", (i % 2  == 0) ? "off" : "on");
       break;
     case COMMAND_STOP_ALL:
-      for (i = 0; i < NUM_MOTORS; i++) {
-        set_motor_dir(i, MOTOR_DIR_STOPPED);
-      }
+      target_orientation.speed = 0;
       // When the stop all command is received, maintain the current depth
       target_orientation.depth = get_depth();
       printf("stopping\n");
       break;
     case COMMAND_STOP:
       i = read_hex(st);
-      if (i < 0 || i >= NUM_MOTORS) {
+      if (i == ALL) {
+        for (c = 0; c < NUM_MOTORS; c++) {
+          set_motor_dir(c, MOTOR_DIR_STOPPED);
+          printf("stopping motor %d\n", c);
+        }
+      } else if (i < 0 || i >= NUM_MOTORS) {
         printf("motor # invalid\n");
       } else {
         set_motor_dir(i, MOTOR_DIR_STOPPED);
@@ -135,7 +139,12 @@ void process_command(char *st)
       break;
     case COMMAND_BRAKE:
       i = read_hex(st);
-      if (i < 0 || i >= NUM_MOTORS) {
+      if (i == ALL) {
+        for (c = 0; c < NUM_MOTORS; c++) {
+          set_motor_dir(c, MOTOR_DIR_BRAKE);
+          printf("braking motor %d\n", c);
+        }
+      } else if (i < 0 || i >= NUM_MOTORS) {
         printf("motor # invalid\n");
       } else {
         set_motor_dir(i, MOTOR_DIR_BRAKE);
@@ -144,7 +153,12 @@ void process_command(char *st)
       break;
     case COMMAND_FORWARD:
       i = read_hex(st);
-      if (i < 0 || i >= NUM_MOTORS) {
+      if (i == ALL) {
+        for (c = 0; c < NUM_MOTORS; c++) {
+          set_motor_dir(c, MOTOR_DIR_FORWARD);
+          printf("setting motor %d to forward\n", c);
+        }
+      } else if (i < 0 || i >= NUM_MOTORS) {
         printf("motor # invalid\n");
       } else {
         set_motor_dir(i, MOTOR_DIR_FORWARD);
@@ -153,7 +167,12 @@ void process_command(char *st)
       break;
     case COMMAND_REVERSE:
       i = read_hex(st);
-      if (i < 0 || i >= NUM_MOTORS) {
+      if (i == ALL) {
+        for (c = 0; c < NUM_MOTORS; c++) {
+          set_motor_dir(c, MOTOR_DIR_REVERSE);
+          printf("setting motor %d to reverse\n", c);
+        }
+      } else if (i < 0 || i >= NUM_MOTORS) {
         printf("motor # invalid\n");
       } else {
         set_motor_dir(i, MOTOR_DIR_REVERSE);
@@ -162,7 +181,17 @@ void process_command(char *st)
       break;
     case COMMAND_DUTY_CYCLE:
       i = read_hex(st);
-      if (i < 0 || i >= NUM_MOTORS) {
+      if (i == ALL) {
+        dc = read_hex(st + 2);
+        if (dc < 0) {
+          printf("duty cycle # invalid\n");
+        } else {
+          for (c = 0; c < NUM_MOTORS; c++) {
+            set_motor_duty_cycle(c, dc);
+            printf("setting motor %d to duty cycle %d\n", c, dc);
+          }
+        }
+      } else if (i < 0 || i >= NUM_MOTORS) {
         printf("motor # invalid\n");
       } else {
         dc = read_hex(st + 2);
@@ -362,6 +391,8 @@ static void pm_interrupt(void *context, alt_u32 id)
    // Get failing voltage line
    int which_failed = IORD(POWER_MANAGEMENT_SLAVE_0_BASE, 0);
    power_failures[which_failed]++;
+   // Hack to avoid 5V under-volt failures
+   if (which_failed == 4) return;
 
    static const int failure_threshold = 100;
    if (power_failures[which_failed] < failure_threshold) {
