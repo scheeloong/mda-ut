@@ -1,7 +1,7 @@
-#include "mission.h"
+#include "motors.h"
 #include <math.h>
 
-void Mission::move(MOVE_DIR dir, int speed)
+void Motors::move(MOVE_DIR dir, float speed)
 {
    switch(dir) { // Ritchie: changed relative speeds
    case FORWARD:
@@ -30,7 +30,7 @@ void Mission::move(MOVE_DIR dir, int speed)
    }
 }
 
-void Mission::translate(MOVE_DIR dir)
+void Motors::translate(MOVE_DIR dir)
 {
    switch(dir) {
    case FORWARD:

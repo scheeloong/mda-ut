@@ -1,5 +1,5 @@
-#ifndef MISSION_H
-#define MISSION_H
+#ifndef MOTORS_H
+#define MOTORS_H
 
 #include "../sim/physical_model.h"
 #include <stdlib.h>
@@ -23,10 +23,10 @@ enum DEBUG_CMD {
   CMD_EXIT
 };
 
-class Mission {
+class Motors {
   public:
-    Mission (physical_model *m = NULL) : model(m) {}
-    void move(MOVE_DIR dir, int speed);
+    Motors (physical_model *m = NULL) : model(m) {}
+    void move(MOVE_DIR dir, float speed);
     void move(MOVE_DIR dir) { move(dir, DEFAULT_SPEED); }
 
     // Only for the simulator

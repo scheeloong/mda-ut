@@ -1,14 +1,14 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
-#include "../mission/mission.h"
+#include "../motors/motors.h"
 
 class KeyboardInput {
   public:
-    KeyboardInput(Mission mission) : m(mission), speed(0) {}
+    KeyboardInput(Motors motors) : m(motors), speed(0) {}
     void read_input(char key);
   private:
-    Mission m;
+    Motors m;
     int speed;
 };
 

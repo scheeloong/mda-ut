@@ -23,7 +23,7 @@
 #include "../vision/task_buoy.h"
 #include "../vision/task_U.h"
 
-#include "../mission/mission.h"
+#include "../motors/motors.h"
 
 unsigned int randNum;
 struct timeval last;
@@ -34,7 +34,7 @@ GLuint texName[10];
 physical_model model;
 orientation &angle = model.angle;
 world_vector &position = model.position;
-Mission m(&model);
+Motors m(&model);
 KeyboardInput keyboard(m);
 
 /* window size */

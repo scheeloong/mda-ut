@@ -8,7 +8,7 @@
 #include "obj_detection.h"
 #include "calc_draw.h"
 
-#include "../mission/mission.h"
+#include "../motors/motors.h"
 
 #define GATE_SKINNYNESS 0.017 // ratio of pipe diameter to length
 #define GATE_WIDTH 300.0 // physical width in centimeters
@@ -16,6 +16,6 @@
 
 retcode vision_GATE (vision_in &Input, vision_out &Output, char flags=0);
 
-void controller_GATE (vision_in &Input, Mission &m);
+void controller_GATE (vision_in &Input, Motors &m);
 
 #endif

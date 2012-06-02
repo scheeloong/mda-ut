@@ -219,7 +219,7 @@ retcode vision_U (vision_in &Input, vision_out &Output, char flags) {
 #define SINK_SPEED 2
 #define TURN_SPEED 2
 #define TURN_SPEED2 3
-void controller_U (vision_in &Input, Mission &m) {
+void controller_U (vision_in &Input, Motors &m) {
 // return state guide:
 //  ERROR = bad, disregard this image
 //  NO_DETECT = no detection (not enough pixels to constitute image, or no lines detected)
