@@ -118,7 +118,9 @@ void process_command(char *st)
       printf("setting power %s\n", (i % 2  == 0) ? "off" : "on");
       break;
     case COMMAND_STOP_ALL:
+      // Set speed and heading to neutral
       target_orientation.speed = 0;
+      target_orientation.heading = 0;
       // When the stop all command is received, maintain the current depth
       target_orientation.depth = get_depth();
       printf("stopping\n");
