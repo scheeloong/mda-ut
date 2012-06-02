@@ -10,9 +10,9 @@
 FPGA_DIR=./fpga
 SIM_DIR=./sim
 VISION_DIR=./vision
-MISSION_DIR=./mission
+MOTORS_DIR=./motors
 
-all: fpga sim vision mission
+all: fpga sim vision motors
 
 fpga:
 	$(MAKE) -C $(FPGA_DIR)
@@ -23,13 +23,13 @@ vision:
 sim:
 	$(MAKE) -C $(SIM_DIR)
 
-mission:
-	$(MAKE) -C $(MISSION_DIR)
+motors:
+	$(MAKE) -C $(MOTORS_DIR)
 
 clean:
-	#$(MAKE) -C $(FPGA_DIR) $@
+	$(MAKE) -C $(FPGA_DIR) $@
 	$(MAKE) -C $(SIM_DIR) $@
 	$(MAKE) -C $(VISION_DIR) $@
 	$(MAKE) -C $(MISSION_DIR) $@
 
-.PHONY: all clean fpga vision sim
+.PHONY: all clean fpga vision sim motors
