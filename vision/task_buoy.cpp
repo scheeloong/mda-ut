@@ -94,7 +94,7 @@ retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
 #define TURN_SPEED 3
 #define DONE_RANGE 50
 
-void controller_BUOY (vision_in &Input, Mission &m) {
+void controller_BUOY (vision_in &Input, Motors &m) {
     retcode vcode;
     // vcode table:
 //  ERROR = bad, disregard this image. Happens if multiple circles found.

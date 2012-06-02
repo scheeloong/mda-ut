@@ -4,8 +4,8 @@ CVFLAGS=`pkg-config --cflags --libs opencv`
 LIBO=preproc_filters.o obj_detection.o calc_draw.o histograms.o main.o
 TASKS=common.o task_gate.o task_path.o task_buoy.o task_U.o
 INC= calc_draw.h cv_tasks.h histograms.h obj_detection.h preproc_filters.h
-MISSIONDIR=../mission/
-MISSIONA=libmission.a
+MISSIONDIR=../motors/
+MISSIONA=libmotors.a
 A=libvision.a
 
 # each .o file depends on its .cpp file
@@ -16,7 +16,7 @@ all: test_cv $(A)
 
 # test_cv depends on the objects, no -c
 test_cv: $(TASKS) $(LIBO) $(MISSIONDIR)$(MISSIONA)
-	$(CC) $(LIBO) $(TASKS) -o $@ -L$(MISSIONDIR) -lmission -Wall $(CVFLAGS)
+	$(CC) $(LIBO) $(TASKS) -o $@ -L$(MISSIONDIR) -lmotors -Wall $(CVFLAGS)
 	rm -f *.a
 
 $(MISSIONDIR)$(MISSIONA):

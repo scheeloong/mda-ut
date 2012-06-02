@@ -177,7 +177,7 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
 //    'r','f' = roll left, roll right
 //    't','g' = pitch foward, pitch backwards
 
-void controller_GATE (vision_in &Input, Mission &m) {
+void controller_GATE (vision_in &Input, Motors &m) {
 // the gate task. We have to assume we are pointed approximate at the gate from the beginning.        
     retcode vcode;
 //  ERROR = bad, disregard this image
@@ -199,7 +199,7 @@ void controller_GATE (vision_in &Input, Mission &m) {
 #define TURN_SPEED 2
 
 	float angle_x;
-    // here we check the state of the gate code, depending on what char code it returns, we send a command to the sub using mission
+    // here we check the state of the gate code, depending on what char code it returns, we send a command to the sub using motors
     if (state == DONE) {}
     else if (vcode == NO_DETECT) { // cant see anything
       state = NO_GATE;
