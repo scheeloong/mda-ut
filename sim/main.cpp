@@ -22,6 +22,7 @@
 #include "../vision/task_path.h"
 #include "../vision/task_buoy.h"
 #include "../vision/task_U.h"
+#include "../vision/task_torp.h"
 
 #include "../motors/motors.h"
 
@@ -321,6 +322,9 @@ void cv_init () {
            case '4':
                Vin.HSV.setSim_U (); 
                break;
+	   case '5':
+	       Vin.HSV.setSim_torp();
+	       break;
            default:
                printf ("Unrecognized CV_VISION_FLAG. Shutting Down\n");
                exit(1);
@@ -385,8 +389,10 @@ void cv_display (void) {
                 controller_U (Vin, m);
                 break;
 	    case '5':
-		//controller_torp (Vin, m);
+		controller_TORP (Vin, m);
 		break;
+	    default: // I(Vincent) added this just so the control flow can be more appropriate
+	      break;
        }
   
        cvWaitKey(5); // without 5ms delay the window will not show properly
@@ -522,8 +528,14 @@ int main(int argc, char** argv)
       randNum = 0;
 
    printf(
-         "*** USE ./sim 0-4 TO USE VISION CODE\n"
-         "*** Commands: \n"
+         "*** USE ./sim 0-5 TO USE VISION CODE\n"
+	 "0: no controller\n"
+	 "1: gate controller\n"
+	 "2: path controller\n"
+	 "3: buoy controller\n"
+	 "4: U controller\n"
+	 "5: torp controller\n"
+	 "*** Commands: \n"
          "*** ijkl to strafe in yz plane\n"
          "*** wasd to move fowards/back and turn on vertical axis\n"
          "*** r and f to roll\n"
@@ -551,16 +563,16 @@ int main(int argc, char** argv)
    if (CV_VISION_FLAG) {
        cv_init();
    }
-   
+
    /** register callback functions for glut */
    glutReshapeFunc (cv_reshape);                    // called when window resized
    glutKeyboardFunc (cv_keyboard);                  // called with key pressed
    glutDisplayFunc (cv_display);                    // called when glutPostRedisplay() raises redraw flag
    glutIdleFunc(anim_scene);                        // called when idle (simulate speed)
    
-   cv_reshape (600, 400);
+   cv_reshape (600, 400); 
    /*start the main glut loop*/
-   glutMainLoop();
+   glutMainLoop(); // something is wrong with the gluMainLoop() because it prevents the sim from operating on torp code
    
    destroy_windows ();
    cvDestroyWindow ("Downwards Cam");

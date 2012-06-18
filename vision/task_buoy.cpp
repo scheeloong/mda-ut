@@ -42,7 +42,7 @@ retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
                              2, //  resolution in accumulator img. > 1 means lower res
                              100, // mindist
                              50, // canny high threshold
-                             25 ); // accumulator threshold
+                             25 ); // accumulator threshold 
 
     /** decide on output */
     int ncircles=circles->total; 
@@ -113,7 +113,7 @@ void controller_BUOY (vision_in &Input, Motors &m) {
     PI_x.setK1K2 (-24.0/PI, -0.8); // K1 is set so output is 0 if input is tan(30degrees)
     PI_y.setK1K2 (-24.0/PI, -0.8);
     
-    enum ESTATE {NO_BUOY, GOOD, PAN, CHARGE, RET, DONE, PAUSE};
+    enum ESTATE {NO_BUOY, GOOD, PAN, CHARGE, RET, DONE, /*PAUSE*/};
     /** State Guide:
      * The sub starts in NB and travels foward. If it sees something, it goes to GOOD to 
      * home in on that object.
@@ -214,8 +214,8 @@ void controller_BUOY (vision_in &Input, Motors &m) {
             printf ("   buoy: FINISHED. Returning.\n");
             m.move (REVERSE, FWD_SPEED);
             break;
-        case PAUSE:
-            break;
+        /*case PAUSE:
+            break;*/
         case DONE:
             m.move (STOP);
             break;
