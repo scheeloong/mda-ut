@@ -480,8 +480,6 @@ int main()
   while(1) {
     alt_getline(buffer_str, STR_LEN);
     process_command(buffer_str);
-  //process_command("di\n");
-  //printf("\n");
   }
 
   return 0;
