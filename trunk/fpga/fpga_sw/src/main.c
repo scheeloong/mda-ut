@@ -114,6 +114,10 @@ void process_command(char *st)
       break;
     case COMMAND_POW:
       i = read_hex(st);
+      // When changing power, also stop all motors
+      for (c = 0; c < NUM_MOTORS; c++) {
+        set_motor_dir(c, MOTOR_DIR_STOPPED);
+      }
       set_pow(i);
       printf("setting power %s\n", (i % 2  == 0) ? "off" : "on");
       break;
