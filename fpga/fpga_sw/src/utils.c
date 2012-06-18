@@ -64,6 +64,7 @@ int read_hex(char *st)
   }
 
   int i = 0;
+  bool is_negative = (*st == '-');
   while (*st && *st != '\n' && *st != ' ') {
     i <<= 4;
     if (*st >= '0' && *st <= '9')
@@ -71,6 +72,9 @@ int read_hex(char *st)
     else if (*st >= 'a' && *st <= 'f')
       i |= (int)(*st - 'a' + 10);
     st++;
+  }
+  if (is_negative) {
+    return -i;
   }
   return i;
 }
@@ -179,7 +183,6 @@ void get_gyro(int *x, int *y, int *z)
 void controller_output(int pitch_setting, int roll_setting, int depth_setting,int heading, int velocity)
 {
    int motor_duty_cycle[5];
-   int motor_direction[5];  
    int i;
    
    int vertical_thrust_steady_state = 0; //Tune for some number better for better depth controller
