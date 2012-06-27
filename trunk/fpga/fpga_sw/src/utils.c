@@ -6,6 +6,7 @@
  * Author: victor
  */
 
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -162,14 +163,6 @@ int get_depth()
   return IORD(IMU_CONTROLLER_0_BASE, 3);
 }
 
-// returns a x,y,z gyroscope values
-void get_gyro(int *x, int *y, int *z)
-{
-  *x = IORD(IMU_CONTROLLER_0_BASE, 0);
-  *y = IORD(IMU_CONTROLLER_0_BASE, 1);
-  *z = IORD(IMU_CONTROLLER_0_BASE, 2);
-}
-
 // This function is responsible for calling the motor setting signals.
 // An input of 200 is the neutral position for the specific axis input.
 // An input of (200,200,200,200,200) would mean for the object to remain stationary. 
@@ -207,6 +200,8 @@ void controller_output(int pitch_setting, int roll_setting, int depth_setting,in
 // returns a struct of x,y,z acceleration values
 void get_accel(struct t_accel_data *accel_data, struct orientation *orientation)
 {
+  double const PI = 4*atan(1);
+
   IOWR(SELECT_I2C_CLK_BASE, 0, 0x00);
 
   // configure accelerometer as +-2g and start measure
@@ -221,16 +216,10 @@ void get_accel(struct t_accel_data *accel_data, struct orientation *orientation)
     }
   }
 
-  // With the accleration data, calculate the orientation as well.
-  IOWR(IMU_CONTROLLER_0_BASE,0,accel_data->x);
-  IOWR(IMU_CONTROLLER_0_BASE,1,accel_data->y);
-  IOWR(IMU_CONTROLLER_0_BASE,2,(-1)*accel_data->z);
-  // Delay 10 cycles for hardware processing
-  int z;
-  for ( z = 0; z < 10; z++ ){}
-  // Write to output orientation structure
-  orientation->pitch = -1 * IORD(IMU_CONTROLLER_0_BASE,8);
-  orientation->roll = -1 * IORD(IMU_CONTROLLER_0_BASE,7);
+  // Calculation orientation
+  int z_squared = accel_data->z*accel_data->z, y_squared = accel_data->y*accel_data->y;
+  orientation->pitch = (z_squared + y_squared == 0) ? 0 : atan(accel_data->x/sqrt(z_squared + y_squared)) * 180 / PI;
+  orientation->roll = (z_squared == 0) ? 0 : atan(accel_data->y/sqrt(2*z_squared)) * 180 / PI;
 
   return;
 }
