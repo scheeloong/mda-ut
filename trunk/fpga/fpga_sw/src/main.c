@@ -369,8 +369,6 @@ static void pm_interrupt(void *context, alt_u32 id)
    // Get failing voltage line
    int which_failed = IORD(POWER_MANAGEMENT_SLAVE_0_BASE, 0);
    power_failures[which_failed]++;
-   // Hack to avoid 5V under-volt failures
-   if (which_failed == 4) return;
 
    static const int failure_threshold = 100;
    if (power_failures[which_failed] < failure_threshold) {
