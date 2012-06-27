@@ -223,9 +223,9 @@ void process_command(char *st)
       print_int(accel_data.z);
       alt_putchar('\n');
       printf("in degrees: ");
-      print_int(orientation.pitch >> 3);
+      print_int(orientation.pitch);
       alt_putchar(',');
-      print_int(orientation.roll >> 3);
+      print_int(orientation.roll);
       alt_putchar('\n');
       break;
     case COMMAND_ACCEL_X:

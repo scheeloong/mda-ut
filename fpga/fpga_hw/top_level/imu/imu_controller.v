@@ -1,8 +1,6 @@
 // This is the Avalon slave for the IMU
 //
-// Registers 0-2 store the gyroscope
 // Register 3 stores the depth sensor
-// Registers 4-6 store the magnetometer
 // Registers 7-9 store the accelerometer
 
 module imu_controller(
