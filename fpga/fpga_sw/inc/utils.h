@@ -3,10 +3,6 @@
 #ifndef _MDA_UTILS_H
 #define _MDA_UTILS_H
 
-#define STR_LEN 30
-#define NUM_MOTORS 6
-#define MOTOR_CONTROLLER_0_DUTY_CYCLE (MOTOR_CONTROLLER_0_BASE + 32)
-
 #include "accelerometer_adxl345_spi.h"
 
 enum MOTOR_DIR {
@@ -29,7 +25,6 @@ int get_motor_duty_cycle(int);
 int get_pwm_freq();
 void get_accel(struct t_accel_data *, struct orientation *);
 int get_depth();
-void controller_output(int pitch_setting, int roll_setting, int depth_setting,int heading, int velocity);
 
 // API to give commands to NIOS
 
