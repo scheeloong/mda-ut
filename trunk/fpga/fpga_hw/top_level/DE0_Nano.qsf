@@ -446,3 +446,11 @@ set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A0000013621C9BC
 set_global_assignment -name TCL_SCRIPT_FILE power_management/power_management_slave_hw.tcl -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE power_management/power_management_slave.v -qip DE0_Nano_SOPC.qip
 set_global_assignment -name VERILOG_FILE power_management_slave_0.v -qip DE0_Nano_SOPC.qip
+
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A000001382B9E60C9 -qip DE0_Nano_SOPC.qip
+set_global_assignment -name TCL_SCRIPT_FILE ../../../../../../altera/11.1sp2/ip/altera/sopc_builder_ip/altera_avalon_altpll/altera_avalon_altpll_hw.tcl -qip DE0_Nano_SOPC.qip
+set_global_assignment -name SDC_FILE ../../../../../../altera/11.1sp2/ip/altera/sopc_builder_ip/altera_avalon_clock_adapter/altera_avalon_clock_adapter.sdc -qip DE0_Nano_SOPC.qip
+set_global_assignment -name IP_TOOL_NAME sopc -entity DE0_Nano_SOPC -qip DE0_Nano_SOPC.qip
+set_global_assignment -name IP_TOOL_VERSION 11.1sp2 -entity DE0_Nano_SOPC -qip DE0_Nano_SOPC.qip
+set_global_assignment -name IP_TOOL_ENV sopc -entity DE0_Nano_SOPC -qip DE0_Nano_SOPC.qip
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A000001383650BAF0 -qip DE0_Nano_SOPC.qip
