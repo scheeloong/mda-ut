@@ -163,40 +163,6 @@ int get_depth()
   return IORD(IMU_CONTROLLER_0_BASE, 3);
 }
 
-// This function is responsible for calling the motor setting signals.
-// An input of 200 is the neutral position for the specific axis input.
-// An input of (200,200,200,200,200) would mean for the object to remain stationary. 
-// Range of input = (0,400)
-// Motor 1 = front, vertical, left; 
-// Motor 2 = front, vertical, right;
-// Motor 3 = center, horizontal, right;
-// Motor 4 = center, horizontal, left;
-// Motor 5 = rear, vertical;
-// duty cycle range = (200,824), centered at 512, dont go full range
-void controller_output(int pitch_setting, int roll_setting, int depth_setting,int heading, int velocity)
-{
-   int motor_duty_cycle[5];
-   int i;
-   
-   int vertical_thrust_steady_state = 0; //Tune for some number better for better depth controller
-        
-   motor_duty_cycle[0] = 512 + vertical_thrust_steady_state + (depth_setting-200) + (pitch_setting-200) + (roll_setting-200); 
-   motor_duty_cycle[1] = 512 + vertical_thrust_steady_state + (depth_setting-200) + (pitch_setting-200) - (roll_setting-200);
-   motor_duty_cycle[2] = 512 + (velocity) + (heading);
-   motor_duty_cycle[3] = 512 + (velocity) - (heading);
-   motor_duty_cycle[4] = 512 + vertical_thrust_steady_state + (depth_setting-200) - (pitch_setting-200);
-
-   for ( i = 0; i < 5; i++ )
-   {
-      if ( motor_duty_cycle[i] < 200 )
-         motor_duty_cycle[i] = 200;
-      if ( motor_duty_cycle[i] > 824 )
-         motor_duty_cycle[i] = 824;
-      set_motor_duty_cycle(i, motor_duty_cycle[i]);  
-      DEBUG_interrupt[i] = motor_duty_cycle[i];
-   }  
-}
-
 // returns a struct of x,y,z acceleration values
 void get_accel(struct t_accel_data *accel_data, struct orientation *orientation)
 {
@@ -218,8 +184,9 @@ void get_accel(struct t_accel_data *accel_data, struct orientation *orientation)
 
   // Calculation orientation
   int z_squared = accel_data->z*accel_data->z, y_squared = accel_data->y*accel_data->y;
-  orientation->pitch = (z_squared + y_squared == 0) ? 0 : atan(accel_data->x/sqrt(z_squared + y_squared)) * 180 / PI;
-  orientation->roll = (z_squared == 0) ? 0 : atan(accel_data->y/sqrt(2*z_squared)) * 180 / PI;
+  // pitch and roll are zero when sub is "flat"
+  orientation->pitch = (z_squared + y_squared == 0) ? 90 : atan(accel_data->x/sqrt(z_squared + y_squared)) * RAD_TO_DEG;
+  orientation->roll = (z_squared == 0) ? 90 : atan(accel_data->y/sqrt(2*z_squared)) * RAD_TO_DEG;
 
   return;
 }

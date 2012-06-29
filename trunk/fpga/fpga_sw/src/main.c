@@ -15,6 +15,7 @@
 
 #include "settings.h"
 #include "utils.h"
+#include "controller.h"
 
 // Victor, please determine where these lines should go, I need these global.
 // Structures used by the PD controller for stabilization
@@ -310,11 +311,11 @@ static void timer_interrupts(void* context, alt_u32 id)
 
    // Get current orientation data
    struct t_accel_data accel_data;   
-   int pitch_setting = 200;
-   int roll_setting = 200;
-   int depth_setting = 200;
-   int heading = 200;
-   int velocity = 200;
+   int pitch_setting = ZERO_PWM;
+   int roll_setting = ZERO_PWM;
+   int depth_setting = ZERO_PWM;
+   int heading = ZERO_PWM;
+   int velocity = ZERO_PWM;
    
    // Calculate orientation data
    previous_orientation = current_orientation;
