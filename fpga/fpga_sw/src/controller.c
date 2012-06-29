@@ -12,7 +12,11 @@
 #include "sys/alt_stdio.h"
 
 #include "controller.h"
+#include "utils.h"
 #include "settings.h"
+
+// Structure for debugging interrupt data, printf's taking too long
+int DEBUG_interrupt[10];
 
 // This function is responsible for calling the motor setting signals.
 // An input of 200 is the neutral position for the specific axis input.

@@ -18,9 +18,6 @@
 #include "settings.h"
 #include "utils.h"
 
-// Structure for debugging interrupt data, printf's taking too long
-int DEBUG_interrupt[10];
-
 // remember what mode each motor is in ('s' for stopped, 'f' for forward, 'r' for reverse)
 char motor_modes[NUM_MOTORS];
 
@@ -166,8 +163,6 @@ int get_depth()
 // returns a struct of x,y,z acceleration values
 void get_accel(struct t_accel_data *accel_data, struct orientation *orientation)
 {
-  double const PI = 4*atan(1);
-
   IOWR(SELECT_I2C_CLK_BASE, 0, 0x00);
 
   // configure accelerometer as +-2g and start measure

@@ -21,6 +21,4 @@ static int motor_duty_cycle[5];
 
 void controller_output(int pitch_setting, int roll_setting, int depth_setting,int heading, int velocity);
 
-
-
 #endif
