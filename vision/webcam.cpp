@@ -6,13 +6,16 @@
 #include "calc_draw.h"
 #include "preproc_filters.h"
 #include "common.h"
+#include "task_buoy.h"
 
 int main( int argc, char** argv ) {
-    unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 1;
+    unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 1, BUOY = 0;
     float RES_SCALING = 1;
+    vision_in Vin;
+    vision_out Vout;
     
-	 	if (argc == 1) 
-			printf ("For options use --help\n\n");
+    if (argc == 1) 
+        printf ("For options use --help\n\n");
 
     for (int i = 0; i < argc; i++) {
         if (!strcmp(argv[i], "1"))
@@ -25,15 +28,17 @@ int main( int argc, char** argv ) {
             DISPLAY = 0;
         else if (!strcmp (argv[i], "--no_write"))
             WRITE = 0;
-				else if (!strcmp (argv[i], "--help")) {
-					printf ("OpenCV based webcam program. Hit 'q' to exit. Defaults to cam0, writes to \"webcam.avi\"\n");
-					printf ("Put any integer as an argument (without --) to use that as camera number\n\n");
-					printf ("  --small --med\n    Scale down the image. Speed up capture.\n\n");
-					printf ("  --no_write\n    Does not write captured video to file.\n\n");
-					printf ("  --no_display\n    Does not display captured video.\n\n");
-					printf ("  Example: `./webcam 1 --med --no_write` will use cam1, medium size scaling, does not write to disk\n\n");
-					return 0;
-				}
+        else if (!strcmp (argv[i], "--buoy"))
+            BUOY = 1;
+        else if (!strcmp (argv[i], "--help")) {
+            printf ("OpenCV based webcam program. Hit 'q' to exit. Defaults to cam0, writes to \"webcam.avi\"\n");
+            printf ("Put any integer as an argument (without --) to use that as camera number\n\n");
+            printf ("  --small --med\n    Scale down the image. Speed up capture.\n\n");
+            printf ("  --no_write\n    Does not write captured video to file.\n\n");
+            printf ("  --no_display\n    Does not display captured video.\n\n");
+            printf ("  Example: `./webcam 1 --med --no_write` will use cam1, medium size scaling, does not write to disk\n\n");
+            return 0;
+        }
     }
     
     if (DISPLAY) {
@@ -45,6 +50,13 @@ int main( int argc, char** argv ) {
     IplImage* frame = cvQueryFrame( capture );         // read a single frame from the cam
     IplImage* img = cvCreateImage (cvSize(frame->width*RES_SCALING,frame->height*RES_SCALING), 
                              frame->depth, frame->nChannels);
+    
+    if (BUOY) {
+        if (DISPLAY) create_windows ();
+        Vin.img = cvCreateImage (cvSize(img->width,img->height), 
+                                 img->depth, img->nChannels);
+        Vin.HSV.setAll (-10,10, 190,255,30,255);
+    }
     
     CvVideoWriter * vid1;
     if (WRITE) {
@@ -60,7 +72,7 @@ int main( int argc, char** argv ) {
     capture = cvCreateCameraCapture(CAM_NUMBER);
     char c;
     
-   /* for (int i = 0; i < 100; i++) {
+   /* for (int i = 0; i < 10; i++) {
         frame = cvQueryFrame (capture);
     }*/
     
@@ -69,12 +81,20 @@ int main( int argc, char** argv ) {
         
         if (RES_SCALING != 1)
             cvResize(frame, img);
-				else
-					img = frame;
+        else
+            img = frame;
         
         if (DISPLAY)
             cvShowImage("webcam", img);
     
+        if (BUOY) {
+            Vin.img = img;
+            if (DISPLAY) 
+                vision_BUOY (Vin, Vout, _DISPLAY);
+            else 
+                vision_BUOY (Vin, Vout, 0);
+        }
+        
         if (WRITE)
             cvWriteFrame(vid1, frame);      // write the frame to the video writer
         
@@ -83,5 +103,8 @@ int main( int argc, char** argv ) {
     }
     
     cvDestroyWindow ("webcam");
+    if (BUOY && DISPLAY) {
+        destroy_windows();
+    }
     return 0;
 }
