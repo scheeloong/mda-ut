@@ -12,16 +12,16 @@ A=libvision.a
 .cpp.o: $(INC)
 	$(CC) $< -o $@ $(FLAGS)
 
-all: webcam test_cv $(A)
+all: webcam $(A)
 
 # webcam doesnt depend on tasks
-webcam: webcam.o $(LIBO) 
-	$(CC) webcam.o $(LIBO) -o $@ -Wall $(CVFLAGS)
+webcam: webcam.o $(LIBO) $(TASKS) $(MISSIONDIR)$(MISSIONA)
+	$(CC) webcam.o $(LIBO) $(TASKS) -o $@ -L$(MISSIONDIR) -lmotors -Wall $(CVFLAGS)
 	rm -f *.a
 # test_cv depends on the objects, no -c
-test_cv: main.o $(TASKS) $(LIBO) $(MISSIONDIR)$(MISSIONA)
-	$(CC) main.o $(LIBO) $(TASKS) -o $@ -L$(MISSIONDIR) -lmotors -Wall $(CVFLAGS)
-	rm -f *.a
+#test_cv: main.o $(TASKS) $(LIBO) $(MISSIONDIR)$(MISSIONA)
+#	$(CC) main.o $(LIBO) $(TASKS) -o $@ -L$(MISSIONDIR) -lmotors -Wall $(CVFLAGS)
+#	rm -f *.a
 
 $(MISSIONDIR)$(MISSIONA):
 	make -C $(MISSIONDIR) $(MISSIONA)
@@ -30,6 +30,6 @@ $(A): $(TASKS) $(LIBO)
 	ar -cvq $@ $(LIBO) $(TASKS)
 
 clean:
-	rm -rf $(LIBO) $(TASKS) $(A) test_cv webcam ./*~
+	rm -rf $(LIBO) $(TASKS) $(A) webcam ./*~
 
 .PHONY: all clean

@@ -35,14 +35,21 @@ retcode vision_BUOY (vision_in &Input, vision_out &Output, char flags) {
     CvMemStorage* storage=cvCreateMemStorage(0);  
     CvSeq* circles = 0;
   
-    cvSmooth(img_1,img_1, CV_BLUR, 3,3); // smooth to ensure canny will "catch" the circle
+    cvGradient_Custom (img_1, img_1,
+                        5, 5, // dims of rectangular kernel
+                        1, // number of times erode and dialate applied. 
+                        0);
+    
+    int pixels = cvCountNonZero (img_1);
+    
+    //cvSmooth(img_1,img_1, CV_BLUR, 3,3); // smooth to ensure canny will "catch" the circle
     if (flags & _DISPLAY) cvShowImage(Input.window[0], img_1);
     
     circles = cvHoughCircles(img_1, storage, CV_HOUGH_GRADIENT,
                              2, //  resolution in accumulator img. > 1 means lower res
-                             100, // mindist
+                             img_1->width*0.5, // mindist
                              50, // canny high threshold
-                             25 ); // accumulator threshold 
+                             img_1->width*0.2 ); // accumulator threshold 
 
     /** decide on output */
     int ncircles=circles->total; 
