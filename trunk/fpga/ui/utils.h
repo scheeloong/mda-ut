@@ -24,6 +24,8 @@ int atoi_safe (char *str);
 void exit_safe ();
 void cmd_error ();
 
+void spawn_term (char *);
+
 void help ();
 void help_motor ();
 void help_dyn ();

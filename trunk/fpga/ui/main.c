@@ -15,7 +15,9 @@
 #define MAX_TOKENS 3
 #define LINE_START "fpga> "
 
-int main () {
+int main (int argc, char *argv[]) {
+    spawn_term((argc >= 2) ? argv[1] : NULL);
+
     char cmd[51];               // stores the command that was entered
     char* token[MAX_TOKENS];    // points to parts of the command
     unsigned i;
