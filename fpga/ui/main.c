@@ -1,4 +1,4 @@
-/** FPAG User Inteface Utilities
+/** FPGA User Inteface Utilities
  *  This file contains functions that communicate with the fpga that the main
  *  program will call.
  * 
@@ -35,11 +35,6 @@ int main () {
             help ();
         else if (!strcmp(token[0], "q") || !strcmp(token[0], "exit")) 
             exit_safe();
-        else if (!strcmp(token[0], "make")) {
-            printf ("gcc -Wall -c main.c -o main.o\nmain.c: In function ‘main’:\n");
-            printf ("main.c:36: error: expected ‘}’ before ‘else’\nmake: *** [main.o] Error 1\n");
-            exit_safe();
-        }
         else if (!strcmp(token[0], ":q"))
             printf ("this isnt vim lol\n");
         else if (!strcmp(token[0], "help")) {
@@ -68,7 +63,8 @@ int main () {
                 motor_set (pwm, H_RISE);                    
             }
             else {
-                motor_num = atoi_safe (token[1]);
+                motor_num = atoi_safe (token[1]); // 1-indexed
+		motor_num--; // Internally, this is 0-indexed
                 pwm = atoi_safe (token[2]);
                 switch (motor_num) {
                     case M_FRONT_LEFT:  motor_set (pwm, H_FRONT_LEFT); break;

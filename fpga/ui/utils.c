@@ -3,7 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define TERM stderr /* Standard error will pipe to the NIOS terminal */
+
+#define ZERO_DC 512
+#define PWM_FREQ 20
+
 unsigned cmd_ok = 0;
+unsigned power = 0;
 
 int atoi_safe (char *str) {
     if (str == NULL) {
@@ -60,24 +66,48 @@ void motor_set (int pwm, char motor_flags) {
         return;
     }
     
-    if (motor_flags & H_FRONT_LEFT) printf ("set M_FRONT_LEFT to %d\n", pwm);
-    if (motor_flags & H_FRONT_RIGHT) printf ("set M_FRONT_RIGHT to %d\n", pwm);
-    if (motor_flags & H_FWD_LEFT) printf ("set M_FWD_LEFT to %d\n", pwm);
-    if (motor_flags & H_FWD_RIGHT) printf ("set M_FWD_RIGHT to %d\n", pwm);
-    if (motor_flags & H_REAR) printf ("set M_REAR to %d\n", pwm);
+    if (motor_flags & H_FRONT_LEFT) {
+        printf ("set left front vertical motor to %d\n", pwm);
+        fprintf (TERM, "smd %d %x\n", M_FRONT_LEFT, pwm);
+    }
+    if (motor_flags & H_FRONT_RIGHT) {
+        printf ("set right front vertical motor to %d\n", pwm);
+        fprintf (TERM, "smd %d %x\n", M_FRONT_RIGHT, pwm);
+    }
+    if (motor_flags & H_FWD_LEFT) {
+        printf ("set left forward motor to %d\n", pwm);
+        fprintf (TERM, "smd %d %x\n", M_FWD_LEFT, pwm);
+    }
+    if (motor_flags & H_FWD_RIGHT) {
+        printf ("set right forward motor to %d\n", pwm);
+        fprintf (TERM, "smd %d %x\n", M_FWD_RIGHT, pwm);
+    }
+    if (motor_flags & H_REAR) {
+        printf ("set rear vertical motor to %d\n", pwm);
+        fprintf (TERM, "smd %d %x\n", M_REAR, pwm);
+    }
 }
 
 void power_status () {
     cmd_ok = 1;
-    printf ("power_status not implemented.\n");
+    printf("power is turned %s\n", (power) ? "on" : "off");
 }
 void power_on () {
     cmd_ok = 1;
-    printf ("power_on not implemented.\n");
+    printf ("turned power on.\n");
+    fprintf (TERM, "p 1\n");
+    fprintf (TERM, "spf %x\n", PWM_FREQ);
+    fprintf (TERM, "smd a %x\n", ZERO_DC);
+    fprintf (TERM, "smf a\n");
+    power = 1;
 }
 void power_off () {
     cmd_ok = 1;
-    printf ("power_off not implemented.\n");
+    printf ("turned power off.\n");
+    fprintf (TERM, "p 0\n");
+    fprintf (TERM, "sms a\n");
+    fprintf (TERM, "smd a %x\n", ZERO_DC);
+    power = 0;
 }
 
 void dyn_status () {
