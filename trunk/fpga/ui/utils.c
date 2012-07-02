@@ -9,6 +9,7 @@
 unsigned cmd_ok = 0;
 unsigned power = 0;
 
+char *proc_str = NULL;
 FILE *fterm = NULL;
 
 int atoi_safe (char *str) {
@@ -30,6 +31,24 @@ void spawn_term (char *proc)
     if (!fterm) {
         fterm = stderr;
     }
+    proc_str = proc;
+}
+
+void read_from_term (char *cmd)
+{
+    pclose(fterm);
+    char full_cmd[100], out_str[100];
+
+    sprintf(full_cmd, "echo \"%s\" | %s", cmd, proc_str);
+    fterm = (FILE *)popen(full_cmd, "r");
+
+    while (fgets(out_str, 100, fterm)) {
+        printf("%s", out_str);
+    }
+
+    pclose(fterm);
+
+    spawn_term(proc_str);
 }
 
 void help () {
@@ -66,7 +85,7 @@ void help_power () {
 
 void motor_status() {
     cmd_ok = 1;
-    printf ("motor_status not implemented.\n");
+    read_from_term ("gm");
 }
 
 void motor_set (int pwm, char motor_flags) {
@@ -122,5 +141,9 @@ void power_off () {
 
 void dyn_status () {
     cmd_ok = 1;
-    printf ("dyn_status not implemented.\n");
+
+    // Acceleration
+    read_from_term("ga");
+    // Depth
+    read_from_term("gd");
 }
