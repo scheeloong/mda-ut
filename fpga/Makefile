@@ -7,7 +7,7 @@ SW_DIR=./fpga_sw
 ELF_NAME=main.elf
 GDB_TCP_PORT=2345
 
-all: fpga_sw
+all: fpga_sw ui
 
 # This next command just creates the Board Support Pacakge from the sopc file
 # Pretty basic command, it is actually pretty cool
@@ -21,14 +21,18 @@ fpga_sw: bsp
 fpga_hw:
 	$(MAKE) -C $(FPGA_DIR)
 
+ui:
+	$(MAKE) -C ui
+
 clean:
 	-$(MAKE) -k -C $(SW_DIR) $@
 	rm -f $(SW_DIR)/Makefile
 	rm -rf $(BSP_DIR)
 	$(MAKE) -C $(FPGA_DIR) $@
+	$(MAKE) -C ui $@
 	$(MAKE) -C ./fpga_hw/demo_projects/pwm $@
 
-.PHONY: all clean bsp fpga_sw fpga_hw
+.PHONY: all clean bsp fpga_sw fpga_hw ui
 
 # Handy make targets
 dl_hw:
@@ -50,4 +54,7 @@ gdb_client:
 terminal:
 	nios2-terminal -q
 
-.PHONY: dl_hw dl_sw dl_both gdb_server gdb_client terminal
+ui_term:
+	./ui/ui "make -s terminal"
+
+.PHONY: dl_hw dl_sw dl_both gdb_server gdb_client terminal ui_term

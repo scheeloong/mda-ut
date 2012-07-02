@@ -3,13 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define TERM stderr /* Standard error will pipe to the NIOS terminal */
-
 #define ZERO_DC 512
 #define PWM_FREQ 20
 
 unsigned cmd_ok = 0;
 unsigned power = 0;
+
+FILE *fterm = NULL;
 
 int atoi_safe (char *str) {
     if (str == NULL) {
@@ -20,7 +20,17 @@ int atoi_safe (char *str) {
 }
 
 void cmd_error () { printf ("**** Invalid command. Type \"help\" for command list\n"); }
-void exit_safe () { power_off(); exit(0); }
+void exit_safe () { power_off(); exit(0); pclose(fterm); }
+
+void spawn_term (char *proc)
+{
+    if (proc) {
+        fterm = (FILE *)popen(proc, "w");
+    }
+    if (!fterm) {
+        fterm = stderr;
+    }
+}
 
 void help () {
     cmd_ok = 1;
@@ -68,23 +78,23 @@ void motor_set (int pwm, char motor_flags) {
     
     if (motor_flags & H_FRONT_LEFT) {
         printf ("set left front vertical motor to %d\n", pwm);
-        fprintf (TERM, "smd %d %x\n", M_FRONT_LEFT, pwm);
+        fprintf (fterm, "smd %d %x\n", M_FRONT_LEFT, pwm);
     }
     if (motor_flags & H_FRONT_RIGHT) {
         printf ("set right front vertical motor to %d\n", pwm);
-        fprintf (TERM, "smd %d %x\n", M_FRONT_RIGHT, pwm);
+        fprintf (fterm, "smd %d %x\n", M_FRONT_RIGHT, pwm);
     }
     if (motor_flags & H_FWD_LEFT) {
         printf ("set left forward motor to %d\n", pwm);
-        fprintf (TERM, "smd %d %x\n", M_FWD_LEFT, pwm);
+        fprintf (fterm, "smd %d %x\n", M_FWD_LEFT, pwm);
     }
     if (motor_flags & H_FWD_RIGHT) {
         printf ("set right forward motor to %d\n", pwm);
-        fprintf (TERM, "smd %d %x\n", M_FWD_RIGHT, pwm);
+        fprintf (fterm, "smd %d %x\n", M_FWD_RIGHT, pwm);
     }
     if (motor_flags & H_REAR) {
         printf ("set rear vertical motor to %d\n", pwm);
-        fprintf (TERM, "smd %d %x\n", M_REAR, pwm);
+        fprintf (fterm, "smd %d %x\n", M_REAR, pwm);
     }
 }
 
@@ -95,18 +105,18 @@ void power_status () {
 void power_on () {
     cmd_ok = 1;
     printf ("turned power on.\n");
-    fprintf (TERM, "p 1\n");
-    fprintf (TERM, "spf %x\n", PWM_FREQ);
-    fprintf (TERM, "smd a %x\n", ZERO_DC);
-    fprintf (TERM, "smf a\n");
+    fprintf (fterm, "p 1\n");
+    fprintf (fterm, "spf %x\n", PWM_FREQ);
+    fprintf (fterm, "smd a %x\n", ZERO_DC);
+    fprintf (fterm, "smf a\n");
     power = 1;
 }
 void power_off () {
     cmd_ok = 1;
     printf ("turned power off.\n");
-    fprintf (TERM, "p 0\n");
-    fprintf (TERM, "sms a\n");
-    fprintf (TERM, "smd a %x\n", ZERO_DC);
+    fprintf (fterm, "p 0\n");
+    fprintf (fterm, "sms a\n");
+    fprintf (fterm, "smd a %x\n", ZERO_DC);
     power = 0;
 }
 
