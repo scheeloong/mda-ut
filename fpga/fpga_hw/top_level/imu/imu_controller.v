@@ -17,10 +17,6 @@ module imu_controller(
   output ADC_SADDR, 
   output ADC_SCLK,
   input [31:0] writedata);
-	
-  reg [31:0] raw_acclerometer_x;//signed 10 bit number
-  reg [31:0] raw_acclerometer_y;
-  reg [31:0] raw_acclerometer_z; 
 
   wire [31:0] raw_depth;
  
@@ -45,19 +41,6 @@ module imu_controller(
         readdata <= raw_depth;
       default:
         readdata <= 32'd0;
-    endcase
-	 	 
-  always @(posedge clk)
-    if (chipselect & write)
-    casex (addr)
-      4'b0000:
-        raw_acclerometer_x <= writedata;
-      4'b0001:
-        raw_acclerometer_y <= writedata;
-      4'b0010:
-        raw_acclerometer_z <= writedata; 
-      default:
-        ;
     endcase
 endmodule
 
