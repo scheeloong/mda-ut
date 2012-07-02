@@ -34,7 +34,7 @@ module imu_controller(
     .ADC_SCLK(ADC_SCLK)
 );
 
-  always @(posedge clk)
+  always @(posedge sys_clk)
     if (chipselect & read)
     casex (addr)
       4'b0011:
