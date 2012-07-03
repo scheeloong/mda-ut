@@ -26,8 +26,6 @@ struct orientation previous_orientation;
 struct PD_controller_inputs PD_controller_inputs;
 // Structure containing PD controller feedback values
 struct PD_controller_error_values PD_controller_error_values;
-// Structure for debugging interrupt data, printf's taking too long
-extern int DEBUG_interrupt[10];
 
 // For power management
 int power_failures[7] = {0};
@@ -43,19 +41,17 @@ struct command_struct my_cmds[] = {
   {"gaz\n", COMMAND_ACCEL_Z, "gaz - get z-acceleration\n  Usage: gaz\n\n  Print z-acceleration\n"},
   {"gd\n", COMMAND_DEPTH, "gd - get depth\n  Usage: gd\n\n  Print depth (not converted)\n"},
   {"gm\n", COMMAND_MOTORS, "gm - get motor data\n  Usage: gm\n\n  Print all motor settings (direction on one line and duty cycle on the next)\n"},
-  {"gmm", COMMAND_MOTORS_MIXED, ""},
   {"h", COMMAND_HELP, "h - help\n  Usage: h <cmd>\n\n  Print the help message for all commands that start with cmd, leave empty to print all help messages\n"},
   {"p", COMMAND_POW, "p - power off/on\n  Usage: p (0|1)\n\n Turn off/on power to all the voltage fails\n"},
+  {"shc", COMMAND_HEADING_CHANGE, "shc - set heading change of motor\n positive or negative, range from -157 to 157\n"},
+  {"smb", COMMAND_BRAKE, "smb - set motor brake\n  Usage: smb <n>\n\n  Turn the nth motor off\n"},
   {"smd", COMMAND_DUTY_CYCLE, "smd - set motor duty cycle\n  Usage: smd <n> <0xdc>\n\n  Set the duty cycle of the nth motor to dc\nNote: the duty cycle is inputted in hex out of 0x3ff (1024 in decimal)\n"},
   {"smf", COMMAND_FORWARD, "smf - set motor forward\n  Usage: smf <n>\n\n  Turn on the nth motor in the forward direction\n"},
   {"smr", COMMAND_REVERSE, "smr - set motor reverse\n  Usage: smr <n>\n\n  Turn on the nth motor in the reverse direction\n"},
   {"sms", COMMAND_STOP, "sms - set motor stop\n  Usage: sms <n>\n\n  Turn the nth motor off\n"},
-  {"smb", COMMAND_BRAKE, "smb - set motor brake\n  Usage: smb <n>\n\n  Turn the nth motor off\n"},
   {"spf", COMMAND_FREQ, "spf - set PWM frequency\n  Usage: spf <0xn>\n\n  Set the PWM frequency to n in kilohertz\nNote: the frequency is inputted in hex\n"},
   {"stop\n", COMMAND_STOP_ALL, "stop\n  Usage: stop\n\n  Stop all motors\n"},
-  {"di\n", COMMAND_INTERRUPT_DEBUG, "di - print interrupt debug values\n  Usage: di\n"},
   {"ss", COMMAND_SPEED, "ss - set forward or backward speed of motor\n positive or negative, range from -157 to 157\n"},
-  {"shc", COMMAND_HEADING_CHANGE, "shc - set heading change of motor\n positive or negative, range from -157 to 157\n"},
   {"svo", COMMAND_VERTICAL_OFFSET, "svo - set vertical offset of motor\n positive or negative, range from -157 to 157\n"}
 };
 
@@ -265,15 +261,6 @@ void process_command(char *st)
       }
       alt_putchar('\n');
       break;
-    case COMMAND_MOTORS_MIXED:
-      sscanf(st,"%d %d %d %d %d",&inputs[0],&inputs[1],&inputs[2],&inputs[3],&inputs[4]);
-      controller_output(inputs[0],inputs[1],inputs[2],inputs[3],inputs[4]);
-      break;  
-    case COMMAND_INTERRUPT_DEBUG:
-      for ( i = 0; i < 10; i++){
-        printf("Interrupt debug %d: %d\n", i, DEBUG_interrupt[i]); 
-      }
-      break;
     case COMMAND_SPEED:
       i = read_hex(st);
       if (i < -157) { target_orientation.speed = -157; }
@@ -343,12 +330,6 @@ static void timer_interrupts(void* context, alt_u32 id)
    // The mission computer has set the depth change value, ignore pd input
      depth_setting = depth_setting + target_orientation.depth_offset;
    }
-   
-   DEBUG_interrupt[5] = pitch_setting;
-   DEBUG_interrupt[6] = roll_setting;
-   DEBUG_interrupt[7] = depth_setting;
-   DEBUG_interrupt[8] = heading;
-   DEBUG_interrupt[9] = velocity;
    
    // Set motor outputs
    controller_output(pitch_setting, roll_setting, depth_setting, target_orientation.heading, target_orientation.speed);
