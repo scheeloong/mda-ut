@@ -21,19 +21,19 @@
          type = "long";
       }
    }
-   element imu_controller_0.avalon_slave_0
-   {
-      datum baseAddress
-      {
-         value = "2304";
-         type = "long";
-      }
-   }
    element power_management_slave_0.avalon_slave_0
    {
       datum baseAddress
       {
          value = "2400";
+         type = "long";
+      }
+   }
+   element imu_controller_0.avalon_slave_0
+   {
+      datum baseAddress
+      {
+         value = "2304";
          type = "long";
       }
    }
@@ -123,7 +123,7 @@
    {
       datum _sortIndex
       {
-         value = "19";
+         value = "18";
          type = "int";
       }
    }
@@ -217,7 +217,7 @@
    {
       datum _sortIndex
       {
-         value = "18";
+         value = "20";
          type = "int";
       }
    }
@@ -283,16 +283,8 @@
    {
       datum _sortIndex
       {
-         value = "20";
+         value = "19";
          type = "int";
-      }
-   }
-   element controller_interrupt_counter.s1
-   {
-      datum baseAddress
-      {
-         value = "2368";
-         type = "long";
       }
    }
    element clock_crossing_io2.s1
@@ -300,14 +292,6 @@
       datum baseAddress
       {
          value = "83886080";
-         type = "long";
-      }
-   }
-   element clock_crossing_io.s1
-   {
-      datum baseAddress
-      {
-         value = "67108864";
          type = "long";
       }
    }
@@ -319,11 +303,64 @@
          type = "long";
       }
    }
+   element g_sensor_int.s1
+   {
+      datum baseAddress
+      {
+         value = "80";
+         type = "long";
+      }
+   }
    element key.s1
    {
       datum baseAddress
       {
          value = "32";
+         type = "long";
+      }
+   }
+   element clock_crossing_io.s1
+   {
+      datum baseAddress
+      {
+         value = "67108864";
+         type = "long";
+      }
+   }
+   element controller_interrupt_counter.s1
+   {
+      datum _tags
+      {
+         value = "";
+         type = "String";
+      }
+      datum baseAddress
+      {
+         value = "2368";
+         type = "long";
+      }
+   }
+   element select_i2c_clk.s1
+   {
+      datum baseAddress
+      {
+         value = "96";
+         type = "long";
+      }
+   }
+   element i2c_sda.s1
+   {
+      datum baseAddress
+      {
+         value = "2112";
+         type = "long";
+      }
+   }
+   element sw.s1
+   {
+      datum baseAddress
+      {
+         value = "64";
          type = "long";
       }
    }
@@ -345,38 +382,6 @@
       datum baseAddress
       {
          value = "33554432";
-         type = "long";
-      }
-   }
-   element sw.s1
-   {
-      datum baseAddress
-      {
-         value = "64";
-         type = "long";
-      }
-   }
-   element g_sensor_int.s1
-   {
-      datum baseAddress
-      {
-         value = "80";
-         type = "long";
-      }
-   }
-   element select_i2c_clk.s1
-   {
-      datum baseAddress
-      {
-         value = "96";
-         type = "long";
-      }
-   }
-   element i2c_sda.s1
-   {
-      datum baseAddress
-      {
-         value = "2112";
          type = "long";
       }
    }
@@ -454,8 +459,8 @@
  <parameter name="maxAdditionalLatency" value="0" />
  <parameter name="projectName" value="DE0_Nano.qpf" />
  <parameter name="sopcBorderPoints" value="true" />
- <parameter name="systemHash" value="37089643405" />
- <parameter name="timeStamp" value="1340769137403" />
+ <parameter name="systemHash" value="34200023307" />
+ <parameter name="timeStamp" value="1341283190472" />
  <parameter name="useTestBenchNamingPattern" value="false" />
  <module kind="clock_source" version="11.1" enabled="1" name="clk_50">
   <parameter name="clockFrequency" value="50000000" />
@@ -937,11 +942,6 @@
   <parameter name="AUTO_CLOCK_SINK_CLOCK_RATE" value="50000000" />
  </module>
  <module
-   kind="imu_controller"
-   version="1.0"
-   enabled="1"
-   name="imu_controller_0" />
- <module
    kind="altera_avalon_timer"
    version="11.1"
    enabled="1"
@@ -964,6 +964,11 @@
    name="power_management_slave_0">
   <parameter name="AUTO_CLOCK_CLOCK_RATE" value="50000000" />
  </module>
+ <module
+   kind="imu_controller"
+   version="1.0"
+   enabled="1"
+   name="imu_controller_0" />
  <connection
    kind="avalon"
    version="11.1"
@@ -1186,19 +1191,6 @@
    kind="clock"
    version="11.1"
    start="clk_50.clk"
-   end="imu_controller_0.clock" />
- <connection
-   kind="avalon"
-   version="11.1"
-   start="cpu.data_master"
-   end="imu_controller_0.avalon_slave_0">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0900" />
- </connection>
- <connection
-   kind="clock"
-   version="11.1"
-   start="clk_50.clk"
    end="controller_interrupt_counter.clk" />
  <connection
    kind="avalon"
@@ -1240,4 +1232,17 @@
    version="11.1"
    start="clk_50.clk"
    end="gsensor_spi.clock_reset" />
+ <connection
+   kind="avalon"
+   version="11.1"
+   start="cpu.data_master"
+   end="imu_controller_0.avalon_slave_0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0900" />
+ </connection>
+ <connection
+   kind="clock"
+   version="11.1"
+   start="altpll_sys.c4"
+   end="imu_controller_0.clock" />
 </system>
