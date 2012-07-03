@@ -201,7 +201,6 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
                        .GPIO_out_from_the_motor_controller_0({led_wire[3:0], gpio_2_wire[6], gpio_2_wire[8], gpio_0_wire[24], gpio_0_wire[25], gpio_0_wire[18], gpio_0_wire[19], gpio_0_wire[12], gpio_0_wire[13], gpio_0_wire[16], gpio_0_wire[17], gpio_0_wire[10], gpio_0_wire[11], gpio_2_wire[2], gpio_2_wire[4], gpio_0_wire[22], gpio_0_wire[23], gpio_0_wire[4], gpio_0_wire[5], gpio_0_wire[2], gpio_0_wire[0]}),
 
                       // Clocks for the IMU
-                      .spi_clk_to_the_imu_controller_0(CLOCK_50),
                       .sys_clk_to_the_imu_controller_0(CLOCK_50),
                       .ADC_CS_N_from_the_imu_controller_0(ADC_CS_N),
                       .ADC_SADDR_from_the_imu_controller_0(ADC_SADDR),

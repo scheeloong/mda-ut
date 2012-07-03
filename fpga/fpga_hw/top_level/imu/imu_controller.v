@@ -4,22 +4,19 @@
 // Registers 7-9 store the accelerometer
 
 module imu_controller(
-  input clk, 
   input chipselect, 
   input [3:0]addr, 
   input read, 
-  input write,
   output reg [31:0] readdata, 
   input spi_clk, 
   input sys_clk, 
   input ADC_SDAT, 
   output ADC_CS_N, 
   output ADC_SADDR, 
-  output ADC_SCLK,
-  input [31:0] writedata);
+  output ADC_SCLK
+);
 
   wire [31:0] raw_depth;
- 
 
   imu imu(
     .reset_n(1'b1),

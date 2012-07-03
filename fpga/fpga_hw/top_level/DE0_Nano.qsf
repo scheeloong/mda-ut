@@ -446,3 +446,5 @@ set_global_assignment -name IP_TOOL_NAME sopc -entity DE0_Nano_SOPC -qip DE0_Nan
 set_global_assignment -name IP_TOOL_VERSION 11.1sp2 -entity DE0_Nano_SOPC -qip DE0_Nano_SOPC.qip
 set_global_assignment -name IP_TOOL_ENV sopc -entity DE0_Nano_SOPC -qip DE0_Nano_SOPC.qip
 set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A000001383650BAF0 -qip DE0_Nano_SOPC.qip
+
+set_global_assignment -name SOPC_BUILDER_SIGNATURE_ID 00226994CE9A000001384AA36002 -qip DE0_Nano_SOPC.qip
