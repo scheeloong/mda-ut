@@ -15,9 +15,6 @@
 #include "utils.h"
 #include "settings.h"
 
-// Structure for debugging interrupt data, printf's taking too long
-int DEBUG_interrupt[10];
-
 // This function is responsible for calling the motor setting signals.
 // An input of 200 is the neutral position for the specific axis input.
 // An input of (200,200,200,200,200) would mean for the object to remain stationary. 
@@ -46,6 +43,5 @@ void controller_output(int pitch_setting, int roll_setting, int depth_setting,in
       if ( motor_duty_cycle[i] > FULL_PWM )
          motor_duty_cycle[i] = FULL_PWM;
       set_motor_duty_cycle(i, motor_duty_cycle[i]);  
-      DEBUG_interrupt[i] = motor_duty_cycle[i];
    }  
 }
