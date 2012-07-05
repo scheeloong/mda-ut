@@ -12,6 +12,7 @@ unsigned cmd_ok = 0;
 unsigned power = 0;
 
 pid_t child_pid = 0;
+int p_stdin[2], p_stdout[2];
 FILE *infp = NULL, *outfp = NULL;
 
 int atoi_safe (char *str) {
@@ -23,23 +24,28 @@ int atoi_safe (char *str) {
 }
 
 void cmd_error () { printf ("**** Invalid command. Type \"help\" for command list\n"); }
+
 void exit_safe ()
 {
     power_off();
-    exit(0);
+
     fflush(infp);
     fflush(outfp);
-    fclose(infp);
-    fclose(outfp);
+
+    close(p_stdin[0]);
+    close(p_stdin[1]);
+    close(p_stdout[0]);
+    close(p_stdout[1]);
     if (child_pid > 0) {
        kill(child_pid, SIGINT);
     }
+
+    exit(0);
 }
 
 pid_t popen2 (char *proc, int *infp, int *outfp)
 {
     const int READ = 0, WRITE = 1;
-    int p_stdin[2], p_stdout[2];
     pid_t pid;
 
     if (pipe(p_stdin) || pipe(p_stdout)) {
@@ -70,8 +76,8 @@ pid_t popen2 (char *proc, int *infp, int *outfp)
 
 void spawn_term (char *proc)
 {
-    int inh, outh;
     if (proc) {
+        int inh, outh;
         child_pid = popen2(proc, &inh, &outh);
         infp = fdopen(inh, "w");
         outfp = fdopen(outh, "r");
@@ -161,6 +167,7 @@ void power_status () {
     cmd_ok = 1;
     printf("power is turned %s\n", (power) ? "on" : "off");
 }
+
 void power_on () {
     cmd_ok = 1;
     printf ("turned power on.\n");
@@ -170,6 +177,7 @@ void power_on () {
     fprintf (infp, "smf a\n");
     power = 1;
 }
+
 void power_off () {
     cmd_ok = 1;
     printf ("turned power off.\n");
