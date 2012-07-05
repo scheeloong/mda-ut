@@ -1,5 +1,5 @@
 CC=g++
-FLAGS=-c -Wall $(CVFLAGS)
+FLAGS=-c -Wall
 CVFLAGS=`pkg-config --cflags --libs opencv`
 LIBO=preproc_filters.o obj_detection.o calc_draw.o histograms.o common.o
 TASKS=task_gate.o task_path.o task_buoy.o task_U.o task_torp.o
@@ -10,7 +10,7 @@ A=libvision.a
 
 # each .o file depends on its .cpp file
 .cpp.o: $(INC)
-	$(CC) $< -o $@ $(FLAGS)
+	$(CC) $< -o $@ $(FLAGS) $(CVFLAGS)
 
 all: webcam $(A)
 
@@ -30,6 +30,6 @@ $(A): $(TASKS) $(LIBO)
 	ar -cvq $@ $(LIBO) $(TASKS)
 
 clean:
-	rm -rf $(LIBO) $(TASKS) $(A) webcam ./*~
+	rm -rf *.o $(TASKS) $(A) webcam ./*~
 
 .PHONY: all clean
