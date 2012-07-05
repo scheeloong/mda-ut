@@ -85,6 +85,9 @@ void spawn_term (char *proc)
     if (!infp) {
         infp = stderr;
     }
+    if (!outfp) {
+        outfp = stdin;
+    }
 }
 
 void read_from_term (char *cmd)
