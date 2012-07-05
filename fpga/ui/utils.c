@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <unistd.h>
 
 #define ZERO_DC 512
 #define PWM_FREQ 20
@@ -9,8 +11,8 @@
 unsigned cmd_ok = 0;
 unsigned power = 0;
 
-char *proc_str = NULL;
-FILE *fterm = NULL;
+pid_t child_pid = 0;
+FILE *infp = NULL, *outfp = NULL;
 
 int atoi_safe (char *str) {
     if (str == NULL) {
@@ -21,34 +23,68 @@ int atoi_safe (char *str) {
 }
 
 void cmd_error () { printf ("**** Invalid command. Type \"help\" for command list\n"); }
-void exit_safe () { power_off(); exit(0); pclose(fterm); }
+void exit_safe ()
+{
+    power_off();
+    exit(0);
+    fflush(infp);
+    fflush(outfp);
+    fclose(infp);
+    fclose(outfp);
+    if (child_pid > 0) {
+       kill(child_pid, SIGINT);
+    }
+}
+
+pid_t popen2 (char *proc, int *infp, int *outfp)
+{
+    const int READ = 0, WRITE = 1;
+    int p_stdin[2], p_stdout[2];
+    pid_t pid;
+
+    if (pipe(p_stdin) || pipe(p_stdout)) {
+        printf("pipe failed\n");
+        return -1;
+    }
+
+    pid = fork();
+
+    if (pid < 0) {
+        return pid;
+    } else if (pid == 0) {
+        close(p_stdin[WRITE]);
+        dup2(p_stdin[READ], READ);
+        close(p_stdout[READ]);
+        dup2(p_stdout[WRITE], WRITE);
+
+        execl("/bin/sh", "sh", "-c", proc, NULL);
+        perror("Running execl command failed!");
+        exit(1);
+    }
+
+    *infp = p_stdin[WRITE];
+    *outfp = p_stdout[READ];
+
+    return pid;
+}
 
 void spawn_term (char *proc)
 {
+    int inh, outh;
     if (proc) {
-        fterm = (FILE *)popen(proc, "w");
+        child_pid = popen2(proc, &inh, &outh);
+        infp = fdopen(inh, "w");
+        outfp = fdopen(outh, "r");
     }
-    if (!fterm) {
-        fterm = stderr;
+    if (!infp) {
+        infp = stderr;
     }
-    proc_str = proc;
 }
 
 void read_from_term (char *cmd)
 {
-    pclose(fterm);
-    char full_cmd[100], out_str[100];
-
-    sprintf(full_cmd, "echo \"%s\" | %s", cmd, proc_str);
-    fterm = (FILE *)popen(full_cmd, "r");
-
-    while (fgets(out_str, 100, fterm)) {
-        printf("%s", out_str);
-    }
-
-    pclose(fterm);
-
-    spawn_term(proc_str);
+    fflush(outfp);
+    fprintf(infp, "%s\n", cmd);
 }
 
 void help () {
@@ -86,6 +122,10 @@ void help_power () {
 void motor_status() {
     cmd_ok = 1;
     read_from_term ("gm");
+    int pwm;
+    fscanf(outfp, "%d", &pwm);
+
+    printf("pwm: %d\n", pwm);
 }
 
 void motor_set (int pwm, char motor_flags) {
@@ -97,23 +137,23 @@ void motor_set (int pwm, char motor_flags) {
     
     if (motor_flags & H_FRONT_LEFT) {
         printf ("set left front vertical motor to %d\n", pwm);
-        fprintf (fterm, "smd %d %x\n", M_FRONT_LEFT, pwm);
+        fprintf (infp, "smd %d %x\n", M_FRONT_LEFT, pwm);
     }
     if (motor_flags & H_FRONT_RIGHT) {
         printf ("set right front vertical motor to %d\n", pwm);
-        fprintf (fterm, "smd %d %x\n", M_FRONT_RIGHT, pwm);
+        fprintf (infp, "smd %d %x\n", M_FRONT_RIGHT, pwm);
     }
     if (motor_flags & H_FWD_LEFT) {
         printf ("set left forward motor to %d\n", pwm);
-        fprintf (fterm, "smd %d %x\n", M_FWD_LEFT, pwm);
+        fprintf (infp, "smd %d %x\n", M_FWD_LEFT, pwm);
     }
     if (motor_flags & H_FWD_RIGHT) {
         printf ("set right forward motor to %d\n", pwm);
-        fprintf (fterm, "smd %d %x\n", M_FWD_RIGHT, pwm);
+        fprintf (infp, "smd %d %x\n", M_FWD_RIGHT, pwm);
     }
     if (motor_flags & H_REAR) {
         printf ("set rear vertical motor to %d\n", pwm);
-        fprintf (fterm, "smd %d %x\n", M_REAR, pwm);
+        fprintf (infp, "smd %d %x\n", M_REAR, pwm);
     }
 }
 
@@ -124,26 +164,31 @@ void power_status () {
 void power_on () {
     cmd_ok = 1;
     printf ("turned power on.\n");
-    fprintf (fterm, "p 1\n");
-    fprintf (fterm, "spf %x\n", PWM_FREQ);
-    fprintf (fterm, "smd a %x\n", ZERO_DC);
-    fprintf (fterm, "smf a\n");
+    fprintf (infp, "p 1\n");
+    fprintf (infp, "spf %x\n", PWM_FREQ);
+    fprintf (infp, "smd a %x\n", ZERO_DC);
+    fprintf (infp, "smf a\n");
     power = 1;
 }
 void power_off () {
     cmd_ok = 1;
     printf ("turned power off.\n");
-    fprintf (fterm, "p 0\n");
-    fprintf (fterm, "sms a\n");
-    fprintf (fterm, "smd a %x\n", ZERO_DC);
+    fprintf (infp, "p 0\n");
+    fprintf (infp, "sms a\n");
+    fprintf (infp, "smd a %x\n", ZERO_DC);
     power = 0;
 }
 
 void dyn_status () {
     cmd_ok = 1;
+    int x, y, z, d;
 
     // Acceleration
     read_from_term("ga");
+    fscanf(outfp, "raw: %d, %d, %d", &x, &y, &z);
+    printf("(x,y,z) acceleration: %d %d %d\n", x, y, z);
     // Depth
     read_from_term("gd");
+    fscanf(outfp, "%d", &d);
+    printf("depth: %d\n", d);
 }
