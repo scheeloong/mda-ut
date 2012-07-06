@@ -1,0 +1,5 @@
+#summary The annual RoboSub competition
+
+= Competition Details =
+
+This is the annual competition we try to make to. We haven't gone in the past few years. The link is: http://www.auvsifoundation.org/foundation/competitions/robosub/.
