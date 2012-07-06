@@ -1,1 +1,1 @@
-#include "../lib/mgui.h"
+#include "mgui.h"

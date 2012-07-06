@@ -1,4 +1,4 @@
-#include "../lib/mgui.h"
+#include "mgui.h"
 #include <string.h>
 #include <stdio.h>
 

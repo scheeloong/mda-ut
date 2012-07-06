@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "lib/mv.h"
-#include "lib/mgui.h"
+#include "mv.h"
+#include "mgui.h"
 
 int main () {
     char filename[] = "settings/settings.msf";
