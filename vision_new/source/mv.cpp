@@ -1,2 +1,2 @@
-#include "../lib/mv.h"
+#include "mv.h"
 #include <cv.h>
