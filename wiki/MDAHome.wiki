@@ -1,0 +1,11 @@
+#summary Home Page
+
+= Introduction =
+
+Welcome to our home page. Since our previous wiki is down, we're testing the built-in wiki on Google Code.
+
+= Details =
+
+Some useful pages:
+  * RoboSub competition: http://www.auvsifoundation.org/foundation/competitions/robosub/
+  * Our home page: http://mdaskule.wordpress.com
