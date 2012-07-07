@@ -31,10 +31,10 @@ void exit_safe ()
 
     fflush(infp);
     fflush(outfp);
+    fclose(infp);
+    fclose(outfp);
 
     close(p_stdin[0]);
-    close(p_stdin[1]);
-    close(p_stdout[0]);
     close(p_stdout[1]);
     if (child_pid > 0) {
        kill(child_pid, SIGINT);
@@ -63,7 +63,7 @@ pid_t popen2 (char *proc, int *infp, int *outfp)
         close(p_stdout[READ]);
         dup2(p_stdout[WRITE], WRITE);
 
-        execl("/bin/sh", "sh", "-c", proc, NULL);
+        execl(proc, "", NULL);
         perror("Running execl command failed!");
         exit(1);
     }
