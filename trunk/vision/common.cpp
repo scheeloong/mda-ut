@@ -28,7 +28,7 @@ void HSV_settings:: setSim_buoyG () { H_MIN=50; H_MAX=70; S_MIN=70; S_MAX=255; V
 void HSV_settings:: setSim_buoyY () { H_MIN=15; H_MAX=45; S_MIN=70; S_MAX=255; V_MIN=110; V_MAX=255;}
 void HSV_settings:: setSim_U () { H_MIN=50; H_MAX=70; S_MIN=75; S_MAX=255; V_MIN=110; V_MAX=255;}
 void HSV_settings:: setSim_torp () { H_MIN=175; H_MAX=10; S_MIN=120; S_MAX=255; V_MIN=160; V_MAX=255;}
-// the torp setting is for the RED side of the target
+
 
 
 int HSV_settings:: HueInRange (unsigned hue) { 
