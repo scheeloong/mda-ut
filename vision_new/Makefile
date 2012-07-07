@@ -9,8 +9,11 @@ OBJ=$(OBJDIR)mgui.o $(OBJDIR)main.o $(OBJDIR)mv.o $(OBJDIR)mfile.o
 
 all: test
 
-$(OBJDIR)%.o: $(SRCDIR)%.cpp
-	$(CC) -Wall -I$(LIBDIR) -c $^ -o $@ $(CVFLAGS)
+$(OBJDIR)%.o: $(SRCDIR)%.cpp $(INC)
+	$(CC) -Wall -I$(LIBDIR) -c $< -o $@ $(CVFLAGS)
+
+#$(OBJDIR)mfile.o: $(SRCDIR)mfile.cpp $(LIBDIR)mgui.h
+#	$(CC) -Wall -I$(LIBDIR) -c $^ -o $@ $(CVFLAGS)
 
 # test is the main executable and depends on each object
 test: $(OBJ)
