@@ -1,8 +1,9 @@
 #include "utils.h"
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
+#include <string.h>
 #include <unistd.h>
 
 #define ZERO_DC 512
@@ -92,8 +93,18 @@ void spawn_term (char *proc)
 
 void read_from_term (char *cmd)
 {
-    fflush(outfp);
-    fprintf(infp, "%s\n", cmd);
+    fprintf(infp, "%s", cmd);
+    fflush(infp);
+
+    // Flush outfp until you see the command being printed out
+    const unsigned int BUF_SIZE = 128;
+    char buf[BUF_SIZE];
+    while (1) {
+        fgets(buf, BUF_SIZE, outfp);
+        if (strcmp(buf, cmd) == 0) {
+            break;
+        }
+    }
 }
 
 void help () {
@@ -130,11 +141,25 @@ void help_power () {
 
 void motor_status() {
     cmd_ok = 1;
-    read_from_term ("gm");
-    int pwm;
-    fscanf(outfp, "%d", &pwm);
+    read_from_term ("gm\n");
 
+    int pwm, i;
+    char line[64];
+    const int num_motors = 5;
+    int duty_cycles[num_motors];
+
+    fscanf(outfp, "%d", &pwm);
     printf("pwm: %d\n", pwm);
+
+    fscanf(outfp, "%s", line);
+    printf("motor directions: %s\n", line);
+
+    fscanf(outfp, "%d,%d,%d,%d,%d", duty_cycles, duty_cycles+1, duty_cycles+2, duty_cycles+3, duty_cycles+4);
+    printf("duty cycles:");
+    for (i = 0; i < num_motors; i++) {
+       printf(" %d", (duty_cycles[i]-512) * 100 / 512);
+    }
+    puts("");
 }
 
 void motor_set (int pwm, char motor_flags) {
@@ -164,6 +189,8 @@ void motor_set (int pwm, char motor_flags) {
         printf ("set rear vertical motor to %d\n", pwm);
         fprintf (infp, "smd %d %x\n", M_REAR, pwm);
     }
+
+    fflush(infp);
 }
 
 void power_status () {
@@ -179,6 +206,7 @@ void power_on () {
     fprintf (infp, "smd a %x\n", ZERO_DC);
     fprintf (infp, "smf a\n");
     power = 1;
+    fflush(infp);
 }
 
 void power_off () {
@@ -188,18 +216,30 @@ void power_off () {
     fprintf (infp, "sms a\n");
     fprintf (infp, "smd a %x\n", ZERO_DC);
     power = 0;
+    fflush(infp);
+}
+
+void get_accel(int *x, int *y, int *z)
+{
+    read_from_term("ga\n");
+    fscanf(outfp, "raw: %d, %d, %d", x, y, z);
+}
+
+int get_depth()
+{
+    int depth;
+    read_from_term("gd\n");
+    fscanf(outfp, "%d", &depth);
+    return depth;
 }
 
 void dyn_status () {
     cmd_ok = 1;
-    int x, y, z, d;
+    int x, y, z;
 
-    // Acceleration
-    read_from_term("ga");
-    fscanf(outfp, "raw: %d, %d, %d", &x, &y, &z);
-    printf("(x,y,z) acceleration: %d %d %d\n", x, y, z);
-    // Depth
-    read_from_term("gd");
-    fscanf(outfp, "%d", &d);
+    get_accel(&x, &y, &z);
+    printf("(x,y,z) acceleration: %d,%d,%d\n", x, y, z);
+
+    int d = get_depth();
     printf("depth: %d\n", d);
 }
