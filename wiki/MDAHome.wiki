@@ -9,3 +9,7 @@ Welcome to our home page. Since our previous wiki is down, we're testing the bui
 Some useful pages:
   * RoboSub competition: http://www.auvsifoundation.org/foundation/competitions/robosub/
   * Our home page: http://mdaskule.wordpress.com
+
+== Editing ==
+
+To edit the wiki, go to http://code.google.com/p/mda-ut/w/list
