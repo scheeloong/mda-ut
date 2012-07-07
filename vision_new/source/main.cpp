@@ -3,24 +3,35 @@
  */
 #include <stdlib.h>
 #include <stdio.h>
+#include <highgui.h>
+#include <cv.h>
 
 #include "mv.h"
 #include "mgui.h"
 
-int main () {
-    char filename[] = "settings/settings.msf";
-    float S1, S2;
+int main (int argc, char** argv) {
+    char TEST_SETTINGS[] = "settings/test_settings.mda";
+    unsigned width, height;
     
-    read_mv_setting (filename, "S1", S1);
-    read_mv_setting (filename, "S2", S2);
-    //read_mv_setting (filename, "S3", S2);
+    read_common_mv_setting ("IMG_WIDTH_COMMON", width);
+    read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
+    printf ("Image Size: %dx%d\n", width,height);
     
-    printf ("S1: %f\nS2: %f\n", S1, S2);
-                      
     mvWindow win1("win1");
-    mvWindow win2("win2");
-    mvWindow win3("win3");
-    mvWindow win4("win4");
+    
+    mvGradient gradient (TEST_SETTINGS);
+    
+    IplImage * temp = cvLoadImage(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
+    IplImage * img = cvCreateImage(cvSize(width,height), IPL_DEPTH_8U, 1);
+    cvResize (temp, img);
+    
+    win1.showImage (img);
+    
+    IplImage * res = cvCreateImage (cvGetSize(img), IPL_DEPTH_8U, 1); 
+    gradient.filter (img, res);
+    
+    
+    
     cvWaitKey(0);
     return 0;
 }
