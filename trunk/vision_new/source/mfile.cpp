@@ -13,16 +13,13 @@ bool str_isdigit (const char str[])
     return true;
 }
 
-int read_mv_setting
+template <typename TYPE>
+void read_mv_setting (const char filename[], const char setting_name[], TYPE &data) 
 /* Reads a single setting from a file. searches through file for the setting
    and puts it into &data. Returns 0 iff successful. Settings file must have
    lines consisting of either comments (beings with '#') or in the format
    SETTING_NAME, SETTING_VALUE */
-(
-    const char filename[], 
-    const char setting_name[], 
-    float &data
-) 
+
 {
     FILE* fh = fopen (filename, "r");
     if (fh == NULL) {
@@ -47,8 +44,9 @@ int read_mv_setting
                 exit (1);
             }
             
-            data = atof (token);
-            return 0;
+            float temp = atof (token);
+            data = TYPE(temp);
+            return;
         }
     }
     
@@ -56,3 +54,7 @@ int read_mv_setting
              in file %s\n", setting_name, filename);
     exit (1);
 }
+/* these lines declare the use of int,unsigned,flot of read_mv_setting */
+template void read_mv_setting<int>(const char filename[], const char setting_name[], int &data);
+template void read_mv_setting<unsigned>(const char filename[], const char setting_name[], unsigned &data);
+template void read_mv_setting<float>(const char filename[], const char setting_name[], float &data);

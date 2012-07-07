@@ -1,0 +1,12 @@
+# this is a comment!
+#
+S1, 11.4
+
+# more comments
+S2, 22.3
+
+#mvGradient
+KERNEL_WIDTH, 5
+KERNEL_HEIGHT, 5
+DISPLAY, 1
+QUIET, 1
