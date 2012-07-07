@@ -12,7 +12,7 @@ int ratio; // initially garbage, this is to set ratio of large to small circle
 /* declare the circle to be passed through */
 float* small_circle = NULL;
 float* big_circle = NULL;
-
+int circle_centre_x, circle_centre_y; //initially garbage, but is updated whenever it's preparing to shoot.
 retcode vision_TORP (vision_in &Input, vision_out &Output, char flags) {
 // Will change real_x, real_y, range in Output.
 // return state guide:
@@ -185,6 +185,8 @@ void controller_TORP (vision_in &Input, Motors &m) {
     }
     else if (state == CHARGE) {
         if (t-dt > CHARGE_t) {
+	    circle_centre_x = small_circle[0];
+	    circle_centre_y = small_circle[1];
             state = SHOOT;
             dt = t;
         }
@@ -243,6 +245,7 @@ void controller_TORP (vision_in &Input, Motors &m) {
             break;
         case SHOOT:
             printf ("   torp: FINISHED. Preparing to Shoot.\n");
+	    printf ("	torp: FINISHED. Circle coordinates: (%d, %d)\n", &circle_centre_x, &circle_centre_y);
             m.move(STOP);
 	    // do something to do the actual shooting
             break;
