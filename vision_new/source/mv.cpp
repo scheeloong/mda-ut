@@ -3,13 +3,13 @@
 #include <cv.h>
 #include <stdlib.h>
 
-mvGradient:: mvGradient (const char* settings_file_name) {   
+mvGradient:: mvGradient (char settings_file[]) {   
     read_common_mv_setting ("IMG_WIDTH_COMMON", IMG_WIDTH);
     read_common_mv_setting ("IMG_HEIGHT_COMMON", IMG_HEIGHT);
-    read_mv_setting (settings_file_name, "KERNEL_WIDTH", KERNEL_WIDTH);
-    read_mv_setting (settings_file_name, "KERNEL_HEIGHT", KERNEL_HEIGHT);
-    read_mv_setting (settings_file_name, "DISPLAY", _DISPLAY_);
-    read_mv_setting (settings_file_name, "QUIET", _QUIET_);
+    read_mv_setting (settings_file, "KERNEL_WIDTH", KERNEL_WIDTH);
+    read_mv_setting (settings_file, "KERNEL_HEIGHT", KERNEL_HEIGHT);
+    read_mv_setting (settings_file, "DISPLAY", _DISPLAY_);
+    read_mv_setting (settings_file, "QUIET", _QUIET_);
     
     assert (KERNEL_WIDTH % 2 == 1); // the kernel size must be odd
     assert (KERNEL_HEIGHT % 2 == 1); 
