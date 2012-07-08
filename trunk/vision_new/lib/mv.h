@@ -22,7 +22,7 @@ class mvGradient {
     int _DISPLAY_, _QUIET_;
     
     public:
-    mvGradient (const char* settings_file_name);
+    mvGradient (char settings_file[]);
     ~mvGradient ();
     void filter (const IplImage* img, IplImage* result);
 };
