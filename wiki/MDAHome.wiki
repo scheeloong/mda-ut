@@ -1,15 +1,19 @@
 #summary Home Page
 
-= Introduction =
+= The MDA Wiki =
 
-Welcome to our home page. Since our previous wiki is down, we're testing the built-in wiki on Google Code.
+Hello everyone, this is the University of Toronto Mechatronics Design Association Wiki.
 
-= Details =
+Check us out at http://mdaskule.wordpress.com
 
-Some useful pages:
-  * RoboSub competition: http://www.auvsifoundation.org/foundation/competitions/robosub/
-  * Our home page: http://mdaskule.wordpress.com
+This wiki is to be used to keep documentation for the club.
+It would be nice if new joiners could use this wiki to get up to speed with some of the club's stuff.
+It can also get pretty technical and allow people working on the same project to keep track of what each other are doing.
 
-== Editing ==
+*_IMPORTANT NOTE_: TO THOSE WHO EDIT THE WIKI, PLEASE KEEP IT ORGANIZED AND FOLLOW THE TOP-DOWN STRUCTURE IT'S ALREADY IN. IF POSTS ARE ALL OVER THE PLACE THEN THERE IS NO USE. THANK YOU! *
 
-To edit the wiki, go to http://code.google.com/p/mda-ut/w/list
+== getting started ==
+  * AboutMda
+  * JoiningMda
+  * UsefulLinks
+  * CodingPractices
