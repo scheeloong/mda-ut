@@ -21,11 +21,10 @@ void Find_Circles(Mat img, vector<Vec3f> results) {
    }
   
   /// Show your results
-  namedWindow( "Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE );
-  imshow( "Hough Circle Transform Demo", img );
+  namedWindow( "Find Circles", CV_WINDOW_AUTOSIZE );
+  imshow( "Find Circles", img );
   
   waitKey(0);
-  //return 0;
 }
 
 int main (int argc, char** argv) {
