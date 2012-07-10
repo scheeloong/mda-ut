@@ -12,7 +12,8 @@ It can also get pretty technical and allow people working on the same project to
 
 *_IMPORTANT NOTE_: TO THOSE WHO EDIT THE WIKI, PLEASE KEEP IT ORGANIZED AND FOLLOW THE TOP-DOWN STRUCTURE IT'S ALREADY IN. IF POSTS ARE ALL OVER THE PLACE THEN THERE IS NO USE. THANK YOU! *
 
-== getting started ==
+== Getting started ==
+
   * AboutMda
   * JoiningMda
   * UsefulLinks

@@ -1,3 +1,5 @@
+#summary good coding practices
+
 = Coding practices =
 
 This will serve as a quick tutorial of good coding practices, to allow for better software/hardware development as a group. This will cover subversion, our version control system, and Makefiles.
@@ -21,7 +23,7 @@ Do
 
 Now the fun part, the important commands:
 
-  * svn help: help! For help on a specific command, try svn help <command>.
+  * svn help: help! For help on a specific command, try svn help 'command'.
   * svn checkout: Download a copy of the latest code from the repository to your local drive. Note, you should only need to do this once.
   * svn update: Update a checked out (existing) local build to the latest version, integrating other people's changes.
   * svn add: Add a new file to be tracked by svn. When you commit a change, this file will be added to the repository.
