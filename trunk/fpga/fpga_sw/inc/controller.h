@@ -3,6 +3,22 @@
 #ifndef _MDA_CONTROLLER_H
 #define _MDA_CONTROLLER_H
 
+/* acceleration data in x,y,z */
+struct t_accel_data {
+  alt_16 x, y, z;
+};
+
+struct orientation {
+  // angles
+  int pitch;
+  int roll;
+  int heading;
+
+  // scalars
+  int speed;
+  int depth;
+};
+
 // Motor 1 = front, vertical, left; 
 // Motor 2 = front, vertical, right;
 // Motor 3 = center, horizontal, right;
@@ -14,6 +30,8 @@
 #define M_RIGHT motor_duty_cycle[3]
 #define M_REAR motor_duty_cycle[4]
 
-void controller_output(int pitch_setting, int roll_setting, int depth_setting,int heading, int velocity);
+void get_orientation(struct t_accel_data *accel_data, struct orientation *orientation);
+
+void controller_output(int pitch_setting, int roll_setting, int heading, int speed, int depth_setting);
 
 #endif

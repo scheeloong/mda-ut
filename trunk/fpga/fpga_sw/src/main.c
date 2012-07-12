@@ -37,7 +37,6 @@ struct command_struct my_cmds[] = {
   {"spf", COMMAND_FREQ, "spf - set PWM frequency\n  Usage: spf <0xn>\n\n  Set the PWM frequency to n in kilohertz\nNote: the frequency is inputted in hex\n"},
   {"stop\n", COMMAND_STOP_ALL, "stop\n  Usage: stop\n\n  Stop all motors\n"},
   {"ss", COMMAND_SPEED, "ss - set forward or backward speed of motor\n positive or negative, range from -157 to 157\n"},
-  {"svo", COMMAND_VERTICAL_OFFSET, "svo - set vertical offset of motor\n positive or negative, range from -157 to 157\n"}
 };
 
 // the size of the above array
@@ -195,7 +194,7 @@ void process_command(char *st)
       }
       break;
     case COMMAND_ACCEL:
-      get_accel(&accel_data, &orientation);
+      get_accel(&accel_data);
       printf("raw: ");
       print_int(accel_data.x);
       alt_putchar(',');
@@ -203,6 +202,7 @@ void process_command(char *st)
       alt_putchar(',');
       print_int(accel_data.z);
       alt_putchar('\n');
+      get_orientation(&accel_data, &orientation);
       printf("in degrees: ");
       print_int(orientation.pitch);
       alt_putchar(',');
@@ -210,17 +210,17 @@ void process_command(char *st)
       alt_putchar('\n');
       break;
     case COMMAND_ACCEL_X:
-      get_accel(&accel_data, &orientation);
+      get_accel(&accel_data);
       print_int(accel_data.x);
       alt_putchar('\n');
       break;
     case COMMAND_ACCEL_Y:
-      get_accel(&accel_data, &orientation);
+      get_accel(&accel_data);
       print_int(accel_data.y);
       alt_putchar('\n');
       break;
     case COMMAND_ACCEL_Z:
-      get_accel(&accel_data, &orientation);
+      get_accel(&accel_data);
       print_int(accel_data.z);
       alt_putchar('\n');
       break;
@@ -252,10 +252,6 @@ void process_command(char *st)
     case COMMAND_HEADING_CHANGE:
       i = read_hex(st);
       set_target_heading(i);
-      break;
-    case COMMAND_VERTICAL_OFFSET:
-      i = read_hex(st);
-      set_target_depth_offset(i);
       break;
   }
 }
