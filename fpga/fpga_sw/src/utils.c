@@ -15,6 +15,7 @@
 #include "system.h"
 #include "sys/alt_stdio.h"
 
+#include "interrupts.h"
 #include "settings.h"
 #include "utils.h"
 
@@ -36,6 +37,9 @@ void init()
   // instantiate motor state as stopped and 0 duty cycle
   memset(motor_modes, (int)'s', NUM_MOTORS);
   memset(motor_duty_cycles, 0, NUM_MOTORS * sizeof(int));
+
+  // Initialize interrupts
+  init_interrupts();
 }
 
 // returns a string until the maximum length (int len) or a newline character is reached from stdin

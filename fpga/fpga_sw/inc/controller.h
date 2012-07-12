@@ -14,11 +14,6 @@
 #define M_RIGHT motor_duty_cycle[3]
 #define M_REAR motor_duty_cycle[4]
 
-
-
-static int motor_duty_cycle[5];
-
-
 void controller_output(int pitch_setting, int roll_setting, int depth_setting,int heading, int velocity);
 
 #endif

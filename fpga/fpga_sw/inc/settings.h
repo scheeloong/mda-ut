@@ -3,8 +3,8 @@
 // allow the user to interact when using commands
 #define INTERACTIVE
 
-// log state every timer interrupt
-//#define LOG
+// enable the controller
+#define ENABLE_CONTROLLER
 
 #define NUM_MOTORS 6
 #define STR_LEN 30
@@ -15,7 +15,6 @@
 #define ZERO_PWM 200
 #define FULL_PWM 800 // true max is 824
 #define HALF_PWM 512
-
 
 #ifndef INTERACTIVE
 #undef puts

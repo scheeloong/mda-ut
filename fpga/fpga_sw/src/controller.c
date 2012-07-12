@@ -15,6 +15,8 @@
 #include "utils.h"
 #include "settings.h"
 
+static int motor_duty_cycle[NUM_MOTORS];
+
 // This function is responsible for calling the motor setting signals.
 // An input of 200 is the neutral position for the specific axis input.
 // An input of (200,200,200,200,200) would mean for the object to remain stationary. 
