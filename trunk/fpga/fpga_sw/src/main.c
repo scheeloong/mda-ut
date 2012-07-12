@@ -8,28 +8,13 @@
 
 #include <string.h>
 #include "altera_avalon_timer_regs.h"
-#include "io.h"
 #include "system.h"
 #include "sys/alt_stdio.h"
 #include "sys/alt_irq.h"
 
+#include "interrupts.h"
 #include "settings.h"
 #include "utils.h"
-#include "controller.h"
-
-// Victor, please determine where these lines should go, I need these global.
-// Structures used by the PD controller for stabilization
-struct orientation target_orientation;
-struct orientation current_orientation;
-struct orientation previous_orientation;
-// Structure containing various PD parameters
-struct PD_controller_inputs PD_controller_inputs;
-// Structure containing PD controller feedback values
-struct PD_controller_error_values PD_controller_error_values;
-
-// For power management
-int power_failures[7] = {0};
-int old_power_failures[7] = {0};
 
 // This is the list of all the commands
 // PLEASE KEEP THIS IN ALPHABETICAL ORDER
@@ -56,7 +41,7 @@ struct command_struct my_cmds[] = {
 };
 
 // the size of the above array
-int cmd_len = sizeof(my_cmds) / sizeof(struct command_struct);
+const int cmd_len = sizeof(my_cmds) / sizeof(struct command_struct);
 
 // print a description of all available commands
 void print_help(char *st)
@@ -95,7 +80,6 @@ void process_command(char *st)
   struct t_accel_data accel_data;
   struct orientation orientation;
   int c, dc;
-  int inputs[5];
   const int ALL = 10; // 10 is a in hex
 
   switch (cid) {
@@ -116,10 +100,10 @@ void process_command(char *st)
       break;
     case COMMAND_STOP_ALL:
       // Set speed and heading to neutral
-      target_orientation.speed = 0;
-      target_orientation.heading = 0;
+      set_target_speed(0);
+      set_target_heading(0);
       // When the stop all command is received, maintain the current depth
-      target_orientation.depth = get_depth();
+      set_target_depth(get_depth());
       printf("stopping\n");
       break;
     case COMMAND_STOP:
@@ -263,135 +247,17 @@ void process_command(char *st)
       break;
     case COMMAND_SPEED:
       i = read_hex(st);
-      if (i < -157) { target_orientation.speed = -157; }
-      else if (i > 157) { target_orientation.speed = 157; }
-      else { target_orientation.speed = i; }
+      set_target_speed(i);
       break;
     case COMMAND_HEADING_CHANGE:
       i = read_hex(st);
-      if (i < -157) { target_orientation.heading = -157; }
-      else if (i > 157) { target_orientation.heading = 157; }
-      else { target_orientation.heading = i; }
+      set_target_heading(i);
       break;
     case COMMAND_VERTICAL_OFFSET:
       i = read_hex(st);
-      if (i < -157) { target_orientation.depth_offset = -157; }
-      else if (i > 157) { target_orientation.depth_offset = 157; }
-      else { target_orientation.depth_offset = i; }
+      set_target_depth_offset(i);
       break;
   }
-}
-
-
-// Controller Interrupt Routine, should be 100Hz.
-static void timer_interrupts(void* context, alt_u32 id)
-{
-   // Power stuff
-   int i;
-   for (i = 0; i < 7; i++) {
-      // Reset to 0 if unchanged
-      if (power_failures[i] == old_power_failures[i]) {
-         power_failures[i] = 0;
-      }
-      old_power_failures[i] = power_failures[i];
-   }
-
-   // Get current orientation data
-   struct t_accel_data accel_data;   
-   int pitch_setting = ZERO_PWM;
-   int roll_setting = ZERO_PWM;
-   int depth_setting = ZERO_PWM;
-   int heading = ZERO_PWM;
-   int velocity = ZERO_PWM;
-   
-   // Calculate orientation data
-   previous_orientation = current_orientation;
-   get_accel(&accel_data, &current_orientation);
-	
-   // Calculate PD error values	
-   // I assume that I only want stabilization (target_orientation is set from main notebook master)
-   PD_controller_error_values.pitch_D = current_orientation.pitch - target_orientation.pitch - PD_controller_error_values.pitch_P;
-   PD_controller_error_values.roll_D = current_orientation.roll - target_orientation.roll - PD_controller_error_values.roll_P;
-   PD_controller_error_values.depth_D = current_orientation.depth - target_orientation.depth - PD_controller_error_values.depth_P;
-   PD_controller_error_values.heading_D = current_orientation.heading - target_orientation.heading - PD_controller_error_values.heading_P;
-   PD_controller_error_values.pitch_P = current_orientation.pitch - target_orientation.pitch;
-   PD_controller_error_values.roll_P = current_orientation.roll - target_orientation.roll;
-   PD_controller_error_values.depth_P = current_orientation.depth - target_orientation.depth;
-   PD_controller_error_values.heading_P = current_orientation.heading - target_orientation.heading;
-   
-   // PD values yet to be determined
-   pitch_setting = pitch_setting + (PD_controller_error_values.pitch_D>>4)*4 + (PD_controller_error_values.pitch_P>>4)*4;
-   roll_setting = roll_setting + (PD_controller_error_values.roll_D>>4)*4 + (PD_controller_error_values.roll_P>>4)*4;
-   if (target_orientation.depth_offset == 0){
-   // The mission computer has set depth change to zero, therefore maintain the target_orientation
-     depth_setting = depth_setting + (current_orientation.depth_offset>>4)*4;
-   }
-   else {
-   // The mission computer has set the depth change value, ignore pd input
-     depth_setting = depth_setting + target_orientation.depth_offset;
-   }
-   
-   // Set motor outputs
-   controller_output(pitch_setting, roll_setting, depth_setting, target_orientation.heading, target_orientation.speed);
-   
-   // Restart Interrupt for timer_0
-   IOWR_ALTERA_AVALON_TIMER_SNAPL(CONTROLLER_INTERRUPT_COUNTER_BASE, 1);
-   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,0); // Clear interrupt (ITO)
-   IOWR_ALTERA_AVALON_TIMER_STATUS(CONTROLLER_INTERRUPT_COUNTER_BASE, 0); // Clear TO
-   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,7); // Enable IRQ and Start timer
-}
-
-// Power management Interrupt routine
-//
-// If this triggers, something went wrong with one of the voltage lines
-// Turn off power to all the voltage rails and print out what caused
-// the problem
-static void pm_interrupt(void *context, alt_u32 id)
-{
-   // Get failing voltage line
-   int which_failed = IORD(POWER_MANAGEMENT_SLAVE_0_BASE, 0);
-   power_failures[which_failed]++;
-
-   static const int failure_threshold = 100;
-   if (power_failures[which_failed] < failure_threshold) {
-      return;
-   }
-
-   // Turn off power
-   IOWR(POWER_MANAGEMENT_SLAVE_0_BASE, 0, 0);
-
-   // Might be in the middle of printing, send a newline
-   alt_putchar('\n');
-   int i;
-   for (i = 0; i < 7; i++) {
-      if (power_failures[i] == 0) {
-         continue;
-      }
-      switch(i) {
-         case 0:
-            alt_putstr("24 V under-voltage failed");
-            break;
-         case 1:
-            alt_putstr("12 V over-voltage failed");
-            break;
-         case 2:
-            alt_putstr("12 V under-voltage failed");
-            break;
-         case 3:
-            alt_putstr("5 over-voltage failed");
-            break;
-         case 4:
-            alt_putstr("5 V under-voltage failed");
-            break;
-         case 5:
-            alt_putstr("3.3 V over-voltage failed");
-            break;
-         case 6:
-            alt_putstr("3.3 V under-voltage failed");
-            break;
-       }
-       printf(" %d times\n", power_failures[i]);
-   }
 }
 
 // the main function
@@ -399,34 +265,7 @@ int main()
 {
   char buffer_str[STR_LEN+1];
 
-  // Set inital target orientation
-  target_orientation.pitch = 0;
-  target_orientation.roll = 0;
-  target_orientation.speed = 0;
-  target_orientation.depth_offset = 0;
-  target_orientation.depth = 0;
-  target_orientation.heading = 0;
-  // Set PD values
-  PD_controller_inputs.pitch_D = 0;
-  PD_controller_inputs.roll_D = 0;
-  PD_controller_inputs.depth_D = 0;
-  PD_controller_inputs.heading_D = 0;
-  PD_controller_inputs.pitch_P = 0;
-  PD_controller_inputs.roll_P = 0;
-  PD_controller_inputs.depth_P = 0;
-  PD_controller_inputs.heading_P = 0;
-
   init();
-
-  // Setup controller interrupt
-  alt_ic_isr_register(CONTROLLER_INTERRUPT_COUNTER_IRQ_INTERRUPT_CONTROLLER_ID,CONTROLLER_INTERRUPT_COUNTER_IRQ,timer_interrupts,0,0);	// Register Interrupt (check system.h for defs)
-  alt_ic_isr_register(POWER_MANAGEMENT_SLAVE_0_IRQ_INTERRUPT_CONTROLLER_ID, POWER_MANAGEMENT_SLAVE_0_IRQ,pm_interrupt,0,0);	// Register Interrupt (check system.h for defs)
-  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 0);		// Clear control register
-  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 2);		// Continuous Mode ON
-  IOWR_ALTERA_AVALON_TIMER_PERIODL(CONTROLLER_INTERRUPT_COUNTER_BASE, 0x4B40);   // Timer interrupt period is 100ms, 10 Hz refresh rate
-  IOWR_ALTERA_AVALON_TIMER_PERIODH(CONTROLLER_INTERRUPT_COUNTER_BASE, 0x004C);
-  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 3);	    // Enable timer_0 interrupt
-  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 7);       // Start timer interrupt
 
   // read and process commands continuously
   while(1) {
