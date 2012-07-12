@@ -1,6 +1,7 @@
 #ifndef ACCELEROMETER_ADXL345_SPI_H_
 #define ACCELEROMETER_ADXL345_SPI_H_
 
+#include "controller.h"
 
 /* Bit values in BW_RATE                                                */
 /* Expresed as output data rate */
@@ -82,20 +83,6 @@
 
 #include "alt_types.h"
 #include <stdbool.h>
-
-/* acceleration data in x,y,z */
-struct t_accel_data {
-  alt_16 x, y, z;
-};
-
-struct orientation{
-	int pitch;
-	int roll;
-	int speed;
-	int depth_offset;
-	int depth;
-	int heading;
-};
 
 bool ADXL345_SPI_Init(alt_u32 device_base);
 bool ADXL345_SPI_IsDataReady(alt_u32 device_base);

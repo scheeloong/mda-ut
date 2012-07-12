@@ -23,7 +23,7 @@ void set_pwm_freq(int);
 void set_pow(int);
 int get_motor_duty_cycle(int);
 int get_pwm_freq();
-void get_accel(struct t_accel_data *, struct orientation *);
+void get_accel(struct t_accel_data *);
 int get_depth();
 
 // API to give commands to NIOS
@@ -47,7 +47,6 @@ enum COMMAND_ID {
   COMMAND_HELP,
   COMMAND_SPEED,
   COMMAND_HEADING_CHANGE,
-  COMMAND_VERTICAL_OFFSET
 };
 
 struct command_struct {

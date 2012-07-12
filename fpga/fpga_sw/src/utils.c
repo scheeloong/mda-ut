@@ -6,7 +6,6 @@
  * Author: victor
  */
 
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -165,7 +164,7 @@ int get_depth()
 }
 
 // returns a struct of x,y,z acceleration values
-void get_accel(struct t_accel_data *accel_data, struct orientation *orientation)
+void get_accel(struct t_accel_data *accel_data)
 {
   IOWR(SELECT_I2C_CLK_BASE, 0, 0x00);
 
@@ -180,12 +179,6 @@ void get_accel(struct t_accel_data *accel_data, struct orientation *orientation)
       break;
     }
   }
-
-  // Calculation orientation
-  int z_squared = accel_data->z*accel_data->z, y_squared = accel_data->y*accel_data->y;
-  // pitch and roll are zero when sub is "flat"
-  orientation->pitch = (z_squared + y_squared == 0) ? 90 : atan(accel_data->x/sqrt(z_squared + y_squared)) * RAD_TO_DEG;
-  orientation->roll = (z_squared == 0) ? 90 : atan(accel_data->y/sqrt(2*z_squared)) * RAD_TO_DEG;
 
   return;
 }
