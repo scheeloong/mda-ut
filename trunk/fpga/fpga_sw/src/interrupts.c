@@ -1,0 +1,120 @@
+/*
+ * interrupts.c
+ *
+ * The timer and power management interrupts.
+ * Note that the timer interrupt is also closely related to the controller.
+ *
+ * Author: victor
+ */
+
+#include "altera_avalon_timer_regs.h"
+#include "system.h"
+#include "sys/alt_stdio.h"
+#include "sys/alt_irq.h"
+
+#include "interrupts.h"
+#include "settings.h"
+#include "utils.h"
+#include "controller.h"
+
+// For power management
+int power_failures[7] = {0};
+int old_power_failures[7] = {0};
+
+
+// Controller Interrupt Routine, should be 100Hz.
+static void timer_interrupts(void* context, alt_u32 id)
+{
+   // Power stuff
+   int i;
+   for (i = 0; i < 7; i++) {
+      // Reset to 0 if unchanged
+      if (power_failures[i] == old_power_failures[i]) {
+         power_failures[i] = 0;
+      }
+      old_power_failures[i] = power_failures[i];
+   }
+
+   calculate_pid();
+   
+   // Restart Interrupt for this timer
+   IOWR_ALTERA_AVALON_TIMER_SNAPL(CONTROLLER_INTERRUPT_COUNTER_BASE, 1);
+   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,0); // Clear interrupt (ITO)
+   IOWR_ALTERA_AVALON_TIMER_STATUS(CONTROLLER_INTERRUPT_COUNTER_BASE, 0); // Clear TO
+   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,7); // Enable IRQ and Start timer
+}
+
+// Power management Interrupt routine
+//
+// If this triggers, something went wrong with one of the voltage lines
+// Turn off power to all the voltage rails and print out what caused
+// the problem
+static void pm_interrupt(void *context, alt_u32 id)
+{
+   // Get failing voltage line
+   int which_failed = IORD(POWER_MANAGEMENT_SLAVE_0_BASE, 0);
+   power_failures[which_failed]++;
+
+   static const int failure_threshold = 100;
+   if (power_failures[which_failed] < failure_threshold) {
+      return;
+   }
+
+   // Turn off power
+   IOWR(POWER_MANAGEMENT_SLAVE_0_BASE, 0, 0);
+
+   // Might be in the middle of printing, send a newline
+   alt_putchar('\n');
+   int i;
+   for (i = 0; i < 7; i++) {
+      if (power_failures[i] == 0) {
+         continue;
+      }
+      switch(i) {
+         case 0:
+            alt_putstr("24 V under-voltage failed");
+            break;
+         case 1:
+            alt_putstr("12 V over-voltage failed");
+            break;
+         case 2:
+            alt_putstr("12 V under-voltage failed");
+            break;
+         case 3:
+            alt_putstr("5 over-voltage failed");
+            break;
+         case 4:
+            alt_putstr("5 V under-voltage failed");
+            break;
+         case 5:
+            alt_putstr("3.3 V over-voltage failed");
+            break;
+         case 6:
+            alt_putstr("3.3 V under-voltage failed");
+            break;
+       }
+       alt_printf(" %d times\n", power_failures[i]);
+   }
+}
+
+void init_interrupts()
+{
+  // Setup power management interrupt
+  alt_ic_isr_register(POWER_MANAGEMENT_SLAVE_0_IRQ_INTERRUPT_CONTROLLER_ID, POWER_MANAGEMENT_SLAVE_0_IRQ,(void *)pm_interrupt,0,0);	// Register Interrupt (check system.h for defs)
+
+#ifdef ENABLE_CONTROLLER
+
+  const int timer_period = CLOCK_SPEED / TIMER_RATE_IN_HZ;
+  const short period_lo = timer_period;
+  const short period_hi = timer_period >> 16;
+
+  // Setup controller interrupt
+  alt_ic_isr_register(CONTROLLER_INTERRUPT_COUNTER_IRQ_INTERRUPT_CONTROLLER_ID,CONTROLLER_INTERRUPT_COUNTER_IRQ,(void *)timer_interrupts,0,0);	// Register Interrupt (check system.h for defs)
+  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 0);		// Clear control register
+  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 2);		// Continuous Mode ON
+  IOWR_ALTERA_AVALON_TIMER_PERIODL(CONTROLLER_INTERRUPT_COUNTER_BASE, period_lo);   // Timer interrupt period
+  IOWR_ALTERA_AVALON_TIMER_PERIODH(CONTROLLER_INTERRUPT_COUNTER_BASE, period_hi);
+  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 3);	    // Enable timer_0 interrupt
+  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 7);       // Start timer interrupt
+#endif
+}

@@ -17,7 +17,6 @@
 #include "utils.h"
 
 // This is the list of all the commands
-// PLEASE KEEP THIS IN ALPHABETICAL ORDER
 // Note: end the first string with a \n to ensure an exact match if no arguments are used
 struct command_struct my_cmds[] = {
   {"ga\n", COMMAND_ACCEL, "ga - get acceleration\n  Usage: ga\n\n  Print (x,y,z) acceleration\n"},
@@ -28,7 +27,8 @@ struct command_struct my_cmds[] = {
   {"gm\n", COMMAND_MOTORS, "gm - get motor data\n  Usage: gm\n\n  Print all motor settings (direction on one line and duty cycle on the next)\n"},
   {"h", COMMAND_HELP, "h - help\n  Usage: h <cmd>\n\n  Print the help message for all commands that start with cmd, leave empty to print all help messages\n"},
   {"p", COMMAND_POW, "p - power off/on\n  Usage: p (0|1)\n\n Turn off/on power to all the voltage fails\n"},
-  {"shc", COMMAND_HEADING_CHANGE, "shc - set heading change of motor\n positive or negative, range from -157 to 157\n"},
+  {"sd", COMMAND_DEPTH, "sd - set depth of submarine\n"},
+  {"sh", COMMAND_HEADING, "sh - set heading of motor\n positive or negative, range from -157 to 157\n"},
   {"smb", COMMAND_BRAKE, "smb - set motor brake\n  Usage: smb <n>\n\n  Turn the nth motor off\n"},
   {"smd", COMMAND_DUTY_CYCLE, "smd - set motor duty cycle\n  Usage: smd <n> <0xdc>\n\n  Set the duty cycle of the nth motor to dc\nNote: the duty cycle is inputted in hex out of 0x3ff (1024 in decimal)\n"},
   {"smf", COMMAND_FORWARD, "smf - set motor forward\n  Usage: smf <n>\n\n  Turn on the nth motor in the forward direction\n"},
@@ -79,7 +79,7 @@ void process_command(char *st)
   struct t_accel_data accel_data;
   struct orientation orientation;
   int c, dc;
-  const int ALL = 10; // 10 is a in hex
+  const int ALL = 10; // 10 is 'a' in hex
 
   switch (cid) {
     case COMMAND_INVALID:
@@ -249,9 +249,13 @@ void process_command(char *st)
       i = read_hex(st);
       set_target_speed(i);
       break;
-    case COMMAND_HEADING_CHANGE:
+    case COMMAND_HEADING:
       i = read_hex(st);
       set_target_heading(i);
+      break;
+    case COMMAND_SET_DEPTH:
+      i = read_hex(st);
+      set_target_depth(i);
       break;
   }
 }

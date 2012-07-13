@@ -6,6 +6,9 @@
 // enable the controller
 #define ENABLE_CONTROLLER
 
+#define CLOCK_SPEED 50000000
+#define TIMER_RATE_IN_HZ 20
+
 #define NUM_MOTORS 6
 #define STR_LEN 30
 #define RAD_TO_DEG 57.3  // 180/PI
