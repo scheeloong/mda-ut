@@ -1,5 +1,6 @@
 #include "utils.h"
 
+#include <math.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -242,6 +243,15 @@ void dyn_status () {
 
     get_accel(&x, &y, &z);
     printf("(x,y,z) acceleration: %d,%d,%d\n", x, y, z);
+
+    int z_squared = z*z, y_squared = y*y;
+    const double RAD_TO_DEG = 57.3; // 180/PI
+
+    // pitch and roll are zero when sub is "flat"
+    double pitch = (z_squared + y_squared == 0) ? 90 : atan2(x,sqrt(z_squared + y_squared)) * RAD_TO_DEG;
+    double roll = (z_squared == 0) ? 90 : atan2(y,sqrt(2*z_squared)) * RAD_TO_DEG;
+
+    printf("pitch: %d, roll: %d (both in degrees)\n", (int)pitch, (int)roll);
 
     int d = get_depth();
     printf("depth: %d\n", d);

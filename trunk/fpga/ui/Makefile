@@ -1,6 +1,7 @@
 # FPAG UI makefile
 
-CC=gcc -Wall
+CC=gcc
+CFLAGS = -Wall -lm
 INC=utils.h
 OBJ=utils.o
 EXE=ui
@@ -8,10 +9,10 @@ EXE=ui
 all: fpga_ui
 
 .c.o: $(INC)
-	$(CC) -c $< -o $@
+	$(CC) -c $< $(CFLAGS) -o $@
 
 fpga_ui: utils.o main.o
-	$(CC) main.o $(OBJ) -o $(EXE)
+	$(CC) main.o $(OBJ) $(CFLAGS) -o $(EXE)
 
 clean:
 	rm -f $(EXE) *.o *~
