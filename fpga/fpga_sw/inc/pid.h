@@ -2,9 +2,8 @@
 #ifndef _PID_H
 #define _PID_H
 
-#include "controller_settings.h"
-
 #define PID_NUM_OLD_VALUES 3
+typedef double HW_NUM;
 
 typedef struct {
     // everything is here is supposed to be private

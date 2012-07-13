@@ -40,6 +40,3 @@ HW_NUM PID_Output (Controller_PID* PID) {
 // calculate the output of the controller
     return PID->Const_P*PID->P + PID->Const_I*PID->I + PID->Const_D*PID->D;    
 }
-        
-        
-        

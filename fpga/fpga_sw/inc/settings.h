@@ -6,6 +6,7 @@
 // enable the controller
 #define ENABLE_CONTROLLER
 
+// constants
 #define CLOCK_SPEED 50000000
 #define TIMER_RATE_IN_HZ 20
 
@@ -31,8 +32,7 @@
  * These are multiplicative constants in the PID equation
  * Alpha is the decay rate for Integral term
  */
-// #define USE_PID_2
-#ifdef USE_PID_2
+
 #define ROLL_CONST_P 1
 #define ROLL_CONST_I 1
 #define ROLL_CONST_D 1
@@ -57,4 +57,3 @@
 
 /** This converts the relative motor force to PWM */
 #define FACTOR_FORCE_TO_PWM 1
-#endif
