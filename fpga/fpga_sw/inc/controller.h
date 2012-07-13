@@ -30,8 +30,13 @@ struct orientation {
 #define M_RIGHT motor_duty_cycle[3]
 #define M_REAR motor_duty_cycle[4]
 
+void set_target_speed(int speed);
+void set_target_heading(int heading);
+void set_target_depth(int depth);
+
 void get_orientation(struct t_accel_data *accel_data, struct orientation *orientation);
 
+void calculate_pid();
 void controller_output(int pitch_setting, int roll_setting, int heading, int speed, int depth_setting);
 
 #endif
