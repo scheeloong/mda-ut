@@ -43,6 +43,9 @@ void init()
 
   // Initialize interrupts
   init_interrupts();
+  
+  // Ritchie - Initialize PID controllers
+  pid_init();
 }
 
 // returns a string until the maximum length (int len) or a newline character is reached from stdin

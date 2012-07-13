@@ -39,4 +39,7 @@ void get_orientation(struct t_accel_data *accel_data, struct orientation *orient
 void calculate_pid();
 void controller_output(int pitch_setting, int roll_setting, int heading, int speed, int depth_setting);
 
+void calculate_pid_2();
+void pid_init();
+
 #endif

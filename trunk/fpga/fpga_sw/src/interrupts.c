@@ -35,7 +35,11 @@ static void timer_interrupts(void* context, alt_u32 id)
       old_power_failures[i] = power_failures[i];
    }
 
+	 #ifndef USE_PID_2
    calculate_pid();
+   #else
+	 calculate_pid_2();
+   #endif
    
    // Restart Interrupt for this timer
    IOWR_ALTERA_AVALON_TIMER_SNAPL(CONTROLLER_INTERRUPT_COUNTER_BASE, 1);
