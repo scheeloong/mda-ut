@@ -87,6 +87,11 @@ void pid_init () // call this anytime before calling calculate_pid2
     PID_Depth.Const_I = PITCH_CONST_I;
     PID_Depth.Const_D = PITCH_CONST_D;
     PID_Depth.Alpha = PITCH_ALPHA;
+
+    // Initialize target orientation
+    set_target_depth(get_depth());
+    set_target_speed(0);
+    //set_target_heading(get_heading());
 }
 
 int motor_force_to_pwm (HW_NUM force) { // assume this conversion is linear for now
