@@ -57,8 +57,8 @@ void get_orientation(struct t_accel_data *accel_data, struct orientation *orient
   int z_squared = accel_data->z*accel_data->z, y_squared = accel_data->y*accel_data->y;
 
   // pitch and roll are zero when sub is "flat"
-  orientation->pitch = (z_squared + y_squared == 0) ? 90 : atan(accel_data->x/sqrt(z_squared + y_squared)) * RAD_TO_DEG;
-  orientation->roll = (z_squared == 0) ? 90 : atan(accel_data->y/sqrt(2*z_squared)) * RAD_TO_DEG;
+  orientation->pitch = (z_squared + y_squared == 0) ? 90 : atan2(accel_data->x,sqrt(z_squared + y_squared)) * RAD_TO_DEG;
+  orientation->roll = (z_squared == 0) ? 90 : atan2(accel_data->y,sqrt(2*z_squared)) * RAD_TO_DEG;
 }
 
 // The PID controller!
@@ -91,8 +91,8 @@ void pid_init () // call this anytime before calling calculate_pid2
 
 int motor_force_to_pwm (HW_NUM force) { // assume this conversion is linear for now
     int pwm = force * FACTOR_FORCE_TO_PWM;
-    pwm = (pwm > 200) ? 200 : pwm;
-    pwm = (pwm < -200) ? -200 : pwm;
+    pwm = (pwm > 400) ? 400 : pwm;
+    pwm = (pwm < -400) ? -400 : pwm;
     
     return pwm;
 }
@@ -137,7 +137,7 @@ void calculate_pid()
    M_FRONT_RIGHT -= 0.25*motor_force_to_pwm(Depth_Force_Needed);
    M_REAR -= 0.5*motor_force_to_pwm(Depth_Force_Needed);
    
-   /** Note that motor_force_to_pwm returns a value between -200 and 200, and the factors are such that the sum of
+   /** Note that motor_force_to_pwm returns a value between -400 and 400, and the factors are such that the sum of
     *  each factor for every motor adds up (absolutely) to 1.0. Physics son! 
     */
    
