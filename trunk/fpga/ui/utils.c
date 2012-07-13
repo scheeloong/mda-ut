@@ -168,26 +168,29 @@ void motor_set (int pwm, char motor_flags) {
         printf ("**** Invalid pwm. motor pwm unchanged.\n");
         return;
     }
-    
+
+    // convert pwm to something the FPGA understands    
+    int motor_pwm = (pwm + 100) * 1024 / 200;
+
     if (motor_flags & H_FRONT_LEFT) {
         printf ("set left front vertical motor to %d\n", pwm);
-        fprintf (infp, "smd %d %x\n", M_FRONT_LEFT, pwm);
+        fprintf (infp, "smd %d %x\n", M_FRONT_LEFT, motor_pwm);
     }
     if (motor_flags & H_FRONT_RIGHT) {
         printf ("set right front vertical motor to %d\n", pwm);
-        fprintf (infp, "smd %d %x\n", M_FRONT_RIGHT, pwm);
+        fprintf (infp, "smd %d %x\n", M_FRONT_RIGHT, motor_pwm);
     }
     if (motor_flags & H_FWD_LEFT) {
         printf ("set left forward motor to %d\n", pwm);
-        fprintf (infp, "smd %d %x\n", M_FWD_LEFT, pwm);
+        fprintf (infp, "smd %d %x\n", M_FWD_LEFT, motor_pwm);
     }
     if (motor_flags & H_FWD_RIGHT) {
         printf ("set right forward motor to %d\n", pwm);
-        fprintf (infp, "smd %d %x\n", M_FWD_RIGHT, pwm);
+        fprintf (infp, "smd %d %x\n", M_FWD_RIGHT, motor_pwm);
     }
     if (motor_flags & H_REAR) {
         printf ("set rear vertical motor to %d\n", pwm);
-        fprintf (infp, "smd %d %x\n", M_REAR, pwm);
+        fprintf (infp, "smd %d %x\n", M_REAR, motor_pwm);
     }
 
     fflush(infp);
