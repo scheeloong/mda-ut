@@ -117,6 +117,9 @@ void controller_output(int pitch_setting, int roll_setting, int heading, int spe
    // write the motor duty cycles to FPGA
    for ( i = 0; i < 5; i++ )
    {
+      // Skip left and right motors for now
+      if (i == 2 | i == 3) continue;
+
       if ( motor_duty_cycle[i] < ZERO_PWM )
          motor_duty_cycle[i] = ZERO_PWM;
       if ( motor_duty_cycle[i] > FULL_PWM )
