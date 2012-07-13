@@ -29,7 +29,7 @@ module imu(
    input sys_clk,
    inout sda,
    output scl,
-   output [31:0] raw_depth,
+   output [8*32-1:0] adc_channels,
 
    //////////// ADC //////////
    input                                  ADC_SDAT,
@@ -89,6 +89,13 @@ ADC_CTRL adc_controller_8_channels (
    .oADC_12_bit_channel_7(ADC_12_bit_channel_7)
 );
 
-assign raw_depth = {20'd0, ADC_12_bit_channel_0};
+assign adc_channels[1*32-1:0*32] = {20'd0, ADC_12_bit_channel_0};
+assign adc_channels[2*32-1:1*32] = {20'd0, ADC_12_bit_channel_1};
+assign adc_channels[3*32-1:2*32] = {20'd0, ADC_12_bit_channel_2};
+assign adc_channels[4*32-1:3*32] = {20'd0, ADC_12_bit_channel_3};
+assign adc_channels[5*32-1:4*32] = {20'd0, ADC_12_bit_channel_4};
+assign adc_channels[6*32-1:5*32] = {20'd0, ADC_12_bit_channel_5};
+assign adc_channels[7*32-1:6*32] = {20'd0, ADC_12_bit_channel_6};
+assign adc_channels[8*32-1:7*32] = {20'd0, ADC_12_bit_channel_7};
 	
 endmodule

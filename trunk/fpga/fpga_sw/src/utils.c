@@ -160,7 +160,7 @@ int get_pwm_freq()
 // returns depth
 int get_depth()
 {
-  return IORD(IMU_CONTROLLER_0_BASE, 3);
+  return IORD(IMU_CONTROLLER_0_BASE, 5);
 }
 
 // returns a struct of x,y,z acceleration values
