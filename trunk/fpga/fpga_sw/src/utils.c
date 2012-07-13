@@ -30,12 +30,16 @@ int pwm_period = -1;
 // initialize array values
 void init()
 {
+  int i;
+
   // Initialize to power off
   set_pow(0);
 
   // instantiate motor state as stopped and 0 duty cycle
   memset(motor_modes, (int)'s', NUM_MOTORS);
-  memset(motor_duty_cycles, 0, NUM_MOTORS * sizeof(int));
+  for (i = 0; i < NUM_MOTORS; i++) {
+    set_motor_duty_cycle(i, HALF_PWM);
+  }
 
   // Initialize interrupts
   init_interrupts();
