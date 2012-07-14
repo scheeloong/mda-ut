@@ -27,7 +27,7 @@ struct command_struct my_cmds[] = {
   {"gm\n", COMMAND_MOTORS, "gm - get motor data\n  Usage: gm\n\n  Print all motor settings (direction on one line and duty cycle on the next)\n"},
   {"h", COMMAND_HELP, "h - help\n  Usage: h <cmd>\n\n  Print the help message for all commands that start with cmd, leave empty to print all help messages\n"},
   {"p", COMMAND_POW, "p - power off/on\n  Usage: p (0|1)\n\n Turn off/on power to all the voltage fails\n"},
-  {"sd", COMMAND_DEPTH, "sd - set depth of submarine\n"},
+  {"sd", COMMAND_SET_DEPTH, "sd - set depth of submarine\n"},
   {"sh", COMMAND_HEADING, "sh - set heading of motor\n positive or negative, range from -157 to 157\n"},
   {"smb", COMMAND_BRAKE, "smb - set motor brake\n  Usage: smb <n>\n\n  Turn the nth motor off\n"},
   {"smd", COMMAND_DUTY_CYCLE, "smd - set motor duty cycle\n  Usage: smd <n> <0xdc>\n\n  Set the duty cycle of the nth motor to dc\nNote: the duty cycle is inputted in hex out of 0x3ff (1024 in decimal)\n"},
@@ -256,6 +256,7 @@ void process_command(char *st)
     case COMMAND_SET_DEPTH:
       i = read_hex(st);
       set_target_depth(i);
+      printf("setting target depth to %d\n", i);
       break;
   }
 }

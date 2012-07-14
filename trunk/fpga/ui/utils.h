@@ -39,5 +39,6 @@ void power_on();
 void power_off();
 
 void dyn_status();
+void dyn_set_target_depth(int);
 
 #endif

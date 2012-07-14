@@ -21,7 +21,7 @@ int main (int argc, char *argv[]) {
     char cmd[51];               // stores the command that was entered
     char* token[MAX_TOKENS];    // points to parts of the command
     unsigned i;
-    int pwm, motor_num;
+    int pwm, motor_num, target_setting;
     
     for (;;) {
         printf (LINE_START);
@@ -89,7 +89,12 @@ int main (int argc, char *argv[]) {
             }
         }
         else if (!strcmp(token[0], "dyn") || !strcmp(token[0], "d")) {
-            dyn_status();
+            if (token[1] == NULL)
+                dyn_status();
+            else if (!strcmp (token[1], "depth")) {
+                target_setting = atoi_safe(token[2]); // Note an invalid token will cause target_setting = 0, which is ok
+                dyn_set_target_depth(target_setting);
+            }
         }
         
         if (cmd_ok != 1) 

@@ -129,7 +129,8 @@ void help_motor () {
 void help_dyn () {
     cmd_ok = 1;
     printf ("\n\tdyn / d\n");
-    printf ("\t\t%-10s - %s","status","prints accelerometer and depth readings.\n\n");
+    printf ("\t\t%-10s - %s","status","prints accelerometer and depth readings.\n");
+    printf ("\t\t%-10s - %s","depth <pwm>","set target depth.\n\n");
 }
 
 void help_power () {
@@ -223,14 +224,12 @@ void power_off () {
     fflush(infp);
 }
 
-void get_accel(int *x, int *y, int *z)
-{
+void get_accel (int *x, int *y, int *z) {
     read_from_term("ga\n");
     fscanf(outfp, "raw: %d, %d, %d", x, y, z);
 }
 
-int get_depth()
-{
+int get_depth () {
     int depth;
     read_from_term("gd\n");
     fscanf(outfp, "%d", &depth);
@@ -255,4 +254,11 @@ void dyn_status () {
 
     int d = get_depth();
     printf("depth: %d\n", d);
+}
+
+void dyn_set_target_depth (int target_depth) {
+    cmd_ok = 1;
+    printf("setting target depth to %d.\n", target_depth);
+    fprintf(infp, "sd %x\n", target_depth);
+    fflush(infp);
 }
