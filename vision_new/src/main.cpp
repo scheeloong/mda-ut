@@ -20,8 +20,8 @@ int main (int argc, char** argv) {
     
     mvWindow win1("win1");
     
-    //mvGradient gradient ("settings/test_settings.mda");
-    mvHSVFilter HSVFilter ("settings/HSVFilter_settings.mda");
+    //mvGradient gradient ("settings/test_settings.csv");
+    mvHSVFilter HSVFilter ("settings/HSVFilter_settings.csv");
 
     IplImage * temp = cvLoadImage(argv[1], CV_LOAD_IMAGE_COLOR);
     IplImage * img = mvCreateImage_Color (width, height);

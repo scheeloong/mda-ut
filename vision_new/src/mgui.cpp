@@ -31,10 +31,10 @@ mvWindow:: ~mvWindow () {
 }
     
 /** mvCamera methods **/
-mvCamera:: mvCamera (char settings_file[]) {
+mvCamera:: mvCamera (const char* settings_file) {
     unsigned img_width, img_height;
-    read_common_mv_setting ("COMMON_IMG_WIDTH", img_width);
-    read_common_mv_setting ("COMMON_IMG_HEIGHT", img_height);
+    read_common_mv_setting ("IMG_WIDTH_COMMON", img_width);
+    read_common_mv_setting ("IMG_HEIGHT_COMMON", img_height);
 
     int cam_number, framerate; 
     // note the framerate gets stored in with the video file
