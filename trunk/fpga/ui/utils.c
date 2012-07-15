@@ -92,7 +92,7 @@ void spawn_term (char *proc)
     }
 }
 
-void read_from_term (char *cmd)
+void write_and_flush_term (char *cmd)
 {
     fprintf(infp, "%s", cmd);
     fflush(infp);
@@ -143,7 +143,7 @@ void help_power () {
 
 void motor_status() {
     cmd_ok = 1;
-    read_from_term ("gm\n");
+    write_and_flush_term ("gm\n");
 
     int pwm, i;
     char line[64];
@@ -217,21 +217,21 @@ void power_on () {
 void power_off () {
     cmd_ok = 1;
     printf ("turned power off.\n");
-    fprintf (infp, "p 0\n");
     fprintf (infp, "sms a\n");
     fprintf (infp, "smd a %x\n", ZERO_DC);
+    // Make sure the power is off
+    write_and_flush_term ("p 0\n");
     power = 0;
-    fflush(infp);
 }
 
 void get_accel (int *x, int *y, int *z) {
-    read_from_term("ga\n");
+    write_and_flush_term("ga\n");
     fscanf(outfp, "raw: %d, %d, %d", x, y, z);
 }
 
 int get_depth () {
     int depth;
-    read_from_term("gd\n");
+    write_and_flush_term("gd\n");
     fscanf(outfp, "%d", &depth);
     return depth;
 }
