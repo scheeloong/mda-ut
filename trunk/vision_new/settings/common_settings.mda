@@ -1,4 +1,4 @@
 # every image will be this size before processing
-IMG_WIDTH_COMMON, 320
-IMG_HEIGHT_COMMON, 240
+IMG_WIDTH_COMMON, 480 # 320
+IMG_HEIGHT_COMMON, 360 # 240
 
