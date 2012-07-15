@@ -3,7 +3,7 @@
 #include <cv.h>
 #include <stdlib.h>
 
-mvGradient:: mvGradient (char settings_file[]) {   
+mvGradient:: mvGradient (const char* settings_file) {   
     read_common_mv_setting ("IMG_WIDTH_COMMON", IMG_WIDTH);
     read_common_mv_setting ("IMG_HEIGHT_COMMON", IMG_HEIGHT);
     read_mv_setting (settings_file, "KERNEL_WIDTH", KERNEL_WIDTH);
@@ -37,10 +37,11 @@ mvGradient:: ~mvGradient () {
     if (_DISPLAY_) delete window;
 }
 
-void mvGradient:: filter (const IplImage* img, IplImage* result)
-{
+void mvGradient:: filter (const IplImage* img, IplImage* result) {
     assert (img != NULL);
     assert (img->nChannels == 1);
+		assert (result != NULL);
+		assert (result->nChannels == 1);
         
     cvMorphologyEx (
         img, result, scratch, 

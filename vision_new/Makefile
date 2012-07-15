@@ -1,11 +1,11 @@
 CC=g++
 CVFLAGS=`pkg-config --cflags --libs opencv`
 LIBDIR=lib/
-SRCDIR=source/
+SRCDIR=src/
 OBJDIR=obj/
 
 INC=$(LIBDIR)mgui.h $(LIBDIR)mv.h 
-OBJ=$(OBJDIR)mgui.o $(OBJDIR)main.o $(OBJDIR)mv.o $(OBJDIR)mfile.o
+OBJ=$(OBJDIR)mgui.o $(OBJDIR)mv.o $(OBJDIR)mvGradient.o $(OBJDIR)mvHSVFilter.o $(OBJDIR)mfile.o $(OBJDIR)main.o
 
 all: test
 

@@ -10,7 +10,8 @@
 #include "mgui.h"
 
 int main (int argc, char** argv) {
-    char TEST_SETTINGS[] = "settings/test_settings.mda";
+    assert (argc == 2);
+
     unsigned width, height;
     
     read_common_mv_setting ("IMG_WIDTH_COMMON", width);
@@ -19,18 +20,17 @@ int main (int argc, char** argv) {
     
     mvWindow win1("win1");
     
-    mvGradient gradient (TEST_SETTINGS);
-    
-    IplImage * temp = cvLoadImage(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
-    IplImage * img = cvCreateImage(cvSize(width,height), IPL_DEPTH_8U, 1);
+    //mvGradient gradient ("settings/test_settings.mda");
+    mvHSVFilter HSVFilter ("settings/HSVFilter_settings.mda");
+
+    IplImage * temp = cvLoadImage(argv[1], CV_LOAD_IMAGE_COLOR);
+    IplImage * img = mvCreateImage_Color (width, height);
     cvResize (temp, img);
     
     win1.showImage (img);
     
-    IplImage * res = cvCreateImage (cvGetSize(img), IPL_DEPTH_8U, 1); 
-    gradient.filter (img, res);
-    
-    
+    IplImage * res = mvCreateImage (img); // res is greyscale 
+    HSVFilter.filter (img, res);
     
     cvWaitKey(0);
     return 0;
