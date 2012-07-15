@@ -83,10 +83,10 @@ void pid_init () // call this anytime before calling calculate_pid2
     PID_Pitch.Alpha = PITCH_ALPHA;
     
     PID_Reset (&PID_Depth);
-    PID_Depth.Const_P = PITCH_CONST_P;
-    PID_Depth.Const_I = PITCH_CONST_I;
-    PID_Depth.Const_D = PITCH_CONST_D;
-    PID_Depth.Alpha = PITCH_ALPHA;
+    PID_Depth.Const_P = DEPTH_CONST_P;
+    PID_Depth.Const_I = DEPTH_CONST_I;
+    PID_Depth.Const_D = DEPTH_CONST_D;
+    PID_Depth.Alpha = DEPTH_ALPHA;
 
     // Initialize target orientation
     set_target_depth(get_depth());
@@ -111,6 +111,7 @@ void calculate_pid()
    previous_orientation = current_orientation;
    get_accel(&accel_data);
    get_orientation(&accel_data, &current_orientation);
+   current_orientation.depth = get_depth();
    
    /** Ritchie - At this point I assume that current_orientation.pitch and .roll should be controlled towards zero
     *            and .depth should be controlled towards target_orientation.depth
@@ -130,17 +131,17 @@ void calculate_pid()
    /** orientation stability - the signs are almost surely wrong 
     *  If the COM is off center we would have some sort of factors here instead of 0.5
     */
-   M_FRONT_LEFT = HALF_PWM + 0.5*motor_force_to_pwm(Roll_Force_Needed) - 0.25*motor_force_to_pwm(Pitch_Force_Needed);
-   M_FRONT_RIGHT = HALF_PWM - 0.5*motor_force_to_pwm(Roll_Force_Needed) - 0.25*motor_force_to_pwm(Pitch_Force_Needed);
-   M_REAR = HALF_PWM + 0.5*motor_force_to_pwm(Pitch_Force_Needed);
+   M_FRONT_LEFT = HALF_PWM + 0.5*motor_force_to_pwm(Roll_Force_Needed) + 0.25*motor_force_to_pwm(Pitch_Force_Needed);
+   M_FRONT_RIGHT = HALF_PWM - 0.5*motor_force_to_pwm(Roll_Force_Needed) + 0.25*motor_force_to_pwm(Pitch_Force_Needed);
+   M_REAR = HALF_PWM - 0.5*motor_force_to_pwm(Pitch_Force_Needed);
    M_LEFT = get_motor_duty_cycle(2); // M_LEFT and M_RIGHT are same as before
    M_RIGHT = get_motor_duty_cycle(3);
    
    /** depth control. Again if COM off center use different factors
     */
-   M_FRONT_LEFT -= 0.25*motor_force_to_pwm(Depth_Force_Needed);
-   M_FRONT_RIGHT -= 0.25*motor_force_to_pwm(Depth_Force_Needed);
-   M_REAR -= 0.5*motor_force_to_pwm(Depth_Force_Needed);
+   M_FRONT_LEFT += 0.25*motor_force_to_pwm(Depth_Force_Needed);
+   M_FRONT_RIGHT += 0.25*motor_force_to_pwm(Depth_Force_Needed);
+   M_REAR += 0.5*motor_force_to_pwm(Depth_Force_Needed);
    
    /** Note that motor_force_to_pwm returns a value between -400 and 400, and the factors are such that the sum of
     *  each factor for every motor adds up (absolutely) to 1.0. Physics son! 
