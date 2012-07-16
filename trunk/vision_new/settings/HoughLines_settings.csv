@@ -1,0 +1,5 @@
+# this file defines constants used in the Hough Lines algorithm
+ACCUMULATOR_THRESHOLD, 60 # how many points a line must pass through to be accepted by the alg
+MIN_LINE_LENGTH, 60 # minimum accepted line length in pixels
+MIN_COLINEAR_LINE_DIST 50 # colinear lines must be this far apart to be considered two lines
+

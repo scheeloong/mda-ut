@@ -4,8 +4,8 @@ LIBDIR=lib/
 SRCDIR=src/
 OBJDIR=obj/
 
-INC=$(LIBDIR)mgui.h $(LIBDIR)mv.h 
-OBJ=$(OBJDIR)mgui.o $(OBJDIR)mv.o $(OBJDIR)mvGradient.o $(OBJDIR)mvHSVFilter.o $(OBJDIR)mfile.o 
+INC=$(LIBDIR)mgui.h $(LIBDIR)mv.h $(LIBDIR)mvlines.h
+OBJ=$(OBJDIR)mgui.o $(OBJDIR)mv.o $(OBJDIR)mvGradient.o $(OBJDIR)mvHSVFilter.o $(OBJDIR)mfile.o $(OBJDIR)mvlines.o
 TEST=$(OBJDIR)main.o
 WEBCAM=$(OBJDIR)webcam.o
 

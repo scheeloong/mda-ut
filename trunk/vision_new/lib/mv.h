@@ -2,8 +2,6 @@
  *  includes objects for filters and detectors
  *  Author - Ritchie Zhao
  */
-
-
 #ifndef __MDA_VISION_MV__
 #define __MDA_VISION_MV__
 
@@ -11,9 +9,10 @@
 #include "mgui.h"
 
 /** mvCreateImage is a wrapper for cvCreateImage which drops the need for specifying
- *  depth and nChannels 
+ *  depth and nChannels. The default mvCreateImage always returns a greyscale image 
+ *  while mvCreateImage_Color always returns a color image;
  */
-inline IplImage* mvCreateImage (CvSize size) {
+inline IplImage* mvCreateImage (CvSize size) { 
     return cvCreateImage (size, IPL_DEPTH_8U, 1);
 }
 inline IplImage* mvCreateImage (unsigned width, unsigned height) {
@@ -37,16 +36,15 @@ inline IplImage* mvCreateImage_Color (IplImage *img) {
     return temp;
 }
 
-/* Gradient Filter */
+/** Gradient Filter object */
+// Must provide it with 2 images, both of COMMON size 
 class mvGradient {
     IplImage* scratch;
     IplConvKernel* kernel; 
-    mvWindow* window;
-    char window_name[WINDOW_NAME_LEN];
     
     unsigned IMG_WIDTH, IMG_HEIGHT;
     unsigned KERNEL_WIDTH, KERNEL_HEIGHT;
-    int _DISPLAY_, _QUIET_;
+    int _QUIET_;
     
     public:
     mvGradient (const char* settings_file);
@@ -54,17 +52,15 @@ class mvGradient {
     void filter (const IplImage* img, IplImage* result);
 };
 
-/* HSV color limit filter */
+/** HSV color limit filter */
+// Currently support for changing the HSV values on the fly are limited
 class mvHSVFilter {
     #define _SAME_ 999999
     IplImage* HSVImg;
-    mvWindow* window;
-    char window_name[WINDOW_NAME_LEN];
     
     unsigned IMG_WIDTH, IMG_HEIGHT;
     int HMIN,HMAX;
     unsigned SMIN,SMAX, VMIN, VMAX;
-    int _DISPLAY_;
     
     private:
     int hueInRange (unsigned char hue);

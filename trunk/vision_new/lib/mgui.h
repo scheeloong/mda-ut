@@ -8,6 +8,7 @@
 
 #include <highgui.h>
 #include <stdio.h>
+#include <mvlines.h>
 
 // Hopefully this is the only hardcoded settings file
 #define COMMON_SETTINGS_FILE "settings/common_settings.csv"
@@ -38,12 +39,13 @@ class mvWindow {
     public:
     mvWindow (const char _name[]);
     ~mvWindow (); 
-    void showImage (const CvArr* _image) { cvShowImage(name, _image); }
+    void showImage (const CvArr* image) { cvShowImage(name, image); }
     void move (unsigned x, unsigned y) { cvMoveWindow(name, x, y); }
 };
 
 /** mvCamera - class for managing webcams and video writers **/
 // This class lets you open a camera and write video to disk 
+// Usage is simple. 
 class mvCamera {
     CvCapture* capture;
     CvVideoWriter* writer;
