@@ -1,0 +1,5 @@
+# settings for camera 1
+
+CAMERA_NUMBER, 1
+CAMERA_WRITE, 1
+FRAMERATE, 30  # in fps

@@ -29,7 +29,7 @@ mvWindow:: ~mvWindow () {
     cvDestroyWindow (name); 
     windows_array[window_number] = false;
 }
-    
+
 /** mvCamera methods **/
 mvCamera:: mvCamera (const char* settings_file) {
     unsigned img_width, img_height;

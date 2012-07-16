@@ -11,7 +11,6 @@ mvHSVFilter:: mvHSVFilter (const char* settings_file) {
     read_mv_setting (settings_file, "SAT_MAX", SMAX);
     read_mv_setting (settings_file, "VAL_MIN", VMIN);
     read_mv_setting (settings_file, "VAL_MAX", VMAX);
-    read_mv_setting (settings_file, "DISPLAY", _DISPLAY_);
     
     HMIN = (HMIN>=0) ? HMIN : HMIN+180; 
     HMAX = (HMAX<180) ? HMAX : HMAX-180; 
@@ -21,16 +20,10 @@ mvHSVFilter:: mvHSVFilter (const char* settings_file) {
         IPL_DEPTH_8U,     // depth
         3                 // nChannels
     );
-    
-    if (_DISPLAY_) {
-        sprintf (window_name, "%s", "mvHSVFilter");
-        window = new mvWindow(window_name);
-    }
 }
 
 mvHSVFilter:: ~mvHSVFilter () {
     cvReleaseImage (&HSVImg);
-    if (_DISPLAY_) delete window;
 }
 
 void mvHSVFilter:: setHSV (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax) {
@@ -51,11 +44,11 @@ int mvHSVFilter:: hueInRange (unsigned char hue) { // helper function for the fi
         
 void mvHSVFilter:: filter (const IplImage* img, IplImage* result) {
     assert (img != NULL);
-		assert (img->nChannels == 3);
+    assert (img->nChannels == 3);
     assert (result != NULL);
-		assert (result->nChannels == 1);
-	
-		cvCvtColor (img, HSVImg, CV_BGR2HSV); // convert to HSV 
+    assert (result->nChannels == 1);
+
+    cvCvtColor (img, HSVImg, CV_BGR2HSV); // convert to HSV 
 
     /* go through each pixel, set the result image's pixel to 0 or 255 based on whether the
      * origin img's HSV values are withing bounds
@@ -79,7 +72,4 @@ void mvHSVFilter:: filter (const IplImage* img, IplImage* result) {
             imgPtr+=3; resPtr++;
         }
     }
-
-    if (_DISPLAY_)
-        window->showImage (result);
 }
