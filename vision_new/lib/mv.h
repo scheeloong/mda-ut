@@ -12,18 +12,30 @@
  *  depth and nChannels. The default mvCreateImage always returns a greyscale image 
  *  while mvCreateImage_Color always returns a color image;
  */
-inline IplImage* mvCreateImage (CvSize size) { 
-    return cvCreateImage (size, IPL_DEPTH_8U, 1);
-}
-inline IplImage* mvCreateImage (unsigned width, unsigned height) {
+inline IplImage* mvCreateImage () { // common size image
+    unsigned width, height;
+    read_common_mv_setting ("IMG_WIDTH_COMMON", width);
+    read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
     return cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 1);
 }
-inline IplImage* mvCreateImage (IplImage *img) {
+inline IplImage* mvCreateImage (CvSize size) { // specified size
+    return cvCreateImage (size, IPL_DEPTH_8U, 1);
+}
+inline IplImage* mvCreateImage (unsigned width, unsigned height) { // specified size
+    return cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 1);
+}
+inline IplImage* mvCreateImage (IplImage *img) { // size and origin
     IplImage* temp = cvCreateImage (cvGetSize(img), IPL_DEPTH_8U, 1);
     temp->origin = img->origin;
     return temp;
 }
 
+inline IplImage* mvCreateImage_Color () { // common size image
+    unsigned width, height;
+    read_common_mv_setting ("IMG_WIDTH_COMMON", width);
+    read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
+    return cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
+}
 inline IplImage* mvCreateImage_Color (CvSize size) {
     return cvCreateImage (size, IPL_DEPTH_8U, 3);
 }

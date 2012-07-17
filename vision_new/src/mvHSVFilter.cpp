@@ -3,8 +3,6 @@
 #include <cv.h>   
     
 mvHSVFilter:: mvHSVFilter (const char* settings_file) {
-    read_common_mv_setting ("IMG_WIDTH_COMMON", IMG_WIDTH);
-    read_common_mv_setting ("IMG_HEIGHT_COMMON", IMG_HEIGHT);
     read_mv_setting (settings_file, "HUE_MIN", HMIN);
     read_mv_setting (settings_file, "HUE_MAX", HMAX);
     read_mv_setting (settings_file, "SAT_MIN", SMIN);
@@ -15,11 +13,7 @@ mvHSVFilter:: mvHSVFilter (const char* settings_file) {
     HMIN = (HMIN>=0) ? HMIN : HMIN+180; 
     HMAX = (HMAX<180) ? HMAX : HMAX-180; 
     
-    HSVImg = cvCreateImage ( 
-        cvSize(IMG_WIDTH,IMG_HEIGHT),
-        IPL_DEPTH_8U,     // depth
-        3                 // nChannels
-    );
+    HSVImg = mvCreateImage_Color (); // common size, 3 channel 
 }
 
 mvHSVFilter:: ~mvHSVFilter () {
