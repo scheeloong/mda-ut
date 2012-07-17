@@ -49,12 +49,23 @@ class mvWindow {
 class mvCamera {
     CvCapture* capture;
     CvVideoWriter* writer;
-    int _WRITE_;    
+    IplImage* imgResized;
+    int _WRITE_;  
 
     public:
     mvCamera (const char* settings_file);
     ~mvCamera ();
-    IplImage* getFrame () { return cvQueryFrame(capture); }
+
+    /* In a monsterous betrayal of good coding, the behaviour of getFrame and 
+     * getFrameResized are a bit different.
+     * getFrame will return a pointer to the frame in the camera's buffer. 
+     * Meaning the returned img must not be freed/modified by the user.
+     * getFrameResized by necessity uses a created image, and every time it is
+     * called the image will be overwritten. This img also must not be freed/
+     * modified by the user.
+     */ 
+    IplImage* getFrame () { return cvQueryFrame(capture); } 
+    IplImage* getFrameResized (); 
     void writeFrame (IplImage* frame) { cvWriteFrame(writer,frame); }
 };
 

@@ -1,4 +1,5 @@
 #include "mgui.h"
+#include "mv.h"
 
 /** mvWindow methods **/
 static bool windows_array[NUM_SUPPORTED_WINDOWS] = {false,false,false,false};
@@ -32,9 +33,9 @@ mvWindow:: ~mvWindow () {
 
 /** mvCamera methods **/
 mvCamera:: mvCamera (const char* settings_file) {
-    unsigned img_width, img_height;
-    read_common_mv_setting ("IMG_WIDTH_COMMON", img_width);
-    read_common_mv_setting ("IMG_HEIGHT_COMMON", img_height);
+    unsigned width, height;
+    read_common_mv_setting ("IMG_WIDTH_COMMON", width);
+    read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
 
     int cam_number, framerate; 
     // note the framerate gets stored in with the video file
@@ -46,16 +47,26 @@ mvCamera:: mvCamera (const char* settings_file) {
     capture = cvCreateCameraCapture (cam_number);
     if (_WRITE_) {
         writer = cvCreateVideoWriter (
-            "webcam.avi",			// video file name
-            CV_FOURCC('P','I','M','1'),		// codec
-            30,					// framerate
-            cvSize(img_width,img_height),	// size
+            "webcam.avi",			    // video file name
+            CV_FOURCC('P','I','M','1'),	// codec
+            30,					        // framerate
+            cvSize(width,height),	    // size
             1
         );
     }
+
+    imgResized = mvCreateImage_Color (width, height);
 }
 
 mvCamera:: ~mvCamera () {
     cvReleaseCapture (&capture);
+    cvReleaseImage (&imgResized);
     if (_WRITE_) cvReleaseVideoWriter (&writer);
+}
+
+IplImage* mvCamera:: getFrameResized () {
+    IplImage* frame = cvQueryFrame (capture);
+    assert (frame != NULL); // only fails if something wrong with camera
+    cvResize (frame, imgResized, CV_INTER_LINEAR); // bilienar interpolation
+    return imgResized;
 }

@@ -69,11 +69,11 @@ void mvLines:: drawOntoImage (IplImage* img) {
 
 /** mvHoughLines methods */
 mvHoughLines:: mvHoughLines (const char* settings_file) {
-    PIX_RESOLUTION = 1;
-    ANG_RESOLUTION = CV_PI/180.0;  // radian equivalent of 1 degree
     read_mv_setting (settings_file, "ACCUMULATOR_THRESHOLD", ACCUMULATOR_THRESHOLD);
     read_mv_setting (settings_file, "MIN_LINE_LENGTH", MIN_LINE_LENGTH);
     read_mv_setting (settings_file, "MIN_COLINEAR_LINE_DIST", MIN_COLINEAR_LINE_DIST);
+    read_mv_setting (settings_file, "PIXEL_RESOLUTION", PIX_RESOLUTION);
+    read_mv_setting (settings_file, "ANGULAR_RESOLUTION", ANG_RESOLUTION);
 }
 
 void mvHoughLines:: findLines (IplImage *img, mvLines* lines) {

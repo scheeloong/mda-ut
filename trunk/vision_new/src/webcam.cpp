@@ -28,6 +28,7 @@ int main( int argc, char** argv ) {
         }
     }
 
+    /// initialization
     mvCamera* camera = NULL;
 	if (CAM_NUMBER == 0)
 		camera = new mvCamera ("settings/camera_0_settings.csv");
@@ -36,23 +37,39 @@ int main( int argc, char** argv ) {
     else if (CAM_NUMBER == 2)
 	    camera = new mvCamera ("settings/camera_2_settings.csv");
     
-    mvWindow* window = NULL;
-    if (DISPLAY)
-        window = new mvWindow ("webcam");
+    mvWindow* win1 = DISPLAY ? new mvWindow ("webcam") : NULL;
+    mvWindow* win2 = DISPLAY ? new mvWindow ("result") : NULL;
 
+    mvHSVFilter HSVFilter ("settings/HSVFilter_settings.csv"); // color filter
+    mvGradient gradient ("settings/gradient_settings.csv");
+    mvHoughLines HoughLines ("settings/HoughLines_settings.csv");
+    mvLines lines; // data struct to store lines
+
+    IplImage* filter_img = mvCreateImage ();
+    IplImage* grad_img = mvCreateImage ();
+
+    /// execution
     char c;
     IplImage* frame;
-
     for (;;) {
-        frame = camera->getFrame();
-    
-        if (DISPLAY)
-            window->showImage (frame);
+        frame = camera->getFrameResized(); // read frame from cam
+
+        HSVFilter.filter (frame, filter_img); // process it
+        gradient.filter (filter_img, grad_img);
+        HoughLines.findLines (grad_img, &lines);
+        lines.drawOntoImage (grad_img);
+
+        if (DISPLAY) {
+            win1->showImage (frame);
+            win2->showImage (grad_img);
+        }
 
         if (WRITE)
             camera->writeFrame (frame);
     
-        c = cvWaitKey(10);
+        lines.clearData();
+
+        c = cvWaitKey(2);
         if (c == 'q') 
             break;
     }
