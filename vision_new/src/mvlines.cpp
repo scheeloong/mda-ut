@@ -13,7 +13,7 @@ void mvLines:: removeHoriz () {
     
     CvPoint* temp;
     for (int i = 0; i < data->total; i++) { // for each line
-        temp = (CvPoint*)cvGetSeqElem(data, i);
+        temp = CV_GET_SEQ_ELEM(CvPoint, data, i);
         if (ABS(temp[1].y-temp[0].y) < ABS(temp[1].x-temp[0].x)) {  // horiz line
             cvSeqRemove(data,i); // if it is a horiz line, delete it 
         }
@@ -25,7 +25,7 @@ void mvLines:: removeVert () {
     
     CvPoint* temp;
     for (int i = 0; i < data->total; i++) { // for each line
-        temp = (CvPoint*)cvGetSeqElem(data, i);
+        temp = CV_GET_SEQ_ELEM(CvPoint, data, i);
         if (ABS(temp[1].y-temp[0].y) > ABS(temp[1].x-temp[0].x)) {  // vert line
             cvSeqRemove(data,i); // if it is a vert line, delete it 
         }
@@ -39,7 +39,7 @@ void mvLines:: sortXY () { // sort horiz lines by X, vert lines by Y
     int swap;
     
     for (int i = 0; i < data->total; i++) { // for each line
-        temp = (CvPoint*)cvGetSeqElem(data, i);
+        temp = CV_GET_SEQ_ELEM(CvPoint, data, i);
         
         if (ABS(temp[1].y-temp[0].y) < ABS(temp[1].x-temp[0].x)) {  // horiz line
             if (temp[0].x > temp[1].x) { // sort so lower X value comes first
@@ -62,7 +62,7 @@ void mvLines:: drawOntoImage (IplImage* img) {
     
     CvPoint* point;
     for (int i = 0; i < data->total; i++) {
-        point = (CvPoint*)cvGetSeqElem(data, i);
+        point = CV_GET_SEQ_ELEM(CvPoint, data, i);
         cvLine (img, point[0],point[1], CV_RGB(50,50,50), LINE_THICKNESS);
     }
 }
