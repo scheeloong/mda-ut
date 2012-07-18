@@ -94,13 +94,15 @@ void pid_init () // call this anytime before calling calculate_pid2
     //set_target_heading(get_heading());
 }
 
-int motor_force_to_pwm (HW_NUM force) { // assume this conversion is linear for now
-    int pwm = force * FACTOR_FORCE_TO_PWM;
+HW_NUM motor_force_to_pwm (HW_NUM force) { // assume this conversion is linear for now
+    HW_NUM pwm = force * FACTOR_FORCE_TO_PWM;
     pwm = (pwm > 400) ? 400 : pwm;
     pwm = (pwm < -400) ? -400 : pwm;
     
     return pwm;
 }
+
+static int counter = 0;
 
 void calculate_pid()
 {
@@ -121,28 +123,45 @@ void calculate_pid()
    // update the controller with the new values
    PID_Update (&PID_Roll, current_orientation.roll);
    PID_Update (&PID_Pitch, current_orientation.pitch);
-   PID_Update (&PID_Depth, current_orientation.depth - target_orientation.depth);
+   HW_NUM diff = (target_orientation.depth - current_orientation.depth);
+   PID_Update (&PID_Depth, diff);
    
    // calculate the force required
    HW_NUM Roll_Force_Needed = FACTOR_PID_ROLL_TO_FORCE * PID_Output(&PID_Roll);
    HW_NUM Pitch_Force_Needed = FACTOR_PID_PITCH_TO_FORCE * PID_Output(&PID_Pitch);
    HW_NUM Depth_Force_Needed = FACTOR_PID_DEPTH_TO_FORCE * PID_Output(&PID_Depth);
     
+   if (counter % 128 == 0) {
+	printf ("depth current = %d\n", current_orientation.pitch);
+	printf ("PID_Depth.P = %f\n", PID_Pitch.P*PID_Pitch.Const_P);
+	printf ("PID_Depth.I = %f\n", PID_Pitch.I*PID_Pitch.Const_I);
+	printf ("PID_Depth.D = %f\n", PID_Pitch.D*PID_Pitch.Const_D);
+	printf ("Depth_PID: %f\n", Pitch_Force_Needed);
+    }
+
    /** orientation stability - the signs are almost surely wrong 
     *  If the COM is off center we would have some sort of factors here instead of 0.5
     */
-   M_FRONT_LEFT = HALF_PWM + 0.5*motor_force_to_pwm(Roll_Force_Needed) + 0.25*motor_force_to_pwm(Pitch_Force_Needed);
-   M_FRONT_RIGHT = HALF_PWM - 0.5*motor_force_to_pwm(Roll_Force_Needed) + 0.25*motor_force_to_pwm(Pitch_Force_Needed);
-   M_REAR = HALF_PWM - 0.5*motor_force_to_pwm(Pitch_Force_Needed);
-   M_LEFT = get_motor_duty_cycle(2); // M_LEFT and M_RIGHT are same as before
-   M_RIGHT = get_motor_duty_cycle(3);
+   HW_NUM m_front_left = HALF_PWM + 0.5*motor_force_to_pwm(Roll_Force_Needed) + 0.25*motor_force_to_pwm(Pitch_Force_Needed);
+   HW_NUM m_front_right = HALF_PWM - 0.5*motor_force_to_pwm(Roll_Force_Needed) + 0.25*motor_force_to_pwm(Pitch_Force_Needed);
+   HW_NUM m_rear = HALF_PWM - 0.5*motor_force_to_pwm(Pitch_Force_Needed);
+   HW_NUM m_left = get_motor_duty_cycle(2); // M_LEFT and M_RIGHT are same as before
+   HW_NUM m_right = get_motor_duty_cycle(3);
    
    /** depth control. Again if COM off center use different factors
     */
-   M_FRONT_LEFT += 0.25*motor_force_to_pwm(Depth_Force_Needed);
-   M_FRONT_RIGHT += 0.25*motor_force_to_pwm(Depth_Force_Needed);
-   M_REAR += 0.5*motor_force_to_pwm(Depth_Force_Needed);
-   
+   m_front_left += 0.25*motor_force_to_pwm(Depth_Force_Needed);
+   m_front_right += 0.25*motor_force_to_pwm(Depth_Force_Needed);
+   m_rear += 0.5*motor_force_to_pwm(Depth_Force_Needed);
+  
+   M_FRONT_LEFT = (int)m_front_left;
+   M_FRONT_RIGHT = (int)m_front_right;
+   M_LEFT = (int)m_left;
+   M_RIGHT = (int)m_right;
+   M_REAR = (int)m_rear;
+
+   if (counter % 128 == 0)
+	printf ("M_REAR: %d\n", M_REAR-HALF_PWM);
    /** Note that motor_force_to_pwm returns a value between -400 and 400, and the factors are such that the sum of
     *  each factor for every motor adds up (absolutely) to 1.0. Physics son! 
     */
@@ -157,5 +176,7 @@ void calculate_pid()
          motor_duty_cycle[i] = FULL_PWM;
       set_motor_duty_cycle(i, motor_duty_cycle[i]);  
    }  
+
+   counter++;
 }
 

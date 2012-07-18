@@ -16,8 +16,8 @@ typedef struct {
     HW_NUM old_values[PID_NUM_OLD_VALUES];
 } Controller_PID;
 
-void PID_Reset (Controller_PID* PID);
+inline void PID_Reset (Controller_PID* PID);
 void PID_Update (Controller_PID* PID, HW_NUM value);
-HW_NUM PID_Output (Controller_PID* PID);
+inline HW_NUM PID_Output (Controller_PID* PID);
 
 #endif
