@@ -55,6 +55,7 @@ terminal:
 	nios2-terminal -q
 
 ui_term:
+	date >> log.txt
 	./ui/ui `which nios2-terminal`
 
 .PHONY: dl_hw dl_sw dl_both gdb_server gdb_client terminal ui_term

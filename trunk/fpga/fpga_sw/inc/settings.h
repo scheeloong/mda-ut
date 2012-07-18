@@ -33,18 +33,18 @@
  * Alpha is the decay rate for Integral term
  */
 
-#define ROLL_CONST_P 1
-#define ROLL_CONST_I 1
-#define ROLL_CONST_D 1
-#define ROLL_ALPHA 0
-#define PITCH_CONST_P 1
-#define PITCH_CONST_I 1
-#define PITCH_CONST_D 1
-#define PITCH_ALPHA 0
-#define DEPTH_CONST_P 1
-#define DEPTH_CONST_I 1
-#define DEPTH_CONST_D 1
-#define DEPTH_ALPHA 0
+#define ROLL_CONST_P 0.0
+#define ROLL_CONST_I 0.0
+#define ROLL_CONST_D 0.0
+#define ROLL_ALPHA 0.0
+#define PITCH_CONST_P 72.0
+#define PITCH_CONST_I 0.0
+#define PITCH_CONST_D 0.0
+#define PITCH_ALPHA 0.0
+#define DEPTH_CONST_P 16.0
+#define DEPTH_CONST_I 0.005
+#define DEPTH_CONST_D 0.0
+#define DEPTH_ALPHA 0.0
 
 /** The following constants define the scaling between PID controller outputs
  *  and the motor force. Say the PID reads a string of angles/depth values and spits
@@ -56,4 +56,4 @@
 #define FACTOR_PID_DEPTH_TO_FORCE 1
 
 /** This converts the relative motor force to PWM */
-#define FACTOR_FORCE_TO_PWM 1
+#define FACTOR_FORCE_TO_PWM 0.4
