@@ -4,6 +4,7 @@
 
 #include "mgui.h"
 #include "mv.h"
+#include "mvLines.h"
 
 int main( int argc, char** argv ) {
     unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 1;
