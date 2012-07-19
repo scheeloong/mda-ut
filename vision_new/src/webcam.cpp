@@ -50,9 +50,14 @@ int main( int argc, char** argv ) {
 
     /// execution
     char c;
+    int n = 0;
     IplImage* frame;
     for (;;) {
         frame = camera->getFrameResized(); // read frame from cam
+	if (n > 3) {
+	    n = 0;
+	    //continue;
+	}
 
         HSVFilter.filter (frame, filter_img); // process it
         gradient.filter (filter_img, grad_img);
