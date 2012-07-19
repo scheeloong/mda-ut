@@ -38,7 +38,7 @@ class mvLines {
     void sortXY (); // each Horiz line has smaller X value first, each Vert smaller Y first
     void drawOntoImage (IplImage* img);
     
-    CvPoint* operator [] (unsigned index) { return CV_GET_SEQ_ELEM (CvPoint,data,index); }
+    CvPoint* operator [] (unsigned index) { return (CvPoint*)cvGetSeqElem(data,index); }
     
     // note clearData does NOT deallocate memory, it only allows recycling of used memory. 
     void clearData () { cvClearSeq(data); data=NULL; cvClearMemStorage(storage); } 
