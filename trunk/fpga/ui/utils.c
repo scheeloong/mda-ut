@@ -96,19 +96,21 @@ void write_and_flush_term (char *cmd)
 {
     fprintf(infp, "%s", cmd);
     fflush(infp);
-FILE *log = fopen("log.txt", "a");
+    // Also write the output to a log file
+    FILE *log = fopen("log.txt", "a");
+
     // Flush outfp until you see the command being printed out
     const unsigned int BUF_SIZE = 128;
     char buf[BUF_SIZE];
     while (1) {
         fgets(buf, BUF_SIZE, outfp);
         fprintf(log, "%s", buf);
-        fprintf(stderr, "%s", buf);
         if (strcmp(buf, cmd) == 0) {
             break;
         }
     }
-fclose(log);
+
+    fclose(log);
 }
 
 void help () {

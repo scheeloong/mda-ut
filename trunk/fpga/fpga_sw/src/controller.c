@@ -102,8 +102,6 @@ HW_NUM motor_force_to_pwm (HW_NUM force) { // assume this conversion is linear f
     return pwm;
 }
 
-static int counter = 0;
-
 void calculate_pid()
 {
    // Get current orientation data
@@ -130,13 +128,16 @@ void calculate_pid()
    HW_NUM Roll_Force_Needed = FACTOR_PID_ROLL_TO_FORCE * PID_Output(&PID_Roll);
    HW_NUM Pitch_Force_Needed = FACTOR_PID_PITCH_TO_FORCE * PID_Output(&PID_Pitch);
    HW_NUM Depth_Force_Needed = FACTOR_PID_DEPTH_TO_FORCE * PID_Output(&PID_Depth);
-    
+
+   // Print some debug messages every so often...
+   static int counter = 0;
+   counter++;
    if (counter % 128 == 0) {
-	printf ("depth current = %d\n", current_orientation.pitch);
+	/*printf ("depth current = %d\n", current_orientation.pitch);
 	printf ("PID_Depth.P = %f\n", PID_Pitch.P*PID_Pitch.Const_P);
 	printf ("PID_Depth.I = %f\n", PID_Pitch.I*PID_Pitch.Const_I);
 	printf ("PID_Depth.D = %f\n", PID_Pitch.D*PID_Pitch.Const_D);
-	printf ("Depth_PID: %f\n", Pitch_Force_Needed);
+	printf ("Depth_PID: %f\n", Pitch_Force_Needed);*/
     }
 
    /** orientation stability - the signs are almost surely wrong 
@@ -160,8 +161,6 @@ void calculate_pid()
    M_RIGHT = (int)m_right;
    M_REAR = (int)m_rear;
 
-   if (counter % 128 == 0)
-	printf ("M_REAR: %d\n", M_REAR-HALF_PWM);
    /** Note that motor_force_to_pwm returns a value between -400 and 400, and the factors are such that the sum of
     *  each factor for every motor adds up (absolutely) to 1.0. Physics son! 
     */
@@ -176,7 +175,5 @@ void calculate_pid()
          motor_duty_cycle[i] = FULL_PWM;
       set_motor_duty_cycle(i, motor_duty_cycle[i]);  
    }  
-
-   counter++;
 }
 
