@@ -1,7 +1,7 @@
 /** mvlines.cpp - contains implementation of mLines class and
  *  mvHoughLines line finding algorithm
  */
-#include "mvlines.h"
+#include "mvLines.h"
 #include "mgui.h"
 #include <cv.h>
 

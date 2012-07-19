@@ -8,7 +8,7 @@
 
 #include <highgui.h>
 #include <stdio.h>
-#include <mvlines.h>
+//#include <mvLines.h>
 
 // Hopefully this is the only hardcoded settings file
 #define COMMON_SETTINGS_FILE "settings/common_settings.csv"
