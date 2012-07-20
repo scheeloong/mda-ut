@@ -105,7 +105,7 @@ void init_interrupts()
 
 #ifdef ENABLE_CONTROLLER
 
-  const int timer_period = CLOCK_SPEED / TIMER_RATE_IN_HZ;
+  const int timer_period = CLOCK_SPEED / TIMER_RATE_IN_HZ / NUM_DEPTH_VALUES;
   const short period_lo = timer_period;
   const short period_hi = timer_period >> 16;
 
