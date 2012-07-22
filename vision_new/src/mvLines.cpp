@@ -1,4 +1,4 @@
-/** mvlines.cpp - contains implementation of mLines class and
+/** mvLines.cpp - contains implementation of mLines class and
  *  mvHoughLines line finding algorithm
  */
 #include "mvLines.h"
