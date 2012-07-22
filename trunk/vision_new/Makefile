@@ -4,12 +4,13 @@ LIBDIR=lib/
 SRCDIR=src/
 OBJDIR=obj/
 
-INC=$(LIBDIR)mgui.h $(LIBDIR)mv.h $(LIBDIR)mvLines.h
-OBJ=$(OBJDIR)mgui.o $(OBJDIR)mv.o $(OBJDIR)mvGradient.o $(OBJDIR)mvHSVFilter.o $(OBJDIR)mfile.o $(OBJDIR)mvLines.o
+INC=$(LIBDIR)mgui.h $(LIBDIR)mv.h $(LIBDIR)mvLines.h $(LIBDIR)mvCircles.h $(LIBDIR)TriangularMatrix.h
+OBJ=$(OBJDIR)mgui.o $(OBJDIR)mv.o $(OBJDIR)mvGradient.o $(OBJDIR)mvHSVFilter.o $(OBJDIR)mfile.o $(OBJDIR)mvLines.o $(OBJDIR)mvClustering.o $(OBJDIR)mvCircles.o
 TEST=$(OBJDIR)main.o
 WEBCAM=$(OBJDIR)webcam.o
+MATTEST=$(OBJDIR)MatrixTest.o
 
-all: test webcam
+all: test webcam MatTest
 
 $(OBJDIR)%.o: $(SRCDIR)%.cpp $(INC)
 	$(CC) -Wall -I$(LIBDIR) -c $< -o $@ $(CVFLAGS)
@@ -20,9 +21,12 @@ $(OBJDIR)%.o: $(SRCDIR)%.cpp $(INC)
 # test is the main executable and depends on each object
 test: $(OBJ) $(TEST)
 	$(CC) -Wall $(OBJ) $(TEST) -o $@ $(CVFLAGS)
-# webcame is another executable
+# webcam is another executable
 webcam: $(OBJ) $(WEBCAM)
 	$(CC) -Wall $(OBJ) $(WEBCAM) -o $@ $(CVFLAGS)
+# Triangular Matrix Test 
+MatTest: $(OBJ) $(MATTEST)
+	$(CC) -Wall $(OBJ) $(MATTEST) -o $@ $(CVFLAGS)
 
 clean:
 	rm -f test webcam ./obj/* ./*~

@@ -10,6 +10,7 @@
 #include "mv.h"
 #include "mgui.h"
 #include "mvLines.h"
+#include "mvCircles.h"
 
 int main (int argc, char** argv) {
     // We want to do HSV color filter, take the gradient of result,
@@ -21,6 +22,8 @@ int main (int argc, char** argv) {
     mvGradient gradient ("settings/test_settings.csv");
     mvHoughLines HoughLines ("settings/HoughLines_settings.csv");
     mvLines lines; // data struct to store lines
+    mvHoughCircles HoughCircles ("settings/HoughCircles_settings.csv");
+    mvCircles circles;
 
     // windows to display stuff
     mvWindow win1("img");
@@ -42,13 +45,24 @@ int main (int argc, char** argv) {
     HSVFilter.filter (img, res);
     win2.showImage (res);
     
-    HoughLines.findLines (res, &lines);
-    lines.drawOntoImage (res);
+    gradient.filter (res,res);
+    
+    //HoughLines.findLines (res, &lines);
+    //lines.drawOntoImage (res);
     /*for (unsigned i = 0; i < lines.nlines(); i++) { 
         cvLine (res, lines[i][0], lines[i][1], CV_RGB(50,50,50), 1);
     }*/
-    win3.showImage(res);
     
+    HoughCircles.findCircles (res, &circles);
+    //circles.drawOntoImage (res);
+    for (unsigned i = 0; i < circles.ncircles(); i++) { 
+        CvPoint center = cvPoint(circles[i].x, circles[i].y); // x and y coordinate of circle 
+        cvCircle (res, center, circles[i].rad, CV_RGB(50,50,50), 2);
+    }
+    
+    
+    win3.showImage(res);
+        
     cvWaitKey(0);
     return 0;
 }

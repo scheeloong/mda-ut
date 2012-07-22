@@ -7,6 +7,8 @@
 
 #include <cv.h>
 
+#define LINE_THICKNESS 1
+    
 /** mvLines - object representing a collection of lines using the two endpoints */
 /* When created, the class automatically allocates 6400 bytes of memory that it uses to 
  * store data. This can be recycled by calling clearData(); This memory cannot be reclaimed
@@ -21,7 +23,6 @@
  * Use drawOntoImage (img) to draw the lines onto an image.
  */
 class mvLines {
-    #define LINE_THICKNESS 1
     CvSeq* data;
     CvMemStorage* storage; // this stores actual line data in opencv
     
@@ -56,6 +57,21 @@ class mvHoughLines {
     mvHoughLines (const char* settings_file);
     /* use default destructor */
     void findLines (IplImage *img, mvLines* lines);
+};
+
+
+
+
+/** The following classes deal with K-Means clustering */
+
+class mvKMeans {
+    CvPoint** cluster;  // array of CvPoint, representing the cluster averages
+                        // the first index is the cluster number, and can be arbitrarily big
+                        // second index is which endpoint is the line, which is 0 or 1 only
+                        
+    
+    
+    public:
 };
 
 #endif
