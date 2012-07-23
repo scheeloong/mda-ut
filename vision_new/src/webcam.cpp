@@ -5,6 +5,7 @@
 #include "mgui.h"
 #include "mv.h"
 #include "mvLines.h"
+#include "mvCircles.h"
 
 int main( int argc, char** argv ) {
     unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 1;
@@ -30,6 +31,7 @@ int main( int argc, char** argv ) {
     }
 
     /// initialization
+    // init camera
     mvCamera* camera = NULL;
 	if (CAM_NUMBER == 0)
 		camera = new mvCamera ("settings/camera_0_settings.csv");
@@ -38,32 +40,45 @@ int main( int argc, char** argv ) {
     else if (CAM_NUMBER == 2)
 	    camera = new mvCamera ("settings/camera_2_settings.csv");
     
+    // init windows
     mvWindow* win1 = DISPLAY ? new mvWindow ("webcam") : NULL;
     mvWindow* win2 = DISPLAY ? new mvWindow ("result") : NULL;
 
+    // declare filters we need
     mvHSVFilter HSVFilter ("settings/HSVFilter_settings.csv"); // color filter
     mvGradient gradient ("settings/gradient_settings.csv");
     mvHoughLines HoughLines ("settings/HoughLines_settings.csv");
     mvLines lines; // data struct to store lines
+    mvHoughCircles HoughCircles ("settings/HoughCircles_settings.csv");
+    mvCircles circles; // data struct to store circles
+    mvKMeans kmeans;
 
+    // declare images we need
     IplImage* filter_img = mvCreateImage ();
     IplImage* grad_img = mvCreateImage ();
-
+    
     /// execution
     char c;
     int n = 0;
     IplImage* frame;
     for (;;) {
         frame = camera->getFrameResized(); // read frame from cam
-	if (n > 3) {
-	    n = 0;
-	    //continue;
-	}
+	    if (n > 3) {
+	        n = 0;
+	        //continue;
+	    }
 
         HSVFilter.filter (frame, filter_img); // process it
-        gradient.filter (filter_img, grad_img);
+        cvErode (filter_img, filter_img);
+        //gradient.filter (filter_img, grad_img);
+        grad_img = filter_img;
         HoughLines.findLines (grad_img, &lines);
-        lines.drawOntoImage (grad_img);
+        //lines.drawOntoImage (grad_img);
+        kmeans.init (3, &lines);
+        kmeans.KMeans_CreateStartingClusters ();
+        kmeans.drawClustersOntoImage (grad_img);
+        //HoughCircles.findCircles (grad_img, &circles);
+        //circles.drawOntoImage (grad_img);
 
         if (DISPLAY) {
             win1->showImage (frame);
@@ -73,7 +88,8 @@ int main( int argc, char** argv ) {
         if (WRITE)
             camera->writeFrame (frame);
     
-        lines.clearData();
+        lines.clearData(); // erase line data and reuse allocated mem
+        circles.clearData();
 
         c = cvWaitKey(2);
         if (c == 'q') 

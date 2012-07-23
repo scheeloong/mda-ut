@@ -58,6 +58,7 @@ void mvLines:: sortXY () { // sort horiz lines by X, vert lines by Y
 
 void mvLines:: drawOntoImage (IplImage* img) {
     assert (img != NULL);
+    assert (data != NULL);
     assert (img->nChannels == 1);
     
     CvPoint* point;

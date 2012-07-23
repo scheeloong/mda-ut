@@ -43,9 +43,11 @@ class mvCircles {
     
     // note clearData does NOT deallocate memory, it only allows recycling of used memory. 
     void clearData () { 
-        cvClearSeq(data); 
-        data=NULL; 
-        cvClearMemStorage(storage); 
+        if (data) {
+            cvClearSeq(data); 
+            data=NULL; 
+            cvClearMemStorage(storage);
+        }
     } 
 };
 
