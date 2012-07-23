@@ -27,6 +27,7 @@ class mvLines {
     CvMemStorage* storage; // this stores actual line data in opencv
     
     friend class mvHoughLines;
+    friend class mvKmeans;
     
     public:
     // the constructor allocates 6400 bytes of storage space, which is like 400 lines...
@@ -42,7 +43,13 @@ class mvLines {
     CvPoint* operator [] (unsigned index) { return (CvPoint*)cvGetSeqElem(data,index); }
     
     // note clearData does NOT deallocate memory, it only allows recycling of used memory. 
-    void clearData () { cvClearSeq(data); data=NULL; cvClearMemStorage(storage); } 
+    void clearData () { 
+        if (data) {
+            cvClearSeq(data); 
+            data=NULL; 
+            cvClearMemStorage(storage);
+        }
+    } 
 };
 
 /** mvHoughLines - Hough Line finding filter */
@@ -61,17 +68,34 @@ class mvHoughLines {
 
 
 
-
-/** The following classes deal with K-Means clustering */
+/** The following code deal with K-Means clustering */
+#include "Matrix.h"
+#define MAX_CLUSTERS 6
 
 class mvKMeans {
-    CvPoint** cluster;  // array of CvPoint, representing the cluster averages
-                        // the first index is the cluster number, and can be arbitrarily big
-                        // second index is which endpoint is the line, which is 0 or 1 only
-                        
+    unsigned N_Clusters;
+    unsigned N_Lines;
+    
+    // The below is an array of CvPoint* (maximum 10 elements). Each CvPoint* 
+    // represents a line using starting and ending point.
+    CvPoint* Clusters[MAX_CLUSTERS];  
+    mvLines* Lines;
+    
+    Matrix<int>* Cluster_Line_Diff_Matrix;
+    
+    private:    
+    // helper functions
+    unsigned Get_Line_Cluster_Diff (unsigned cluster_index, unsigned line_index);
+    
+    // steps in the algorithm
+    void KMeans_Init (unsigned _n_clusters, mvLines* _lines);
     
     
     public:
+    mvKMeans ();
+    void init (unsigned _n_clusters, mvLines* _lines) { KMeans_Init (_n_clusters, _lines); }
+    void KMeans_CreateStartingClusters ();
+    void drawClustersOntoImage (IplImage* img);
 };
 
 #endif

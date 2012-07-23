@@ -6,6 +6,7 @@
 
 void mvCircles:: drawOntoImage (IplImage* img) {
     assert (img != NULL);
+    assert (data != NULL);
     assert (img->nChannels == 1);
     
     float* circleData;
