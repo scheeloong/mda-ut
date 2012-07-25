@@ -5,8 +5,8 @@
 // or the lookup, if necessary.
 
 // declare this array so it can be used on initializing the look-up
-int pwm_of_force[SIZE];
-
+int pwm_of_force[SIZE]; // array of pwms
+double lookup_force[SIZE]; // array of forces
 int pwm_greater_than(double force) {
   return (int)((force + 0.698636363)/0.045);
 }
@@ -16,23 +16,31 @@ int pwm_lesser_than(double force) {
 }
 
 double force_cubic(int pwm) {
-  return (-5e-7)*pow(pwm, 3) + 0.0005*pow(pwm,2) + 0.0002*pwm + 0.1457;
+  double har = (1.888e-5)*pow(pwm,3) - (6.593e-6)*pow(pwm,2) + (4.320e-3)*pwm;
+  //printf("%f\n",har); // we don'tneed this
+  return har;
 }
 
+/*the inverse_cubic() will not be used, as it causes complications */
+
 int inverse_cubic(double x){
-  // this function is the result of a cubic function's inverse, obtained from matlab
+  //the inverse of the cubic is very ugly in appearance, so it will be broken down into bits.
+  //source: http://www.wolframalpha.com/input/?i=find+inverse+of+y+%3D+%281.888e-5%29*x^3+-+%286.593e-6%29*x^2+%2B+%284.320e-3%29*x
+  double a = 1.38739*pow(10,9)*sqrt(1.20303*pow(10,19)*pow(x,2)-1.20976*pow(10,16)*x+7.60966*pow(10,15))-4.81213*pow(10,18)*x+2.41952*pow(10,15);
+  double b = pow(a,0.33333);
+  double term_one = 0.116402 - 0.0000176554*b;
+  double term_two = (4.31923*pow(10,6))/b;
   
-  return (int)(pow(((147573952589676412928*x)/5572392449786181 + pow((pow(((147573952589676412928*x)/5572392449786181 - 632102790618389393758244638159555047229893034175957/47470909521199675931189252779875122596859085800000),2) + 3122879011617526236642070885072818855886306351302285917744713791340273274419820904225939762730255706590632243/7042147658656018892397039849248736387998837701713675676482675488992600832524073443786755125000000000000),(1/2)) - 632102790618389393758244638159555047229893034175957/47470909521199675931189252779875122596859085800000),(1/3)) - 1461678031171954654252356464715037707/(19167628157058046751550999114050000*pow(((147573952589676412928*x)/5572392449786181 + pow((pow(((147573952589676412928*x)/5572392449786181 - 632102790618389393758244638159555047229893034175957/47470909521199675931189252779875122596859085800000),2) + 3122879011617526236642070885072818855886306351302285917744713791340273274419820904225939762730255706590632243/7042147658656018892397039849248736387998837701713675676482675488992600832524073443786755125000000000000),(1/2)) - 632102790618389393758244638159555047229893034175957/47470909521199675931189252779875122596859085800000),(1/3)) + 288282983532959/2476618866571636));
-  
+  double inverse_result = term_one + term_two;
+  return (int)(inverse_result);
 }
 
 
 void init_lookup() {
   int i;
   for (i = 0; i < SIZE; i++) {
-    double force = (i - 100) / 10000;
+    double force = (double)((i - 100.0) / 10000.0);
     pwm_of_force[i] = inverse_cubic(force);
-    //print lookup
     printf("%d\n", pwm_of_force[i]);
   }
 }
@@ -69,7 +77,7 @@ void pwm_force() {
     
     char str[256];
     double force;
-  
+
     int front_pwm, back_pwm1, back_pwm2;
     printf("Enter a force for a pwm to generate\n");
   
@@ -92,5 +100,6 @@ void pwm_force() {
     printf("FRONT PWM: %d\n", front_pwm);
     printf("BACK PWM 1: %d\n",back_pwm1);
     printf("BACK PWM 2: %d\n",back_pwm2);
+    
   }
 }

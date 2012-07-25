@@ -5,7 +5,7 @@
 #include <math.h>
 
 #define NUM_ELEMENTS 80
-
+#define LINEAR_PWM_RANGE 30
 
 // this aims to implement motor linearization for the motors of the sub.
 // what this does is given a force to be applied, it would calculate the 
