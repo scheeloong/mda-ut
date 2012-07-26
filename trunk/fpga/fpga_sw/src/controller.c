@@ -14,6 +14,7 @@
 #include "sys/alt_stdio.h"
 
 #include "pid.h"
+#include "pwm_force.h"
 #include "controller.h"
 #include "utils.h"
 #include "settings.h"
@@ -115,12 +116,8 @@ void pid_init () // call this anytime before calling calculate_pid2
     //set_target_heading(get_heading());
 }
 
-HW_NUM motor_force_to_pwm (HW_NUM force) { // assume this conversion is linear for now
-    HW_NUM pwm = force * FACTOR_FORCE_TO_PWM;
-    pwm = (pwm > 400) ? 400 : pwm;
-    pwm = (pwm < -400) ? -400 : pwm;
-    
-    return pwm;
+HW_NUM motor_force_to_pwm (HW_NUM force) {
+    return pwm_of_force(force);
 }
 
 void calculate_pid()
