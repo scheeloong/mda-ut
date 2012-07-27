@@ -114,10 +114,13 @@ void pid_init () // call this anytime before calling calculate_pid2
     set_target_depth(get_depth());
     set_target_speed(0);
     //set_target_heading(get_heading());
+
+    // Initialize motor linearization lookup table
+    init_lookup();
 }
 
 HW_NUM motor_force_to_pwm (HW_NUM force) {
-    return pwm_of_force(force);
+    return pwm_of_force(force*FACTOR_CONTROLLER_FORCE_TO_LBS);
 }
 
 void calculate_pid()
