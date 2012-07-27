@@ -16,7 +16,6 @@
 
 #include "interrupts.h"
 #include "settings.h"
-#include "pwm_force.h"
 #include "utils.h"
 
 // remember what mode each motor is in ('s' for stopped, 'f' for forward, 'r' for reverse)
@@ -47,9 +46,6 @@ void init()
   
   // Ritchie - Initialize PID controllers
   pid_init();
-
-  // Initialize motor linearization lookup table
-  init_lookup();
 }
 
 // returns a string until the maximum length (int len) or a newline character is reached from stdin

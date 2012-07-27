@@ -56,5 +56,5 @@
 #define FACTOR_PID_PITCH_TO_FORCE 1
 #define FACTOR_PID_DEPTH_TO_FORCE 1
 
-/** This converts the relative motor force to PWM */
-#define FACTOR_FORCE_TO_PWM 0.4
+/** This converts the controller force into lbs, so that it can be mapped to a PWM */
+#define FACTOR_CONTROLLER_FORCE_TO_LBS (1/200)
