@@ -1,7 +1,6 @@
 #include "pid.h"
 #include "settings.h"
 
-inline
 void PID_Reset (Controller_PID* PID) { 
 // initializes the PID controller
     PID->I = 0;
@@ -35,7 +34,6 @@ void PID_Update (Controller_PID* PID, HW_NUM value) {
     }
 }
 
-inline 
 HW_NUM PID_Output (Controller_PID* PID) {
 // calculate the output of the controller
     return PID->Const_P*PID->P + PID->Const_I*PID->I + PID->Const_D*PID->D;    

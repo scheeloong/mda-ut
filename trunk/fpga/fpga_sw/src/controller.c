@@ -119,7 +119,6 @@ void pid_init () // call this anytime before calling calculate_pid2
     init_lookup();
 }
 
-inline
 HW_NUM motor_force_to_pwm (HW_NUM force) {
     return pwm_of_force(force*FACTOR_CONTROLLER_FORCE_TO_LBS);
 }
@@ -132,10 +131,30 @@ void stabilizing_motors_force_to_pwm (
         HW_NUM *m_front_left, HW_NUM *m_front_right, HW_NUM *m_rear
         )
 {
-    // calculate the pwms
-    *m_front_left = motor_force_to_pwm(f_front_left);
-    *m_front_right = motor_force_to_pwm(f_front_right);
-    *m_rear = motor_force_to_pwm(f_rear);
+    #define PWM_LIMIT_FACTOR 0.8
+    #define FORCE_REDUCTION_FACTOR 0.85
+
+    for(;;) {
+        // calculate the pwms
+        *m_front_left = motor_force_to_pwm(f_front_left);
+        *m_front_right = motor_force_to_pwm(f_front_right);
+        *m_rear = motor_force_to_pwm(f_rear);
+
+        HW_NUM pwm_limit = PWM_LIMIT_FACTOR * FULL_PWM;
+
+        // if any pwm is out of bound
+        if (ABS(*m_front_left) > pwm_limit ||
+            ABS(*m_front_right) > pwm_limit ||
+            ABS(*m_rear) > pwm_limit)
+        {
+            // reduce force
+            f_front_left *= FORCE_REDUCTION_FACTOR;
+            f_front_right *= FORCE_REDUCTION_FACTOR;
+            f_rear *= FORCE_REDUCTION_FACTOR;
+        }
+        else
+            break;
+    }
 }
 
 void calculate_pid()
