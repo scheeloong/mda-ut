@@ -23,23 +23,25 @@ int inverse_cubic(double x){
   return (int)(5.12 * inverse_result);
 }
 
+inline
+int max(int a, int b)
+{
+  return (a > b) ? a : b;
+}
 
+inline
+int min(int a, int b)
+{
+  return (a < b) ? a : b;
+}
+
+inline
 void init_lookup() {
   int i;
   for (i = 0; i < SIZE; i++) {
     double force = (i - SIZE/2) / (double) (SIZE/2);
     pwm_from_force[i] = inverse_cubic(force);
   }
-}
-
-int max(int a, int b)
-{
-  return (a > b) ? a : b;
-}
-
-int min(int a, int b)
-{
-  return (a < b) ? a : b;
 }
 
 int pwm_of_force (double force)

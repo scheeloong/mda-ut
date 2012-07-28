@@ -3,6 +3,8 @@
 #ifndef _MDA_CONTROLLER_H
 #define _MDA_CONTROLLER_H
 
+#define ABS(x) (((x) > 0) ? (x) : (-(x)))
+
 /* acceleration data in x,y,z */
 struct t_accel_data {
   alt_16 x, y, z;
