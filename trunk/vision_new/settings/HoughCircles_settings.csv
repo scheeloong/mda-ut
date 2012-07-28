@@ -1,6 +1,14 @@
 # this file defines constants used in the Hough Lines algorithm
-PIXEL_RESOLUTION 2 # step size in pixels, > 1 means the line finder skips pixels
-ACCUMULATOR_THRESHOLD, 120 # how many points a line must pass through to be accepted by the alg
+
+# step size in pixels, > 1 means the line finder skips pixels
+PIXEL_RESOLUTION 2 
+# how easy it is for a transition from high to low to be detected as a contour
+# higher means harder detection. Keep it between 30 and 60
 CANNY_HIGH_THRESHOLD, 50
-MIN_CENTER_DIST, 150
+
+# number of points a circle must pass through to be accepted
+_ACCUMULATOR_THRESHOLD_, 0.4        # scales image width
+# minimum distance between centers of 2 circles for them to be
+# seperate circles
+_MIN_CENTER_DIST_, 0.5              # scales image width
 

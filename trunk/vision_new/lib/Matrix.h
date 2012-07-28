@@ -6,12 +6,12 @@
  */
 template <class Type>
 class Matrix {
-    Type* data;
+    Type* _data;
     unsigned _rows, _cols;
     
     public:
     Matrix (unsigned rows, unsigned cols);
-    ~Matrix () { delete [] data; }
+    ~Matrix () { delete [] _data; }
     
     Type& operator() (unsigned r, unsigned c); // accessor operator
     Type operator() (unsigned r, unsigned c) const;
@@ -27,7 +27,7 @@ inline
 Matrix<Type>:: Matrix (unsigned rows, unsigned cols) : _rows(rows), _cols(cols) { 
     unsigned size = _rows*_cols;
     assert (size != 0);
-    data = new Type[size]; 
+    _data = new Type[size]; 
 }
 
 template <class Type>
@@ -35,7 +35,7 @@ inline
 Type& Matrix<Type>:: operator() (unsigned r, unsigned c) {
     assert (r >= 0 && r < _rows);
     assert (c >= 0 && c < _cols);
-    return data[r*_cols + c];
+    return _data[r*_cols + c];
 }
 
 template <class Type>
@@ -43,7 +43,7 @@ inline
 Type Matrix<Type>:: operator() (unsigned r, unsigned c) const {
     assert (r >= 0 && r < _rows);
     assert (c >= 0 && c < _cols);
-    return data[r*_cols + c];
+    return _data[r*_cols + c];
 }
 
 template <class Type>
@@ -51,7 +51,7 @@ inline
 void Matrix<Type>:: set (unsigned r, unsigned c, Type value) {
     assert (r >= 0 && r < _rows);
     assert (c >= 0 && c < _cols);
-    data[r*_cols + c] = value;
+    _data[r*_cols + c] = value;
 }
 
 template <class Type>
@@ -59,7 +59,7 @@ inline
 void Matrix<Type>:: setAll (Type value) {
     for (unsigned r = 0; r < _rows; r++)
         for (unsigned c = 0; c < _cols; c++)
-            data[r*_cols + c] = value;
+            _data[r*_cols + c] = value;
 }
 
 #endif
