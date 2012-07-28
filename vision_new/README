@@ -10,3 +10,7 @@ Important Things:
   - You need a "common_settings.msf" in settings, which contains the minimum
     needed config info to start the system. This is extensively hardcoded
   - Each filter and task has its own settings file
+  - In a settings file, any setting that looks like _LENGTH_ will be a scale
+    factor from zero to 1. In the code this ratio is multiplied by an
+    appropriate value indicated in the comments. 
+  - A setting like LENGTH without underscores will behave as the value itself.

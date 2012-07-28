@@ -50,8 +50,7 @@ void read_mv_setting (const char filename[], const char setting_name[], TYPE &da
         }
     }
     
-    fprintf (stderr, "**** ERROR: read_mv_setting: setting %s not found \
-             in file %s\n", setting_name, filename);
+    fprintf (stderr, "**** ERROR: read_mv_setting: setting %s not found in file %s\n", setting_name, filename);
     exit (1);
 }
 /* these lines declare the use of int,unsigned,flot of read_mv_setting */

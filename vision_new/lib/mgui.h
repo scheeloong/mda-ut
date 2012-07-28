@@ -33,23 +33,23 @@ void read_common_mv_setting (const char setting_name[], TYPE &value)
 #define NUM_SUPPORTED_WINDOWS 4 
 #define WINDOW_NAME_LEN 20
 class mvWindow {
-    char name[WINDOW_NAME_LEN];
-    int window_number;
+    char _name[WINDOW_NAME_LEN];
+    int _window_number;
     
     public:
-    mvWindow (const char _name[]);
+    mvWindow (const char name[]);
     ~mvWindow (); 
-    void showImage (const CvArr* image) { cvShowImage(name, image); }
-    void move (unsigned x, unsigned y) { cvMoveWindow(name, x, y); }
+    void showImage (const CvArr* image) { cvShowImage(_name, image); }
+    void move (unsigned x, unsigned y) { cvMoveWindow(_name, x, y); }
 };
 
 /** mvCamera - class for managing webcams and video writers **/
 // This class lets you open a camera and write video to disk 
 // Usage is simple. 
 class mvCamera {
-    CvCapture* capture;
-    CvVideoWriter* writer;
-    IplImage* imgResized;
+    CvCapture* _capture;
+    CvVideoWriter* _writer;
+    IplImage* _imgResized;
     int _WRITE_;  
 
     public:
@@ -64,9 +64,9 @@ class mvCamera {
      * called the image will be overwritten. This img also must not be freed/
      * modified by the user.
      */ 
-    IplImage* getFrame () { return cvQueryFrame(capture); } 
+    IplImage* getFrame () { return cvQueryFrame(_capture); } 
     IplImage* getFrameResized (); 
-    void writeFrame (IplImage* frame) { cvWriteFrame(writer,frame); }
+    void writeFrame (IplImage* frame) { cvWriteFrame(_writer,frame); }
 };
 
 #endif

@@ -23,31 +23,31 @@
  * Use drawOntoImage (img) to draw the lines onto an image.
  */
 class mvLines {
-    CvSeq* data;
-    CvMemStorage* storage; // this stores actual line data in opencv
+    CvSeq* _data;
+    CvMemStorage* _storage; // this stores actual line data in opencv
     
     friend class mvHoughLines;
     friend class mvKmeans;
     
     public:
     // the constructor allocates 6400 bytes of storage space, which is like 400 lines...
-    mvLines () { data=NULL; storage=cvCreateMemStorage(6400); } 
+    mvLines () { _data=NULL; _storage=cvCreateMemStorage(6400); } 
     ~mvLines () {} // opencv will clean up the memory used (i hope)
     
-    unsigned nlines () { return (data != NULL) ? unsigned(data->total) : 0; }
+    unsigned nlines () { return (_data != NULL) ? unsigned(_data->total) : 0; }
     void removeHoriz ();
     void removeVert ();
     void sortXY (); // each Horiz line has smaller X value first, each Vert smaller Y first
     void drawOntoImage (IplImage* img);
     
-    CvPoint* operator [] (unsigned index) { return (CvPoint*)cvGetSeqElem(data,index); }
+    CvPoint* operator [] (unsigned index) { return (CvPoint*)cvGetSeqElem(_data,index); }
     
     // note clearData does NOT deallocate memory, it only allows recycling of used memory. 
     void clearData () { 
-        if (data) {
-            cvClearSeq(data); 
-            data=NULL; 
-            cvClearMemStorage(storage);
+        if (_data) {
+            cvClearSeq(_data); 
+            _data=NULL; 
+            cvClearMemStorage(_storage);
         }
     } 
 };
@@ -57,8 +57,8 @@ class mvLines {
 class mvHoughLines {
     unsigned PIX_RESOLUTION;
     float ANG_RESOLUTION; // ang_resolution is in radians
-    unsigned ACCUMULATOR_THRESHOLD;
-    unsigned MIN_LINE_LENGTH, MIN_COLINEAR_LINE_DIST;
+    float _ACCUMULATOR_THRESHOLD_;
+    float _MIN_LINE_LENGTH_, _MIN_COLINEAR_LINE_DIST_;
     
     public:
     mvHoughLines (const char* settings_file);
@@ -73,28 +73,29 @@ class mvHoughLines {
 #define MAX_CLUSTERS 6
 
 class mvKMeans {
-    unsigned N_Clusters;
-    unsigned N_Lines;
+    unsigned _nClusters;
+    unsigned _nLines;
+    //unsigned _iterations;
     
     // The below is an array of CvPoint* (maximum 10 elements). Each CvPoint* 
     // represents a line using starting and ending point.
-    CvPoint* Clusters[MAX_CLUSTERS];  
-    mvLines* Lines;
-    
-    Matrix<int>* Cluster_Line_Diff_Matrix;
+    CvPoint* _Clusters[MAX_CLUSTERS];  
+    mvLines* _Lines;
+    Matrix<int>* _Cluster_Line_Diff_Matrix;
     
     private:    
     // helper functions
     unsigned Get_Line_Cluster_Diff (unsigned cluster_index, unsigned line_index);
     
     // steps in the algorithm
-    void KMeans_Init (unsigned _n_clusters, mvLines* _lines);
+    void KMeans_Init (unsigned n_clusters, mvLines* lines);
     
     
     public:
     mvKMeans ();
-    void init (unsigned _n_clusters, mvLines* _lines) { KMeans_Init (_n_clusters, _lines); }
+    void init (unsigned n_clusters, mvLines* lines) { KMeans_Init (n_clusters, lines); }
     void KMeans_CreateStartingClusters ();
+    void KMeans_Cleanup ();
     void drawClustersOntoImage (IplImage* img);
 };
 
