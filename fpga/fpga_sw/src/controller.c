@@ -119,8 +119,43 @@ void pid_init () // call this anytime before calling calculate_pid2
     init_lookup();
 }
 
+inline
 HW_NUM motor_force_to_pwm (HW_NUM force) {
     return pwm_of_force(force*FACTOR_CONTROLLER_FORCE_TO_LBS);
+}
+
+// the following function calculates the pwm needed for the 3 stabilizing motors. 
+// It ensures motors are balanced and no motor exceeds 0.8*FULL_PWM by reducing 
+// the force if any motor pwm does exceed the limit
+void stabilizing_motors_force_to_pwm (
+        HW_NUM f_front_left, HW_NUM f_front_right, HW_NUM f_rear,
+        HW_NUM *m_front_left, HW_NUM *m_front_right, HW_NUM *m_rear
+        )
+{
+    #define PWM_LIMIT_FACTOR 0.8 // VICTORRR is it 0.8 or 0.4 ????
+    #define FORCE_REDUCTION_FACTOR 0.85
+
+    for(;;) {
+        // calculate the pwms
+        *m_front_left = motor_force_to_pwm(f_front_left);
+        *m_front_right = motor_force_to_pwm(f_front_right);
+        *m_rear = motor_force_to_pwm(f_rear);
+        
+        HW_NUM pwm_limit = PWM_LIMIT_FACTOR * FULL_PWM; 
+       
+        // if any pwm is out of bound
+        if (ABS(*m_front_left) > pwm_limit ||
+            ABS(*m_front_right) > pwm_limit ||
+            ABS(*m_rear) > pwm_limit)
+        {
+            // reduce force 
+            f_front_left *= FORCE_REDUCTION_FACTOR;
+            f_front_right *= FORCE_REDUCTION_FACTOR;
+            f_rear *= FORCE_REDUCTION_FACTOR;
+        }
+        else
+            break;
+    }
 }
 
 void calculate_pid()
@@ -171,18 +206,22 @@ void calculate_pid()
    /** orientation stability - the signs are almost surely wrong 
     *  If the COM is off center we would have some sort of factors here instead of 0.5
     */
-   HW_NUM m_front_left = HALF_PWM + 0.5*motor_force_to_pwm(Roll_Force_Needed) + 0.25*motor_force_to_pwm(Pitch_Force_Needed);
-   HW_NUM m_front_right = HALF_PWM - 0.5*motor_force_to_pwm(Roll_Force_Needed) + 0.25*motor_force_to_pwm(Pitch_Force_Needed);
-   HW_NUM m_rear = HALF_PWM - 0.5*motor_force_to_pwm(Pitch_Force_Needed);
+
+   HW_NUM m_front_left;
+   HW_NUM m_front_right;
+   HW_NUM m_rear;
    HW_NUM m_left = get_motor_duty_cycle(2); // M_LEFT and M_RIGHT are same as before
    HW_NUM m_right = get_motor_duty_cycle(3);
    
-   /** depth control. Again if COM off center use different factors
-    */
-   m_front_left += 0.25*motor_force_to_pwm(Depth_Force_Needed);
-   m_front_right += 0.25*motor_force_to_pwm(Depth_Force_Needed);
-   m_rear += 0.5*motor_force_to_pwm(Depth_Force_Needed);
-  
+   stabilizing_motor_force_to_pwm ( // this calculates the pwms for these 3 motors
+      0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_left
+      -0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_right
+      -0.5*Pitch_Force_Needed + 0.5*Depth_Force_Needed, // m_rear
+      &m_front_left,
+      &m_front_right,
+      &m_rear
+   );
+
    M_FRONT_LEFT = (int)m_front_left;
    M_FRONT_RIGHT = (int)m_front_right;
    M_LEFT = (int)m_left;
