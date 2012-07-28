@@ -120,7 +120,8 @@ void pid_init () // call this anytime before calling calculate_pid2
 }
 
 HW_NUM motor_force_to_pwm (HW_NUM force) {
-    return pwm_of_force(force*FACTOR_CONTROLLER_FORCE_TO_LBS);
+    int pwm = ZERO_PWM + pwm_of_force(force*FACTOR_CONTROLLER_FORCE_TO_LBS);
+    return pwm;
 }
 
 // the following function calculates the pwm needed for the 3 stabilizing motors. 
@@ -191,7 +192,7 @@ void calculate_pid()
    HW_NUM Depth_Force_Needed = FACTOR_PID_DEPTH_TO_FORCE * PID_Output(&PID_Depth);
 
    // Print some debug messages every so often...
-   if (counter % 128 == 0) {
+   if (counter % (128*NUM_DEPTH_VALUES) == 0) {
 	/*printf ("depth current = %d\n", current_orientation.pitch);
 	printf ("PID_Depth.P = %f\n", PID_Pitch.P*PID_Pitch.Const_P);
 	printf ("PID_Depth.I = %f\n", PID_Pitch.I*PID_Pitch.Const_I);
