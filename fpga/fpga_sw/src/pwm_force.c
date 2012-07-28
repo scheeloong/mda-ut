@@ -23,19 +23,16 @@ int inverse_cubic(double x){
   return (int)(5.12 * inverse_result);
 }
 
-inline
 int max(int a, int b)
 {
   return (a > b) ? a : b;
 }
 
-inline
 int min(int a, int b)
 {
   return (a < b) ? a : b;
 }
 
-inline
 void init_lookup() {
   int i;
   for (i = 0; i < SIZE; i++) {
