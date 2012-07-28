@@ -60,4 +60,4 @@
 #define FACTOR_PID_DEPTH_TO_FORCE 1
 
 /** This converts the controller force into lbs, so that it can be mapped to a PWM */
-#define FACTOR_CONTROLLER_FORCE_TO_LBS (1/200)
+#define FACTOR_CONTROLLER_FORCE_TO_LBS 0.005

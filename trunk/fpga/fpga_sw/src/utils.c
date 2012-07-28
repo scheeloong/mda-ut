@@ -41,11 +41,11 @@ void init()
     set_motor_duty_cycle(i, HALF_PWM);
   }
 
-  // Initialize interrupts
-  init_interrupts();
-  
   // Ritchie - Initialize PID controllers
   pid_init();
+
+  // Initialize interrupts (must be last)
+  init_interrupts();
 }
 
 // returns a string until the maximum length (int len) or a newline character is reached from stdin
