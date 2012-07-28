@@ -131,10 +131,7 @@ void stabilizing_motors_force_to_pwm (
         HW_NUM *m_front_left, HW_NUM *m_front_right, HW_NUM *m_rear
         )
 {
-    #define PWM_LIMIT_FACTOR 0.8
-    #define FORCE_REDUCTION_FACTOR 0.85
-
-    for(;;) {
+    while (true) {
         // calculate the pwms
         *m_front_left = motor_force_to_pwm(f_front_left);
         *m_front_right = motor_force_to_pwm(f_front_right);

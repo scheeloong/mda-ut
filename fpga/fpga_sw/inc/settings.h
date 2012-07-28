@@ -16,10 +16,13 @@
 #define RAD_TO_DEG 57.3  /* 180/PI */
 #define MOTOR_CONTROLLER_0_DUTY_CYCLE (MOTOR_CONTROLLER_0_BASE + 32)
 
-// duty cycle range = (200,824), centered at 512, dont go full range. 
-#define ZERO_PWM 200
-#define FULL_PWM 800 /* true max is 824 */
+#define ZERO_PWM 0
+#define FULL_PWM 1024 /* true max is 824 */
 #define HALF_PWM 512
+
+// Limits
+#define PWM_LIMIT_FACTOR 0.8
+#define FORCE_REDUCTION_FACTOR 0.85
 
 #ifndef INTERACTIVE
 #undef puts
