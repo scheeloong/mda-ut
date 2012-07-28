@@ -1,4 +1,7 @@
+// Create a lookup table and use it to compute a PWM value, given force.
+
 #include "pwm_force.h"
+#include "settings.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -43,6 +46,8 @@ void init_lookup() {
 
 int pwm_of_force (double force)
 {
+  const int MAX_PWM=FULL_PWM/2;
+
   if (force > MIN_LINEAR_FORCE) {
     return min(MAX_PWM, MIN_LINEAR_PWM + (int)((force - MIN_LINEAR_FORCE) / 0.045 * 5.12));
   }

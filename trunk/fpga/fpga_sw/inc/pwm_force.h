@@ -15,7 +15,6 @@ void init_lookup();
 int pwm_of_force(double force);
 
 // Constants used
-#define MAX_PWM 400
 #define MIN_LINEAR_FORCE 0.63
 #define MIN_LINEAR_PWM (30*5.12)
 
