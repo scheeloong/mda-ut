@@ -73,30 +73,40 @@ class mvHoughLines {
 #define MAX_CLUSTERS 6
 
 class mvKMeans {
-    unsigned _nClusters;
     unsigned _nLines;
-    //unsigned _iterations;
     
-    // The below is an array of CvPoint* (maximum 10 elements). Each CvPoint* 
-    // represents a line using starting and ending point.
-    CvPoint* _Clusters[MAX_CLUSTERS];  
-    mvLines* _Lines;
-    Matrix<int>* _Cluster_Line_Diff_Matrix;
+    // The below _Clusters_**** are arrays of CvPoint[2]. Each CvPoint[2] which store the beginning 
+    // and end points of a line. The lines are the "clusters" we are trying to get and each array
+    // is an intermediate variable to get _Clusters_Best
+    //
+    // _Seed stores the starting cluster, which we use to bin the lines to. Note each element
+    //      will be used to point to an existing line, so no need to allocate this
+    // _Temp store the clusters and they grow during the binning process. 
+    //
+    // _Best stores the most suitable cluster configuration (based on nClusters). It will point
+    //      to _Temp if _Temp is deemed the best so far.
+    CvPoint* _Clusters_Seed[MAX_CLUSTERS];  
+    CvPoint* _Clusters_Temp[MAX_CLUSTERS];
+    CvPoint* _Clusters_Best[MAX_CLUSTERS];  
+    
+    mvLines* _Lines;                        // points to lines we are try to cluster
+    Matrix<int>* _ClusterSeed_Line_Diff_Matrix; // to cache the cluster-line diffs
+    bool* line_already_chosen;              // which lines are already used as starting clusters
     
     private:    
     // helper functions
-    unsigned Get_Line_Cluster_Diff (unsigned cluster_index, unsigned line_index);
+    unsigned Get_Line_ClusterSeed_Diff (unsigned cluster_index, unsigned line_index);
     
     // steps in the algorithm
-    void KMeans_Init (unsigned n_clusters, mvLines* lines);
+    void KMeans_CreateStartingClusters (unsigned nClusters);
+    int KMeans_Cluster (unsigned nClusters, unsigned iterations);
     
     
     public:
     mvKMeans ();
-    void init (unsigned n_clusters, mvLines* lines) { KMeans_Init (n_clusters, lines); }
-    void KMeans_CreateStartingClusters ();
-    void KMeans_Cleanup ();
-    void drawClustersOntoImage (IplImage* img);
+    ~mvKMeans ();
+    int cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvLines* lines);
+    void drawOntoImage (IplImage* img);
 };
 
 #endif
