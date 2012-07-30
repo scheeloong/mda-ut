@@ -23,6 +23,6 @@ using namespace cv;
 int	ncircles; // this is initially garbage. However, it is used to count the number of circles	
 		  // if used outside the function.
 
-void Find_Circles(Mat src, vector<Vec3f> results, char* name);
+void Find_Circles(IplImage* img, CvSeq* results, char* name);
 
 #endif
