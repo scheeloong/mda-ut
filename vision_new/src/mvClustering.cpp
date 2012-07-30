@@ -1,7 +1,8 @@
 #include "mvLines.h"
 #include <cv.h>
 
-#define CREATE_STARTING_CLUSTERS_APPROX
+//#define CREATE_STARTING_CLUSTERS_APPROX
+#define NO_CACHE
 
 #define KMEANS_ITERATIONS 1
 
@@ -37,19 +38,26 @@ inline
 unsigned mvKMeans:: Get_Line_ClusterSeed_Diff (unsigned cluster_index, unsigned line_index) {
 // this function first reads the Cluster_Line_Diff value cached in the matrix, if it is -1
 // that means the value wasnt calculated. So we calculate and store the value
+    #ifdef NO_CACHE
+    return Line_Difference_Metric (_Clusters_Seed[cluster_index], (*_Lines)[line_index]);
+    #else
     int cached_value = (*_ClusterSeed_Line_Diff_Matrix)(cluster_index, line_index);
-    if (cached_value >= 0)
+    if (cached_value >= 0) {
         return cached_value;
+    }
     
     unsigned new_value = Line_Difference_Metric (_Clusters_Seed[cluster_index], (*_Lines)[line_index]);
     _ClusterSeed_Line_Diff_Matrix->set(cluster_index,line_index, new_value);
     return new_value;
+    #endif
 }
 
 /** True methods of KMeans Algorithm */
 
 mvKMeans:: mvKMeans () {
+    #if !defined NO_CACHE
     _ClusterSeed_Line_Diff_Matrix = new Matrix<int> (MAX_CLUSTERS, 20);
+    #endif
     
     for (unsigned i = 0; i < MAX_CLUSTERS; i++) {
         _Clusters_Seed[i] = NULL;
@@ -62,7 +70,9 @@ mvKMeans:: mvKMeans () {
 }
 
 mvKMeans:: ~mvKMeans () {
+    #if !defined NO_CACHE
     delete _ClusterSeed_Line_Diff_Matrix;
+    #endif
 }
 
 void mvKMeans:: KMeans_CreateStartingClusters (unsigned nClusters) {
@@ -192,12 +202,14 @@ int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvL
     //_Lines->sortXY (); // I am not entirely sure we need this
     
     /// initialize the matrix cache
+    #if !defined NO_CACHE
     unsigned cols = _ClusterSeed_Line_Diff_Matrix->getCols();    
     if (cols < _nLines || cols > 3*_nLines) {
         delete _ClusterSeed_Line_Diff_Matrix;
         _ClusterSeed_Line_Diff_Matrix = new Matrix<int> (MAX_CLUSTERS, _nLines);
     }
     _ClusterSeed_Line_Diff_Matrix->setAll (-1);
+    #endif
     
     /// we now run the algorithm
     for (unsigned N = nclusters_min; N <= nclusters_max; N++) {

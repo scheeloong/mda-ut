@@ -115,7 +115,7 @@ int main( int argc, char** argv ) {
             cvWriteFrame(vid1, frame);      // write the frame to the video writer
       
         nframes++;  
-        c = cvWaitKey(16);
+        c = cvWaitKey(2);
         if(c == 'q') break;
     }
     

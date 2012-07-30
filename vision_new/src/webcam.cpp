@@ -57,7 +57,7 @@ int main( int argc, char** argv ) {
 
     // declare images we need
     IplImage* filter_img = mvCreateImage ();
-    IplImage* grad_img = mvCreateImage ();
+    //IplImage* grad_img = mvCreateImage ();
     
     /// execution
     char c;
@@ -75,17 +75,17 @@ int main( int argc, char** argv ) {
         HSVFilter.filter (frame, filter_img); // process it
         cvErode (filter_img, filter_img);
         //gradient.filter (filter_img, grad_img);
-        grad_img = filter_img;
-        HoughLines.findLines (grad_img, &lines);
+        //grad_img = filter_img;
+        HoughLines.findLines (filter_img, &lines);
         //lines.drawOntoImage (grad_img);
-        kmeans.cluster_auto (1, 3, &lines);
-        kmeans.drawOntoImage (grad_img);
+        kmeans.cluster_auto (1, 2, &lines);
+        kmeans.drawOntoImage (filter_img);
         //HoughCircles.findCircles (grad_img, &circles);
         //circles.drawOntoImage (grad_img);
 
         if (DISPLAY) {
             win1->showImage (frame);
-            win2->showImage (grad_img);
+            win2->showImage (filter_img);
         }
 
         if (WRITE)

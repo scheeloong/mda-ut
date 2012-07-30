@@ -32,7 +32,6 @@ class mvLines {
     public:
     // the constructor allocates 6400 bytes of storage space, which is like 400 lines...
     mvLines () { _data=NULL; _storage=cvCreateMemStorage(6400); } 
-    ~mvLines () {} // opencv will clean up the memory used (i hope)
     
     unsigned nlines () { return (_data != NULL) ? unsigned(_data->total) : 0; }
     void removeHoriz ();
