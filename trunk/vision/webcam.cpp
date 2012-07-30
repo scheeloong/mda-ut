@@ -2,14 +2,17 @@
 #include <cv.h>
 #include <highgui.h>
 #include <string.h>
+#include <time.h>
 
 #include "calc_draw.h"
 #include "preproc_filters.h"
 #include "common.h"
 #include "task_buoy.h"
+#include "task_gate.h"
 
 int main( int argc, char** argv ) {
-    unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 1, BUOY = 0;
+    unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 1, BUOY = 0, GATE = 0;
+    unsigned nframes = 0, t_start, t_end;
     float RES_SCALING = 1;
     vision_in Vin;
     vision_out Vout;
@@ -28,6 +31,8 @@ int main( int argc, char** argv ) {
             DISPLAY = 0;
         else if (!strcmp (argv[i], "--no_write"))
             WRITE = 0;
+        else if (!strcmp (argv[i], "--gate"))
+            GATE = 1;
         else if (!strcmp (argv[i], "--buoy"))
             BUOY = 1;
         else if (!strcmp (argv[i], "--help")) {
@@ -48,14 +53,16 @@ int main( int argc, char** argv ) {
     
     CvCapture* capture = cvCreateCameraCapture(CAM_NUMBER);    // create a webcam video capture
     IplImage* frame = cvQueryFrame( capture );         // read a single frame from the cam
-    IplImage* img = cvCreateImage (cvSize(frame->width*RES_SCALING,frame->height*RES_SCALING), 
-                             frame->depth, frame->nChannels);
+    //IplImage* img = cvCreateImage (cvSize(frame->width*RES_SCALING,frame->height*RES_SCALING), 
+      //                       frame->depth, frame->nChannels);
     
-    if (BUOY) {
+    IplImage* img = cvCreateImage (cvSize(480,360), frame->depth, frame->nChannels);
+
+    if (BUOY || GATE) {
         if (DISPLAY) create_windows ();
         Vin.img = cvCreateImage (cvSize(img->width,img->height), 
                                  img->depth, img->nChannels);
-        Vin.HSV.setAll (-10,10, 190,255,30,255);
+        Vin.HSV.setAll (-30,30, 100,255,70,255);
     }
     
     CvVideoWriter * vid1;
@@ -71,6 +78,7 @@ int main( int argc, char** argv ) {
     cvReleaseCapture(&capture);
     capture = cvCreateCameraCapture(CAM_NUMBER);
     char c;
+    t_start = clock();
     
    /* for (int i = 0; i < 10; i++) {
         frame = cvQueryFrame (capture);
@@ -86,7 +94,7 @@ int main( int argc, char** argv ) {
         
         if (DISPLAY)
             cvShowImage("webcam", img);
-    
+        
         if (BUOY) {
             Vin.img = img;
             if (DISPLAY) 
@@ -94,16 +102,28 @@ int main( int argc, char** argv ) {
             else 
                 vision_BUOY (Vin, Vout, 0);
         }
-        
+     
+        if (GATE) {
+            Vin.img = img;
+            if (DISPLAY) 
+                vision_GATE (Vin, Vout, _DISPLAY);
+            else 
+                vision_GATE (Vin, Vout, 0);
+        }
+    
         if (WRITE)
             cvWriteFrame(vid1, frame);      // write the frame to the video writer
-        
+      
+        nframes++;  
         c = cvWaitKey(16);
         if(c == 'q') break;
     }
     
+    t_end = clock();
+    printf ("Average Framerate = %f\n", (float)nframes/(t_end-t_start)*CLOCKS_PER_SEC);
+
     cvDestroyWindow ("webcam");
-    if (BUOY && DISPLAY) {
+    if ((BUOY || GATE) && DISPLAY) {
         destroy_windows();
     }
     return 0;

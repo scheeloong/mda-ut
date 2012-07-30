@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <cv.h>
+#include <time.h>
 #include <string.h>
 
 #include "mgui.h"
@@ -9,6 +10,7 @@
 
 int main( int argc, char** argv ) {
     unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 1;
+    unsigned nframes = 0, t_start, t_end;
     
     if (argc == 1) 
         printf ("For options use --help\n\n");
@@ -61,9 +63,11 @@ int main( int argc, char** argv ) {
     char c;
     int n = 0;
     IplImage* frame;
+    t_start = clock();    
+    
     for (;;) {
         frame = camera->getFrameResized(); // read frame from cam
-	    if (n > 3) {
+	    if (n > 2) {
 	        n = 0;
 	        //continue;
 	    }
@@ -74,9 +78,8 @@ int main( int argc, char** argv ) {
         grad_img = filter_img;
         HoughLines.findLines (grad_img, &lines);
         //lines.drawOntoImage (grad_img);
-        kmeans.init (3, &lines);
-        kmeans.KMeans_CreateStartingClusters ();
-        kmeans.drawClustersOntoImage (grad_img);
+        kmeans.cluster_auto (1, 3, &lines);
+        kmeans.drawOntoImage (grad_img);
         //HoughCircles.findCircles (grad_img, &circles);
         //circles.drawOntoImage (grad_img);
 
@@ -91,10 +94,14 @@ int main( int argc, char** argv ) {
         lines.clearData(); // erase line data and reuse allocated mem
         circles.clearData();
 
+        nframes++;
         c = cvWaitKey(2);
         if (c == 'q') 
             break;
     }
+    
+    t_end = clock ();
+    printf ("\nAverage Framerate = %f\n", (float)nframes/(t_end - t_start)*CLOCKS_PER_SEC);
 
     return 0;
 }
