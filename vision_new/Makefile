@@ -1,4 +1,4 @@
-CC=g++ -g
+CC=g++ -g -O3
 CVFLAGS=`pkg-config --cflags --libs opencv`
 LIBDIR=lib/
 SRCDIR=src/
@@ -9,7 +9,7 @@ OBJ=$(OBJDIR)mgui.o $(OBJDIR)mv.o $(OBJDIR)mvGradient.o $(OBJDIR)mvHSVFilter.o $
 TEST=$(OBJDIR)main.o
 WEBCAM=$(OBJDIR)webcam.o
 
-all: test webcam MatTest
+all: test webcam
 
 $(OBJDIR)%.o: $(SRCDIR)%.cpp $(INC)
 	$(CC) -Wall -I$(LIBDIR) -c $< -o $@ $(CVFLAGS)
