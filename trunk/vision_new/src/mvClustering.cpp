@@ -1,4 +1,5 @@
 #include "mvLines.h"
+#include <stdio.h>
 #include <cv.h>
 
 //#define CREATE_STARTING_CLUSTERS_APPROX

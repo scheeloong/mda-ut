@@ -10,7 +10,7 @@
 
 int main( int argc, char** argv ) {
     unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 1;
-    unsigned nframes = 0, t_start, t_end;
+    unsigned long nframes = 0, t_start, t_end;
     
     if (argc == 1) 
         printf ("For options use --help\n\n");
@@ -61,23 +61,22 @@ int main( int argc, char** argv ) {
     
     /// execution
     char c;
-    int n = 0;
     IplImage* frame;
     t_start = clock();    
     
     for (;;) {
         frame = camera->getFrameResized(); // read frame from cam
-	    if (n > 2) {
-	        n = 0;
-	        //continue;
-	    }
+	if (nframes < 50 || nframes % 3 != 0) {
+		nframes++;
+		continue;
+	}
 
         HSVFilter.filter (frame, filter_img); // process it
         cvErode (filter_img, filter_img);
         //gradient.filter (filter_img, grad_img);
         //grad_img = filter_img;
         HoughLines.findLines (filter_img, &lines);
-        //lines.drawOntoImage (grad_img);
+        //lines.drawOntoImage (filter_img);
         kmeans.cluster_auto (1, 2, &lines);
         kmeans.drawOntoImage (filter_img);
         //HoughCircles.findCircles (grad_img, &circles);
