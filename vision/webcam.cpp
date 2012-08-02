@@ -62,7 +62,7 @@ int main( int argc, char** argv ) {
         if (DISPLAY) create_windows ();
         Vin.img = cvCreateImage (cvSize(img->width,img->height), 
                                  img->depth, img->nChannels);
-        Vin.HSV.setAll (-30,30, 100,255,70,255);
+        Vin.HSV.setAll (-30,30, 80,255,60,255);
     }
     
     CvVideoWriter * vid1;
@@ -86,7 +86,11 @@ int main( int argc, char** argv ) {
     
     while(1) {                      // play the video like before     
         frame = cvQueryFrame (capture);
-        
+  	if (nframes < 50) {
+		nframes++;
+		continue;
+	}
+	      
         if (RES_SCALING != 1)
             cvResize(frame, img);
         else

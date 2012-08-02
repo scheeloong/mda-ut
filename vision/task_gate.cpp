@@ -33,11 +33,11 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
 
 /** probabilistic Hough line finder. Determine the threshold using the number of high pixels */
     //int thresh = 1+(int)(sqrt(pix_fraction*img_1->imageSize * GATE_SKINNYNESS) * 0.5); // guessed length of gate segment in pixels
-    int thresh = 10;
+    int thresh = img_1->width/7;
     CvMemStorage* storage = cvCreateMemStorage(0); // create memstorage for line finidng, delete later
     CvSeq* lines = 0;
     
-    int minlen=img_1->height/10, mindist=minlen;
+    int minlen=img_1->width/10, mindist=minlen;
     lines = cvHoughLines2(img_1, storage,
         CV_HOUGH_PROBABILISTIC,
         2, CV_PI/180.0,
