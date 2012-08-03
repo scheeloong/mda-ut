@@ -36,6 +36,11 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
     int thresh = img_1->width/7;
     CvMemStorage* storage = cvCreateMemStorage(0); // create memstorage for line finidng, delete later
     CvSeq* lines = 0;
+
+/** testing only */
+    IplImage* img_temp;
+    cvGradient_Custom (img_1, img_temp, 5,5,1,0);
+    cvCopy (img_temp, img_1);
     
     int minlen=img_1->width/10, mindist=minlen;
     lines = cvHoughLines2(img_1, storage,
@@ -50,15 +55,10 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
         printf ("  vision_GATE: No Lines Detected. Exiting.\n");
         return NO_DETECT;
     }
-    
-/** testing only */
-    IplImage* img_temp;
-    cvGradient_Custom (img_1, img_temp, 5,5,1,0);
-    cvCopy (img_temp, img_1);
 
 /** Remove all horizontal lines, since we are interested only in vertical part of gate
     Reorient vertical lines so the smaller y value comes first */
-    CvPoint* temp; int swap;
+ /*   CvPoint* temp; int swap;
     for (int i = nlines-1; i >= 0; i--) { // for each line
         temp = (CvPoint*)cvGetSeqElem(lines, i);  
  
@@ -69,7 +69,7 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
             swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
             swap=temp[1].x; temp[1].x=temp[0].x; temp[0].x=swap;
         }
-    }
+    }*/
 /** recheck that there are lines found */
     nlines=lines->total; // recalculate number of lines
     if (nlines == 0) { 
