@@ -10,7 +10,7 @@ mvWindow:: mvWindow (const char name[]) { // this has to be the h file
 
     cvNamedWindow (_name, CV_WINDOW_AUTOSIZE);
 
-    int i = 0;
+    unsigned i = 0;
     while (WINDOWS_ARRAY[i] == true && i < NUM_SUPPORTED_WINDOWS) 
         i++;                    // find next free slot
 

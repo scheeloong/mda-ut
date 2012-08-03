@@ -9,7 +9,7 @@
 #include "mvCircles.h"
 
 int main( int argc, char** argv ) {
-    unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 1;
+    unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 0;
     unsigned long nframes = 0, t_start, t_end;
     
     if (argc == 1) 
@@ -20,8 +20,8 @@ int main( int argc, char** argv ) {
             CAM_NUMBER = atoi (argv[i]);
         else if (!strcmp (argv[i], "--no_display") || !strcmp (argv[i], "--no_disp"))
             DISPLAY = 0;
-        else if (!strcmp (argv[i], "--no_write"))
-            WRITE = 0;
+        else if (!strcmp (argv[i], "--write"))
+            WRITE = 1;
         else if (!strcmp (argv[i], "--help")) {
             printf ("OpenCV based webcam program. Hit 'q' to exit. Defaults to cam0, writes to \"webcam.avi\"\n");
             printf ("Put any integer as an argument (without --) to use that as camera number\n\n");
@@ -44,7 +44,8 @@ int main( int argc, char** argv ) {
     
     // init windows
     mvWindow* win1 = DISPLAY ? new mvWindow ("webcam") : NULL;
-    mvWindow* win2 = DISPLAY ? new mvWindow ("result") : NULL;
+    mvWindow* win2 = DISPLAY ? new mvWindow ("filtered") : NULL;
+    mvWindow* win3 = DISPLAY ? new mvWindow ("result") : NULL;
 
     // declare filters we need
     mvHSVFilter HSVFilter ("settings/HSVFilter_settings.csv"); // color filter
@@ -57,7 +58,7 @@ int main( int argc, char** argv ) {
 
     // declare images we need
     IplImage* filter_img = mvCreateImage ();
-    //IplImage* grad_img = mvCreateImage ();
+    IplImage* grad_img = mvCreateImage ();
     
     /// execution
     char c;
@@ -66,25 +67,26 @@ int main( int argc, char** argv ) {
     
     for (;;) {
         frame = camera->getFrameResized(); // read frame from cam
-	if (nframes < 50 || nframes % 3 != 0) {
+	if (nframes < 20) {// || nframes % 3 != 0) {
 		nframes++;
 		continue;
 	}
 
         HSVFilter.filter (frame, filter_img); // process it
-        cvErode (filter_img, filter_img);
-        //gradient.filter (filter_img, grad_img);
-        //grad_img = filter_img;
-        HoughLines.findLines (filter_img, &lines);
+        //cvErode (filter_img, filter_img);
+        gradient.filter (filter_img, grad_img);
+        
+        HoughLines.findLines (grad_img, &lines);
         //lines.drawOntoImage (filter_img);
-        kmeans.cluster_auto (1, 2, &lines);
-        kmeans.drawOntoImage (filter_img);
+        kmeans.cluster_auto (1, 3, &lines);
+        kmeans.drawOntoImage (grad_img);
         //HoughCircles.findCircles (grad_img, &circles);
         //circles.drawOntoImage (grad_img);
 
         if (DISPLAY) {
             win1->showImage (frame);
             win2->showImage (filter_img);
+            win3->showImage (grad_img);
         }
 
         if (WRITE)
