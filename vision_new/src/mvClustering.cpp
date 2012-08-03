@@ -8,9 +8,6 @@
 #define KMEANS_ITERATIONS 1
 
 #define CLUSTERING_DEBUG 1
-#define DEBUG_MSG (str, ...) \
-    if (CLUSTERING_DEBUG) \
-        printf (str, ...); 
 
 #define ABS(X) (((X) > 0) ? (X) : (-(X)))
 
@@ -100,7 +97,7 @@ void mvKMeans:: KMeans_CreateStartingClusters (unsigned nClusters) {
 
     /// choose first seed cluster, then 2nd, etc in this loop
     for (unsigned N = 0; N < nClusters; N++) {  
-        printf ("Choosing cluster %d\n", N);
+        //printf ("Choosing cluster %d\n", N);
         
         /// For first cluster choose line[0];
         if (N == 0) {
@@ -152,7 +149,7 @@ void mvKMeans:: KMeans_CreateStartingClusters (unsigned nClusters) {
         #endif
         
         /// now copy the data for the line chosen to be the next cluster
-        printf ("  Using line %d for cluster %d\n", next_cluster_index, N);
+        //printf ("  Using line %d for cluster %d\n", next_cluster_index, N);
         _Clusters_Seed[N] = (*_Lines)[next_cluster_index];     // pointer copy starting point
         line_already_chosen[next_cluster_index] = true;
     }
@@ -167,19 +164,19 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
  * Note minimum_inter_cluster_diff is not defined for nClusters == 1, so we wing it. See below. 
  */    
     unsigned weight;
+    unsigned short cluster_of_line[_nLines]; // stores which cluster a line is binned to
     unsigned lines_per_cluster[nClusters];
     unsigned weight_per_cluster[nClusters];    
-    float intra_cluster_diff,  avg_intra_cluster_diff = 0;
-
+    float avg_intra_cluster_diff = 0;
+    unsigned product_of_lines_per_cluster = 1;
+    
     for (unsigned i = 0; i < nClusters; i++) {   // first clear the temp clusters
         _Clusters_Temp[i][0] = cvPoint (0,0);
         _Clusters_Temp[i][1] = cvPoint (0,0);
         weight_per_cluster[i] = 0;
     }
 
-    for (unsigned iter = 0; iter < iterations; iter++) {
-        intra_cluster_diff = 0; // this number keeps track of how spread out lines are in a cluster
-        
+    for (unsigned iter = 0; iter < iterations; iter++) {       
         /// loop over each line and bin that line to a cluster
         for (unsigned line_index = 0; line_index < _nLines; line_index++) {
             unsigned closest_cluster_index = 0;
@@ -208,25 +205,30 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
 
             lines_per_cluster[closest_cluster_index]++;
             weight_per_cluster[closest_cluster_index] += weight;
-            
-            // add the diff between the line and the seed it is assigned to
-            intra_cluster_diff += Line_Difference_Metric (_Clusters_Seed[closest_cluster_index], (*_Lines)[line_index]);
+            cluster_of_line[line_index] = closest_cluster_index; /*****************/
         }
         
         /// calculate the next iteration's clusters and copy them over to clusters_seed
         for (unsigned i = 0; i < nClusters; i++) {
-            if (lines_per_cluster[i] == 0) continue;
+            if (weight_per_cluster[i] == 0) continue;
             
             _Clusters_Temp[i][0].x /= weight_per_cluster[i];
             _Clusters_Temp[i][0].y /= weight_per_cluster[i];
             _Clusters_Temp[i][1].x /= weight_per_cluster[i];
             _Clusters_Temp[i][1].y /= weight_per_cluster[i];
             
-            avg_intra_cluster_diff = intra_cluster_diff / lines_per_cluster[i]; 
-            
             _Clusters_Seed[i] = _Clusters_Temp[i];
         }
     }
+    
+    /// calculate avg_intra_cluster_diff
+    for (unsigned line_index = 0; line_index < _nLines; line_index++) {
+        avg_intra_cluster_diff += Line_Difference_Metric (_Clusters_Seed[cluster_of_line[line_index]], (*_Lines)[line_index]);
+    }
+    for (unsigned i = 0, product_of_lines_per_cluster = 1; i < nClusters; i++) {
+        product_of_lines_per_cluster *= lines_per_cluster[i];
+    }
+    avg_intra_cluster_diff = avg_intra_cluster_diff / product_of_lines_per_cluster / nClusters;
     
     /// now calculate the minimum_inter_cluster_diff and the validity score
     float minimum_inter_cluster_diff = 1E12;
@@ -244,7 +246,7 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
             }
         }
     }
-    
+    printf ("intra = %f,  min_inter = %f\n", avg_intra_cluster_diff, minimum_inter_cluster_diff);
     return avg_intra_cluster_diff / minimum_inter_cluster_diff; 
 }
 
@@ -290,6 +292,7 @@ int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvL
         
         // run the clustering algorithm through the desired num of iterations
         float validity = KMeans_Cluster (N, KMEANS_ITERATIONS);
+        printf ("  nClusters = %d. validity = %f\n", N, validity);
         
         // check validity. If better than current validity pointer copy temp to best and
         // reallocate temp. Otherwise leave temp and it will be overwritten next iteration
@@ -301,6 +304,8 @@ int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvL
                 _Clusters_Best[i] = _Clusters_Seed[i];
         }
     }
+    
+    printf ("Final nClusters = %d, validity = %f\n", _nClusters_Final, min_validity);
     
     /// cleanup
     delete [] line_already_chosen;

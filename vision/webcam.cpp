@@ -62,7 +62,7 @@ int main( int argc, char** argv ) {
         if (DISPLAY) create_windows ();
         Vin.img = cvCreateImage (cvSize(img->width,img->height), 
                                  img->depth, img->nChannels);
-        Vin.HSV.setAll (-30,30, 80,255,60,255);
+        Vin.HSV.setAll (90,150, 100,255,50,255);
     }
     
     CvVideoWriter * vid1;
