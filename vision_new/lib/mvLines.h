@@ -70,9 +70,11 @@ class mvHoughLines {
 /** The following code deal with K-Means clustering */
 #include "Matrix.h"
 #define MAX_CLUSTERS 6
+#define MIN_DIST_BETWEEN_PARALLEL_LINES 10
 
 class mvKMeans {
     unsigned _nLines;
+    unsigned _nClusters_Final; // only used for storing the number of clusters after the algorithm
     
     // The below _Clusters_**** are arrays of CvPoint[2]. Each CvPoint[2] which store the beginning 
     // and end points of a line. The lines are the "clusters" we are trying to get and each array
@@ -98,7 +100,7 @@ class mvKMeans {
     
     // steps in the algorithm
     void KMeans_CreateStartingClusters (unsigned nClusters);
-    int KMeans_Cluster (unsigned nClusters, unsigned iterations);
+    float KMeans_Cluster (unsigned nClusters, unsigned iterations);
     
     
     public:

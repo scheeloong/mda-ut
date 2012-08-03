@@ -1,4 +1,4 @@
-CC=g++ -g -O3
+CC=g++ -g
 CVFLAGS=`pkg-config --cflags --libs opencv`
 LIBDIR=lib/
 SRCDIR=src/

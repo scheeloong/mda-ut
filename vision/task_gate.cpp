@@ -51,6 +51,11 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
         return NO_DETECT;
     }
     
+/** testing only */
+    IplImage* img_temp;
+    cvGradient_Custom (img_1, img_temp, 5,5,1,0);
+    cvCopy (img_temp, img_1);
+
 /** Remove all horizontal lines, since we are interested only in vertical part of gate
     Reorient vertical lines so the smaller y value comes first */
     CvPoint* temp; int swap;

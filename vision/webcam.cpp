@@ -11,9 +11,9 @@
 #include "task_gate.h"
 
 int main( int argc, char** argv ) {
-    unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 1, BUOY = 0, GATE = 0;
+    unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 0, BUOY = 0, GATE = 0;
     unsigned nframes = 0, t_start, t_end;
-    float RES_SCALING = 1;
+    float RES_SCALING = 0.75;
     vision_in Vin;
     vision_out Vout;
     
@@ -29,8 +29,8 @@ int main( int argc, char** argv ) {
             RES_SCALING = 0.75;
         else if (!strcmp (argv[i], "--no_display") || !strcmp (argv[i], "--no_disp"))
             DISPLAY = 0;
-        else if (!strcmp (argv[i], "--no_write"))
-            WRITE = 0;
+        else if (!strcmp (argv[i], "--write"))
+            WRITE = 1;
         else if (!strcmp (argv[i], "--gate"))
             GATE = 1;
         else if (!strcmp (argv[i], "--buoy"))
@@ -86,7 +86,7 @@ int main( int argc, char** argv ) {
     
     while(1) {                      // play the video like before     
         frame = cvQueryFrame (capture);
-  	if (nframes < 50) {
+  	if (nframes < 20) {
 		nframes++;
 		continue;
 	}
