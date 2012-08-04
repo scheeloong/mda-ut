@@ -34,5 +34,5 @@ _MIN_COLINEAR_LINE_DIST_ 0.3   # scaled by image width
 # Roughly speaking:
 #  If the 2 lines in the cluster is seperated by more than the value below,
 #  then 2 clusters will be used. Otherwise 1 cluster is used
-_MIN_DIST_BETWEEN_PARALLEL_LINES_, 0.08
+_MIN_DIST_BETWEEN_PARALLEL_LINES_, 0.02
 

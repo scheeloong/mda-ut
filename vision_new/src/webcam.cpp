@@ -73,11 +73,12 @@ int main( int argc, char** argv ) {
         }
 
         HSVFilter.filter (frame, filter_img); // process it
-        cvErode (filter_img, filter_img);     // this gets rid of some noise
+        cvErode (filter_img, filter_img, cvCreateStructuringElementEx(5,5,3,3,CV_SHAPE_RECT));  // this gets rid of some noise
         canny.filter (filter_img, grad_img);
+        cvDilate (grad_img, grad_img);
         
         HoughLines.findLines (grad_img, &lines);
-        kmeans.cluster_auto (1, 10, &lines);
+        kmeans.cluster_auto (1, 4, &lines);
         
         lines.drawOntoImage (filter_img);
         kmeans.drawOntoImage (grad_img);
