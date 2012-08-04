@@ -1,12 +1,9 @@
 #include "mvLines.h"
+#include "mgui.h"
 #include <stdio.h>
 #include <cv.h>
 
 //#define CREATE_STARTING_CLUSTERS_APPROX
-#define NO_CACHE
-
-#define KMEANS_ITERATIONS 1
-
 #define CLUSTERING_DEBUG 1
 
 #define ABS(X) (((X) > 0) ? (X) : (-(X)))
@@ -32,6 +29,18 @@ unsigned Line_Difference_Metric (const CvPoint* line1, const CvPoint* line2) {
     );
 }
 
+inline
+unsigned mvKMeans:: Get_Line_ClusterSeed_Diff (unsigned cluster_index, unsigned line_index) {
+// this function first reads the Cluster_Line_Diff value cached in the matrix, if it is -1
+// that means the value wasnt calculated. So we calculate and store the value
+    return Line_Difference_Metric (
+        _Clusters_Seed[cluster_index][0].x, _Clusters_Seed[cluster_index][0].y,
+        _Clusters_Seed[cluster_index][1].x, _Clusters_Seed[cluster_index][1].y,
+        (*_Lines)[line_index][0].x, (*_Lines)[line_index][0].y,
+        (*_Lines)[line_index][1].x, (*_Lines)[line_index][1].y
+    );
+}
+
 inline 
 unsigned line_sqr_length (const CvPoint* line) {
     int dx = (line[1].x - line[0].x);
@@ -39,30 +48,15 @@ unsigned line_sqr_length (const CvPoint* line) {
     return unsigned(dx*dx + dy*dy);
 }
 
-inline
-unsigned mvKMeans:: Get_Line_ClusterSeed_Diff (unsigned cluster_index, unsigned line_index) {
-// this function first reads the Cluster_Line_Diff value cached in the matrix, if it is -1
-// that means the value wasnt calculated. So we calculate and store the value
-    #ifdef NO_CACHE
-    return Line_Difference_Metric (_Clusters_Seed[cluster_index], (*_Lines)[line_index]);
-    #else
-    int cached_value = (*_ClusterSeed_Line_Diff_Matrix)(cluster_index, line_index);
-    if (cached_value >= 0) {
-        return cached_value;
-    }
-    
-    unsigned new_value = Line_Difference_Metric (_Clusters_Seed[cluster_index], (*_Lines)[line_index]);
-    _ClusterSeed_Line_Diff_Matrix->set(cluster_index,line_index, new_value);
-    return new_value;
-    #endif
-}
+
 
 /** True methods of KMeans Algorithm */
 
-mvKMeans:: mvKMeans () {
-    #if !defined NO_CACHE
-    _ClusterSeed_Line_Diff_Matrix = new Matrix<int> (MAX_CLUSTERS, 20);
-    #endif
+mvKMeans:: mvKMeans (const char* settings_file) {   
+    unsigned width;  float temp;
+    read_common_mv_setting ("IMG_WIDTH_COMMON", width);
+    read_mv_setting (settings_file, "_MIN_DIST_BETWEEN_PARALLEL_LINES_", temp);
+    _MIN_DIST_BETWEEN_PARALLEL_LINES_ = (unsigned) (temp * width);
     
     for (unsigned i = 0; i < MAX_CLUSTERS; i++) {
         _Clusters_Seed[i] = NULL;
@@ -76,9 +70,6 @@ mvKMeans:: mvKMeans () {
 }
 
 mvKMeans:: ~mvKMeans () {
-    #if !defined NO_CACHE
-    delete _ClusterSeed_Line_Diff_Matrix;
-    #endif
     for (unsigned i = 0; i < MAX_CLUSTERS; i++)
         delete [] _Clusters_Temp[i];
 }
@@ -90,8 +81,10 @@ void mvKMeans:: KMeans_CreateStartingClusters (unsigned nClusters) {
  * The n+1'th cluster is the line which is most different from existing clusters. This is
  * calculated as the line whose minimum difference wrt existing clusters is the greatest.
  */   
+    bool line_already_chosen[_nLines];
     for (unsigned i = 0; i < _nLines; i++)
         line_already_chosen[i] = false;
+    
     for (unsigned i = 0; i < MAX_CLUSTERS; i++)
         _Clusters_Seed[i] = NULL;
 
@@ -185,10 +178,7 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
             
             /// go thru each cluster and find the one that is closest (least diff) wrt this line
             for (unsigned cluster_index = 0; cluster_index < nClusters; cluster_index++) {
-                if (iter == 0)  // for first iteration we can use cached diff values
-                    cluster_diff_i = Get_Line_ClusterSeed_Diff (cluster_index, line_index);
-                else            // otherwise we have to calculate the diff value
-                    cluster_diff_i = Line_Difference_Metric (_Clusters_Seed[cluster_index], (*_Lines)[line_index]);
+                cluster_diff_i = Get_Line_ClusterSeed_Diff (cluster_index, line_index);
                 
                 if (cluster_diff_i < closest_cluster_diff) {
                     closest_cluster_diff = cluster_diff_i;
@@ -223,7 +213,7 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
     
     /// calculate avg_intra_cluster_diff
     for (unsigned line_index = 0; line_index < _nLines; line_index++) {
-        avg_intra_cluster_diff += Line_Difference_Metric (_Clusters_Seed[cluster_of_line[line_index]], (*_Lines)[line_index]);
+        avg_intra_cluster_diff += Get_Line_ClusterSeed_Diff (cluster_of_line[line_index], line_index);
     }
     for (unsigned i = 0, product_of_lines_per_cluster = 1; i < nClusters; i++) {
         product_of_lines_per_cluster *= lines_per_cluster[i];
@@ -235,7 +225,7 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
     if (nClusters == 1) {
         // this equation basically says "when comparing 1 cluster vs 2 clusters, the 2 clusters have to be a distance apart
         // roughly equal to MIN_DIST_BETWEEN_PARALLEL_LINES for the 2 clusters to be better than the 1
-        minimum_inter_cluster_diff = MIN_DIST_BETWEEN_PARALLEL_LINES * line_sqr_length(_Clusters_Seed[0]);
+        minimum_inter_cluster_diff = _MIN_DIST_BETWEEN_PARALLEL_LINES_ * line_sqr_length(_Clusters_Seed[0]);
     }
     else {
         for (unsigned i = 0; i < nClusters; i++) { // loop over all combinations of clusters, find min_inter_cluster_diff
@@ -246,11 +236,11 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
             }
         }
     }
-    printf ("intra = %f,  min_inter = %f\n", avg_intra_cluster_diff, minimum_inter_cluster_diff);
+    printf ("  intra = %f,  min_inter = %f\n", avg_intra_cluster_diff, minimum_inter_cluster_diff);
     return avg_intra_cluster_diff / minimum_inter_cluster_diff; 
 }
 
-int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvLines* lines) {
+int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvLines* lines, unsigned iterations) {
     _Lines = lines; 
     _nLines = _Lines->nlines();
     assert (nclusters_min > 0 && nclusters_max <= MAX_CLUSTERS);
@@ -263,20 +253,8 @@ int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvL
         return 1;
     }
     
-    /// initialize line_already_chosen array
-    line_already_chosen = new bool[_nLines];
-    
-    _Lines->sortXY (); // we need this or when we add the lines some will cancel
-    
-    /// initialize the matrix cache
-    #if !defined NO_CACHE
-    unsigned cols = _ClusterSeed_Line_Diff_Matrix->getCols();    
-    if (cols < _nLines || cols > 3*_nLines) {
-        delete _ClusterSeed_Line_Diff_Matrix;
-        _ClusterSeed_Line_Diff_Matrix = new Matrix<int> (MAX_CLUSTERS, _nLines);
-    }
-    _ClusterSeed_Line_Diff_Matrix->setAll (-1);
-    #endif
+    /// make the lines all "flow" in 1 direction so we can add them up without cancelling
+    _Lines->sortXY ();
     
     /// we now run the algorithm
     float min_validity = 1E12;
@@ -284,14 +262,14 @@ int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvL
     for (unsigned N = nclusters_min; N <= nclusters_max; N++) {
         if (_nLines < N) {
             printf ("Cannot create %d clusters. Not enough lines.\n", N);
-            return 1;
+            continue;
         }
         
         // create required num of clusters
         KMeans_CreateStartingClusters (N);
         
         // run the clustering algorithm through the desired num of iterations
-        float validity = KMeans_Cluster (N, KMEANS_ITERATIONS);
+        float validity = KMeans_Cluster (N, iterations);
         printf ("  nClusters = %d. validity = %f\n", N, validity);
         
         // check validity. If better than current validity pointer copy temp to best and
@@ -308,7 +286,8 @@ int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvL
     printf ("Final nClusters = %d, validity = %f\n", _nClusters_Final, min_validity);
     
     /// cleanup
-    delete [] line_already_chosen;
+    _Lines = NULL;
+    _nLines = 0;
     return 0;
 }
 

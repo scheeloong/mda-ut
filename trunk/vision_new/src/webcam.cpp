@@ -48,13 +48,13 @@ int main( int argc, char** argv ) {
     mvWindow* win3 = DISPLAY ? new mvWindow ("result") : NULL;
 
     // declare filters we need
-    mvHSVFilter HSVFilter ("settings/HSVFilter_settings.csv"); // color filter
-    mvGradient gradient ("settings/gradient_settings.csv");
-    mvHoughLines HoughLines ("settings/HoughLines_settings.csv");
+    mvHSVFilter HSVFilter ("settings/test_settings.csv"); // color filter
+    mvCanny canny ("settings/test_settings.csv");
+    mvHoughLines HoughLines ("settings/test_settings.csv");
     mvLines lines; // data struct to store lines
     mvHoughCircles HoughCircles ("settings/HoughCircles_settings.csv");
     mvCircles circles; // data struct to store circles
-    mvKMeans kmeans;
+    mvKMeans kmeans ("settings/test_settings.csv");
 
     // declare images we need
     IplImage* filter_img = mvCreateImage ();
@@ -67,20 +67,21 @@ int main( int argc, char** argv ) {
     
     for (;;) {
         frame = camera->getFrameResized(); // read frame from cam
-	if (nframes < 20) {// || nframes % 3 != 0) {
-		nframes++;
-		continue;
-	}
+        if (nframes < 20) {// || nframes % 3 != 0) {
+            nframes++;
+            continue;
+        }
 
         HSVFilter.filter (frame, filter_img); // process it
         cvErode (filter_img, filter_img);     // this gets rid of some noise
-        gradient.filter (filter_img, grad_img);
+        canny.filter (filter_img, grad_img);
         
         HoughLines.findLines (grad_img, &lines);
-        kmeans.cluster_auto (1, 6, &lines);
+        kmeans.cluster_auto (1, 10, &lines);
         
         lines.drawOntoImage (filter_img);
         kmeans.drawOntoImage (grad_img);
+        kmeans.clearData();
         //HoughCircles.findCircles (grad_img, &circles);
         //circles.drawOntoImage (grad_img);
 
