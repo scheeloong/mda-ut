@@ -1,12 +1,38 @@
-# this is a comment!
-#
-S1, 11.4
+### color filter settings
+HUE_MIN, 90
+HUE_MAX, 150
+SAT_MIN, 100
+SAT_MAX, 255
+VAL_MIN, 50
+VAL_MAX, 255
 
-# more comments
-S2, 22.3
+### gradient settings
+GRADIENT_KERNEL_WIDTH, 5
+GRADIENT_KERNEL_HEIGHT, 5
+#GRADIENT_ITERATIONS, 1      
 
-#mvGradient
-KERNEL_WIDTH, 5
-KERNEL_HEIGHT, 5
-# DISPLAY, 1
-QUIET, 1
+### canny
+CANNY_KERNEL_SIZE, 5
+CANNY_LOW_THRESHOLD, 30
+CANNY_HIGH_THRESHOLD, 70
+
+### HoughLines 
+PIXEL_RESOLUTION 1 # step size in pixels, > 1 means the line finder skips pixels
+ANGULAR_RESOLUTION 0.017 # step size in angles (radians)
+
+### how many points a line must pass through to be accepted by the alg
+_ACCUMULATOR_THRESHOLD_, 0.1   # scaled by image wdith
+# minimum accepted line length in pixels
+_MIN_LINE_LENGTH_, 0.05          # scaled by image width
+# colinear lines must be this far apart to be considered two lines
+_MIN_COLINEAR_LINE_DIST_ 0.3   # scaled by image width
+
+
+### lines clustering
+# the following value specifies when the algorithm should choose 1 cluster over 
+# 2 clusters (because the clustering goodness metric is undefined for 1 cluster)
+# Roughly speaking:
+#  If the 2 lines in the cluster is seperated by more than the value below,
+#  then 2 clusters will be used. Otherwise 1 cluster is used
+_MIN_DIST_BETWEEN_PARALLEL_LINES_, 0.08
+

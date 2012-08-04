@@ -68,13 +68,10 @@ class mvHoughLines {
 
 
 /** The following code deal with K-Means clustering */
-#include "Matrix.h"
-#define MAX_CLUSTERS 6
-#define MIN_DIST_BETWEEN_PARALLEL_LINES 10
+#define MAX_CLUSTERS 10
 
 class mvKMeans {
-    unsigned _nLines;
-    unsigned _nClusters_Final; // only used for storing the number of clusters after the algorithm
+    unsigned _MIN_DIST_BETWEEN_PARALLEL_LINES_;
     
     // The below _Clusters_**** are arrays of CvPoint[2]. Each CvPoint[2] which store the beginning 
     // and end points of a line. The lines are the "clusters" we are trying to get and each array
@@ -91,8 +88,8 @@ class mvKMeans {
     CvPoint* _Clusters_Best[MAX_CLUSTERS];  
     
     mvLines* _Lines;                        // points to lines we are try to cluster
-    Matrix<int>* _ClusterSeed_Line_Diff_Matrix; // to cache the cluster-line diffs
-    bool* line_already_chosen;              // which lines are already used as starting clusters
+    unsigned _nLines;
+    unsigned _nClusters_Final; // only used for storing the number of clusters after the algorithm
     
     private:    
     // helper functions
@@ -104,9 +101,11 @@ class mvKMeans {
     
     
     public:
-    mvKMeans ();
+    mvKMeans (const char* settings_file);
     ~mvKMeans ();
-    int cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvLines* lines);
+    
+    int cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvLines* lines, unsigned iterations=1);
+    void clearData () { for (unsigned i = 0; i < MAX_CLUSTERS; i++) _Clusters_Best[i] = NULL; }
     void drawOntoImage (IplImage* img);
 };
 

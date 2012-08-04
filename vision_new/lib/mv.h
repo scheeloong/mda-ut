@@ -56,12 +56,39 @@ class mvGradient {
     
     unsigned IMG_WIDTH, IMG_HEIGHT;
     unsigned KERNEL_WIDTH, KERNEL_HEIGHT;
-    int _QUIET_;
     
     public:
     mvGradient (const char* settings_file);
     ~mvGradient ();
-    void filter (const IplImage* img, IplImage* result);
+    
+    void filter (const IplImage* img, IplImage* result) {
+        assert (img != NULL);
+        assert (img->nChannels == 1);
+        assert (result != NULL);
+        assert (result->nChannels == 1);
+            
+        cvMorphologyEx (img, result, scratch, kernel, CV_MOP_GRADIENT);
+        //cvMorphologyEx (img, result, scratch, kernel, CV_MOP_GRADIENT, iterations);
+    };
+};
+
+/** Canny edge detector */
+// pretty trivial
+class mvCanny {
+    unsigned KERNEL_SIZE;
+    float LOW_THRESHOLD, HIGH_THRESHOLD;
+    
+    public:
+    mvCanny (const char* settings_file);
+    
+    void filter (const IplImage* img, IplImage* result) {
+        assert (img != NULL);
+        assert (img->nChannels == 1);
+        assert (result != NULL);
+        assert (result->nChannels == 1);
+        
+        cvCanny (img, result, LOW_THRESHOLD, HIGH_THRESHOLD, KERNEL_SIZE);
+    }
 };
 
 /** HSV color limit filter */
