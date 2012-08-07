@@ -35,12 +35,12 @@ int main( int argc, char** argv ) {
     /// initialization
     // init camera
     mvCamera* camera = NULL;
-	if (CAM_NUMBER == 0)
-		camera = new mvCamera ("settings/camera_0_settings.csv");
+    if (CAM_NUMBER == 0)
+	camera = new mvCamera ("settings/camera_0_settings.csv");
     else if (CAM_NUMBER == 1)
-		camera = new mvCamera ("settings/camera_1_settings.csv");
+	camera = new mvCamera ("settings/camera_1_settings.csv");
     else if (CAM_NUMBER == 2)
-	    camera = new mvCamera ("settings/camera_2_settings.csv");
+	camera = new mvCamera ("settings/camera_2_settings.csv");
     
     // init windows
     mvWindow* win1 = DISPLAY ? new mvWindow ("webcam") : NULL;
@@ -67,7 +67,7 @@ int main( int argc, char** argv ) {
     
     for (;;) {
         frame = camera->getFrameResized(); // read frame from cam
-        if (nframes < 20) {// || nframes % 3 != 0) {
+        if (nframes < 40 || nframes % 4 != 0) {
             nframes++;
             continue;
         }
