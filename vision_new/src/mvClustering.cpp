@@ -296,7 +296,7 @@ void mvKMeans:: drawOntoImage (IplImage* img) {
     assert (img->nChannels == 1);
     
     for (unsigned i = 0; i < _nClusters_Final; i++) {
-        assert (_Clusters_Best[i] != NULL);
-        cvLine (img, _Clusters_Best[i][0],_Clusters_Best[i][1], CV_RGB(50,50,50), 2*LINE_THICKNESS);
+        if (_Clusters_Best[i] != NULL)
+        	cvLine (img, _Clusters_Best[i][0],_Clusters_Best[i][1], CV_RGB(50,50,50), 2*LINE_THICKNESS);
     }
 }

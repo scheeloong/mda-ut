@@ -1,9 +1,9 @@
 ### color filter settings
-HUE_MIN, 90
-HUE_MAX, 150
-SAT_MIN, 100
+HUE_MIN, 170
+HUE_MAX, 10
+SAT_MIN, 120
 SAT_MAX, 255
-VAL_MIN, 50
+VAL_MIN, 10
 VAL_MAX, 255
 
 ### gradient settings
