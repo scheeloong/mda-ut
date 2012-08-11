@@ -58,18 +58,18 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
 
 /** Remove all horizontal lines, since we are interested only in vertical part of gate
     Reorient vertical lines so the smaller y value comes first */
- /*   CvPoint* temp; int swap;
+    CvPoint* temp; int swap;
     for (int i = nlines-1; i >= 0; i--) { // for each line
         temp = (CvPoint*)cvGetSeqElem(lines, i);  
  
-        if (fabs(temp[1].y-temp[0].y) < fabs(temp[1].x-temp[0].x)) {  // horiz line
+        /*if (fabs(temp[1].y-temp[0].y) < fabs(temp[1].x-temp[0].x)) {  // horiz line
             cvSeqRemove(lines,i); // if it is a horiz line, delete it 
         }
-        else if (temp[0].y > temp[1].y) { // sort so lower Y value comes first
+        else*/ if (temp[0].y > temp[1].y) { // sort so lower Y value comes first
             swap=temp[1].y; temp[1].y=temp[0].y; temp[0].y=swap;
             swap=temp[1].x; temp[1].x=temp[0].x; temp[0].x=swap;
         }
-    }*/
+    }
 /** recheck that there are lines found */
     nlines=lines->total; // recalculate number of lines
     if (nlines == 0) { 
@@ -83,7 +83,7 @@ retcode vision_GATE (vision_in &Input, vision_out &Output, char flags) {
     int nseeds=0;
     CvPoint** cseed=0;  // this memory needs to be freed later
     //float min_valid = KMcluster_auto_K (cseed, nseeds, 1,2, lines, nlines, 2, _QUIET);
-    KMcluster_auto_K (cseed, nseeds, 1,2, lines, nlines, 2, _QUIET);
+    KMcluster_auto_K (cseed, nseeds, 1,6, lines, nlines, 2, _QUIET);
     cvReleaseMemStorage (&storage);    
 
 // display clustered lines

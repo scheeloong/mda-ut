@@ -19,7 +19,6 @@ int main (int argc, char** argv) {
     
     /// Grab the filters and data structs we need
     mvHSVFilter HSVFilter ("settings/HSVFilter_settings.csv"); // color filter
-    mvGradient gradient ("settings/test_settings.csv");
     mvHoughLines HoughLines ("settings/HoughLines_settings.csv");
     mvLines lines; // data struct to store lines
     mvHoughCircles HoughCircles ("settings/HoughCircles_settings.csv");
@@ -44,8 +43,6 @@ int main (int argc, char** argv) {
     IplImage * res = mvCreateImage (img); // res is greyscale 
     HSVFilter.filter (img, res);
     win2.showImage (res);
-    
-    gradient.filter (res,res);
     
     //HoughLines.findLines (res, &lines);
     //lines.drawOntoImage (res);
