@@ -53,7 +53,8 @@ class mvCamera {
     int _WRITE_;  
 
     public:
-    mvCamera (const char* settings_file);
+    mvCamera (const char* settings_file, unsigned cam_number);
+    mvCamera (const char* video_file);
     ~mvCamera ();
 
     /* In a monsterous betrayal of good coding, the behaviour of getFrame and 

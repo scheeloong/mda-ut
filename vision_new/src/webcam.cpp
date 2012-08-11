@@ -10,13 +10,13 @@
 
 int main( int argc, char** argv ) {
     unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 0, 
-             LINE = 0, CIRCLE = 0;
+             LINE = 0, CIRCLE = 0, LOAD = 0;
     unsigned long nframes = 0, t_start, t_end;
     
     if (argc == 1) 
         printf ("For options use --help\n\n");
 
-    for (int i = 0; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i],"1") || !strcmp(argv[i],"2"))
             CAM_NUMBER = atoi (argv[i]);
         else if (!strcmp (argv[i], "--no_display") || !strcmp (argv[i], "--no_disp"))
@@ -27,6 +27,10 @@ int main( int argc, char** argv ) {
             LINE = 1;
         else if (!strcmp (argv[i], "--circle"))
             CIRCLE = 1;
+        else if (!strcmp (argv[i], "--load")) {
+            LOAD = i+1; // put the next argument index into LOAD
+            i++;        // skip next arg
+        }
         else if (!strcmp (argv[i], "--help")) {
             printf ("OpenCV based webcam program. Hit 'q' to exit. Defaults to cam0, writes to \"webcam.avi\"\n");
             printf ("Put any integer as an argument (without --) to use that as camera number\n\n");
@@ -40,12 +44,10 @@ int main( int argc, char** argv ) {
     /// initialization
     // init camera
     mvCamera* camera = NULL;
-    if (CAM_NUMBER == 0)
-	camera = new mvCamera ("settings/camera_0_settings.csv");
-    else if (CAM_NUMBER == 1)
-	camera = new mvCamera ("settings/camera_1_settings.csv");
-    else if (CAM_NUMBER == 2)
-	camera = new mvCamera ("settings/camera_2_settings.csv");
+    if (LOAD == 0)
+        camera = new mvCamera ("settings/camera_settings.csv", CAM_NUMBER);
+    else
+        camera = new mvCamera (argv[LOAD]);
     
     // init windows
     mvWindow* win1 = DISPLAY ? new mvWindow ("webcam") : NULL;
@@ -72,7 +74,12 @@ int main( int argc, char** argv ) {
     
     for (;;) {
         frame = camera->getFrameResized(); // read frame from cam
-        if (nframes < 40 || nframes % 2 != 0) {
+        if (!frame) {
+            printf ("Video Finished.\n");
+            break;
+        }
+        
+        if (nframes < 40) {// || nframes % 2 != 0) {
             nframes++;
             continue;
         }
