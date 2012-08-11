@@ -9,7 +9,8 @@
 #include "mvCircles.h"
 
 int main( int argc, char** argv ) {
-    unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 0;
+    unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 0, 
+             LINE = 0, CIRCLE = 0;
     unsigned long nframes = 0, t_start, t_end;
     
     if (argc == 1) 
@@ -22,6 +23,10 @@ int main( int argc, char** argv ) {
             DISPLAY = 0;
         else if (!strcmp (argv[i], "--write"))
             WRITE = 1;
+        else if (!strcmp (argv[i], "--line"))
+            LINE = 1;
+        else if (!strcmp (argv[i], "--circle"))
+            CIRCLE = 1;
         else if (!strcmp (argv[i], "--help")) {
             printf ("OpenCV based webcam program. Hit 'q' to exit. Defaults to cam0, writes to \"webcam.avi\"\n");
             printf ("Put any integer as an argument (without --) to use that as camera number\n\n");
@@ -52,7 +57,7 @@ int main( int argc, char** argv ) {
     mvCanny canny ("settings/test_settings.csv");
     mvHoughLines HoughLines ("settings/test_settings.csv");
     mvLines lines; // data struct to store lines
-    mvHoughCircles HoughCircles ("settings/HoughCircles_settings.csv");
+    mvHoughCircles HoughCircles ("settings/test_settings.csv");
     mvCircles circles; // data struct to store circles
     mvKMeans kmeans ("settings/test_settings.csv");
 
@@ -67,24 +72,34 @@ int main( int argc, char** argv ) {
     
     for (;;) {
         frame = camera->getFrameResized(); // read frame from cam
-        if (nframes < 40 || nframes % 4 != 0) {
+        if (nframes < 40 || nframes % 2 != 0) {
             nframes++;
             continue;
         }
 
         HSVFilter.filter (frame, filter_img); // process it
-        cvErode (filter_img, filter_img, cvCreateStructuringElementEx(5,5,3,3,CV_SHAPE_RECT));  // this gets rid of some noise
-        canny.filter (filter_img, grad_img);
+        mvOpen (filter_img, filter_img, 5, 5);
+        //canny.filter (filter_img, grad_img);
+        mvGradient (filter_img, grad_img, 5, 5);
         cvDilate (grad_img, grad_img);
         
-        HoughLines.findLines (grad_img, &lines);
-        kmeans.cluster_auto (1, 4, &lines);
+        if (LINE) {
+            HoughLines.findLines (grad_img, &lines);
+            kmeans.cluster_auto (1, 4, &lines);
         
-        lines.drawOntoImage (filter_img);
-        kmeans.drawOntoImage (grad_img);
-        kmeans.clearData();
-        //HoughCircles.findCircles (grad_img, &circles);
-        //circles.drawOntoImage (grad_img);
+            lines.drawOntoImage (filter_img);
+            kmeans.drawOntoImage (grad_img);
+            
+            lines.clearData(); // erase line data and reuse allocated mem
+            kmeans.clearData();
+        }
+
+        if (CIRCLE) {
+            HoughCircles.findCircles (grad_img, &circles);
+            printf ("ncircles = %d\n", circles.ncircles());
+            circles.drawOntoImage (grad_img);
+            //circles.clearData();
+        }
 
         if (DISPLAY) {
             win1->showImage (frame);
@@ -95,7 +110,6 @@ int main( int argc, char** argv ) {
         if (WRITE)
             camera->writeFrame (frame);
     
-        lines.clearData(); // erase line data and reuse allocated mem
         circles.clearData();
 
         nframes++;

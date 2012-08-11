@@ -1,15 +1,10 @@
 ### color filter settings
 HUE_MIN, 170
 HUE_MAX, 10
-SAT_MIN, 120
+SAT_MIN, 140
 SAT_MAX, 255
-VAL_MIN, 10
+VAL_MIN, 80
 VAL_MAX, 255
-
-### gradient settings
-GRADIENT_KERNEL_WIDTH, 5
-GRADIENT_KERNEL_HEIGHT, 5
-#GRADIENT_ITERATIONS, 1      
 
 ### canny
 CANNY_KERNEL_SIZE, 5
@@ -17,7 +12,7 @@ CANNY_LOW_THRESHOLD, 30
 CANNY_HIGH_THRESHOLD, 70
 
 ### HoughLines 
-PIXEL_RESOLUTION 1 # step size in pixels, > 1 means the line finder skips pixels
+PIXEL_RESOLUTION 2 # step size in pixels, > 1 means the line finder skips pixels
 ANGULAR_RESOLUTION 0.017 # step size in angles (radians)
 
 ### how many points a line must pass through to be accepted by the alg
@@ -27,6 +22,10 @@ _MIN_LINE_LENGTH_, 0.05          # scaled by image width
 # colinear lines must be this far apart to be considered two lines
 _MIN_COLINEAR_LINE_DIST_ 0.3   # scaled by image width
 
+
+### HoughCircles
+CANNY_HIGH_THRESHOLD, 50
+_MIN_CENTER_DIST_, 0.5
 
 ### lines clustering
 # the following value specifies when the algorithm should choose 1 cluster over 

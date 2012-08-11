@@ -48,29 +48,28 @@ inline IplImage* mvCreateImage_Color (IplImage *img) {
     return temp;
 }
 
-/** Gradient Filter object */
-// Must provide it with 2 images, both of COMMON size 
-class mvGradient {
-    IplImage* scratch;
-    IplConvKernel* kernel; 
+inline void mvGaussian (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h) {
+    cvSmooth (src, dst, kern_w, kern_h);
+}
+inline void mvOpen (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
+    IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
+    cvMorphologyEx (src, dst, NULL, kernel, CV_MOP_OPEN, iterations);
+    cvReleaseStructuringElement (&kernel);
+}
+inline void mvClose (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
+    IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
+    cvMorphologyEx (src, dst, NULL, kernel, CV_MOP_CLOSE, iterations);
+    cvReleaseStructuringElement (&kernel);
+}
+inline void mvGradient (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
+    IplImage* temp = cvCreateImage (cvGetSize(src), IPL_DEPTH_8U, 1);
+    IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
+
+    cvMorphologyEx (src, dst, temp, kernel, CV_MOP_GRADIENT, iterations);
     
-    unsigned IMG_WIDTH, IMG_HEIGHT;
-    unsigned KERNEL_WIDTH, KERNEL_HEIGHT;
-    
-    public:
-    mvGradient (const char* settings_file);
-    ~mvGradient ();
-    
-    void filter (const IplImage* img, IplImage* result) {
-        assert (img != NULL);
-        assert (img->nChannels == 1);
-        assert (result != NULL);
-        assert (result->nChannels == 1);
-            
-        cvMorphologyEx (img, result, scratch, kernel, CV_MOP_GRADIENT);
-        //cvMorphologyEx (img, result, scratch, kernel, CV_MOP_GRADIENT, iterations);
-    };
-};
+    cvReleaseImage (&temp);
+    cvReleaseStructuringElement (&kernel);
+}
 
 /** Canny edge detector */
 // pretty trivial
