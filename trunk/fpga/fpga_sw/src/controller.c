@@ -138,7 +138,7 @@ void stabilizing_motors_force_to_pwm (
         *m_front_right = motor_force_to_pwm(f_front_right);
         *m_rear = motor_force_to_pwm(f_rear);
 
-        HW_NUM pwm_limit = PWM_LIMIT_FACTOR * FULL_PWM;
+        HW_NUM pwm_limit = PWM_LIMIT_FACTOR * MAX_PWM;
 
         // if any pwm is out of bound
         if (ABS(*m_front_left) > pwm_limit ||
@@ -233,10 +233,6 @@ void calculate_pid()
    int i;
    for ( i = 0; i < 5; i++ )
    {
-      if ( motor_duty_cycle[i] < ZERO_PWM )
-         motor_duty_cycle[i] = ZERO_PWM;
-      if ( motor_duty_cycle[i] > FULL_PWM )
-         motor_duty_cycle[i] = FULL_PWM;
       set_motor_duty_cycle(i, motor_duty_cycle[i]);  
    }  
 }
