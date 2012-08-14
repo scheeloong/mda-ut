@@ -138,7 +138,7 @@ void stabilizing_motors_force_to_pwm (
         *m_front_right = motor_force_to_pwm(f_front_right);
         *m_rear = motor_force_to_pwm(f_rear);
 
-        HW_NUM pwm_limit = PWM_LIMIT_FACTOR * MAX_PWM;
+        HW_NUM pwm_limit = MAX_PWM;
 
         // if any pwm is out of bound
         if (ABS(*m_front_left) > pwm_limit ||
@@ -193,11 +193,11 @@ void calculate_pid()
 
    // Print some debug messages every so often...
    if (counter % (128*NUM_DEPTH_VALUES) == 0) {
-	/*printf ("depth current = %d\n", current_orientation.pitch);
+	printf ("depth current = %d\n", current_orientation.pitch);
 	printf ("PID_Depth.P = %f\n", PID_Pitch.P*PID_Pitch.Const_P);
 	printf ("PID_Depth.I = %f\n", PID_Pitch.I*PID_Pitch.Const_I);
 	printf ("PID_Depth.D = %f\n", PID_Pitch.D*PID_Pitch.Const_D);
-	printf ("Depth_PID: %f\n", Pitch_Force_Needed);*/
+	printf ("Depth_PID: %f\n", Pitch_Force_Needed);
     }
 
    /** orientation stability - the signs are almost surely wrong 

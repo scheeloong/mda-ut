@@ -38,7 +38,7 @@ void init()
   // instantiate motor state as stopped and 0 duty cycle
   memset(motor_modes, (int)'s', NUM_MOTORS);
   for (i = 0; i < NUM_MOTORS; i++) {
-    set_motor_duty_cycle(i, HALF_PWM);
+    set_motor_duty_cycle(i, ZERO_PWM);
   }
 
   // Ritchie - Initialize PID controllers
