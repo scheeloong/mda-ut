@@ -26,16 +26,6 @@ int inverse_cubic(double x){
   return (int)(5.12 * inverse_result);
 }
 
-int max(int a, int b)
-{
-  return (a > b) ? a : b;
-}
-
-int min(int a, int b)
-{
-  return (a < b) ? a : b;
-}
-
 void init_lookup() {
   int i;
   for (i = 0; i < SIZE; i++) {
@@ -46,13 +36,11 @@ void init_lookup() {
 
 int pwm_of_force (double force)
 {
-  const int max_pwm = MAX_PWM - ZERO_PWM;
-
   if (force > MIN_LINEAR_FORCE) {
-    return min(MAX_PWM, MIN_LINEAR_PWM + (int)((force - MIN_LINEAR_FORCE) / 0.045 * 5.12));
+    return MIN_LINEAR_PWM + (int)((force - MIN_LINEAR_FORCE) / 0.045 * 5.12);
   }
   if (force < -MIN_LINEAR_FORCE) {
-    return max(-MAX_PWM, -MIN_LINEAR_PWM + (int)((force + MIN_LINEAR_FORCE) / 0.0502 * 5.12));
+    return -MIN_LINEAR_PWM + (int)((force + MIN_LINEAR_FORCE) / 0.0502 * 5.12);
   }
 
   int force_index = (int)((force + 1)*SIZE/2);
