@@ -137,6 +137,10 @@ char get_motor_dir(int motor_num)
 // set motor duty cycle
 void set_motor_duty_cycle(int motor_num, int duty_cycle)
 {
+  // Ensure duty cycle is between MIN_PWM and MAX_PWM
+  duty_cycle = (duty_cycle > MAX_PWM) ? MAX_PWM : duty_cycle;
+  duty_cycle = (duty_cycle < MIN_PWM) ? MIN_PWM : duty_cycle;
+
   // set duty period using duty_cycle as a fraction over 1024
   IOWR(MOTOR_CONTROLLER_0_DUTY_CYCLE, motor_num, duty_cycle * pwm_period / 1024);
   motor_duty_cycles[motor_num] = duty_cycle;

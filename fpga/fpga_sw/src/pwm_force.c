@@ -46,7 +46,7 @@ void init_lookup() {
 
 int pwm_of_force (double force)
 {
-  const int MAX_PWM=FULL_PWM/2;
+  const int max_pwm = MAX_PWM - ZERO_PWM;
 
   if (force > MIN_LINEAR_FORCE) {
     return min(MAX_PWM, MIN_LINEAR_PWM + (int)((force - MIN_LINEAR_FORCE) / 0.045 * 5.12));
