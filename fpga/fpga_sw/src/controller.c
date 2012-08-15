@@ -173,7 +173,7 @@ void calculate_pid()
    previous_orientation = current_orientation;
    get_accel(&accel_data);
    get_orientation(&accel_data, &current_orientation);
-   current_orientation.depth = depth_sum /= NUM_DEPTH_VALUES; // Compute average
+   current_orientation.depth = depth_sum / NUM_DEPTH_VALUES; // Compute average
    
    /** Ritchie - At this point I assume that current_orientation.pitch and .roll should be controlled towards zero
     *            and .depth should be controlled towards target_orientation.depth
@@ -193,11 +193,11 @@ void calculate_pid()
 
    // Print some debug messages every so often...
    if (counter % (128*NUM_DEPTH_VALUES) == 0) {
-	printf ("depth current = %d\n", current_orientation.pitch);
-	printf ("PID_Depth.P = %f\n", PID_Pitch.P*PID_Pitch.Const_P);
-	printf ("PID_Depth.I = %f\n", PID_Pitch.I*PID_Pitch.Const_I);
-	printf ("PID_Depth.D = %f\n", PID_Pitch.D*PID_Pitch.Const_D);
-	printf ("Depth_PID: %f\n", Pitch_Force_Needed);
+	/*printf ("depth current = %d\n", current_orientation.depth);
+	printf ("PID_Depth.P = %f\n", PID_Depth.P*PID_Depth.Const_P);
+	printf ("PID_Depth.I = %f\n", PID_Depth.I*PID_Depth.Const_I);
+	printf ("PID_Depth.D = %f\n", PID_Depth.D*PID_Depth.Const_D);
+	printf ("Depth_PID: %f\n", Depth_Force_Needed);*/
     }
 
    /** orientation stability - the signs are almost surely wrong 
