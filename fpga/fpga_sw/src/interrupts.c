@@ -21,6 +21,21 @@
 int power_failures[7] = {0};
 int old_power_failures[7] = {0};
 
+int enable_controller = 0;
+
+void set_controller(int status)
+{
+   enable_controller = status;
+   if (enable_controller) {
+     IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 7); // Start timer interrupt
+   } else {
+      // Turn off all motors
+      int i;
+      for (i = 0; i < NUM_MOTORS; i++) {
+         set_motor_duty_cycle(i, ZERO_PWM);
+      }
+   }
+}
 
 // Controller Interrupt Routine, should be 100Hz.
 static void timer_interrupts(void* context, alt_u32 id)
@@ -42,7 +57,9 @@ static void timer_interrupts(void* context, alt_u32 id)
    IOWR_ALTERA_AVALON_TIMER_SNAPL(CONTROLLER_INTERRUPT_COUNTER_BASE, 1);
    IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,0); // Clear interrupt (ITO)
    IOWR_ALTERA_AVALON_TIMER_STATUS(CONTROLLER_INTERRUPT_COUNTER_BASE, 0); // Clear TO
-   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,7); // Enable IRQ and Start timer
+   if (enable_controller) {
+      IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,7); // Enable IRQ and Start timer
+   }
 }
 
 // Power management Interrupt routine
@@ -100,22 +117,21 @@ static void pm_interrupt(void *context, alt_u32 id)
 
 void init_interrupts()
 {
-  // Setup power management interrupt
-  alt_ic_isr_register(POWER_MANAGEMENT_SLAVE_0_IRQ_INTERRUPT_CONTROLLER_ID, POWER_MANAGEMENT_SLAVE_0_IRQ,(void *)pm_interrupt,0,0);	// Register Interrupt (check system.h for defs)
+   // Setup power management interrupt
+   alt_ic_isr_register(POWER_MANAGEMENT_SLAVE_0_IRQ_INTERRUPT_CONTROLLER_ID, POWER_MANAGEMENT_SLAVE_0_IRQ,(void *)pm_interrupt,0,0); // Register Interrupt (check system.h for defs)
 
-#ifdef ENABLE_CONTROLLER
+   const int timer_period = CLOCK_SPEED / TIMER_RATE_IN_HZ / NUM_DEPTH_VALUES;
+   const short period_lo = timer_period;
+   const short period_hi = timer_period >> 16;
 
-  const int timer_period = CLOCK_SPEED / TIMER_RATE_IN_HZ / NUM_DEPTH_VALUES;
-  const short period_lo = timer_period;
-  const short period_hi = timer_period >> 16;
-
-  // Setup controller interrupt
-  alt_ic_isr_register(CONTROLLER_INTERRUPT_COUNTER_IRQ_INTERRUPT_CONTROLLER_ID,CONTROLLER_INTERRUPT_COUNTER_IRQ,(void *)timer_interrupts,0,0);	// Register Interrupt (check system.h for defs)
-  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 0);		// Clear control register
-  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 2);		// Continuous Mode ON
-  IOWR_ALTERA_AVALON_TIMER_PERIODL(CONTROLLER_INTERRUPT_COUNTER_BASE, period_lo);   // Timer interrupt period
-  IOWR_ALTERA_AVALON_TIMER_PERIODH(CONTROLLER_INTERRUPT_COUNTER_BASE, period_hi);
-  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 3);	    // Enable timer_0 interrupt
-  IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 7);       // Start timer interrupt
-#endif
+   // Setup controller interrupt
+   alt_ic_isr_register(CONTROLLER_INTERRUPT_COUNTER_IRQ_INTERRUPT_CONTROLLER_ID,CONTROLLER_INTERRUPT_COUNTER_IRQ,(void *)timer_interrupts,0,0); // Register Interrupt (check system.h for defs)
+   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 0); // Clear control register
+   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 2); // Continuous Mode ON
+   IOWR_ALTERA_AVALON_TIMER_PERIODL(CONTROLLER_INTERRUPT_COUNTER_BASE, period_lo); // Timer interrupt period
+   IOWR_ALTERA_AVALON_TIMER_PERIODH(CONTROLLER_INTERRUPT_COUNTER_BASE, period_hi);
+   IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 3); // Enable timer_0 interrupt
+   if (enable_controller) {
+      IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 7); // Start timer interrupt
+   }
 }
