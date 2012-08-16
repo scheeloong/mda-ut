@@ -210,23 +210,39 @@ void power_status () {
 
 void power_on () {
     cmd_ok = 1;
-    printf ("turned power on.\n");
-    fprintf (infp, "p 1\n");
+
+    // Disable motors first
+    fprintf (infp, "sms a\n");
+    fprintf (infp, "sc 0\n");
+
+    // Make sure the power is on
+    write_and_flush_term ("p 1\n");
     fprintf (infp, "spf %x\n", PWM_FREQ);
-    fprintf (infp, "smd a %x\n", ZERO_DC);
+
+    // Wait before turning motors on at neutral duty cycle
+    sleep(1);
     fprintf (infp, "smf a\n");
-    power = 1;
+
+    // Wait before turning controller on
+    sleep(1);
+    fprintf (infp, "sc 1\n");
+
     fflush(infp);
+
+    power = 1;
+    printf ("turned power on.\n");
 }
 
 void power_off () {
     cmd_ok = 1;
-    printf ("turned power off.\n");
     fprintf (infp, "sms a\n");
-    fprintf (infp, "smd a %x\n", ZERO_DC);
+    fprintf (infp, "sc 0\n");
+
     // Make sure the power is off
     write_and_flush_term ("p 0\n");
+
     power = 0;
+    printf ("turned power off.\n");
 }
 
 void get_accel (int *x, int *y, int *z) {
