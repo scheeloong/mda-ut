@@ -3,9 +3,6 @@
 // allow the user to interact when using commands
 #define INTERACTIVE
 
-// enable the controller
-#define ENABLE_CONTROLLER
-
 // constants
 #define CLOCK_SPEED 50000000
 #define TIMER_RATE_IN_HZ 20

@@ -26,9 +26,9 @@ struct command_struct my_cmds[] = {
   {"gd\n", COMMAND_DEPTH, "gd - get depth\n  Usage: gd\n\n  Print depth (not converted)\n"},
   {"gm\n", COMMAND_MOTORS, "gm - get motor data\n  Usage: gm\n\n  Print all motor settings (direction on one line and duty cycle on the next)\n"},
   {"h", COMMAND_HELP, "h - help\n  Usage: h <cmd>\n\n  Print the help message for all commands that start with cmd, leave empty to print all help messages\n"},
-  {"p", COMMAND_POW, "p - power off/on\n  Usage: p (0|1)\n\n Turn off/on power to all the voltage fails\n"},
+  {"p", COMMAND_POW, "p - power off/on\n  Usage: p (0|1)\n\n  Turn off/on power to all the voltage fails\n"},
   {"sd", COMMAND_SET_DEPTH, "sd - set depth of submarine\n"},
-  {"sh", COMMAND_HEADING, "sh - set heading of motor\n positive or negative, range from -157 to 157\n"},
+  {"sh", COMMAND_HEADING, "sh - set heading of motor positive or negative, range from -157 to 157\n"},
   {"smb", COMMAND_BRAKE, "smb - set motor brake\n  Usage: smb <n>\n\n  Turn the nth motor off\n"},
   {"smd", COMMAND_DUTY_CYCLE, "smd - set motor duty cycle\n  Usage: smd <n> <0xdc>\n\n  Set the duty cycle of the nth motor to dc\nNote: the duty cycle is inputted in hex out of 0x3ff (1024 in decimal)\n"},
   {"smf", COMMAND_FORWARD, "smf - set motor forward\n  Usage: smf <n>\n\n  Turn on the nth motor in the forward direction\n"},
@@ -36,7 +36,8 @@ struct command_struct my_cmds[] = {
   {"sms", COMMAND_STOP, "sms - set motor stop\n  Usage: sms <n>\n\n  Turn the nth motor off\n"},
   {"spf", COMMAND_FREQ, "spf - set PWM frequency\n  Usage: spf <0xn>\n\n  Set the PWM frequency to n in kilohertz\nNote: the frequency is inputted in hex\n"},
   {"stop\n", COMMAND_STOP_ALL, "stop\n  Usage: stop\n\n  Stop all motors\n"},
-  {"ss", COMMAND_SPEED, "ss - set forward or backward speed of motor\n positive or negative, range from -157 to 157\n"},
+  {"ss", COMMAND_SPEED, "ss - set forward or backward speed of motor positive or negative, range from -157 to 157\n"},
+  {"sc", COMMAND_CONTROLLER, "sc - set controller off/on\n  Usage: sc (0|1)\n\n  Turn off/on controller\n"},
 };
 
 // the size of the above array
@@ -257,6 +258,11 @@ void process_command(char *st)
       i = read_hex(st);
       set_target_depth(i);
       printf("setting target depth to %d\n", i);
+      break;
+    case COMMAND_CONTROLLER:
+      i = read_hex(st);
+      set_controller(i);
+      printf("setting controller %s\n", (i % 2  == 0) ? "off" : "on");
       break;
   }
 }
