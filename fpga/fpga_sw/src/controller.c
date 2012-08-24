@@ -111,9 +111,9 @@ void pid_init () // call this anytime before calling calculate_pid2
     PID_Depth.Alpha = DEPTH_ALPHA;
 
     // Initialize target orientation
-    set_target_depth(get_depth());
+    set_target_depth(0);
     set_target_speed(0);
-    //set_target_heading(get_heading());
+    set_target_heading(0);
 
     // Initialize motor linearization lookup table
     init_lookup();
