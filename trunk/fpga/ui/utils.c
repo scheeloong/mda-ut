@@ -102,9 +102,13 @@ void write_and_flush_term (char *cmd)
     // Flush outfp until you see the command being printed out
     const unsigned int BUF_SIZE = 128;
     char buf[BUF_SIZE];
+    const char * power_fail_msg = "power failed\n";
     while (1) {
         fgets(buf, BUF_SIZE, outfp);
         fprintf(log, "%s", buf);
+        if (strcmp(buf, power_fail_msg) == 0) {
+            printf("%s", buf);
+        }
         if (strcmp(buf, cmd) == 0) {
             break;
         }

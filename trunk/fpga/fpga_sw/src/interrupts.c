@@ -27,6 +27,7 @@ void set_controller(int status)
 {
    enable_controller = status;
    if (enable_controller) {
+     set_target_depth(get_depth());
      IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 7); // Start timer interrupt
    } else {
       // Turn off all motors
@@ -81,8 +82,8 @@ static void pm_interrupt(void *context, alt_u32 id)
    // Turn off power
    IOWR(POWER_MANAGEMENT_SLAVE_0_BASE, 0, 0);
 
-   // Might be in the middle of printing, send a newline
-   alt_putchar('\n');
+   // Might be in the middle of printing, print a leading newline
+   alt_printf("\npower failed\n");
    int i;
    for (i = 0; i < 7; i++) {
       if (power_failures[i] == 0) {
