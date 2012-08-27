@@ -11,10 +11,11 @@ A=libmotors.a
 
 all: $(OBJ) $(A)
 
-$(A): $(OBJ)
+$(A): $(OBJ) $(INC)
+	rm -f $(A)
 	ar -cqv $@ $(LIBO)
 
-$(OBJ): $(LIBO)
+$(OBJ): $(LIBO) $(INC)
 	$(CC) $(LIBO) -o $@ $(FLAGS)
 
 clean:

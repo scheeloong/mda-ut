@@ -13,6 +13,18 @@ physical_model::physical_model()
    reset_speed();
 };
 
+physical_model::physical_model(float x, float y, float z)
+{
+   // simulator coordinates
+   position.x = x;
+   position.y = y;
+   position.z = z;
+}
+
+physical_model::~physical_model()
+{
+}
+
 void physical_model::reset_angle()
 {
    angle.pitch = A_P;
@@ -34,40 +46,54 @@ void physical_model::reset_speed()
    angular_speed = 0;
 }
 
-physical_model::physical_model(float x, float y, float z)
+void physical_model::reset_accel()
 {
-   // simulator coordinates
-   position.x = x;
-   position.y = y;
-   position.z = z;
+   accel = 0;
+   depth_accel = 0;
+   angular_accel = 0;
 }
 
-physical_model::~physical_model()
+void physical_model::print()
 {
+   printf ("speed: %6.2f\t", speed);
+   printf ("depth_speed: %6.2f\t", depth_speed);
+   printf ("ang_speed: %6.2f\n", angular_speed); 
+   printf ("accel: %6.2f\t", accel);
+   printf ("depth_accel: %6.2f\t", depth_accel);
+   printf ("ang_accel: %6.2f\n\n", angular_accel); 
 }
 
 #define DEPTH_SPEED_SCALING 500000.0
 #define FWD_SPEED_SCALING 50000.0
 #define SIDE_SPEED_SCALING 50000.0
-void range_angle_int(int& angle)
+void range_angle (float& angle)
 {
-   if (angle >= 180)
-      angle -= 360;
-   else if (angle <= -180)
-      angle += 360;
+   if (angle >= 180)        angle -= 360;
+   else if (angle <= -180)  angle += 360;
+}
+float friction_cap (float frictional_accel)
+{
+   if (frictional_accel >= 0.5)        frictional_accel = 0.5;
+   else if (frictional_accel <= -0.5)  frictional_accel = -0.5;
 }
 
 // time past since last iteration in seconds
 void physical_model::update(long delta_time)
 {
-   float distance_traveled = speed * delta_time/ FWD_SPEED_SCALING;
+    speed +=  accel - FWD_LOSS_CONST*speed;
+    depth_speed += depth_accel - DEPTH_LOSS_CONST*depth_speed;
+    angular_speed += angular_accel - ANG_LOSS_CONST*angular_speed;
+    
+    //if (fabs(speed) < 0.1) speed = 0;
+    //if (fabs(depth_speed) < 0.1) depth_speed = 0;
+    //if (fabs(angular_speed) < 0.1) angular_speed = 0;
 
-   position.x = position.x + sin(angle.yaw * M_PI/180) * distance_traveled;
-   position.z = position.z - cos(angle.yaw * M_PI/180) * distance_traveled;
+    float distance_traveled = speed * delta_time/ FWD_SPEED_SCALING;
+    position.x = position.x + sin(angle.yaw * M_PI/180) * distance_traveled;
+    position.z = position.z - cos(angle.yaw * M_PI/180) * distance_traveled;
+    position.y += depth_speed * delta_time/DEPTH_SPEED_SCALING;
 
-
-   position.y += depth_speed * delta_time/DEPTH_SPEED_SCALING;
-
-   float dtheta = angular_speed * delta_time/ SIDE_SPEED_SCALING;
-   angle.yaw += dtheta;
+    float dtheta = angular_speed * delta_time/ SIDE_SPEED_SCALING;
+    angle.yaw += dtheta;
+    range_angle (angle.yaw);
 }
