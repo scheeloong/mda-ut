@@ -106,6 +106,9 @@ void set_pow(int on_off)
 // set motor direction
 void set_motor_dir(int motor_num, enum MOTOR_DIR dir)
 {
+  if (motor_num == 2) motor_num = 0;
+  else if (motor_num == 0) motor_num = 2;
+
   switch(dir) {
     case MOTOR_DIR_STOPPED:
       IOWR(MOTOR_CONTROLLER_0_BASE, motor_num, 0x0);
@@ -137,6 +140,9 @@ char get_motor_dir(int motor_num)
 // set motor duty cycle
 void set_motor_duty_cycle(int motor_num, int duty_cycle)
 {
+  if (motor_num == 2) motor_num = 0;
+  else if (motor_num == 0) motor_num = 2;
+
   // Ensure duty cycle is between MIN_PWM and MAX_PWM
   duty_cycle = (duty_cycle > MAX_PWM) ? MAX_PWM : duty_cycle;
   duty_cycle = (duty_cycle < MIN_PWM) ? MIN_PWM : duty_cycle;

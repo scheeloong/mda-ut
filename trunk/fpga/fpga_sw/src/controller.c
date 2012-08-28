@@ -211,8 +211,8 @@ void calculate_pid()
    HW_NUM m_right = get_motor_duty_cycle(3);
    
    stabilizing_motors_force_to_pwm ( // this calculates the pwms for these 3 motors
-      0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_left
-      -0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_right
+      -0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_left
+      0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_right
       -0.5*Pitch_Force_Needed + 0.5*Depth_Force_Needed, // m_rear
       &m_front_left,
       &m_front_right,
