@@ -28,6 +28,8 @@ void Motors::move(MOVE_DIR dir, float accel)
       model->angular_accel = 0;
       break;
    }
+   
+   cap_accel ();
 }
 
 void Motors::translate(MOVE_DIR dir)
@@ -124,4 +126,19 @@ void Motors::key_command (char key) {
             model->angular_accel = 0;
             break;
     }
+}
+
+void Motors::cap_accel () {
+    if (model->accel > FWD_ACCEL_CONST*ACCEL_LEVEL_LIMIT) 
+        model->accel = FWD_ACCEL_CONST*ACCEL_LEVEL_LIMIT;
+    if (model->accel < -FWD_ACCEL_CONST*ACCEL_LEVEL_LIMIT) 
+        model->accel = -FWD_ACCEL_CONST*ACCEL_LEVEL_LIMIT;
+    if (model->depth_accel > DEPTH_ACCEL_CONST*ACCEL_LEVEL_LIMIT) 
+        model->depth_accel = DEPTH_ACCEL_CONST*ACCEL_LEVEL_LIMIT;
+    if (model->depth_accel < -DEPTH_ACCEL_CONST*ACCEL_LEVEL_LIMIT) 
+        model->depth_accel = -DEPTH_ACCEL_CONST*ACCEL_LEVEL_LIMIT;
+    if (model->angular_accel > ANG_ACCEL_CONST*ACCEL_LEVEL_LIMIT) 
+        model->angular_accel = ANG_ACCEL_CONST*ACCEL_LEVEL_LIMIT;
+    if (model->angular_accel < -ANG_ACCEL_CONST*ACCEL_LEVEL_LIMIT) 
+        model->angular_accel = -ANG_ACCEL_CONST*ACCEL_LEVEL_LIMIT;
 }

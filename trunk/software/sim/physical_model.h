@@ -7,9 +7,13 @@
 #define POS_INC .2
 #define PI 3.14159265
 
-#define FWD_LOSS_CONST 0.06
-#define DEPTH_LOSS_CONST 0.09
-#define ANG_LOSS_CONST 0.06
+#define DEPTH_SPEED_SCALING 1.0
+#define FWD_SPEED_SCALING 0.4
+#define SIDE_SPEED_SCALING 1.5
+
+#define FWD_LOSS_CONST 0.12
+#define DEPTH_LOSS_CONST 0.18
+#define ANG_LOSS_CONST 0.10
 
 class physical_model
 {
@@ -23,7 +27,7 @@ public:
    physical_model();
    physical_model(float x, float y, float z);
    ~physical_model();
-   void update(long delta_time);
+   void update(float delta_t);
    void reset_angle();
    void reset_pos();
    void reset_speed();

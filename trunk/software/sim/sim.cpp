@@ -1,12 +1,11 @@
 #include <GL/glut.h>
-#include <sys/time.h>
+#include <time.h>
 #include "bmp_io.h"
 #include "types.h"
 #include "physical_model.h"
 #include "sim.h"
 
 const float sky[4] = { .527343, .804687, 5/*1*/, 1.0f};
-static struct timeval last;
 
 /**
 * @brief makes texture from given file
@@ -65,17 +64,14 @@ void set_camera() {
 */
 void anim_scene() 
 {
-   struct timeval cur;
-   gettimeofday(&cur, NULL);
-   
-   long delta = (long)(cur.tv_sec*1e6+cur.tv_usec - (last.tv_sec*1e6+last.tv_usec));
-   if (delta > DELAY)
+   unsigned t = clock();
+   float delta_t = (float)(t - clock_ticks_elapsed) / CLOCKS_PER_SEC; // in seconds
+      
+   if (delta_t > FRAME_DELAY)
    {
-      last = cur;
-
-      delta = (int)DELAY;
-      model.update(delta);
+      model.update((float)delta_t);
       glutPostRedisplay();
+      clock_ticks_elapsed = t;
    }
 }
 
@@ -92,8 +88,7 @@ void init() {
    glEnable (GL_LINE_SMOOTH);
    glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
    glLineWidth (1.5);
-
-   gettimeofday(&last, NULL);
+   
    model.reset_pos();
    model.reset_angle();
    model.angle.pitch = 0;
@@ -196,6 +191,8 @@ void init() {
 
    init_fog();
    init_site();
+   
+   clock_ticks_elapsed = clock();
 }
 
 void destroy () {  

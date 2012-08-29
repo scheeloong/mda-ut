@@ -3,7 +3,6 @@
 #include "types.h"
 #include "physical_model.h"
 #include "sim.h"
-#include "sim_cv.h"
 
 /**
  * Because the opencv code we have assumes that images passed to it are of the size 
@@ -12,11 +11,11 @@
  */
 
 unsigned display_cv;
-IplImage *cv_img_fwd, *cv_img_down; // stores the front and down camera imgs respectively
+IplImage *cv_img_fwd=NULL, *cv_img_down=NULL; // stores the front and down camera imgs respectively
 
 void cv_init () {
-    unsigned width=50, height = 50; // temporary
-    
+    unsigned width=600, height = 400; // temporary
+
     display_cv = 1;
     cv_img_fwd = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
     cv_img_fwd->origin = 1;

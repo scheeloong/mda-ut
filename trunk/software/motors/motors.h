@@ -1,13 +1,16 @@
 #ifndef MOTORS_H
 #define MOTORS_H
 
-#include "../sim_new/physical_model.h"
+#include "../sim/physical_model.h"
 #include <stdlib.h>
 
 #define DEFAULT_ACCEL 1
-#define FWD_ACCEL_CONST 0.02
-#define DEPTH_ACCEL_CONST 0.06
-#define ANG_ACCEL_CONST 0.1
+
+#define FWD_ACCEL_CONST 1
+#define DEPTH_ACCEL_CONST 1
+#define ANG_ACCEL_CONST 1
+
+#define ACCEL_LEVEL_LIMIT 6
 
 enum MOVE_DIR {
   STOP,
@@ -42,6 +45,8 @@ class Motors {
     void debug(DEBUG_CMD cmd);
     
   private:
+    void cap_accel ();  
+      
     physical_model *model; // this deals with velocities in the sim
 };
 
