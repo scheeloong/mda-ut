@@ -9,20 +9,19 @@
 #include <GL/glut.h>
 #include <stdlib.h>
 #include <math.h>
-#include <sys/time.h>
+#include <time.h>
 #include "bmp_io.h"
 #include "types.h"
 #include "physical_model.h"
 #include "sim.h"
-#include "sim_cv.h"
 
 #include <highgui.h>
 
-#include "../motors_new/motors.h"
+#include "../motors/motors.h"
 
-unsigned int randNum;
-
-GLuint texName[10];
+unsigned int randNum;   // global to determine fog thickness and site positions
+GLuint texName[10];     // global for names of textures
+unsigned clock_ticks_elapsed = 0;   // ticks is system ticks, not seconds.
 
 /* physical model*/
 physical_model model;
@@ -59,7 +58,7 @@ int main(int argc, char** argv)
          "  (and other undocumented features)\n"
          "  TO CHANGE inital position, see init.h\n"
          "-----------------------------------------\n");
-      
+   
    /*glut inits*/
    glutInit(&argc, argv);
    glutInitDisplayMode(GLUT_SINGLE | GLUT_DEPTH | GLUT_RGB | GLUT_DOUBLE);
@@ -67,17 +66,17 @@ int main(int argc, char** argv)
    glutInitWindowPosition(10, 0);
    glutCreateWindow ("Forwards Cam");
    init();
-      
-   cv_init();
-
+   cv_init(); 
+   
    /** register callback functions for glut */
    glutReshapeFunc  (cv_reshape);                    // called when window resized
    glutKeyboardFunc (cv_keyboard);                  // called with key pressed
    glutDisplayFunc  (cv_display);                    // called when glutPostRedisplay() raises redraw flag
    glutIdleFunc     (anim_scene);                        // called when idle (simulate speed)
-   
-   cv_reshape (600, 400); 
-   /*start the main glut loop*/
+
+    //cv_reshape (600, 400); 
+
+    /*start the main glut loop*/
    glutMainLoop();
    
    destroy();

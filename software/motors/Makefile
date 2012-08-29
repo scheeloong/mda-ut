@@ -1,7 +1,8 @@
 CC=g++
 FLAGS=-Wall -lm
 LIBO=motors.o main.o
-INC=motors.h
+SIMDIR=../sim
+INC=motors.h $(SIMDIR)/physical_model.h
 OBJ=motors
 A=libmotors.a
 

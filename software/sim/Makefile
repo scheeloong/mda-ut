@@ -6,12 +6,12 @@ AFLAGS=-L$(CVDIR) $(CVDIR)$(CVA) -L$(MOTORSDIR) $(MOTORSDIR)$(MOTORSA)
 
 FLAGS= -Wall `pkg-config opencv --cflags --libs`
 
-INC=init.h sim.h sim_cv.h physical_model.h planks.h types.h $(MOTORSDIR)/motors.h
+INC=init.h sim.h physical_model.h planks.h types.h $(MOTORSDIR)/motors.h
 
-MOTORSDIR=../motors_new/
+MOTORSDIR=../motors/
 MOTORSA=libmotors.a
 
-CVDIR=../vision_new/
+CVDIR=../vision/
 CVA=libvision.a
 
 sim: $(INC) $(OBJS) $(CVDIR)$(CVA) $(MOTORSDIR)$(MOTORSA)
@@ -21,6 +21,7 @@ $(CVDIR)$(CVA):
 	make -C $(CVDIR) $(CVA)
 
 $(MOTORSDIR)$(MOTORSA):
+	make -C $(MOTORSDIR) clean
 	make -C $(MOTORSDIR) $(MOTORSA)
 
 .cpp.o:  $(INC)

@@ -1,8 +1,33 @@
-#ifndef _SIM_CV_H_
-#define _SIM_CV_H_
+#ifndef _SIM_COMMON_H_
+#define _SIM_COMMON_H_
+
+extern physical_model model;
+extern GLuint texName[10];
+extern unsigned clock_ticks_elapsed;
+
+#define VERBOSE_CAMERA 0 // print lots of random stuff if 1
+#define FRAME_DELAY 0.01 // max refresh rate in seconds
+
+/* makes texture from given file, outputs textrue name as Gluint */
+void makeTextureImage(char filename[], GLuint tex_name);
+/* setup camera */
+void set_camera();
+/* simulates speed */
+void anim_scene(); 
+/* reads textures and define lighting */
+void init();
+/* destroys defined objects */
+void destroy();
+
+/** opencv related functions below */
 
 #include <highgui.h>
-#include "../motors_new/motors.h"
+#include "../motors/motors.h"
+
+#define CAMERA_FIELD_OF_VIEW 52 //37
+extern physical_model model;
+extern Motors m;
+extern unsigned display_cv;
 
 /** OpenCV integration section starts here.
  *  Info:
@@ -31,14 +56,8 @@
  * User has no input when cv is running. cv will overwrite the user's key.
  * 
  * This is implemented by adding a section in cv_display that sends img to cv and processes
- * it. Thus cv will see a new image immediately as it is painted on window.
- * 
+ * it. Thus cv will see a new image immediately as it is painted on window. 
  */
-
-#define CAMERA_FIELD_OF_VIEW 52 //37
-extern physical_model model;
-extern Motors m;
-extern unsigned display_cv;
 
 void cv_init ();
 void cvQueryFrameGL (IplImage* img);
