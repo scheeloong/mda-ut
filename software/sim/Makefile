@@ -24,7 +24,7 @@ $(MOTORSDIR)$(MOTORSA):
 	make -C $(MOTORSDIR) clean
 	make -C $(MOTORSDIR) $(MOTORSA)
 
-.cpp.o:  $(INC)
+.cpp.o: $(INC)
 	g++ -c $< $(FLAGS)
 
 clean:

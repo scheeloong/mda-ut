@@ -86,13 +86,13 @@ void physical_model::update(float delta_t)
     //if (fabs(depth_speed) < 0.1) depth_speed = 0;
     //if (fabs(angular_speed) < 0.1) angular_speed = 0;
 
-    float distance_traveled = speed * delta_t/ FWD_SPEED_SCALING;
+    float distance_traveled = speed * delta_t * FWD_SPEED_SCALING;
         
     position.x = position.x + sin(angle.yaw * M_PI/180) * distance_traveled;
     position.z = position.z - cos(angle.yaw * M_PI/180) * distance_traveled;
-    position.y += depth_speed * delta_t/DEPTH_SPEED_SCALING;
+    position.y += depth_speed * delta_t * DEPTH_SPEED_SCALING;
 
-    float dtheta = angular_speed * delta_t / SIDE_SPEED_SCALING;    
+    float dtheta = angular_speed * delta_t * SIDE_SPEED_SCALING;    
     angle.yaw += dtheta;
     range_angle (angle.yaw);
 }
