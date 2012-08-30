@@ -8,28 +8,18 @@
 # to change what you want to build
 #
 FPGA_DIR=./fpga
-SIM_DIR=./sim
-VISION_DIR=./vision
-MOTORS_DIR=./motors
+SOFTWARE_DIR=./software
 
 all: vision sim fpga motors
 
 fpga:
 	$(MAKE) -C $(FPGA_DIR)
 
-vision:
-	$(MAKE) -C $(VISION_DIR)
-
-sim:
-	$(MAKE) -C $(SIM_DIR)
-
-motors:
-	$(MAKE) -C $(MOTORS_DIR)
+software:
+	$(MAKE) -C $(SOFTWARE_DIR)
 
 clean:
 	$(MAKE) -C $(FPGA_DIR) $@
-	$(MAKE) -C $(SIM_DIR) $@
-	$(MAKE) -C $(VISION_DIR) $@
-	$(MAKE) -C $(MOTORS_DIR) $@
+	$(MAKE) -C $(SOFTWARE_DIR) $@
 
 .PHONY: all clean fpga vision sim motors
