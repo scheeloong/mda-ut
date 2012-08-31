@@ -14,10 +14,17 @@
 #include "types.h"
 #include "physical_model.h"
 #include "sim.h"
+#include "../vision/lib/mda_vision.h"
 
 #include <highgui.h>
 
 #include "../motors/motors.h"
+
+// debug flags
+unsigned DEBUG_MODEL = 0;
+
+// opencv variables
+CV_TASK_ENUM cv_task_enum;
 
 unsigned int randNum;   // global to determine fog thickness and site positions
 GLuint texName[10];     // global for names of textures
@@ -34,30 +41,52 @@ Motors m(&model);
 */
 int main(int argc, char** argv)
 {   
+    printf (
+    "\n   Welcome to the Mechatronics Design Association Simulator!\n"
+    "       --help:         print this message and exit\n"
+    "       --rand:         randomize the fog density and obstacle positions\n"
+    "       --debug-model:  print speed and accel of model\n"
+    "\n   Run Vision Module without Control\n"
+    "       --vtest\n"
+    "       --vgate\n"
+    "       --vpath\n"
+    "       --vbuoy\n"
+    "       --vframe\n"
+    "\n   Commands: \n"
+    "      wasd     -  accelerate fowards/back and turn on vertical axis\n"
+    "      rf       -  accelerate rise/sink\n"
+    "      e        -  passive stop (all accel to zero)\n"
+    "      <space>  -  active stop\n"
+    "      ijkl     -  translate fowards/back and turn on vertical axis\n"
+    "      o;       -  translate rise/sink\n"
+    "      x        -  reset angle\n"
+    "      z        -  reset position\n"
+    "      p        -  save screenshot as cvSimImg.jpg\n\n"
+    ); 
+    
     randNum = 0;
+    cv_task_enum = NO_TASK; // no task
     
     for (int i = 0; i < argc; i++) {
-        if (!strcmp(argv[i], "-r")) {
+        if (!strcmp(argv[i], "--help"))
+            return (0);
+        else if (!strcmp(argv[i], "--rand")) {
             srand (time(NULL));
             randNum = rand() % 15000;
         }
+        else if (!strcmp(argv[i], "--debug-model"))
+            DEBUG_MODEL = 1;
+        else if (!strcmp(argv[i], "--vtest"))
+            cv_task_enum = CV_VISION_TEST;
+        else if (!strcmp(argv[i], "--vgate"))
+            cv_task_enum = CV_VISION_GATE;
+        else if (!strcmp(argv[i], "--vpath"))
+            cv_task_enum = CV_VISION_PATH;
+        else if (!strcmp(argv[i], "--vbuoy"))
+            cv_task_enum = CV_VISION_BUOY;
+        else if (!strcmp(argv[i], "--vframe"))
+            cv_task_enum = CV_VISION_FRAME;
     }
-   
-   printf(
-    "*** Possible Options:\n" 
-    "  -r: randomize site\n"
-    "*** Commands: \n"
-         "  ijkl to strafe in yz plane\n"
-         "  wasd to move fowards/back and turn on vertical axis\n"
-         "  r and f to roll\n"
-         "  t and g to pitch\n"
-         "  x to reset angle, z to reset position\n"
-         "  <> to set reverse/forward speed\n"
-         "  -+ to set down/up depth speed\n"
-         "  p to take a screenshot saved as cvSimImg.jpg\n"
-         "  (and other undocumented features)\n"
-         "  TO CHANGE inital position, see init.h\n"
-         "-----------------------------------------\n");
    
    /*glut inits*/
    glutInit(&argc, argv);

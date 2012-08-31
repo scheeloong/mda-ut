@@ -1,6 +1,8 @@
 #ifndef _SIM_COMMON_H_
 #define _SIM_COMMON_H_
 
+extern unsigned DEBUG_MODEL;
+
 extern physical_model model;
 extern GLuint texName[10];
 extern unsigned clock_ticks_elapsed;
@@ -24,10 +26,19 @@ void destroy();
 #include <highgui.h>
 #include "../motors/motors.h"
 
+enum CV_TASK_ENUM {
+    NO_TASK,
+    CV_VISION_TEST,
+    CV_VISION_GATE,
+    CV_VISION_PATH,
+    CV_VISION_BUOY,
+    CV_VISION_FRAME
+};
+
 #define CAMERA_FIELD_OF_VIEW 52 //37
 extern physical_model model;
 extern Motors m;
-extern unsigned display_cv;
+extern CV_TASK_ENUM cv_task_enum;
 
 /** OpenCV integration section starts here.
  *  Info:
