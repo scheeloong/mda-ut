@@ -21,8 +21,6 @@ MDA_VISION_MODULE_TEST* vision_test;
 void cv_init () {
     unsigned width=600, height = 400; // temporary
     
-    printf ("wat happen %d\n", cv_task_enum);
-    
     if (cv_task_enum == CV_VISION_TEST)
         vision_test = new MDA_VISION_MODULE_TEST;
 

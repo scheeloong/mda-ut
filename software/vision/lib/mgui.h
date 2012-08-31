@@ -31,7 +31,7 @@ void read_common_mv_setting (const char setting_name[], TYPE &value)
 // The first 4 windows created are moved automatically to good locations
 // on the screen
 #define NUM_SUPPORTED_WINDOWS 4 
-#define WINDOW_NAME_LEN 20
+#define WINDOW_NAME_LEN 50
 class mvWindow {
     char _name[WINDOW_NAME_LEN];
     int _window_number;
