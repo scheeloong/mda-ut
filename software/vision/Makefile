@@ -5,8 +5,9 @@ SRCDIR=src/
 OBJDIR=obj/
 A=libvision.a
 
-INC=$(LIBDIR)mgui.h $(LIBDIR)mv.h $(LIBDIR)mvLines.h $(LIBDIR)mvCircles.h
+INC=$(LIBDIR)mgui.h $(LIBDIR)mv.h $(LIBDIR)mvLines.h $(LIBDIR)mvCircles.h $(LIBDIR)mda_vision.h
 OBJ=$(OBJDIR)mgui.o $(OBJDIR)mv.o $(OBJDIR)mvHSVFilter.o $(OBJDIR)mfile.o $(OBJDIR)mvLines.o $(OBJDIR)mvClustering.o $(OBJDIR)mvCircles.o
+VOBJ=$(OBJDIR)mda_vision.o
 TEST=$(OBJDIR)main.o
 WEBCAM=$(OBJDIR)webcam.o
 
@@ -16,14 +17,14 @@ $(OBJDIR)%.o: $(SRCDIR)%.cpp $(INC)
 	$(CC) -Wall -I$(LIBDIR) -c $< -o $@ $(CVFLAGS)
 
 # test is the main executable and depends on each object
-test: $(OBJ) $(TEST)
-	$(CC) -Wall $(OBJ) $(TEST) -o $@ $(CVFLAGS)
+test: $(OBJ) $(VOBJ) $(TEST)
+	$(CC) -Wall $(OBJ) $(VOBJ) $(TEST) -o $@ $(CVFLAGS)
 # webcam is another executable
-webcam: $(OBJ) $(WEBCAM)
-	$(CC) -Wall $(OBJ) $(WEBCAM) -o $@ $(CVFLAGS)
+webcam: $(OBJ) $(VOBJ) $(WEBCAM)
+	$(CC) -Wall $(OBJ) $(VOBJ) $(WEBCAM) -o $@ $(CVFLAGS)
 # archive file
-$(A): $(OBJ)
-	ar -cvq $@ $(OBJ)
+$(A): $(OBJ) $(VOBJ)
+	ar -cvq $@ $(OBJ) $(VOBJ)
 
 clean:
 	rm -f test webcam ./obj/* $(A) ./*~

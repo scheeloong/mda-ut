@@ -3,6 +3,7 @@
 #include "types.h"
 #include "physical_model.h"
 #include "sim.h"
+#include "../vision/lib/mda_vision.h"
 
 /**
  * Because the opencv code we have assumes that images passed to it are of the size 
@@ -10,13 +11,21 @@
  * abide by this. We will use a temp image and rescale that image to common size
  */
 
-unsigned display_cv;
-IplImage *cv_img_fwd=NULL, *cv_img_down=NULL; // stores the front and down camera imgs respectively
+IplImage* cv_img_fwd = NULL;
+IplImage* cv_img_down = NULL; // stores the front and down camera imgs respectively
+IplImage* cv_img_result = NULL;
+
+// tasks
+MDA_VISION_MODULE_TEST* vision_test;
 
 void cv_init () {
     unsigned width=600, height = 400; // temporary
+    
+    printf ("wat happen %d\n", cv_task_enum);
+    
+    if (cv_task_enum == CV_VISION_TEST)
+        vision_test = new MDA_VISION_MODULE_TEST;
 
-    display_cv = 1;
     cv_img_fwd = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
     cv_img_fwd->origin = 1;
     cv_img_down = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
@@ -39,7 +48,7 @@ void cv_display () {
 // the redraw flag is raised by the function glutPostRedisplay();
 // with CV_VISION_FLAG the cv code will run every time the window is updated.
    
-    if (display_cv) {
+    if (cv_task_enum != NO_TASK) {
         // first grab both front and bottom cam images       
         model.angle.pitch = 90;      // grab downwards first
         glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
@@ -58,10 +67,17 @@ void cv_display () {
 
         cvShowImage ("Downwards Cam", cv_img_down);
 
-        /** OPENCV CODE GOES HERE. */      
-
-        cvWaitKey(5); // without 5ms delay the window will not show properly
-        /** END OPENCV CODE */ 
+        /** OPENCV CODE GOES HERE. */    
+        if (cv_task_enum == CV_VISION_TEST) {
+            vision_test->filter (cv_img_fwd, cv_img_result);
+        }
+        /** END OPENCV CODE */
+        
+        char c = cvWaitKey(5); // without 5ms delay the window will not show properly
+        if (c == 'q' || c == 27) {
+            destroy ();
+            exit(0);
+        }
     }
     else {
         glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
@@ -75,7 +91,8 @@ void cv_display () {
         // when done drawing you use glutSwapBuffers to switch front and back buffers.
     }   
     
-    model.print();
+    if (DEBUG_MODEL)
+        model.print();
 
     glFlush();
     //copy_bytes();
@@ -119,7 +136,7 @@ void cv_reshape(int w, int h)
    glLoadIdentity();
    
    // resize the opencv structure too eh
-   if (display_cv) {
+   if (cv_task_enum) {
        cvReleaseImage (&cv_img_fwd);
        cv_img_fwd = cvCreateImage (cvSize(w,h), IPL_DEPTH_8U, 3);
        cv_img_fwd->origin=1;

@@ -5,7 +5,6 @@ VISION_DIR=./vision/
 all: motors vision sim
 
 motors:
-	$(MAKE) -C $(MOTORS_DIR) clean
 	$(MAKE) -C $(MOTORS_DIR)
 
 vision:
