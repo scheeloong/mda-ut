@@ -30,5 +30,6 @@ clean:
 	rm -f test webcam ./obj/* $(A) ./*~
 	rm -f $(LIBDIR)*~
 	rm -f $(SRCDIR)*~
+	rm -f ./settings/*~
 
 .PHONY: all clean

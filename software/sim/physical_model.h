@@ -7,13 +7,13 @@
 #define POS_INC .2
 #define PI 3.14159265
 
-#define DEPTH_SPEED_SCALING 0.04
-#define FWD_SPEED_SCALING 0.1
-#define SIDE_SPEED_SCALING 0.5
+#define DEPTH_SPEED_SCALING 0.02
+#define FWD_SPEED_SCALING 0.06
+#define SIDE_SPEED_SCALING 0.4
 
-#define FWD_LOSS_CONST 0.08
-#define DEPTH_LOSS_CONST 0.06
-#define ANG_LOSS_CONST 0.07
+#define FWD_LOSS_CONST 0.06
+#define DEPTH_LOSS_CONST 0.05
+#define ANG_LOSS_CONST 0.05
 
 class physical_model
 {
