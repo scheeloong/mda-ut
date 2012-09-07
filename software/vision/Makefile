@@ -11,7 +11,7 @@ VOBJ=$(OBJDIR)mda_vision.o
 TEST=$(OBJDIR)main.o
 WEBCAM=$(OBJDIR)webcam.o
 
-all: mda_settings_path test webcam $(A)
+all: vision_settings_path test webcam $(A)
 
 $(OBJDIR)%.o: $(SRCDIR)%.cpp $(INC)
 	$(CC) -Wall -I$(LIBDIR) -c $< -o $@ $(CVFLAGS)
@@ -25,9 +25,7 @@ webcam: $(OBJ) $(VOBJ) $(WEBCAM)
 # archive file
 $(A): $(OBJ) $(VOBJ)
 	ar -cvq $@ $(OBJ) $(VOBJ)
-mda_settings_path:
-	MDA_SETTINGS_PATH=`pwd`/settings
-	`export MDA_SETTINGS_PATH`
+vision_settings_path:
 
 clean:
 	rm -f test webcam ./obj/* $(A) ./*~
