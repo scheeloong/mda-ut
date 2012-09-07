@@ -15,7 +15,7 @@
 int main (int argc, char** argv) {
     // We want to do HSV color filter, take the gradient of result,
     // and run line finding on the gradient img
-    assert (argc == 2);
+    assert (argc == 2); // need image as first argument
     
     /// Grab the filters and data structs we need
     mvHSVFilter HSVFilter ("settings/HSVFilter_settings.csv"); // color filter
