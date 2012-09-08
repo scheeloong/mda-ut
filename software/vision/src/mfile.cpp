@@ -1,6 +1,7 @@
 #include "mgui.h"
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 bool str_isdigit (const char str[])
 // Helper function for read_mv_setting. Returns true if string is a float 
@@ -21,9 +22,22 @@ void read_mv_setting (const char filename[], const char setting_name[], TYPE &da
    SETTING_NAME, SETTING_VALUE */
 
 {
-    FILE* fh = fopen (filename, "r");
+    char settings_file[100]; // create a string to hold the filename. First byte is zero.
+    settings_file[0] = 0;
+    
+    // attempt to read environment var MDA_SETTINGS_DIR_ENV_VAR. If successful use the read
+    // value as directory base for 
+    char * env_mda_settings_dir = getenv(MDA_SETTINGS_DIR_ENV_VAR);
+    if (env_mda_settings_dir != NULL)
+        strcpy (settings_file, env_mda_settings_dir);
+    else
+        strcpy (settings_file, MDA_BACKUP_SETTINGS_DIR);
+    
+    strcat (settings_file, filename);
+        
+    FILE* fh = fopen (settings_file, "r");
     if (fh == NULL) {
-        fprintf (stderr, "**** Error: read_mv_setting failed to open %s\n", filename); 
+        fprintf (stderr, "**** Error: read_mv_setting failed to open %s\n", settings_file); 
         exit (1);
     }
     
@@ -46,11 +60,12 @@ void read_mv_setting (const char filename[], const char setting_name[], TYPE &da
             
             float temp = atof (token);
             data = TYPE(temp);
+            fclose (fh);
             return;
         }
     }
     
-    fprintf (stderr, "**** ERROR: read_mv_setting: setting %s not found in file %s\n", setting_name, filename);
+    fprintf (stderr, "**** ERROR: read_mv_setting: setting %s not found in file %s\n", setting_name, settings_file);
     exit (1);
 }
 /* these lines declare the use of int,unsigned,flot of read_mv_setting */

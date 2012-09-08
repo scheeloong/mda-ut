@@ -11,7 +11,9 @@
 //#include <mvLines.h>
 
 // Hopefully this is the only hardcoded settings file
-#define COMMON_SETTINGS_FILE "./settings/common_settings.csv"
+#define MDA_SETTINGS_DIR_ENV_VAR "MDA_VISION_SETTINGS_PATH"
+#define MDA_BACKUP_SETTINGS_DIR "./settings/"
+#define COMMON_SETTINGS_FILE "common_settings.csv"
 
 /** read_mv_setting and co. - Functions to read settings from .csv files **/
 // This function searches through the file and looks for the setting, getting

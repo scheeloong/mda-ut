@@ -5,7 +5,7 @@
 #include "mv.h"
 #include "mvLines.h"
 
-#define MDA_VISION_MODULE_TEST_SETTINGS "./settings/vision_module_test_settings.csv"
+#define MDA_VISION_MODULE_TEST_SETTINGS "vision_module_test_settings.csv"
 
 // this class is to test vision/sim/control interfaces. write whatever you want
 class MDA_VISION_MODULE_TEST {

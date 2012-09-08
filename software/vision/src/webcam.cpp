@@ -45,7 +45,7 @@ int main( int argc, char** argv ) {
     // init camera
     mvCamera* camera = NULL;
     if (LOAD == 0)
-        camera = new mvCamera ("settings/camera_settings.csv", CAM_NUMBER);
+        camera = new mvCamera ("camera_settings.csv", CAM_NUMBER);
     else
         camera = new mvCamera (argv[LOAD]);
     
@@ -55,13 +55,13 @@ int main( int argc, char** argv ) {
     mvWindow* win3 = DISPLAY ? new mvWindow ("result") : NULL;
 
     // declare filters we need
-    mvHSVFilter HSVFilter ("settings/test_settings.csv"); // color filter
-    mvCanny canny ("settings/test_settings.csv");
-    mvHoughLines HoughLines ("settings/test_settings.csv");
+    mvHSVFilter HSVFilter ("test_settings.csv"); // color filter
+    mvCanny canny ("test_settings.csv");
+    mvHoughLines HoughLines ("test_settings.csv");
     mvLines lines; // data struct to store lines
-    mvHoughCircles HoughCircles ("settings/test_settings.csv");
+    mvHoughCircles HoughCircles ("test_settings.csv");
     mvCircles circles; // data struct to store circles
-    mvKMeans kmeans ("settings/test_settings.csv");
+    mvKMeans kmeans ("test_settings.csv");
 
     // declare images we need
     IplImage* filter_img = mvCreateImage ();

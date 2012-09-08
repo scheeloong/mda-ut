@@ -28,7 +28,6 @@ void MDA_VISION_MODULE_TEST:: filter (const IplImage* src, IplImage* &dst) {
     
     _HoughLines->findLines (_filtered_img, _lines);
     _lines->drawOntoImage(_filtered_img);
-    printf ("lines: %d\n", _lines->nlines());
     
     _window->showImage (_filtered_img);
     _lines->clearData ();

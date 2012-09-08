@@ -129,11 +129,11 @@ bool bmp_08_data_read ( ifstream &file_in, unsigned long int width, long int hei
 {
    char c;
    bool error;
-   unsigned int i;
+   unsigned i;
    unsigned char *indexr;
    int j;
    int numbyte;
-   int padding;
+   unsigned padding;
 //
 //  Set the padding.
 //
@@ -246,10 +246,9 @@ void bmp_08_data_write ( ofstream &file_out, unsigned long int width,
 //    Input, unsigned char *RARRAY, pointer to the red color array.
 //
 {
-   int i;
+   unsigned i, j;
    unsigned char *indexr;
-   int j;
-   int padding;
+   unsigned padding;
 //
 //  Set the padding.
 //
@@ -280,10 +279,8 @@ bool bmp_24_merged_read ( ifstream &file_in, unsigned long int width, long int h
 {
    char c;
    bool error;
-   int i;
-   int j;
-   int numbyte;
-   int padding;
+   unsigned i, j;
+   unsigned numbyte, padding;
 //
 //  Set the padding.
 //
@@ -427,13 +424,11 @@ bool bmp_24_data_read ( ifstream &file_in, unsigned long int width, long int hei
 {
    char c;
    bool error;
-   int i;
+   unsigned i, j;
    unsigned char *indexb;
    unsigned char *indexg;
    unsigned char *indexr;
-   int j;
-   int numbyte;
-   int padding;
+   unsigned numbyte, padding;
 //
 //  Set the padding.
 //
@@ -579,12 +574,11 @@ void bmp_24_data_write ( ofstream &file_out, unsigned long int width,
 //    and blue color arrays.
 //
 {
-   int i;
+   unsigned i, j;
    unsigned char *indexb;
    unsigned char *indexg;
    unsigned char *indexr;
-   int j;
-   int padding;
+   unsigned padding;
 //
 //  Set the padding.
 //
@@ -619,9 +613,8 @@ void bmp_24_data_write ( ofstream &file_out, unsigned long int width,
 void bmp_24_data_merged_write ( ofstream &file_out, unsigned long int width,
                                 long int height, unsigned char *array )
 {
-   int i;
-   int j;
-   int padding;
+   unsigned i, j;
+   unsigned padding;
 //
 //  Set the padding.
 //
@@ -1089,8 +1082,7 @@ bool bmp_header2_read ( ifstream &file_in, unsigned long int *size,
 //    Output, bool BMP_HEADER2_READ, is true if an error occurred.
 //
 {
-   unsigned char c1;
-   unsigned char c2;
+   //unsigned char c1, c2;
    bool error;
 //
 //  Read SIZE, the size of the header in bytes.
@@ -1329,11 +1321,8 @@ void bmp_palette_print ( unsigned long int colorsused,
 //    red, green, blue and transparency palette arrays.
 //
 {
-   int i;
-   unsigned char *indexa;
-   unsigned char *indexb;
-   unsigned char *indexg;
-   unsigned char *indexr;
+   unsigned i;
+   unsigned char *indexa, *indexb, *indexg, *indexr;
 
    cout << "\n";
    cout << "  Palette information from BMP file:\n";
@@ -1426,11 +1415,8 @@ bool bmp_palette_read ( ifstream &file_in, unsigned long int colorsused,
 {
    char c;
    bool error;
-   int i;
-   unsigned char *indexa;
-   unsigned char *indexb;
-   unsigned char *indexg;
-   unsigned char *indexr;
+   unsigned i;
+   unsigned char *indexa, *indexb, *indexg, *indexr;
 
    indexr = rparray;
    indexg = gparray;
@@ -1550,18 +1536,14 @@ void bmp_palette_write ( ofstream &file_out, unsigned long int colorsused,
 //    red, green, blue and transparency palette arrays.
 //
 {
-   int i;
-   unsigned char *indexa;
-   unsigned char *indexb;
-   unsigned char *indexg;
-   unsigned char *indexr;
+   unsigned char *indexa, *indexb, *indexg, *indexr;
 
    indexr = rparray;
    indexg = gparray;
    indexb = bparray;
    indexa = aparray;
 
-   for ( i = 0; i < colorsused; i++ )
+   for (unsigned i = 0; i < colorsused; i++ )
    {
       file_out << *indexb;
       file_out << *indexg;
@@ -1640,7 +1622,7 @@ bool bmp_print_test ( char *file_in_name )
    unsigned char *gparray;
    long int height;
    unsigned long int horzresolution;
-   unsigned short int magic;
+   //unsigned short int magic;
    int numbytes;
    unsigned short int planes;
    unsigned char *rarray;
@@ -2289,13 +2271,9 @@ bool bmp_08_write_test ( char *file_out_name )
 
    bool error;
    long int height;
-   int i;
    unsigned char *indexr;
-   int j;
-   int j2;
-   int numbytes;
+   unsigned numbytes;
    unsigned char *rarray;
-   int result;
    unsigned long int width;
 
    width = 255;
@@ -2311,9 +2289,9 @@ bool bmp_08_write_test ( char *file_out_name )
 //
    indexr = rarray;
 
-   for ( j = 0; j < height; j++ )
+   for (unsigned j = 0; j < height; j++ )
    {
-      for ( i = 0; i < width; i++ )
+      for (unsigned i = 0; i < width; i++ )
       {
          *indexr = i % ( j + 1 );
          indexr = indexr + 1;
