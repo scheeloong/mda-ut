@@ -8,12 +8,14 @@ MDA_VISION_MODULE_TEST:: MDA_VISION_MODULE_TEST () {
     _window = new mvWindow ("Testing Vision Module");
     _HSVFilter = new mvHSVFilter (MDA_VISION_MODULE_TEST_SETTINGS);
     _HoughLines = new mvHoughLines (MDA_VISION_MODULE_TEST_SETTINGS);
+    _lines = new mvLines ();
 }
 
 MDA_VISION_MODULE_TEST:: ~MDA_VISION_MODULE_TEST () {
     delete _window;
     delete _HSVFilter;
     delete _HoughLines;
+    delete _lines;
 }
 
 void MDA_VISION_MODULE_TEST:: filter (const IplImage* src, IplImage* &dst) {
@@ -24,7 +26,11 @@ void MDA_VISION_MODULE_TEST:: filter (const IplImage* src, IplImage* &dst) {
     _HSVFilter->filter (_resized_img, _filtered_img);
     _filtered_img->origin = src->origin;
     
-    _window->showImage (_filtered_img);
+    _HoughLines->findLines (_filtered_img, _lines);
+    _lines->drawOntoImage(_filtered_img);
+    printf ("lines: %d\n", _lines->nlines());
     
+    _window->showImage (_filtered_img);
+    _lines->clearData ();
     dst = _filtered_img;
 }

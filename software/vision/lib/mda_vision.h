@@ -12,6 +12,7 @@ class MDA_VISION_MODULE_TEST {
     mvWindow* _window;
     mvHSVFilter* _HSVFilter;
     mvHoughLines* _HoughLines;
+    mvLines* _lines;
     
     IplImage* _resized_img;
     IplImage* _filtered_img;
