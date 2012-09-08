@@ -18,10 +18,10 @@ int main (int argc, char** argv) {
     assert (argc == 2); // need image as first argument
     
     /// Grab the filters and data structs we need
-    mvHSVFilter HSVFilter ("settings/HSVFilter_settings.csv"); // color filter
-    mvHoughLines HoughLines ("settings/HoughLines_settings.csv");
+    mvHSVFilter HSVFilter ("HSVFilter_settings.csv"); // color filter
+    mvHoughLines HoughLines ("HoughLines_settings.csv");
     mvLines lines; // data struct to store lines
-    mvHoughCircles HoughCircles ("settings/HoughCircles_settings.csv");
+    mvHoughCircles HoughCircles ("HoughCircles_settings.csv");
     mvCircles circles;
 
     // windows to display stuff
