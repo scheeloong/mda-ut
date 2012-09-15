@@ -49,13 +49,13 @@ class mvWindow {
 // This class lets you open a camera and write video to disk 
 // Usage is simple. 
 class mvCamera {
+    #define FRAMERATE 30
     CvCapture* _capture;
     CvVideoWriter* _writer;
     IplImage* _imgResized;
-    int _WRITE_;  
 
     public:
-    mvCamera (const char* settings_file, unsigned cam_number);
+    mvCamera (unsigned cam_number, unsigned write=0);
     mvCamera (const char* video_file);
     ~mvCamera ();
 
@@ -69,7 +69,11 @@ class mvCamera {
      */ 
     IplImage* getFrame () { return cvQueryFrame(_capture); } 
     IplImage* getFrameResized (); 
-    void writeFrame (IplImage* frame) { cvWriteFrame(_writer,frame); }
+
+    void writeFrame (IplImage* frame) {
+        assert (_writer != NULL); // If fails you have not created the video writer
+        cvWriteFrame(_writer,frame);
+   }
 };
 
 #endif
