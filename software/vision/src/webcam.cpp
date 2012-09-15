@@ -45,7 +45,7 @@ int main( int argc, char** argv ) {
     // init camera
     mvCamera* camera = NULL;
     if (LOAD == 0)
-        camera = new mvCamera ("camera_settings.csv", CAM_NUMBER);
+        camera = new mvCamera (CAM_NUMBER, 0);
     else
         camera = new mvCamera (argv[LOAD]);
     

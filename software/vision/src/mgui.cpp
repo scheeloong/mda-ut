@@ -32,27 +32,23 @@ mvWindow:: ~mvWindow () {
 }
 
 /** mvCamera methods **/
-mvCamera:: mvCamera (const char* settings_file, unsigned cam_number) {
+mvCamera:: mvCamera (unsigned cam_number, unsigned write) {
     unsigned width, height;
     read_common_mv_setting ("IMG_WIDTH_COMMON", width);
     read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
 
-    unsigned framerate; 
-    // note the framerate gets stored in with the video file
-    // it doesnt dictate the speed of reading frames from the camera
-    read_mv_setting (settings_file, "CAMERA_WRITE", _WRITE_);
-    read_mv_setting (settings_file, "FRAMERATE", framerate);
-
     _capture = cvCreateCameraCapture (cam_number);
-    if (_WRITE_) {
+    if (write) {
         _writer = cvCreateVideoWriter (
             "webcam.avi",               // video file name
             CV_FOURCC('P','I','M','1'), // codec
-            framerate,                  // framerate
+            FRAMERATE,                  // framerate
             cvSize(width,height),       // size
             1
         );
     }
+    else
+        _writer = NULL;
 
     _imgResized = mvCreateImage_Color (width, height);
 }
@@ -64,12 +60,13 @@ mvCamera:: mvCamera (const char* video_file) {
     
     _capture = cvCreateFileCapture (video_file);   
     _imgResized = mvCreateImage_Color (width, height);
+    _writer = NULL;
 }
 
 mvCamera:: ~mvCamera () {
     cvReleaseCapture (&_capture);
     cvReleaseImage (&_imgResized);
-    if (_WRITE_) cvReleaseVideoWriter (&_writer);
+    if (_writer != NULL) cvReleaseVideoWriter (&_writer);
 }
 
 IplImage* mvCamera:: getFrameResized () {
