@@ -56,7 +56,6 @@ int main( int argc, char** argv ) {
 
     // declare filters we need
     mvHSVFilter HSVFilter ("test_settings.csv"); // color filter
-    mvCanny canny ("test_settings.csv");
     mvHoughLines HoughLines ("test_settings.csv");
     mvLines lines; // data struct to store lines
     mvHoughCircles HoughCircles ("test_settings.csv");
@@ -86,7 +85,6 @@ int main( int argc, char** argv ) {
 
         HSVFilter.filter (frame, filter_img); // process it
         mvOpen (filter_img, filter_img, 5, 5);
-        //canny.filter (filter_img, grad_img);
         mvGradient (filter_img, grad_img, 5, 5);
         cvDilate (grad_img, grad_img);
         

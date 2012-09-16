@@ -71,25 +71,6 @@ inline void mvGradient (const IplImage* src, IplImage* dst, unsigned kern_w, uns
     cvReleaseStructuringElement (&kernel);
 }
 
-/** Canny edge detector */
-// pretty trivial
-class mvCanny {
-    unsigned KERNEL_SIZE;
-    float LOW_THRESHOLD, HIGH_THRESHOLD;
-    
-    public:
-    mvCanny (const char* settings_file);
-    
-    void filter (const IplImage* img, IplImage* result) {
-        assert (img != NULL);
-        assert (img->nChannels == 1);
-        assert (result != NULL);
-        assert (result->nChannels == 1);
-        
-        cvCanny (img, result, LOW_THRESHOLD, HIGH_THRESHOLD, KERNEL_SIZE);
-    }
-};
-
 /** HSV color limit filter */
 // Currently support for changing the HSV values on the fly are limited
 class mvHSVFilter {

@@ -6,11 +6,6 @@ SAT_MAX, 255
 VAL_MIN, 80
 VAL_MAX, 255
 
-### canny
-CANNY_KERNEL_SIZE, 5
-CANNY_LOW_THRESHOLD, 30
-CANNY_HIGH_THRESHOLD, 70
-
 ### HoughLines 
 PIXEL_RESOLUTION 2 # step size in pixels, > 1 means the line finder skips pixels
 ANGULAR_RESOLUTION 0.017 # step size in angles (radians)
