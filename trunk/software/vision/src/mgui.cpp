@@ -69,10 +69,3 @@ mvCamera:: ~mvCamera () {
     if (_writer != NULL) cvReleaseVideoWriter (&_writer);
 }
 
-IplImage* mvCamera:: getFrameResized () {
-    IplImage* frame = cvQueryFrame (_capture);
-    if (!frame)
-        return NULL;
-    cvResize (frame, _imgResized, CV_INTER_LINEAR); // bilienar interpolation
-    return _imgResized;
-}

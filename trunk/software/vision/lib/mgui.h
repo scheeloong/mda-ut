@@ -8,7 +8,7 @@
 
 #include <highgui.h>
 #include <stdio.h>
-//#include <mvLines.h>
+#include <cv.h>
 
 // Hopefully this is the only hardcoded settings file
 #define MDA_SETTINGS_DIR_ENV_VAR "MDA_VISION_SETTINGS_PATH"
@@ -68,7 +68,13 @@ class mvCamera {
      * modified by the user.
      */ 
     IplImage* getFrame () { return cvQueryFrame(_capture); } 
-    IplImage* getFrameResized (); 
+    IplImage* getFrameResized () {
+        IplImage* frame = cvQueryFrame (_capture);
+        if (!frame)
+            return NULL;
+        cvResize (frame, _imgResized, CV_INTER_LINEAR); // bilienar interpolation
+        return _imgResized;
+    } 
 
     void writeFrame (IplImage* frame) {
         assert (_writer != NULL); // If fails you have not created the video writer
