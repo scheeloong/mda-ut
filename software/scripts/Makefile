@@ -14,6 +14,9 @@ all: $(EXES)
 %.out: %.c $(INC) $(UIDIR)$(UIA)
 	$(CC) $< $(AFLAGS) $(CFLAGS) -o $@
 
+$(UIDIR)$(UIA):
+	make -C $(UIDIR)
+
 clean:
 	rm -f log.txt $(EXES)
 
