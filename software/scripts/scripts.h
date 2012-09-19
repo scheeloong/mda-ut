@@ -26,12 +26,18 @@ inline void spawn_nios2_term()
 
 inline void int_handler(int signal)
 {
+  // If the power is already off, just kill child and exit
+  if (!get_power()) {
+    kill_child();
+    exit(0);
+  }
+
+
   // Calling the int_handler will kill the child process (nios2-terminal)
   // Respawn it, then exit_safe
   spawn_nios2_term();
 
   exit_safe();
-  exit(0);
 }
 
 inline void init()

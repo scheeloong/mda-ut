@@ -27,10 +27,8 @@ int atoi_safe (char *str) {
 
 void cmd_error () { printf ("**** Invalid command. Type \"help\" for command list\n"); }
 
-void exit_safe ()
+void kill_child ()
 {
-    power_off();
-
     fflush(infp);
     fflush(outfp);
     fclose(infp);
@@ -41,6 +39,12 @@ void exit_safe ()
     if (child_pid > 0) {
        kill(child_pid, SIGTERM);
     }
+}
+
+void exit_safe ()
+{
+    power_off();
+    kill_child();
 
     exit(0);
 }
