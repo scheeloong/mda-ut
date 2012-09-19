@@ -41,4 +41,7 @@ void power_off();
 void dyn_status();
 void dyn_set_target_depth(int);
 
+void get_accel(int *, int *, int *);
+int get_depth();
+
 #endif

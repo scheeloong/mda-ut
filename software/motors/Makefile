@@ -1,25 +1,25 @@
 CC=g++
 FLAGS=-Wall -lm
-LIBO=motors.o main.o
+OBJ=motors.o main.o
 SIMDIR=../sim
 INC=motors.h $(SIMDIR)/physical_model.h
-OBJ=motors
+EXE=motors
 A=libmotors.a
 
 # each .o file depends on its .cpp file
 .cpp.o: $(INC)
 	$(CC) $< -o $@ -c $(FLAGS)
 
-all: $(OBJ) $(A)
+all: $(EXE) $(A)
 
-$(A): $(OBJ) $(INC)
+$(A): $(EXE) $(INC)
 	rm -f $(A)
-	ar -cqv $@ $(LIBO)
+	ar -cqv $@ $(OBJ)
 
-$(OBJ): $(LIBO) $(INC)
-	$(CC) $(LIBO) -o $@ $(FLAGS)
+$(EXE): $(OBJ) $(INC)
+	$(CC) $(OBJ) -o $@ $(FLAGS)
 
 clean:
-	rm -rf $(LIBO) $(OBJ) $(A) *~
+	rm -rf $(OBJ) $(EXE) $(A) *~
 
 .PHONY: all clean
