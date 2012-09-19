@@ -1,4 +1,4 @@
-# FPAG UI makefile
+# FPGA UI makefile
 
 CC=gcc
 CFLAGS = -Wall -lm
