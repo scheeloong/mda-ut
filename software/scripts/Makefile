@@ -6,7 +6,8 @@ UIDIR=../../fpga/ui/
 UIA=libui.a
 AFLAGS=-L$(UIDIR) $(UIDIR)$(UIA)
 
-EXES=move_up_down.out
+SRCS:=$(wildcard *.c)
+EXES:=$(patsubst %.c,%.out,$(SRCS))
 
 all: $(EXES)
 
