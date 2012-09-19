@@ -5,14 +5,19 @@ CFLAGS = -Wall -lm
 INC=utils.h
 OBJ=utils.o
 EXE=ui
+A=libui.a
 
-all: fpga_ui
+all: $(EXE) $(A)
 
 .c.o: $(INC)
 	$(CC) -c $< $(CFLAGS) -o $@
 
-fpga_ui: utils.o main.o
+$(EXE): utils.o main.o
 	$(CC) main.o $(OBJ) $(CFLAGS) -o $(EXE)
 
+$(A): $(EXE) $(INC)
+	rm -f $(A)
+	ar -cqv $@ $(OBJ)
+
 clean:
-	rm -f $(EXE) *.o *~
+	rm -f $(EXE) $(A) $(OBJ) *~
