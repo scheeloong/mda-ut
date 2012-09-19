@@ -13,7 +13,7 @@ all: $(EXES)
 .c.o: $(INC)
 	$(CC) -c $< $(CFLAGS)
 
-$(EXES): *.o
+$(EXES): *.o $(UIDIR)$(UIA)
 	$(CC) $@.o $(AFLAGS) $(CFLAGS) -o $@
 
 clean:

@@ -39,7 +39,7 @@ void exit_safe ()
     close(p_stdin[0]);
     close(p_stdout[1]);
     if (child_pid > 0) {
-       kill(child_pid, SIGINT);
+       kill(child_pid, SIGTERM);
     }
 
     exit(0);
