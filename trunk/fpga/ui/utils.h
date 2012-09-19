@@ -21,6 +21,7 @@
 extern unsigned cmd_ok;
 
 int atoi_safe (char *str);
+void kill_child ();
 void exit_safe ();
 void cmd_error ();
 
