@@ -1,9 +1,10 @@
 #ifndef __MDA_SCRIPTS_H__
 #define __MDA_SCRIPTS_H__
 
+#include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
 #include "../../fpga/ui/utils.h"
 
 inline void spawn_nios2_term()
@@ -15,6 +16,11 @@ inline void spawn_nios2_term()
   fscanf(fp, "%127s", nios2_shell_path);
   pclose(fp);
 
+  if (nios2_shell_path[0] != '/') {
+    puts("nios2-terminal is not on your path, exiting");
+    exit(1);
+  }
+
   spawn_term(nios2_shell_path);
 }
 
@@ -25,7 +31,7 @@ inline void int_handler(int signal)
   spawn_nios2_term();
 
   exit_safe();
-  exit(signal);
+  exit(0);
 }
 
 inline void init()
