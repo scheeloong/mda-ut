@@ -6,17 +6,14 @@ UIDIR=../../fpga/ui/
 UIA=libui.a
 AFLAGS=-L$(UIDIR) $(UIDIR)$(UIA)
 
-EXES=move_up_down
+EXES=move_up_down.out
 
 all: $(EXES)
 
-.c.o: $(INC)
-	$(CC) -c $< $(CFLAGS)
-
-$(EXES): *.o $(UIDIR)$(UIA)
-	$(CC) $@.o $(AFLAGS) $(CFLAGS) -o $@
+%.out: %.c $(INC) $(UIDIR)$(UIA)
+	$(CC) $< $(AFLAGS) $(CFLAGS) -o $@
 
 clean:
-	rm -f *.o log.txt $(EXES)
+	rm -f log.txt $(EXES)
 
 .PHONY: all clean
