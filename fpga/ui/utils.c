@@ -107,6 +107,7 @@ void write_and_flush_term (char *cmd)
         fgets(buf, BUF_SIZE, outfp);
         fprintf(log, "%s", buf);
         if (strcmp(buf, power_fail_msg) == 0) {
+            power = 0;
             printf("%s", buf);
         }
         if (strcmp(buf, cmd) == 0) {
@@ -247,6 +248,10 @@ void power_off () {
 
     power = 0;
     printf ("turned power off.\n");
+}
+
+int get_power() {
+    return power;
 }
 
 void get_accel (int *x, int *y, int *z) {
