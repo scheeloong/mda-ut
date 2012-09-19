@@ -23,6 +23,6 @@ int main()
     sleep(PAUSE_TIME);
   }
 
-  power_off();
+  exit_safe();
   return 0;
 }

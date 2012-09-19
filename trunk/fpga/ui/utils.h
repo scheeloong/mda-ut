@@ -37,6 +37,7 @@ void motor_set (int pwm, char motor_flags);
 void power_status();
 void power_on();
 void power_off();
+int get_power();
 
 void dyn_status();
 void dyn_set_target_depth(int);
