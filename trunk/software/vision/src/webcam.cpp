@@ -45,7 +45,7 @@ int main( int argc, char** argv ) {
     // init camera
     mvCamera* camera = NULL;
     if (LOAD == 0)
-        camera = new mvCamera (CAM_NUMBER, 0);
+        camera = new mvCamera (CAM_NUMBER, WRITE);
     else
         camera = new mvCamera (argv[LOAD]);
     
@@ -90,10 +90,11 @@ int main( int argc, char** argv ) {
         
         if (LINE) {
             HoughLines.findLines (grad_img, &lines);
-            kmeans.cluster_auto (1, 4, &lines);
+            kmeans.cluster_auto (1, 5, &lines);
         
-            lines.drawOntoImage (filter_img);
+            //lines.drawOntoImage (grad_img);
             kmeans.drawOntoImage (grad_img);
+            kmeans.drawOntoImage (frame);
             
             lines.clearData(); // erase line data and reuse allocated mem
             kmeans.clearData();

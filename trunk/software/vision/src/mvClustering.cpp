@@ -293,10 +293,10 @@ int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvL
 
 void mvKMeans:: drawOntoImage (IplImage* img) {
     assert (img != NULL);
-    assert (img->nChannels == 1);
+    //assert (img->nChannels == 1);
     
     for (unsigned i = 0; i < _nClusters_Final; i++) {
         if (_Clusters_Best[i] != NULL)
-        	cvLine (img, _Clusters_Best[i][0],_Clusters_Best[i][1], CV_RGB(50,50,50), 2*LINE_THICKNESS);
+        	cvLine (img, _Clusters_Best[i][0],_Clusters_Best[i][1], CV_RGB(80,10,10), 2*LINE_THICKNESS);
     }
 }
