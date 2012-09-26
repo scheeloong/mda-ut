@@ -2,7 +2,7 @@
  *                                                                           *
  * Module:       Altera_UP_RS232_Counters                                    *
  * Description:                                                              *
- *      This module reads and writes data to the RS232 connectpr on Altera's *
+ *      This module reads and writes data to the RS232 connector on Altera's *
  *   DE1 and DE2 Development and Education Boards.                           *
  *                                                                           *
  *****************************************************************************/
