@@ -12,7 +12,7 @@
 # 
 # request TCL package from ACDS 12.0
 # 
-package require -exact qsys 12.0
+package require -exact sopc 11.0
 
 
 # 
@@ -33,7 +33,7 @@ set_module_property ALLOW_GREYBOX_GENERATION false
 # 
 # file sets
 # 
-add_file Avalon_UP_Avalon_RS232.v SYNTHESIS
+add_file Altera_UP_Avalon_RS232.v SYNTHESIS
 add_file RS232_0.v SYNTHESIS
 
 
