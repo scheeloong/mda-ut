@@ -189,7 +189,7 @@ global_disable #(
 );
 
 DE0_Nano_SOPC DE0_Nano_SOPC_inst(
-                      // 1) global signals:
+                      // global signals:
                        .altpll_io(),
                        .altpll_sdram(DRAM_CLK),
                        .altpll_sys(),
@@ -206,15 +206,19 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
                       .ADC_SADDR_from_the_imu_controller_0(ADC_SADDR),
                       .ADC_SCLK_from_the_imu_controller_0(ADC_SCLK),
                       .ADC_SDAT_to_the_imu_controller_0(ADC_SDAT),
-							  
+
+                      // RS232 Signals (add signals later)
+                      .UART_RXD_to_the_RS232_0(),
+                      .UART_RWD_from_the_RS232_0(),
+
                       // Power Management
                       .data_to_the_power_management_slave_0(GPIO_1[27]),
                       .mux_from_the_power_management_slave_0(voltage_mux),
                       .kill_sw_from_the_power_management_slave_0(kill_sw),
 
                       // the_select_i2c_clk
-                       .out_port_from_the_select_i2c_clk(select_i2c_clk),							  
-							  
+                       .out_port_from_the_select_i2c_clk(select_i2c_clk),
+
                       // the_altpll_0
                        .locked_from_the_altpll_0(),
                        .phasedone_from_the_altpll_0(),
@@ -225,12 +229,12 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
                        .sce_from_the_epcs(EPCS_NCSO), 
                        .sdo_from_the_epcs(EPCS_ASDO), 
 
-							  
+
                       // the_gsensor_spi
                        .SPI_CS_n_from_the_gsensor_spi(G_SENSOR_CS_N),
                        .SPI_SCLK_from_the_gsensor_spi(spi_clk),
-                       .SPI_SDIO_to_and_from_the_gsensor_spi(I2C_SDAT),							  
-						  
+                       .SPI_SDIO_to_and_from_the_gsensor_spi(I2C_SDAT),	
+
 
                       // the_g_sensor_int
                        .in_port_to_the_g_sensor_int(G_SENSOR_INT),
