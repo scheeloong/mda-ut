@@ -33,10 +33,8 @@ set_module_property ALLOW_GREYBOX_GENERATION false
 # 
 # file sets
 # 
-add_fileset QUARTUS_SYNTH QUARTUS_SYNTH "" ""
-set_fileset_property QUARTUS_SYNTH TOP_LEVEL Altera_UP_Avalon_RS232
-set_fileset_property QUARTUS_SYNTH ENABLE_RELATIVE_INCLUDE_PATHS false
-add_fileset_file Altera_UP_Avalon_RS232.v VERILOG PATH RS232/Altera_UP_Avalon_RS232.v
+add_file Avalon_UP_Avalon_RS232.v SYNTHESIS
+add_file RS232_0.v SYNTHESIS
 
 
 # 
