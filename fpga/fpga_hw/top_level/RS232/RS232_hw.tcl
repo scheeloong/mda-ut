@@ -34,7 +34,7 @@ set_module_property ALLOW_GREYBOX_GENERATION false
 # file sets
 # 
 add_file Altera_UP_Avalon_RS232.v SYNTHESIS
-add_file RS232_0.v SYNTHESIS
+add_file RS232_slave.v SYNTHESIS
 
 
 # 
