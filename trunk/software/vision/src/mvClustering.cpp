@@ -4,20 +4,29 @@
 #include <cv.h>
 
 //#define CREATE_STARTING_CLUSTERS_APPROX
-#define CLUSTERING_DEBUG 1
+//#define CLUSTERING_DEBUG
 
 #define ABS(X) (((X) > 0) ? (X) : (-(X)))
+#define SQR(X) ((X)*(X))
 
 /** Helper Functions */
 inline
 unsigned Line_Difference_Metric (int x1,int y1, int x2,int y2, int x3,int y3, int x4,int y4) {
-// this is 8x the area of the quadrilateral
-    int a123 = (x2-x1)*(y3-y1) - (x3-x1)*(y2-y1);
+
+    // this is 8x the area of the quadrilateral
+/*    int a123 = (x2-x1)*(y3-y1) - (x3-x1)*(y2-y1);
     int a134 = (x3-x1)*(y4-y1) - (x4-x1)*(y3-y1);
     int a124 = (x2-x1)*(y4-y1) - (x4-x1)*(y2-y1);
     int a234 = (x3-x2)*(y4-y2) - (x4-x2)*(y3-y2);
     
     return ABS(a123) + ABS(a134) + ABS(a124) + ABS(a234);
+*/
+    unsigned d1 = SQR(x3-x1) + SQR(y3-y1);
+    unsigned d2 = SQR(x4-x2) + SQR(y4-y2);
+    unsigned L = SQR(x2-x1) + SQR(y2-y1) + SQR(x4-x3) + SQR(y4-y3);
+    if (L == 0)
+        return 100000;
+    return 1000 * (d1+d2) / L;
 }
 
 inline 
@@ -48,20 +57,25 @@ unsigned line_sqr_length (const CvPoint* line) {
     return unsigned(dx*dx + dy*dy);
 }
 
-
+inline
+void copy_line (const CvPoint* src, CvPoint* dst) {
+    dst[0].x = src[0].x;
+    dst[0].y = src[0].y;
+    dst[1].x = src[1].x;
+    dst[1].y = src[1].y;
+}
 
 /** True methods of KMeans Algorithm */
 
-mvKMeans:: mvKMeans (const char* settings_file) {   
-    unsigned width;  float temp;
+mvKMeans:: mvKMeans () {   
+    unsigned width;
     read_common_mv_setting ("IMG_WIDTH_COMMON", width);
-    read_mv_setting (settings_file, "_MIN_DIST_BETWEEN_PARALLEL_LINES_", temp);
-    _MIN_DIST_BETWEEN_PARALLEL_LINES_ = (unsigned) (temp * width);
+    MIN_DIST_BETWEEN_PARALLEL_LINES = 400; //(unsigned) (_MIN_DIST_BETWEEN_PARALLEL_LINES_MULTIPLIER_ * width);
     
     for (unsigned i = 0; i < MAX_CLUSTERS; i++) {
-        _Clusters_Seed[i] = NULL;
+        _Clusters_Seed[i] = new CvPoint[2];
         _Clusters_Temp[i] = new CvPoint[2];
-        _Clusters_Best[i] = NULL;
+        _Clusters_Best[i] = new CvPoint[2];
     }
     
     _Lines = NULL;
@@ -70,8 +84,11 @@ mvKMeans:: mvKMeans (const char* settings_file) {
 }
 
 mvKMeans:: ~mvKMeans () {
-    for (unsigned i = 0; i < MAX_CLUSTERS; i++)
+    for (unsigned i = 0; i < MAX_CLUSTERS; i++) {
+        delete [] _Clusters_Seed[i];
         delete [] _Clusters_Temp[i];
+        delete [] _Clusters_Best[i];
+    }
 }
 
 void mvKMeans:: KMeans_CreateStartingClusters (unsigned nClusters) {
@@ -85,9 +102,9 @@ void mvKMeans:: KMeans_CreateStartingClusters (unsigned nClusters) {
     for (unsigned i = 0; i < _nLines; i++)
         line_already_chosen[i] = false;
     
-    for (unsigned i = 0; i < MAX_CLUSTERS; i++)
+    /*for (unsigned i = 0; i < MAX_CLUSTERS; i++)
         _Clusters_Seed[i] = NULL;
-
+    */
     /// choose first seed cluster, then 2nd, etc in this loop
     for (unsigned N = 0; N < nClusters; N++) {  
         //printf ("Choosing cluster %d\n", N);
@@ -95,7 +112,8 @@ void mvKMeans:: KMeans_CreateStartingClusters (unsigned nClusters) {
         /// For first cluster choose line[0];
         if (N == 0) {
             // I cant believe this is what happens when you pass in pointers like you are supposed to
-            _Clusters_Seed[N] = (*_Lines)[0];     // pointer copy 
+            //_Clusters_Seed[N] = (*_Lines)[0];     // pointer copy 
+            copy_line ((*_Lines)[0], _Clusters_Seed[N]);
             continue;
         }
         
@@ -143,7 +161,7 @@ void mvKMeans:: KMeans_CreateStartingClusters (unsigned nClusters) {
         
         /// now copy the data for the line chosen to be the next cluster
         //printf ("  Using line %d for cluster %d\n", next_cluster_index, N);
-        _Clusters_Seed[N] = (*_Lines)[next_cluster_index];     // pointer copy starting point
+        copy_line ((*_Lines)[next_cluster_index], _Clusters_Seed[N]); // copy starting point
         line_already_chosen[next_cluster_index] = true;
     }
 }
@@ -160,16 +178,16 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
     unsigned short cluster_of_line[_nLines]; // stores which cluster a line is binned to
     unsigned lines_per_cluster[nClusters];
     unsigned weight_per_cluster[nClusters];    
-    float avg_intra_cluster_diff = 0;
-    unsigned product_of_lines_per_cluster = 1;
     
-    for (unsigned i = 0; i < nClusters; i++) {   // first clear the temp clusters
-        _Clusters_Temp[i][0] = cvPoint (0,0);
-        _Clusters_Temp[i][1] = cvPoint (0,0);
-        weight_per_cluster[i] = 0;
-    }
-
     for (unsigned iter = 0; iter < iterations; iter++) {       
+        /// first clear the temp clusters
+        for (unsigned i = 0; i < nClusters; i++) {   
+            _Clusters_Temp[i][0] = cvPoint (0,0);
+            _Clusters_Temp[i][1] = cvPoint (0,0);
+            weight_per_cluster[i] = 0;
+            lines_per_cluster[i] = 0;
+        }
+
         /// loop over each line and bin that line to a cluster
         for (unsigned line_index = 0; line_index < _nLines; line_index++) {
             unsigned closest_cluster_index = 0;
@@ -185,9 +203,12 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
                     closest_cluster_index = cluster_index;
                 }
             }
-            
+
+            /// rejection routine: if the closest_cluster_diff is too high, simply ignore this line
+
+
             /// add the line to the temp cluster
-            weight = line_sqr_length((*_Lines)[line_index]);
+            weight = 1; //line_sqr_length((*_Lines)[line_index]);
             _Clusters_Temp[closest_cluster_index][0].x += weight * ((*_Lines)[line_index][0].x);
             _Clusters_Temp[closest_cluster_index][0].y += weight * ((*_Lines)[line_index][0].y);
             _Clusters_Temp[closest_cluster_index][1].x += weight * ((*_Lines)[line_index][1].x);
@@ -207,37 +228,47 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
             _Clusters_Temp[i][1].x /= weight_per_cluster[i];
             _Clusters_Temp[i][1].y /= weight_per_cluster[i];
             
-            _Clusters_Seed[i] = _Clusters_Temp[i];
+            copy_line (_Clusters_Temp[i], _Clusters_Seed[i]);
         }
     }
+    
+    float avg_intra_cluster_diff = 0;
+    //unsigned product_of_lines_per_cluster = 1;
     
     /// calculate avg_intra_cluster_diff
     for (unsigned line_index = 0; line_index < _nLines; line_index++) {
         avg_intra_cluster_diff += Get_Line_ClusterSeed_Diff (cluster_of_line[line_index], line_index);
     }
-    for (unsigned i = 0, product_of_lines_per_cluster = 1; i < nClusters; i++) {
+    /*for (unsigned i = 0, product_of_lines_per_cluster = 1; i < nClusters; i++) {
         product_of_lines_per_cluster *= lines_per_cluster[i];
-    }
-    avg_intra_cluster_diff = avg_intra_cluster_diff / product_of_lines_per_cluster / nClusters;
+    }*/
+    avg_intra_cluster_diff = avg_intra_cluster_diff / _nLines;//product_of_lines_per_cluster / nClusters;
     
     /// now calculate the minimum_inter_cluster_diff and the validity score
     float minimum_inter_cluster_diff = 1E12;
+    float avg_inter_cluster_diff = 0;
     if (nClusters == 1) {
         // this equation basically says "when comparing 1 cluster vs 2 clusters, the 2 clusters have to be a distance apart
         // roughly equal to MIN_DIST_BETWEEN_PARALLEL_LINES for the 2 clusters to be better than the 1
-        minimum_inter_cluster_diff = _MIN_DIST_BETWEEN_PARALLEL_LINES_ * line_sqr_length(_Clusters_Seed[0]);
+        minimum_inter_cluster_diff = MIN_DIST_BETWEEN_PARALLEL_LINES; // * line_sqr_length(_Clusters_Seed[0]);
+        avg_inter_cluster_diff = MIN_DIST_BETWEEN_PARALLEL_LINES; // * line_sqr_length(_Clusters_Seed[0]);
     }
     else {
         for (unsigned i = 0; i < nClusters; i++) { // loop over all combinations of clusters, find min_inter_cluster_diff
             for (unsigned j = i+1; j < nClusters; j++) {
                 float temp_diff = Line_Difference_Metric (_Clusters_Seed[i], _Clusters_Seed[j]);
-                if (temp_diff < minimum_inter_cluster_diff)
-                    minimum_inter_cluster_diff = temp_diff;
+                //if (temp_diff < minimum_inter_cluster_diff)
+                  //  minimum_inter_cluster_diff = temp_diff;
+                avg_inter_cluster_diff += temp_diff;
             }
         }
     }
-    printf ("  intra = %f,  min_inter = %f\n", avg_intra_cluster_diff, minimum_inter_cluster_diff);
-    return avg_intra_cluster_diff / minimum_inter_cluster_diff; 
+    avg_inter_cluster_diff /= nClusters;
+
+#ifdef CLUSTERING_DEBUG
+    printf ("  intra = %f,  inter = %f\n", avg_intra_cluster_diff, avg_inter_cluster_diff);
+#endif
+    return avg_intra_cluster_diff / avg_inter_cluster_diff; 
 }
 
 int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvLines* lines, unsigned iterations) {
@@ -264,27 +295,29 @@ int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvL
             printf ("Cannot create %d clusters. Not enough lines.\n", N);
             continue;
         }
-        
+
         // create required num of clusters
         KMeans_CreateStartingClusters (N);
         
         // run the clustering algorithm through the desired num of iterations
         float validity = KMeans_Cluster (N, iterations);
+#ifdef CLUSTERING_DEBUG
         printf ("  nClusters = %d. validity = %f\n", N, validity);
-        
+#endif
         // check validity. If better than current validity pointer copy temp to best and
         // reallocate temp. Otherwise leave temp and it will be overwritten next iteration
         if (validity < min_validity) {
             min_validity = validity;
             _nClusters_Final = N;
-            
-            for (unsigned i = 0; i < N; i++)
-                _Clusters_Best[i] = _Clusters_Seed[i];
+            for (unsigned i = 0; i < N; i++) {
+                copy_line (_Clusters_Seed[i], _Clusters_Best[i]);
+            }
         }
     }
     
+#ifdef CLUSTERING_DEBUG
     printf ("Final nClusters = %d, validity = %f\n", _nClusters_Final, min_validity);
-    
+#endif
     /// cleanup
     _Lines = NULL;
     _nLines = 0;
@@ -297,6 +330,13 @@ void mvKMeans:: drawOntoImage (IplImage* img) {
     
     for (unsigned i = 0; i < _nClusters_Final; i++) {
         if (_Clusters_Best[i] != NULL)
-        	cvLine (img, _Clusters_Best[i][0],_Clusters_Best[i][1], CV_RGB(80,10,10), 2*LINE_THICKNESS);
+        	cvLine (img, _Clusters_Best[i][0],_Clusters_Best[i][1], CV_RGB(100,100,100), 2*LINE_THICKNESS);
+    }
+}
+
+void mvKMeans:: printClusters () {
+    for (unsigned i = 0; i < _nClusters_Final; i++) {
+        if (_Clusters_Best[i] != NULL)
+            printf ("Cluster %d:  (%d,%d) - (%d,%d)\n", i,_Clusters_Best[i][0].x,_Clusters_Best[i][0].y,_Clusters_Best[i][1].x,_Clusters_Best[i][1].y);
     }
 }
