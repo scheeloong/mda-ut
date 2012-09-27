@@ -44,6 +44,7 @@ set_module_property FIX_110_VIP_PATH false
 # +-----------------------------------
 # | files
 # | 
+add_file global_disable.v SYNTHESIS
 add_file power_management.v SYNTHESIS
 add_file power_management_slave.v SYNTHESIS
 # | 
