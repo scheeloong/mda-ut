@@ -60,7 +60,7 @@
  */
 #define FACTOR_PID_ROLL_TO_FORCE 1
 #define FACTOR_PID_PITCH_TO_FORCE 1
-#define FACTOR_YAW_PITCH_TO_FORCE 1
+#define FACTOR_PID_YAW_TO_FORCE 1
 #define FACTOR_PID_DEPTH_TO_FORCE 1
 
 /** This converts the controller force into lbs, so that it can be mapped to a PWM */
