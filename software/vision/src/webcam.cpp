@@ -60,7 +60,7 @@ int main( int argc, char** argv ) {
     mvLines lines; // data struct to store lines
     mvHoughCircles HoughCircles ("test_settings.csv");
     mvCircles circles; // data struct to store circles
-    mvKMeans kmeans ("test_settings.csv");
+    mvKMeans kmeans;
 
     // declare images we need
     IplImage* filter_img = mvCreateImage ();
@@ -85,19 +85,21 @@ int main( int argc, char** argv ) {
 
         HSVFilter.filter (frame, filter_img); // process it
         mvOpen (filter_img, filter_img, 5, 5);
+        mvClose (filter_img, filter_img, 7, 7);
+        
         mvGradient (filter_img, grad_img, 5, 5);
-        cvDilate (grad_img, grad_img);
+        //cvDilate (grad_img, grad_img);
         
         if (LINE) {
             HoughLines.findLines (grad_img, &lines);
-            kmeans.cluster_auto (1, 5, &lines);
+            kmeans.cluster_auto (1, 8, &lines, 1);
         
-            //lines.drawOntoImage (grad_img);
-            kmeans.drawOntoImage (grad_img);
+            lines.drawOntoImage (grad_img);
+            //kmeans.drawOntoImage (grad_img);
             kmeans.drawOntoImage (frame);
             
             lines.clearData(); // erase line data and reuse allocated mem
-            kmeans.clearData();
+            //kmeans.clearData();
         }
 
         if (CIRCLE) {
@@ -119,7 +121,7 @@ int main( int argc, char** argv ) {
         circles.clearData();
 
         nframes++;
-        c = cvWaitKey(2);
+        c = cvWaitKey(20);
         if (c == 'q') 
             break;
     }

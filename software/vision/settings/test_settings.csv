@@ -1,7 +1,7 @@
 ### color filter settings
-HUE_MIN, 0
-HUE_MAX, 30
-SAT_MIN, 100
+HUE_MIN, 90
+HUE_MAX, 130
+SAT_MIN, 110
 SAT_MAX, 255
 VAL_MIN, 80
 VAL_MAX, 255
@@ -11,9 +11,9 @@ PIXEL_RESOLUTION 2 # step size in pixels, > 1 means the line finder skips pixels
 ANGULAR_RESOLUTION 0.017 # step size in angles (radians)
 
 ### how many points a line must pass through to be accepted by the alg
-_ACCUMULATOR_THRESHOLD_, 0.1   # scaled by image wdith
+_ACCUMULATOR_THRESHOLD_, 0.2   # scaled by image wdith
 # minimum accepted line length in pixels
-_MIN_LINE_LENGTH_, 0.3          # scaled by image width
+_MIN_LINE_LENGTH_, 0.15          # scaled by image width
 # colinear lines must be this far apart to be considered two lines
 _MIN_COLINEAR_LINE_DIST_ 0.3   # scaled by image width
 
@@ -28,5 +28,5 @@ _MIN_CENTER_DIST_, 0.5
 # Roughly speaking:
 #  If the 2 lines in the cluster is seperated by more than the value below,
 #  then 2 clusters will be used. Otherwise 1 cluster is used
-_MIN_DIST_BETWEEN_PARALLEL_LINES_, 0.02
+_MIN_DIST_BETWEEN_PARALLEL_LINES_, 0.05
 
