@@ -23,6 +23,8 @@ set_module_property VERSION 1.0
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property DISPLAY_NAME RS232
+set_module_property TOP_LEVEL_HDL_FILE Altera_UP_Avalon_RS232.v
+set_module_property TOP_LEVEL_HDL_MODULE Altera_UP_Avalon_RS232
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
 set_module_property EDITABLE true
 set_module_property ANALYZE_HDL AUTO
@@ -34,7 +36,10 @@ set_module_property ALLOW_GREYBOX_GENERATION false
 # file sets
 # 
 add_file Altera_UP_Avalon_RS232.v SYNTHESIS
-add_file RS232_slave.v SYNTHESIS
+add_file Altera_UP_RS232_Counters.v SYNTHESIS
+add_file Altera_UP_RS232_In_Deserializer.v SYNTHESIS
+add_file Altera_UP_RS232_Out_Serializer.v SYNTHESIS
+add_file Altera_UP_SYNC_FIFO.v SYNTHESIS
 
 
 # 
