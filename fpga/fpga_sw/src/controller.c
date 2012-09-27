@@ -19,6 +19,8 @@
 #include "utils.h"
 #include "settings.h"
 
+//#define DEBUG_MSG
+
 // Structures used by the PD controller for stabilization
 struct orientation target_orientation = {};
 struct orientation current_orientation = {};
@@ -85,8 +87,9 @@ void get_orientation(struct t_accel_data *accel_data, struct orientation *orient
 
 // The PID controller!
 
-static Controller_PID PID_Roll; // 3 controllers for controlling each DOF we care about
+static Controller_PID PID_Roll; // 4 controllers for controlling each DOF we care about
 static Controller_PID PID_Pitch;
+static Controller_PID PID_Yaw;
 static Controller_PID PID_Depth;
 
 void pid_init () // call this anytime before calling calculate_pid2
@@ -103,6 +106,12 @@ void pid_init () // call this anytime before calling calculate_pid2
     PID_Pitch.Const_I = PITCH_CONST_I;
     PID_Pitch.Const_D = PITCH_CONST_D;
     PID_Pitch.Alpha = PITCH_ALPHA;
+    
+    PID_Reset (&PID_Yaw);
+    PID_Yaw.Const_P = YAW_CONST_P;
+    PID_Yaw.Const_I = YAW_CONST_I;
+    PID_Yaw.Const_D = YAW_CONST_D;
+    PID_Yaw.Alpha = YAW_ALPHA;
     
     PID_Reset (&PID_Depth);
     PID_Depth.Const_P = DEPTH_CONST_P;
@@ -127,12 +136,15 @@ HW_NUM motor_force_to_pwm (HW_NUM force) {
 // the following function calculates the pwm needed for the 3 stabilizing motors. 
 // It ensures motors are balanced and no motor exceeds 0.8*FULL_PWM by reducing 
 // the force if any motor pwm does exceed the limit
+#define MAX_FORCE_BALANCING_LOOPS 10
 void stabilizing_motors_force_to_pwm (
         HW_NUM f_front_left, HW_NUM f_front_right, HW_NUM f_rear,
         HW_NUM *m_front_left, HW_NUM *m_front_right, HW_NUM *m_rear
-        )
+)
 {
-    while (true) {
+    unsigned loops = 0;
+
+    while (true && loops < MAX_FORCE_BALANCING_LOOPS) {
         // calculate the pwms
         *m_front_left = motor_force_to_pwm(f_front_left);
         *m_front_right = motor_force_to_pwm(f_front_right);
@@ -152,6 +164,8 @@ void stabilizing_motors_force_to_pwm (
         }
         else
             break;
+
+        loops++;
     }
 }
 
@@ -183,6 +197,7 @@ void calculate_pid()
    // update the controller with the new values
    PID_Update (&PID_Roll, current_orientation.roll);
    PID_Update (&PID_Pitch, current_orientation.pitch);
+   PID_Update (&PID_Yaw, current_orientation.heading);
    HW_NUM diff = (target_orientation.depth - current_orientation.depth);
    PID_Update (&PID_Depth, diff);
    
@@ -190,16 +205,18 @@ void calculate_pid()
    HW_NUM Roll_Force_Needed = FACTOR_PID_ROLL_TO_FORCE * PID_Output(&PID_Roll);
    HW_NUM Pitch_Force_Needed = FACTOR_PID_PITCH_TO_FORCE * PID_Output(&PID_Pitch);
    HW_NUM Depth_Force_Needed = FACTOR_PID_DEPTH_TO_FORCE * PID_Output(&PID_Depth);
+   HW_NUM Yaw_Force_Needed = FACTOR_PID_YAW_TO_FORCE * PID_Output(&PID_Yaw);
 
    // Print some debug messages every so often...
+#ifdef DEBUG_MSG 
    if (counter % (128*NUM_DEPTH_VALUES) == 0) {
-	/*printf ("depth current = %d\n", current_orientation.depth);
+	printf ("depth current = %d\n", current_orientation.depth);
 	printf ("PID_Depth.P = %f\n", PID_Depth.P*PID_Depth.Const_P);
 	printf ("PID_Depth.I = %f\n", PID_Depth.I*PID_Depth.Const_I);
 	printf ("PID_Depth.D = %f\n", PID_Depth.D*PID_Depth.Const_D);
-	printf ("Depth_PID: %f\n", Depth_Force_Needed);*/
+	printf ("Depth_PID: %f\n", Depth_Force_Needed);
     }
-
+#endif
    /** orientation stability - the signs are almost surely wrong 
     *  If the COM is off center we would have some sort of factors here instead of 0.5
     */
@@ -207,8 +224,8 @@ void calculate_pid()
    HW_NUM m_front_left;
    HW_NUM m_front_right;
    HW_NUM m_rear;
-   HW_NUM m_left = get_motor_duty_cycle(2); // M_LEFT and M_RIGHT are same as before
-   HW_NUM m_right = get_motor_duty_cycle(3);
+   HW_NUM m_left = motor_force_to_pwm (0.5*Yaw_Force_Needed); // = get_motor_duty_cycle(2); // M_LEFT and M_RIGHT are same as before
+   HW_NUM m_right = motor_force_to_pwm (0.5*Yaw_Force_Needed); // = get_motor_duty_cycle(3);
    
    stabilizing_motors_force_to_pwm ( // this calculates the pwms for these 3 motors
       -0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_left
