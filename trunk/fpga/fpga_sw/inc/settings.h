@@ -44,6 +44,10 @@
 #define PITCH_CONST_I 0.0 /* NOT CALIBRATED */
 #define PITCH_CONST_D 0.0 /* NOT CALIBRATED */
 #define PITCH_ALPHA 0.0
+#define YAW_CONST_P 3.0 /* NOT CALIBRATED */
+#define YAW_CONST_I 0.0 /* NOT CALIBRATED */
+#define YAW_CONST_D 0.0 /* NOT CALIBRATED */
+#define YAW_ALPHA 0.0
 #define DEPTH_CONST_P 10.0
 #define DEPTH_CONST_I 0.000
 #define DEPTH_CONST_D 1
@@ -56,6 +60,7 @@
  */
 #define FACTOR_PID_ROLL_TO_FORCE 1
 #define FACTOR_PID_PITCH_TO_FORCE 1
+#define FACTOR_YAW_PITCH_TO_FORCE 1
 #define FACTOR_PID_DEPTH_TO_FORCE 1
 
 /** This converts the controller force into lbs, so that it can be mapped to a PWM */
