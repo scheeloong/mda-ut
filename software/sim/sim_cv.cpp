@@ -11,19 +11,32 @@
  * abide by this. We will use a temp image and rescale that image to common size
  */
 
-IplImage* cv_img_fwd = NULL;
-IplImage* cv_img_down = NULL; // stores the front and down camera imgs respectively
-IplImage* cv_img_result = NULL;
+IplImage* cv_img_fwd ;
+IplImage* cv_img_down; // stores the front and down camera imgs respectively
+IplImage* cv_img_result;
+
+bool FLAG_USE_IMG_DOWN; // make this true if you want to use img_down instead of img_fwd
 
 // tasks
-MDA_VISION_MODULE_TEST* vision_test;
+MDA_VISION_MODULE_BASE* vision_module;
 
 void cv_init () {
     unsigned width=600, height = 400; // temporary
     
+    vision_module = NULL;
+    FLAG_USE_IMG_DOWN = false;
+    
     if (cv_task_enum == CV_VISION_TEST)
-        vision_test = new MDA_VISION_MODULE_TEST;
-
+        vision_module = new MDA_VISION_MODULE_TEST;
+    else if (cv_task_enum == CV_VISION_GATE)
+        vision_module = new MDA_VISION_MODULE_GATE;
+    else if (cv_task_enum == CV_VISION_PATH) {
+        vision_module = new MDA_VISION_MODULE_PATH;
+        FLAG_USE_IMG_DOWN = TRUE;
+    }
+    else if (cv_task_enum == CV_VISION_BUOY)
+        vision_module = new MDA_VISION_MODULE_BUOY;
+        
     cv_img_fwd = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
     cv_img_fwd->origin = 1;
     cv_img_down = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
@@ -45,6 +58,8 @@ void cv_display () {
 // this function is called by glutMainLoop every time the window needs to be redrawn 
 // the redraw flag is raised by the function glutPostRedisplay();
 // with CV_VISION_FLAG the cv code will run every time the window is updated.
+    IplImage* img_to_use = NULL;
+    int vci = 0;
    
     if (cv_task_enum != NO_TASK) {
         // first grab both front and bottom cam images       
@@ -54,20 +69,22 @@ void cv_display () {
         set_camera();
         draw();
         cvQueryFrameGL (cv_img_down);
+        cvShowImage ("Downwards Cam", cv_img_down);
 
-        glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
         model.angle.pitch = 0;
+        glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
         set_camera();
         draw();
         glutSwapBuffers();
         cvQueryFrameGL (cv_img_fwd);       
-
-        cvShowImage ("Downwards Cam", cv_img_down);
+        
+        img_to_use = FLAG_USE_IMG_DOWN ? cv_img_down : cv_img_fwd;
 
         /** OPENCV CODE GOES HERE. */    
-        if (cv_task_enum == CV_VISION_TEST) {
-            vision_test->filter (cv_img_fwd, cv_img_result);
+        if (vision_module != NULL) {
+            vision_module->filter (img_to_use, vci);
+            // call calc_vci when it is written
         }
         /** END OPENCV CODE */
         
@@ -113,8 +130,8 @@ void cv_keyboard(unsigned char key, int x, int y)
     }
     else if (key == 'p') {
         //screenshot();
-        cvSaveImage ("cvSimImg.jpg", cv_img_fwd);
-        cvSaveImage ("cvSimImg2.jpg", cv_img_down);
+        cvSaveImage ("cvSimImgFwd.jpg", cv_img_fwd);
+        cvSaveImage ("cvSimImgDwn.jpg", cv_img_down);
     }   
     else { // pass the key to the motor object to handle
       m.key_command(key);
