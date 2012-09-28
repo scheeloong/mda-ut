@@ -15,6 +15,7 @@
 #include "sys/alt_stdio.h"
 
 #include "interrupts.h"
+#include "rs232.h"
 #include "settings.h"
 #include "utils.h"
 
@@ -43,6 +44,9 @@ void init()
 
   // Ritchie - Initialize PID controllers
   pid_init();
+
+  // Initialize IMU UART interface
+  rs232_init();
 
   // Initialize interrupts (must be last)
   init_interrupts();

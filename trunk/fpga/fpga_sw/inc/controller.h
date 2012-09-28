@@ -3,6 +3,8 @@
 #ifndef _MDA_CONTROLLER_H
 #define _MDA_CONTROLLER_H
 
+#include "alt_types.h"
+
 #define ABS(x) (((x) > 0) ? (x) : (-(x)))
 
 /* acceleration data in x,y,z */
