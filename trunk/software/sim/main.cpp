@@ -76,16 +76,14 @@ int main(int argc, char** argv)
         }
         else if (!strcmp(argv[i], "--debug-model"))
             DEBUG_MODEL = 1;
-        else if (!strcmp(argv[i], "--vtest"))
+        else if (!strcmp(argv[i], "--vtest") || !strcmp(argv[i], "--test"))
             cv_task_enum = CV_VISION_TEST;
-        else if (!strcmp(argv[i], "--vgate"))
+        else if (!strcmp(argv[i], "--vgate") || !strcmp(argv[i], "--gate"))
             cv_task_enum = CV_VISION_GATE;
-        else if (!strcmp(argv[i], "--vpath"))
+        else if (!strcmp(argv[i], "--vpath") || !strcmp(argv[i], "--path"))
             cv_task_enum = CV_VISION_PATH;
-        else if (!strcmp(argv[i], "--vbuoy"))
+        else if (!strcmp(argv[i], "--vbuoy") || !strcmp(argv[i], "--buoy"))
             cv_task_enum = CV_VISION_BUOY;
-        else if (!strcmp(argv[i], "--vframe"))
-            cv_task_enum = CV_VISION_FRAME;
     }
    
    /*glut inits*/
