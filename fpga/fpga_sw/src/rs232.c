@@ -58,7 +58,14 @@ void rs232_shell()
 // A read from the IMU is ready. Handle it by copying the result.
 static void read_interrupt(void *context, alt_u32 id)
 {
-  // TODO: implement
+  int read_avail = IORD(RS232_0_BASE, RS232_CONTROL_OFFSET) >> 16;
+  int i;
+
+  for (i = 0; i < read_avail; i++) {
+    putchar(IORD(RS232_0_BASE, 0));
+  }
+
+  puts("");
 }
 
 unsigned char checksum_byte(char* command)
