@@ -1,4 +1,4 @@
-CC=g++ -O3
+CC=g++ -O3 -Wall
 CVFLAGS=`pkg-config --cflags --libs opencv`
 LIBDIR=lib/
 SRCDIR=src/
@@ -14,14 +14,14 @@ WEBCAM=$(OBJDIR)webcam.o
 all: test webcam $(A)
 
 $(OBJDIR)%.o: $(SRCDIR)%.cpp $(INC)
-	$(CC) -Wall -I$(LIBDIR) -c $< -o $@ $(CVFLAGS)
+	$(CC) -I$(LIBDIR) -c $< -o $@ $(CVFLAGS)
 
 # test is the main executable and depends on each object
 test: $(OBJ) $(VOBJ) $(TEST)
-	$(CC) -Wall $(OBJ) $(VOBJ) $(TEST) -o $@ $(CVFLAGS)
+	$(CC) $(OBJ) $(VOBJ) $(TEST) -o $@ $(CVFLAGS)
 # webcam is another executable
 webcam: $(OBJ) $(VOBJ) $(WEBCAM)
-	$(CC) -Wall $(OBJ) $(VOBJ) $(WEBCAM) -o $@ $(CVFLAGS)
+	$(CC) $(OBJ) $(VOBJ) $(WEBCAM) -o $@ $(CVFLAGS)
 # archive file
 $(A): $(OBJ) $(VOBJ)
 	ar -cvq $@ $(OBJ) $(VOBJ)
