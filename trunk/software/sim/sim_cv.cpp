@@ -32,7 +32,7 @@ void cv_init () {
         vision_module = new MDA_VISION_MODULE_GATE;
     else if (cv_task_enum == CV_VISION_PATH) {
         vision_module = new MDA_VISION_MODULE_PATH;
-        FLAG_USE_IMG_DOWN = TRUE;
+        FLAG_USE_IMG_DOWN = true;
     }
     else if (cv_task_enum == CV_VISION_BUOY)
         vision_module = new MDA_VISION_MODULE_BUOY;

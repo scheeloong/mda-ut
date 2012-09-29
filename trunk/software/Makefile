@@ -1,15 +1,19 @@
 SIM_DIR=./sim/
 MOTORS_DIR=./motors/
 VISION_DIR=./vision/
+CONTROL_DIR=./control/
 SCRIPTS_DIR=./scripts/
 
-all: motors vision sim scripts
+all: motors vision control sim scripts
 
 motors:
 	$(MAKE) -C $(MOTORS_DIR)
 
 vision:
 	$(MAKE) -C $(VISION_DIR)
+
+control:
+	$(MAKE) -C $(CONTROL_DIR)
 
 sim:
 	$(MAKE) -C $(SIM_DIR)
@@ -20,7 +24,8 @@ scripts:
 clean:
 	$(MAKE) -C $(MOTORS_DIR) clean
 	$(MAKE) -C $(VISION_DIR) clean
+	$(MAKE) -C $(CONTROL_DIR) clean
 	$(MAKE) -C $(SIM_DIR) clean
 	$(MAKE) -C $(SCRIPTS_DIR) clean
 
-.PHONY: all clean motors vision sim scripts
+.PHONY: all clean motors vision control sim scripts

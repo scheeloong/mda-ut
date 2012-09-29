@@ -4,7 +4,7 @@
 class MDA_CONTROL_MODULE_BASE {
 protected:
 
-public;
+public:
 
 };
 
