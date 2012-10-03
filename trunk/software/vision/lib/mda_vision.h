@@ -34,7 +34,7 @@ public:
     MDA_VISION_MODULE_BASE () { _resized_ = mvCreateImage_Color(); }
     ~MDA_VISION_MODULE_BASE () { delete _resized_; }
 
-    void filter (const IplImage* src, int &vci) {
+    void filter (const IplImage* src) {
         assert (src != NULL);
         assert (src->nChannels == 3);
         
@@ -90,6 +90,20 @@ public:
 /// this class is for the gate
 /// ########################################################################
 class MDA_VISION_MODULE_GATE : public MDA_VISION_MODULE_BASE {
+#define MDA_VISION_GATE_SETTINGS "vision_gate_settings.csv"
+#define GATE_WIDTH 300.0 // physical width in centimeters
+#define GATE_HEIGHT 120.0 // physical width in centimeters
+#define GATE_SKINNYNESS 0.017 // ratio of pipe diameter to length
+#define GATE_WIDTH_TO_HEIGHT_RATIO 2.50
+
+    mvWindow* _window;
+    mvHSVFilter* _HSVFilter;
+    mvHoughLines* _HoughLines;
+    mvKMeans* _KMeans;
+
+    mvLines* _lines;
+    
+    IplImage* _filtered_img;
 
 public:
     MDA_VISION_MODULE_GATE ();
