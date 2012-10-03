@@ -4,7 +4,7 @@
 /// ########################################################################
 MDA_VISION_MODULE_TEST:: MDA_VISION_MODULE_TEST () {
     // these images are common size
-    _filtered_img = mvCreateImage ();
+    _filtered_img = mvCreateImage_Color ();
     _window = new mvWindow ("Testing Vision Module");
     _HSVFilter = new mvHSVFilter (MDA_VISION_MODULE_TEST_SETTINGS);
     _HoughLines = new mvHoughLines (MDA_VISION_MODULE_TEST_SETTINGS);
@@ -20,12 +20,24 @@ MDA_VISION_MODULE_TEST:: ~MDA_VISION_MODULE_TEST () {
 }
 
 void MDA_VISION_MODULE_TEST:: primary_filter (const IplImage* src) {   
-    _HSVFilter->filter (src, _filtered_img);
-    _filtered_img->origin = src->origin;
+    //_HSVFilter->filter (src, _filtered_img);
+
+    /** src is an image that is passed in from the simulator. It is 3 channel
+     *  Because it is const you may need to deep copy (not pointer copy) it 
+     *  to your own IplImage first before you can modify it.
+     *  I've done this with the variable img
+     */
+    IplImage* img = mvCreateImage_Color();
+    cvCopy (src, img);
+    img->origin = src->origin;
+
+    /** YOUR CODE HERE. DO STUFF TO img */
 
 
 
-    _window->showImage (_filtered_img);
+
+    // this line displays the img in a window
+    _window->showImage (img);
 }
 
 void MDA_VISION_MODULE_TEST:: calc_vci () {
