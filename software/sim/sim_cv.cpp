@@ -69,8 +69,7 @@ void cv_display () {
         set_camera();
         draw();
         cvQueryFrameGL (cv_img_down);
-        cvShowImage ("Downwards Cam", cv_img_down);
-
+        
         model.angle.pitch = 0;
         glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
@@ -78,16 +77,18 @@ void cv_display () {
         draw();
         glutSwapBuffers();
         cvQueryFrameGL (cv_img_fwd);       
+
+        cvShowImage ("Downwards Cam", cv_img_down);
         
         img_to_use = FLAG_USE_IMG_DOWN ? cv_img_down : cv_img_fwd;
-
+        
         /** OPENCV CODE GOES HERE. */    
         if (vision_module != NULL) {
-            vision_module->filter (img_to_use, vci);
+            vision_module->filter (img_to_use);
             // call calc_vci when it is written
         }
         /** END OPENCV CODE */
-        
+
         char c = cvWaitKey(5); // without 5ms delay the window will not show properly
         if (c == 'q' || c == 27) {
             destroy ();

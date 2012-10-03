@@ -11,6 +11,7 @@
 #include "mgui.h"
 #include "mvLines.h"
 #include "mvCircles.h"
+#include "mda_vision.h"
 
 int main (int argc, char** argv) {
     // We want to do HSV color filter, take the gradient of result,
@@ -36,7 +37,7 @@ int main (int argc, char** argv) {
     
     // process the img
     IplImage * temp = cvLoadImage(argv[1], CV_LOAD_IMAGE_COLOR);
-    IplImage * img = mvCreateImage_Color (); // img will be common width and height
+    /*IplImage * img = mvCreateImage_Color (); // img will be common width and height
     cvResize (temp, img);
     win1.showImage (img);
     
@@ -46,9 +47,6 @@ int main (int argc, char** argv) {
     
     //HoughLines.findLines (res, &lines);
     //lines.drawOntoImage (res);
-    /*for (unsigned i = 0; i < lines.nlines(); i++) { 
-        cvLine (res, lines[i][0], lines[i][1], CV_RGB(50,50,50), 1);
-    }*/
     
     HoughCircles.findCircles (res, &circles);
     //circles.drawOntoImage (res);
@@ -60,6 +58,11 @@ int main (int argc, char** argv) {
     
     win3.showImage(res);
         
+    cvWaitKey(0);*/
+    
+    MDA_VISION_MODULE_BASE* module = new MDA_VISION_MODULE_GATE;
+    module->filter (temp);
     cvWaitKey(0);
+    
     return 0;
 }

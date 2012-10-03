@@ -109,8 +109,12 @@ class mvKMeans {
     unsigned nClusters () { return _nClusters_Final; }
     void printClusters ();
 
+    // this function does all the clustering, trying each value of nclusters between the min and max specified
     int cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvLines* lines, unsigned iterations=1);
-    //void clearData () { for (unsigned i = 0; i < MAX_CLUSTERS; i++) _Clusters_Best[i] = NULL; }
+    
+    // accessor function for the lines
+    CvPoint* operator [] (unsigned index) { return (CvPoint*)_Clusters_Best[index]; }
+    
     void drawOntoImage (IplImage* img);
 };
 
