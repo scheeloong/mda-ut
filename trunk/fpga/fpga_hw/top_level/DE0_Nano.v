@@ -166,7 +166,7 @@ wire [33:0] gpio_1_wire;
 wire [12:0] gpio_2_wire;
 wire [3:0]  led_wire;
 
-wire error, kill_sw;
+wire error, power;
 wire [2:0] voltage_mux;
 
 //=======================================================
@@ -174,17 +174,18 @@ wire [2:0] voltage_mux;
 //=======================================================
 
 assign reset_n = 1'b1;
-assign GPIO_1[33] = kill_sw;
+assign GPIO_1[33] = power;
 assign {GPIO_1[29], GPIO_1[31], GPIO_1[25]} = voltage_mux;
-assign LED[3:0] = {voltage_mux, kill_sw};
+assign LED[3:0] = {voltage_mux, power};
 
 global_disable #(
   .NUM_IN(2+1),
   .NUM_IOS(34+13+4)
 ) dis_inst (
   .clk(CLOCK_50),
-  .shutdown(~{KEY, kill_sw}),
+  .shutdown(~{KEY, power}),
   .gpio_in({gpio_0_wire, gpio_2_wire, led_wire}),
+  .gpio_out_default({{34{1'b0}}, {7{1'b0}}, {1'b1}, {5{1'b0}}, {4{1'b0}}}), // GPIO_2[5] defaults to 1
   .gpio_out({GPIO_0, GPIO_2, LED[7:4]})
 );
 
@@ -208,13 +209,13 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
                       .ADC_SDAT_to_the_imu_controller_0(ADC_SDAT),
 
                       // RS232 Signals (add signals later)
-                      .UART_RXD_to_the_RS232_0(),
-                      .UART_RWD_from_the_RS232_0(),
+                      .UART_RXD_to_the_RS232_0(!power | GPIO_2[7]), // 1 if power is off
+                      .UART_TXD_from_the_RS232_0(gpio_2_wire[5]),
 
                       // Power Management
                       .data_to_the_power_management_slave_0(GPIO_1[27]),
                       .mux_from_the_power_management_slave_0(voltage_mux),
-                      .kill_sw_from_the_power_management_slave_0(kill_sw),
+                      .kill_sw_from_the_power_management_slave_0(power),
 
                       // the_select_i2c_clk
                        .out_port_from_the_select_i2c_clk(select_i2c_clk),
