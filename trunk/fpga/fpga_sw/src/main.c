@@ -13,6 +13,7 @@
 #include "sys/alt_irq.h"
 
 #include "interrupts.h"
+#include "rs232.h"
 #include "settings.h"
 #include "utils.h"
 
@@ -26,6 +27,7 @@ struct command_struct my_cmds[] = {
   {"gd\n", COMMAND_DEPTH, "gd - get depth\n  Usage: gd\n\n  Print depth (not converted)\n"},
   {"gm\n", COMMAND_MOTORS, "gm - get motor data\n  Usage: gm\n\n  Print all motor settings (direction on one line and duty cycle on the next)\n"},
   {"h", COMMAND_HELP, "h - help\n  Usage: h <cmd>\n\n  Print the help message for all commands that start with cmd, leave empty to print all help messages\n"},
+  {"imu\n", COMMAND_IMU_SHELL, "imu - enter IMU shell\n  Usage: imu\n\n  Enters a shell where stdin goes to the IMU\n  Type quit to exit the IMU shell\n"},
   {"p", COMMAND_POW, "p - power off/on\n  Usage: p (0|1)\n\n  Turn off/on power to all the voltage rails\n"},
   {"sd", COMMAND_SET_DEPTH, "sd - set depth of submarine\n"},
   {"sh", COMMAND_HEADING, "sh - set heading of motor positive or negative, range from -157 to 157\n"},
@@ -263,6 +265,10 @@ void process_command(char *st)
       i = read_hex(st);
       set_controller(i);
       printf("setting controller %s\n", (i % 2  == 0) ? "off" : "on");
+      break;
+    case COMMAND_IMU_SHELL:
+      printf("type quit to exit IMU shell\n");
+      rs232_shell();
       break;
   }
 }
