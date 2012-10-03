@@ -39,8 +39,6 @@ void rs232_init()
 
 void rs232_shell()
 {
-  puts("Direct output to IMU until you type 'quit'");
-
   char buf[BUF_LEN+1];
 
   while (1) {
