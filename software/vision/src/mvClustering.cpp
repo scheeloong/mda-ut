@@ -278,7 +278,9 @@ int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvL
     assert (nclusters_min <= nclusters_max);
     
     /// if the nlines < nclusters then quit (with the clusters being NULL)
+#ifdef CLUSTERING_DEBUG
     printf ("_nLines = %d\n", _nLines);
+#endif
     if (nclusters_min >= _nLines) { 
         printf ("Not enough lines.\n");
         return 1;
