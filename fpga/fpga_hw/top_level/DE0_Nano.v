@@ -189,6 +189,9 @@ global_disable #(
   .gpio_out({GPIO_0, GPIO_2, LED[7:4]})
 );
 
+// assign IMU reset to low
+assign gpio_2_wire[9] = 1'b0;
+
 DE0_Nano_SOPC DE0_Nano_SOPC_inst(
                       // global signals:
                        .altpll_io(),
@@ -209,8 +212,8 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
                       .ADC_SDAT_to_the_imu_controller_0(ADC_SDAT),
 
                       // RS232 Signals (add signals later)
-                      .UART_RXD_to_the_RS232_0(!power | GPIO_0[29]), // 1 if power is off
-                      .UART_TXD_from_the_RS232_0(gpio_0_wire[27]),
+                      .UART_RXD_to_the_RS232_0(!power | GPIO_2[7]), // 1 if power is off
+                      .UART_TXD_from_the_RS232_0(gpio_2_wire[5]),
 
                       // Power Management
                       .data_to_the_power_management_slave_0(GPIO_1[27]),
