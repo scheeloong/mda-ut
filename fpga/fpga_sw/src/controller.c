@@ -13,18 +13,18 @@
 #include "system.h"
 #include "sys/alt_stdio.h"
 
+#include "controller.h"
 #include "pid.h"
 #include "pwm_force.h"
-#include "controller.h"
-#include "utils.h"
+#include "rs232.h"
 #include "settings.h"
+#include "utils.h"
 
 //#define DEBUG_MSG
 
 // Structures used by the PD controller for stabilization
 struct orientation target_orientation = {};
 struct orientation current_orientation = {};
-struct orientation previous_orientation = {};
 // Structure containing various PD parameters
 struct PD_controller_inputs PD_controller_inputs = {};
 // Structure containing PD controller feedback values
@@ -41,16 +41,12 @@ static int motor_duty_cycle[NUM_MOTORS];
 
 void set_target_speed(int speed)
 {
-   speed = (speed > 157) ? 157 : speed;
-   speed = (speed < -157) ? -157 : speed;
    target_orientation.speed = speed;
 }
 
 void set_target_heading(int heading)
 {
-   heading = (heading > 157) ? 157 : heading;
-   heading = (heading < -157) ? -157 : heading;
-   target_orientation.heading = heading;
+   target_orientation.yaw = heading;
 }
 
 void set_target_depth(int depth)
@@ -72,6 +68,12 @@ void update_depth_reading()
    // Rotate idx
    idx++;
    idx %= NUM_DEPTH_VALUES;
+}
+
+// Get an average depth of the last NUM_DEPTH_VALUES readings
+int get_average_depth()
+{
+   return depth_sum / NUM_DEPTH_VALUES;
 }
 
 // Get orientation from acceleration
@@ -184,10 +186,10 @@ void calculate_pid()
    struct t_accel_data accel_data;   
    
    // Calculate orientation data
-   previous_orientation = current_orientation;
    get_accel(&accel_data);
    get_orientation(&accel_data, &current_orientation);
-   current_orientation.depth = depth_sum / NUM_DEPTH_VALUES; // Compute average
+   current_orientation.depth = get_average_depth();
+   current_orientation.yaw = get_imu_yaw();
    
    /** Ritchie - At this point I assume that current_orientation.pitch and .roll should be controlled towards zero
     *            and .depth should be controlled towards target_orientation.depth
@@ -197,7 +199,7 @@ void calculate_pid()
    // update the controller with the new values
    PID_Update (&PID_Roll, current_orientation.roll);
    PID_Update (&PID_Pitch, current_orientation.pitch);
-   PID_Update (&PID_Yaw, current_orientation.heading);
+   PID_Update (&PID_Yaw, current_orientation.yaw);
    HW_NUM diff = (target_orientation.depth - current_orientation.depth);
    PID_Update (&PID_Depth, diff);
    
@@ -217,7 +219,7 @@ void calculate_pid()
 	printf ("Depth_PID: %f\n", Depth_Force_Needed);
     }
 #endif
-   /** orientation stability - the signs are almost surely wrong 
+   /** orientation stability
     *  If the COM is off center we would have some sort of factors here instead of 0.5
     */
 
@@ -225,7 +227,7 @@ void calculate_pid()
    HW_NUM m_front_right;
    HW_NUM m_rear;
    HW_NUM m_left = motor_force_to_pwm (0.5*Yaw_Force_Needed); // = get_motor_duty_cycle(2); // M_LEFT and M_RIGHT are same as before
-   HW_NUM m_right = motor_force_to_pwm (0.5*Yaw_Force_Needed); // = get_motor_duty_cycle(3);
+   HW_NUM m_right = motor_force_to_pwm (-0.5*Yaw_Force_Needed); // = get_motor_duty_cycle(3);
    
    stabilizing_motors_force_to_pwm ( // this calculates the pwms for these 3 motors
       -0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_left
