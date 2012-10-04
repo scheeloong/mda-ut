@@ -11,6 +11,7 @@
 #include "utils.h"
 #include "rs232.h"
 
+#define RS232_DATA_OFFSET 0
 #define RS232_CONTROL_OFFSET 1
 #define RS232_READ_INTERRUPT 1
 
@@ -56,11 +57,11 @@ void rs232_shell()
 // A read from the IMU is ready. Handle it by copying the result.
 static void read_interrupt(void *context, alt_u32 id)
 {
-  int read_avail = IORD(RS232_0_BASE, RS232_CONTROL_OFFSET) >> 16;
+  int read_avail = IORD(RS232_0_BASE, RS232_DATA_OFFSET) >> 16;
   int i;
 
   for (i = 0; i < read_avail; i++) {
-    putchar(IORD(RS232_0_BASE, 0));
+    putchar(IORD(RS232_0_BASE, RS232_DATA_OFFSET));
   }
 
   puts("");
@@ -121,7 +122,7 @@ int write_str(char *str)
   }
 
   while(*str) {
-    IOWR(RS232_0_BASE, 0, *str++);
+    IOWR(RS232_0_BASE, RS232_DATA_OFFSET, *str++);
   }
 
   return 0;
