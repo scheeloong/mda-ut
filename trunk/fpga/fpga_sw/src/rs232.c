@@ -18,6 +18,9 @@
 #define BUF_LEN 250
 #define WRITE_ATTEMPTS 16
 
+// Global variables
+int yaw = 0, pitch = 0, roll = 0;
+
 // Forward function declarations
 static void read_interrupt(void *context, alt_u32 id);
 
@@ -28,6 +31,23 @@ int write_cmd(char *); // Write command (checksum will be added)
 int write_str(char *); // Write string (checksum already included)
 
 enum CHECKSUM_MODE {NO_CHECKSUM, BYTE_CHECKSUM, SHORT_CHECKSUM} checksum_mode = BYTE_CHECKSUM;
+
+// Function definitions
+
+int get_imu_yaw()
+{
+  return yaw;
+}
+
+int get_imu_pitch()
+{
+  return pitch;
+}
+
+int get_imu_roll()
+{
+  return roll;
+}
 
 // Enable read interrupts for RS232
 void rs232_init()

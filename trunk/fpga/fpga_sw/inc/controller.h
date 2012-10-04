@@ -14,9 +14,9 @@ struct t_accel_data {
 
 struct orientation {
   // angles
+  int yaw;
   int pitch;
   int roll;
-  int heading;
 
   // scalars
   int speed;
