@@ -209,8 +209,8 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
                       .ADC_SDAT_to_the_imu_controller_0(ADC_SDAT),
 
                       // RS232 Signals (add signals later)
-                      .UART_RXD_to_the_RS232_0(!power | GPIO_2[7]), // 1 if power is off
-                      .UART_TXD_from_the_RS232_0(gpio_2_wire[5]),
+                      .UART_RXD_to_the_RS232_0(!power | GPIO_0[29]), // 1 if power is off
+                      .UART_TXD_from_the_RS232_0(gpio_0_wire[27]),
 
                       // Power Management
                       .data_to_the_power_management_slave_0(GPIO_1[27]),
