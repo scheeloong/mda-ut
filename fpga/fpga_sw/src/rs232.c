@@ -18,14 +18,16 @@
 #define BUF_LEN 250
 #define WRITE_ATTEMPTS 16
 
+#define ATTITUDE_STRING "$VNYPR"
+
 // Global variables
 int yaw = 0, pitch = 0, roll = 0;
 
 // Forward function declarations
-static void read_interrupt(void *context, alt_u32 id);
+static void read_interrupt(void *, alt_u32);
 
-unsigned char checksum_byte(char* command);
-unsigned short checksum_short(char* command);
+unsigned char checksum_byte(char *);
+unsigned short checksum_short(char *);
 
 int write_cmd(char *); // Write command (checksum will be added)
 int write_str(char *); // Write string (checksum already included)
@@ -34,19 +36,11 @@ enum CHECKSUM_MODE {NO_CHECKSUM, BYTE_CHECKSUM, SHORT_CHECKSUM} checksum_mode = 
 
 // Function definitions
 
-int get_imu_yaw()
+void get_imu_orientation(struct orientation *o)
 {
-  return yaw;
-}
-
-int get_imu_pitch()
-{
-  return pitch;
-}
-
-int get_imu_roll()
-{
-  return roll;
+  o->yaw = yaw;
+  o->pitch = pitch;
+  o->roll = roll;
 }
 
 // Enable read interrupts for RS232
@@ -80,8 +74,23 @@ static void read_interrupt(void *context, alt_u32 id)
   int read_avail = IORD(RS232_0_BASE, RS232_DATA_OFFSET) >> 16;
   int i;
 
+  char buffer[65];
+
   for (i = 0; i < read_avail; i++) {
-    putchar(IORD(RS232_0_BASE, RS232_DATA_OFFSET));
+    char ch = IORD(RS232_0_BASE, RS232_DATA_OFFSET);
+    putchar(ch);
+    buffer[i] = ch;
+  }
+
+  buffer[i] = '\0';
+
+  if (!strncmp(ATTITUDE_STRING, buffer, strlen(ATTITUDE_STRING))) {
+    float yaw_f, pitch_f, roll_f;
+    sscanf(buffer, ATTITUDE_STRING ",%f,%f,%f", &yaw_f, &pitch_f, &roll_f);
+
+    yaw = (int)yaw_f;
+    pitch = (int)pitch_f;
+    roll = (int)roll_f;
   }
 }
 

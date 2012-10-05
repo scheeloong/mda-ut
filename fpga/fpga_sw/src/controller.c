@@ -182,14 +182,9 @@ void calculate_pid()
       return;
    }
 
-   // Get current orientation data
-   struct t_accel_data accel_data;   
-   
-   // Calculate orientation data
-   get_accel(&accel_data);
-   get_orientation(&accel_data, &current_orientation);
+   // Get orientation data from IMU and depth from depth sensor
+   get_imu_orientation(&current_orientation);
    current_orientation.depth = get_average_depth();
-   current_orientation.yaw = get_imu_yaw();
    
    /** Ritchie - At this point I assume that current_orientation.pitch and .roll should be controlled towards zero
     *            and .depth should be controlled towards target_orientation.depth
