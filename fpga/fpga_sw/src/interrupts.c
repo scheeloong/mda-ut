@@ -12,10 +12,11 @@
 #include "sys/alt_stdio.h"
 #include "sys/alt_irq.h"
 
+#include "controller.h"
 #include "interrupts.h"
+#include "rs232.h"
 #include "settings.h"
 #include "utils.h"
-#include "controller.h"
 
 // For power management
 int power_failures[7] = {0};
