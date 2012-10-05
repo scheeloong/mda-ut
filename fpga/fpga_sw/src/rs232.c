@@ -26,11 +26,11 @@ int yaw = 0, pitch = 0, roll = 0;
 // Forward function declarations
 static void read_interrupt(void *, alt_u32);
 
-unsigned char checksum_byte(char *);
-unsigned short checksum_short(char *);
+unsigned char checksum_byte(const char *);
+unsigned short checksum_short(const char *);
 
-int write_cmd(char *); // Write command (checksum will be added)
-int write_str(char *); // Write string (checksum already included)
+int write_cmd(const char *); // Write command (checksum will be added)
+int write_str(const char *); // Write string (checksum already included)
 
 enum CHECKSUM_MODE {NO_CHECKSUM, BYTE_CHECKSUM, SHORT_CHECKSUM} checksum_mode = BYTE_CHECKSUM;
 
@@ -50,6 +50,16 @@ void rs232_init()
 
   // Register read interrupt handler
   alt_ic_isr_register(RS232_0_IRQ_INTERRUPT_CONTROLLER_ID, RS232_0_IRQ, (void *)read_interrupt, 0, 0);
+}
+
+void rs232_init_async_imu_output()
+{
+  const char *YPR_CMD = "VNWRG,06,1";
+  const char *ASYNC_200HZ_RATE_CMD = "VNWRG,07,200";
+
+  // Only output yaw, pitch and roll asynchronously at 200 Hz
+  write_cmd(YPR_CMD);
+  write_cmd(ASYNC_200HZ_RATE_CMD);
 }
 
 void rs232_shell()
@@ -94,7 +104,7 @@ static void read_interrupt(void *context, alt_u32 id)
   }
 }
 
-unsigned char checksum_byte(char* command)
+unsigned char checksum_byte(const char* command)
 {
   unsigned char xor = 0;
   while (*command) {
@@ -103,7 +113,7 @@ unsigned char checksum_byte(char* command)
   return xor;
 }
 
-unsigned short checksum_short(char* command)
+unsigned short checksum_short(const char* command)
 {
   unsigned short crc = 0;
   while (*command) {
@@ -117,7 +127,7 @@ unsigned short checksum_short(char* command)
   return crc;
 }
 
-int write_cmd(char *cmd)
+int write_cmd(const char *cmd)
 {
   char buf[BUF_LEN+6];
 
@@ -133,7 +143,7 @@ int write_cmd(char *cmd)
   return write_str(buf);
 }
 
-int write_str(char *str)
+int write_str(const char *str)
 {
   int len = strlen(str);
   int i;
