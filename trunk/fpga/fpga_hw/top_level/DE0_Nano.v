@@ -176,7 +176,7 @@ wire [2:0] voltage_mux;
 assign reset_n = 1'b1;
 assign GPIO_1[33] = power;
 assign {GPIO_1[29], GPIO_1[31], GPIO_1[25]} = voltage_mux;
-assign LED[3:0] = {voltage_mux, power};
+assign LED[3:0] = {2'b10, GPIO_2[7], gpio_2_wire[5]};
 
 global_disable #(
   .NUM_IN(2+1),
