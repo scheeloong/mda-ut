@@ -74,7 +74,7 @@ static void read_interrupt(void *context, alt_u32 id)
   int read_avail = IORD(RS232_0_BASE, RS232_DATA_OFFSET) >> 16;
   int i;
 
-  char buffer[65];
+  char buffer[129];
 
   for (i = 0; i < read_avail; i++) {
     char ch = IORD(RS232_0_BASE, RS232_DATA_OFFSET);
