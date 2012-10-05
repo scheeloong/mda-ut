@@ -83,8 +83,6 @@ static void read_interrupt(void *context, alt_u32 id)
   for (i = 0; i < read_avail; i++) {
     putchar(IORD(RS232_0_BASE, RS232_DATA_OFFSET));
   }
-
-  puts("");
 }
 
 unsigned char checksum_byte(char* command)
@@ -116,11 +114,11 @@ int write_cmd(char *cmd)
 
   // Add extra characters and checksum
   if (checksum_mode == NO_CHECKSUM) {
-    sprintf(buf, "$%s*", cmd);
+    sprintf(buf, "$%s*\n", cmd);
   } else if (checksum_mode == BYTE_CHECKSUM) {
-    sprintf(buf, "$%s*%02hhX", cmd, checksum_byte(cmd));
+    sprintf(buf, "$%s*%02hhX\n", cmd, checksum_byte(cmd));
   } else {
-    sprintf(buf, "$%s*%04hX", cmd, checksum_short(cmd));
+    sprintf(buf, "$%s*%04hX\n", cmd, checksum_short(cmd));
   }
 
   return write_str(buf);
@@ -137,7 +135,7 @@ int write_str(char *str)
     }
   }
   if (i == WRITE_ATTEMPTS) {
-    printf("Failed to transmit command string %s\n", str);
+    printf("Failed to transmit command string %s", str);
     return -1;
   }
 
