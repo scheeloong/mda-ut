@@ -118,9 +118,9 @@ int write_cmd(char *cmd)
   if (checksum_mode == NO_CHECKSUM) {
     sprintf(buf, "$%s*", cmd);
   } else if (checksum_mode == BYTE_CHECKSUM) {
-    sprintf(buf, "$%s*%02hhx", cmd, checksum_byte(cmd));
+    sprintf(buf, "$%s*%02hhX", cmd, checksum_byte(cmd));
   } else {
-    sprintf(buf, "$%s*%04hx", cmd, checksum_short(cmd));
+    sprintf(buf, "$%s*%04hX", cmd, checksum_short(cmd));
   }
 
   return write_str(buf);
