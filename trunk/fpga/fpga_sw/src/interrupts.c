@@ -27,6 +27,7 @@ void set_controller(int status)
 {
    enable_controller = status;
    if (enable_controller) {
+     rs232_init_async_imu_output();
      set_target_depth(get_depth());
      IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 7); // Start timer interrupt
    } else {
