@@ -91,28 +91,29 @@ static void pm_interrupt(void *context, alt_u32 id)
       }
       switch(i) {
          case 0:
-            alt_putstr("24 V under-voltage failed");
+            alt_putstr("24 V under-voltage failed ");
             break;
          case 1:
-            alt_putstr("12 V over-voltage failed");
+            alt_putstr("12 V over-voltage failed ");
             break;
          case 2:
-            alt_putstr("12 V under-voltage failed");
+            alt_putstr("12 V under-voltage failed ");
             break;
          case 3:
-            alt_putstr("5 over-voltage failed");
+            alt_putstr("5 over-voltage failed ");
             break;
          case 4:
-            alt_putstr("5 V under-voltage failed");
+            alt_putstr("5 V under-voltage failed ");
             break;
          case 5:
-            alt_putstr("3.3 V over-voltage failed");
+            alt_putstr("3.3 V over-voltage failed ");
             break;
          case 6:
-            alt_putstr("3.3 V under-voltage failed");
+            alt_putstr("3.3 V under-voltage failed ");
             break;
        }
-       alt_printf(" %d times\n", power_failures[i]);
+       print_int(power_failures[i]);
+       alt_putstr(" times\n");
    }
 }
 
