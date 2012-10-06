@@ -16,6 +16,7 @@
 #define RS232_READ_INTERRUPT 1
 
 #define BUF_LEN 250
+#define READ_BUF_LEN 128
 #define WRITE_ATTEMPTS 16
 
 #define ATTITUDE_STRING "$VNYPR"
@@ -81,22 +82,29 @@ void rs232_shell()
 // A read from the IMU is ready. Handle it by copying the result.
 static void read_interrupt(void *context, alt_u32 id)
 {
+  static char buffer[READ_BUF_LEN+1];
+  static index = 0;
+
   int read_avail = IORD(RS232_0_BASE, RS232_DATA_OFFSET) >> 16;
-  int i;
+  int max_index = index + read_avail;
 
-  char buffer[129];
-
-  for (i = 0; i < read_avail; i++) {
+  while (1) {
     char ch = IORD(RS232_0_BASE, RS232_DATA_OFFSET);
-    buffer[i] = ch;
+    buffer[index++] = ch;
     putchar(ch);
 
-    if (ch == '\0' || ch == '\n') {
+    // End of command, break
+    if (ch == '\0' || ch == '\n' || index == READ_BUF_LEN) {
       break;
+    }
+    // End of data, return
+    if (index >= max_index) {
+      return;
     }
   }
 
-  buffer[i] = '\0';
+  buffer[index] = '\0';
+  index = 0;
 
   if (!strncmp(ATTITUDE_STRING, buffer, strlen(ATTITUDE_STRING))) {
     float yaw_f, pitch_f, roll_f;
