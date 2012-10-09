@@ -11,7 +11,7 @@ void PID_Reset (Controller_PID* PID) {
     PID->num_values = 0;
 }
 
-void PID_Update (Controller_PID* PID, HW_NUM value) {
+void PID_Update (Controller_PID* PID, double value) {
 // updates the controller with a single reading
     PID->P = value;
     PID->I = (1-PID->Alpha)*PID->I + value;
@@ -22,7 +22,7 @@ void PID_Update (Controller_PID* PID, HW_NUM value) {
     
     PID->old_values[0] = value;
     
-    HW_NUM temp = 0;
+    double temp = 0;
     if (PID->num_values >= PID_NUM_OLD_VALUES-1) { // if enough values accumulated
         for (i = 1; i < PID_NUM_OLD_VALUES; i++)
             temp += PID->old_values[i-1] - PID->old_values[i];
@@ -34,7 +34,7 @@ void PID_Update (Controller_PID* PID, HW_NUM value) {
     }
 }
 
-HW_NUM PID_Output (Controller_PID* PID) {
+double PID_Output (Controller_PID* PID) {
 // calculate the output of the controller
     return PID->Const_P*PID->P + PID->Const_I*PID->I + PID->Const_D*PID->D;    
 }
