@@ -83,7 +83,7 @@ void rs232_shell()
 static void read_interrupt(void *context, alt_u32 id)
 {
   static char buffer[READ_BUF_LEN+1];
-  static index = 0;
+  static int index = 0;
 
   int read_avail = IORD(RS232_0_BASE, RS232_DATA_OFFSET) >> 16;
   int max_index = index + read_avail;
