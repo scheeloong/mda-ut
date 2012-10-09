@@ -20,6 +20,7 @@
 #include "settings.h"
 #include "utils.h"
 
+#define MAX_YAW 360
 //#define DEBUG_MSG
 
 // Structures used by the PD controller for stabilization
@@ -130,44 +131,45 @@ void pid_init () // call this anytime before calling calculate_pid2
     init_lookup();
 }
 
-HW_NUM motor_force_to_pwm (HW_NUM force) {
+double motor_force_to_pwm (double force) {
     int pwm = ZERO_PWM + pwm_of_force(force*FACTOR_CONTROLLER_FORCE_TO_LBS);
     return pwm;
 }
 
-// the following function calculates the pwm needed for the 3 stabilizing motors. 
+// the following function calculates the pwm needed for 2 or 3 stabilizing motors. 
 // It ensures motors are balanced and no motor exceeds 0.8*FULL_PWM by reducing 
-// the force if any motor pwm does exceed the limit
+// the force if any motor pwm does exceed the limit.
 #define MAX_FORCE_BALANCING_LOOPS 10
 void stabilizing_motors_force_to_pwm (
-        HW_NUM f_front_left, HW_NUM f_front_right, HW_NUM f_rear,
-        HW_NUM *m_front_left, HW_NUM *m_front_right, HW_NUM *m_rear
+        double f_1, double f_2, double f_3,
+        double *m_1, double *m_2, double *m_3
 )
 {
-    unsigned loops = 0;
+    unsigned loops;
 
-    while (true && loops < MAX_FORCE_BALANCING_LOOPS) {
+    for (loops = 0; loops < MAX_FORCE_BALANCING_LOOPS; loops++) {
         // calculate the pwms
-        *m_front_left = motor_force_to_pwm(f_front_left);
-        *m_front_right = motor_force_to_pwm(f_front_right);
-        *m_rear = motor_force_to_pwm(f_rear);
+        *m_1 = motor_force_to_pwm(f_1);
+        *m_2 = motor_force_to_pwm(f_2);
+        if (m_3) {
+            *m_3 = motor_force_to_pwm(f_3);
+        }
 
-        HW_NUM pwm_limit = MAX_PWM;
+        double pwm_limit = MAX_PWM;
 
         // if any pwm is out of bound
-        if (ABS(*m_front_left) > pwm_limit ||
-            ABS(*m_front_right) > pwm_limit ||
-            ABS(*m_rear) > pwm_limit)
+        if (ABS(*m_1) > pwm_limit ||
+            ABS(*m_2) > pwm_limit ||
+            (m_3 && ABS(*m_3) > pwm_limit))
         {
             // reduce force
-            f_front_left *= FORCE_REDUCTION_FACTOR;
-            f_front_right *= FORCE_REDUCTION_FACTOR;
-            f_rear *= FORCE_REDUCTION_FACTOR;
+            f_1 *= FORCE_REDUCTION_FACTOR;
+            f_2 *= FORCE_REDUCTION_FACTOR;
+            f_3 *= FORCE_REDUCTION_FACTOR;
         }
-        else
+        else {
             break;
-
-        loops++;
+        }
     }
 }
 
@@ -191,18 +193,29 @@ void calculate_pid()
     *            and nothing else matters just yet
     */
    
-   // update the controller with the new values
+   // update the controller with the new pitch and roll values
    PID_Update (&PID_Roll, current_orientation.roll);
    PID_Update (&PID_Pitch, current_orientation.pitch);
-   PID_Update (&PID_Yaw, current_orientation.yaw);
-   HW_NUM diff = (target_orientation.depth - current_orientation.depth);
-   PID_Update (&PID_Depth, diff);
+
+   // normalize yaw difference between -180 and 180 degrees
+   double delta_yaw = (target_orientation.yaw - current_orientation.yaw);
+   delta_yaw = fmod(delta_yaw, MAX_YAW);
+   if (delta_yaw > MAX_YAW/2) {
+     delta_yaw -= MAX_YAW;
+   } else if (delta_yaw < -MAX_YAW/2) {
+     delta_yaw += MAX_YAW;
+   }
+   PID_Update (&PID_Yaw, delta_yaw);
+
+   // calculate depth difference
+   double delta_depth = (target_orientation.depth - current_orientation.depth);
+   PID_Update (&PID_Depth, delta_depth);
    
    // calculate the force required
-   HW_NUM Roll_Force_Needed = FACTOR_PID_ROLL_TO_FORCE * PID_Output(&PID_Roll);
-   HW_NUM Pitch_Force_Needed = FACTOR_PID_PITCH_TO_FORCE * PID_Output(&PID_Pitch);
-   HW_NUM Depth_Force_Needed = FACTOR_PID_DEPTH_TO_FORCE * PID_Output(&PID_Depth);
-   HW_NUM Yaw_Force_Needed = FACTOR_PID_YAW_TO_FORCE * PID_Output(&PID_Yaw);
+   double Roll_Force_Needed = FACTOR_PID_ROLL_TO_FORCE * PID_Output(&PID_Roll);
+   double Pitch_Force_Needed = FACTOR_PID_PITCH_TO_FORCE * PID_Output(&PID_Pitch);
+   double Depth_Force_Needed = FACTOR_PID_DEPTH_TO_FORCE * PID_Output(&PID_Depth);
+   double Yaw_Force_Needed = FACTOR_PID_YAW_TO_FORCE * PID_Output(&PID_Yaw);
 
    // Print some debug messages every so often...
 #ifdef DEBUG_MSG 
@@ -218,13 +231,18 @@ void calculate_pid()
     *  If the COM is off center we would have some sort of factors here instead of 0.5
     */
 
-   HW_NUM m_front_left;
-   HW_NUM m_front_right;
-   HW_NUM m_rear;
-   HW_NUM m_left = motor_force_to_pwm (0.5*Yaw_Force_Needed); // = get_motor_duty_cycle(2); // M_LEFT and M_RIGHT are same as before
-   HW_NUM m_right = motor_force_to_pwm (-0.5*Yaw_Force_Needed); // = get_motor_duty_cycle(3);
+   double m_front_left, m_front_right, m_rear, m_left, m_right;
    
-   stabilizing_motors_force_to_pwm ( // this calculates the pwms for these 3 motors
+   stabilizing_motors_force_to_pwm ( // this calculates the pwms for yaw motors
+      0.5*Yaw_Force_Needed, // m_left
+      -0.5*Yaw_Force_Needed, // m_right
+      0, // unused
+      &m_left,
+      &m_right,
+      NULL
+   );
+
+   stabilizing_motors_force_to_pwm ( // this calculates the pwms for pitch and roll motors
       -0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_left
       0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_right
       -0.5*Pitch_Force_Needed + 0.5*Depth_Force_Needed, // m_rear
