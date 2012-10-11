@@ -1,10 +1,11 @@
 CC=g++ -O3 -Wall
+CVFLAGS=`pkg-config --cflags --libs opencv`
 LIBDIR=lib/
 SRCDIR=src/
 OBJDIR=obj/
 A=libcontrol.a
 
-INC=$(LIBDIR)mda_control.h
+INC=$(LIBDIR)mda_control.h $(LIBDIR)vci.h
 OBJ=$(OBJDIR)mda_control.o
 TEST=$(OBJDIR)main.o
 
@@ -15,7 +16,7 @@ $(OBJDIR)%.o: $(SRCDIR)%.cpp $(INC)
 
 # test is the main executable and depends on each object
 test: $(OBJ) $(TEST)
-	$(CC) $(OBJ) $(TEST) -o $@
+	$(CC) $(OBJ) $(TEST) -o $@ 
 
 # archive file
 $(A): $(OBJ)
