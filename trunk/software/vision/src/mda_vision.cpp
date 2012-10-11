@@ -40,7 +40,7 @@ void MDA_VISION_MODULE_TEST:: primary_filter (const IplImage* src) {
     _window->showImage (img);
 }
 
-void MDA_VISION_MODULE_TEST:: calc_vci () {
+void MDA_VISION_MODULE_TEST:: calc_vci (VCI* interface) {
 }
 
 
@@ -73,12 +73,12 @@ void MDA_VISION_MODULE_GATE:: primary_filter (const IplImage* src) {
     _KMeans->cluster_auto (1, 2, _lines);
     _KMeans->drawOntoImage (_filtered_img);
 
-    _lines->drawOntoImage (_filtered_img);
+    //_lines->drawOntoImage (_filtered_img);
     _window->showImage (_filtered_img);
     _lines->clearData ();
 }
 
-void MDA_VISION_MODULE_GATE:: calc_vci () {
+void MDA_VISION_MODULE_GATE:: calc_vci (VCI* interface) {
     if (_KMeans->nClusters() == 1) {
     
         return;
@@ -112,11 +112,11 @@ void MDA_VISION_MODULE_GATE:: calc_vci () {
         printf ("Gate Sanity Failure: Gate dimensions inconsistent with data\n");
     //    return;
     }
+
+    interface->x = (int)((x00+x01+x10+x11)*0.25 - _filtered_img->width*0.5);
+    interface->y = (int)((y00+y01+y10+y11)*0.25 - _filtered_img->height*0.5);
     
-    int gate_centroid_x = (int)((x00+x01+x10+x11)*0.25 - _filtered_img->width*0.5);
-    int gate_centroid_y = (int)((y00+y01+y10+y11)*0.25 - _filtered_img->height*0.5);
-    
-    printf ("Gate: (%d, %d),  %d X %d.\n", gate_centroid_x, gate_centroid_y, gate_height, gate_width);
+    printf ("Gate: (%d, %d),  %d X %d.\n", interface->x, interface->y, gate_height, gate_width);
 }
 
 
@@ -132,7 +132,7 @@ MDA_VISION_MODULE_PATH:: ~MDA_VISION_MODULE_PATH () {
 void MDA_VISION_MODULE_PATH:: primary_filter (const IplImage* src) {
 }
 
-void MDA_VISION_MODULE_PATH:: calc_vci () {
+void MDA_VISION_MODULE_PATH:: calc_vci (VCI* interface) {
 }
 
 
@@ -148,5 +148,5 @@ MDA_VISION_MODULE_BUOY:: ~MDA_VISION_MODULE_BUOY () {
 void MDA_VISION_MODULE_BUOY:: primary_filter (const IplImage* src) {
 }
 
-void MDA_VISION_MODULE_BUOY:: calc_vci () {
+void MDA_VISION_MODULE_BUOY:: calc_vci (VCI* interface) {
 }

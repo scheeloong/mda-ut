@@ -3,7 +3,10 @@
 #include "types.h"
 #include "physical_model.h"
 #include "sim.h"
+
 #include "../vision/lib/mda_vision.h"
+#include "../control/lib/vci.h"
+#include "../control/lib/mda_control.h"
 
 /**
  * Because the opencv code we have assumes that images passed to it are of the size 
@@ -17,8 +20,10 @@ IplImage* cv_img_result;
 
 bool FLAG_USE_IMG_DOWN; // make this true if you want to use img_down instead of img_fwd
 
-// tasks
+// variables for vision and control
 MDA_VISION_MODULE_BASE* vision_module;
+MDA_CONTROL_MODULE_BASE* control_module;
+VCI interface;
 
 void cv_init () {
     unsigned width=600, height = 400; // temporary
@@ -36,7 +41,7 @@ void cv_init () {
     }
     else if (cv_task_enum == CV_VISION_BUOY)
         vision_module = new MDA_VISION_MODULE_BUOY;
-        
+
     cv_img_fwd = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
     cv_img_fwd->origin = 1;
     cv_img_down = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
@@ -59,7 +64,6 @@ void cv_display () {
 // the redraw flag is raised by the function glutPostRedisplay();
 // with CV_VISION_FLAG the cv code will run every time the window is updated.
     IplImage* img_to_use = NULL;
-    int vci = 0;
    
     if (cv_task_enum != NO_TASK) {
         // first grab both front and bottom cam images       
@@ -84,8 +88,7 @@ void cv_display () {
         
         /** OPENCV CODE GOES HERE. */    
         if (vision_module != NULL) {
-            vision_module->filter (img_to_use);
-            // call calc_vci when it is written
+            vision_module->filter (img_to_use, &interface);
         }
         /** END OPENCV CODE */
 
