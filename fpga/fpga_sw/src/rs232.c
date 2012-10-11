@@ -91,7 +91,11 @@ static void read_interrupt(void *context, alt_u32 id)
   while (1) {
     char ch = IORD(RS232_0_BASE, RS232_DATA_OFFSET);
     buffer[index++] = ch;
-    putchar(ch);
+
+    // Don't print null characters
+    if(ch) {
+      putchar(ch);
+    }
 
     // End of command, break
     if (ch == '\0' || ch == '\n' || index == READ_BUF_LEN) {
