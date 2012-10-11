@@ -20,6 +20,10 @@
 /// ########################################################################
 class MDA_VISION_MODULE_BASE {
 protected:
+    /// definitions related to camera and vision
+    static const float TAN_FOV_X = 1.2;     // tangent of camera FOV, equal to real width/range
+    static const float TAN_FOV_Y = 1.0;
+
     // stores resized image
     IplImage* _resized_; 
 
@@ -76,10 +80,10 @@ public:
 /// ########################################################################
 class MDA_VISION_MODULE_GATE : public MDA_VISION_MODULE_BASE {
 #define MDA_VISION_GATE_SETTINGS "vision_gate_settings.csv"
-#define GATE_WIDTH 300.0 // physical width in centimeters
-#define GATE_HEIGHT 120.0 // physical width in centimeters
-#define GATE_SKINNYNESS 0.017 // ratio of pipe diameter to length
-#define GATE_WIDTH_TO_HEIGHT_RATIO 2.50
+    static const float GATE_REAL_WIDTH = 300.0;
+    static const float GATE_REAL_HEIGHT = 120.0;
+    static const float GATE_REAL_SLENDERNESS = 0.017;
+    static const float GATE_WIDTH_TO_HEIGHT_RATIO = 2.50;
 
     mvWindow* _window;
     mvHSVFilter* _HSVFilter;

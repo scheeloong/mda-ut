@@ -105,18 +105,24 @@ void MDA_VISION_MODULE_GATE:: calc_vci (VCI* interface) {
     }
     
     /// calculations, treat center of image as 0,0   
-    int gate_width = (int)( abs(x00+x01-x10-x11) * 0.5);
-    int gate_height = (int)( (abs(y00-y01) + abs(y10-y11)) * 0.5);
-    float gate_width_to_height_ratio = abs((float)gate_width / gate_height);
+    int gate_pixel_width = (int)( abs(x00+x01-x10-x11) * 0.5);
+    int gate_pixel_height = (int)( (abs(y00-y01) + abs(y10-y11)) * 0.5);
+    float gate_width_to_height_ratio = abs((float)gate_pixel_width / gate_pixel_height);
     if (gate_width_to_height_ratio > 1.3*GATE_WIDTH_TO_HEIGHT_RATIO || 1.3*gate_width_to_height_ratio < GATE_WIDTH_TO_HEIGHT_RATIO) {
         printf ("Gate Sanity Failure: Gate dimensions inconsistent with data\n");
     //    return;
     }
 
-    interface->x = (int)((x00+x01+x10+x11)*0.25 - _filtered_img->width*0.5);
-    interface->y = (int)((y00+y01+y10+y11)*0.25 - _filtered_img->height*0.5);
-    
-    printf ("Gate: (%d, %d),  %d X %d.\n", interface->x, interface->y, gate_height, gate_width);
+    int pixel_x = (int)((x00+x01+x10+x11)*0.25 - _filtered_img->width*0.5);
+    int pixel_y = (int)((y00+y01+y10+y11)*0.25 - _filtered_img->height*0.5);   
+    printf ("Gate: (%d, %d),  %d X %d.\n", pixel_x, pixel_y, gate_pixel_width, gate_pixel_height);
+
+    // calculate real distances
+    const float pixel_to_real = GATE_REAL_WIDTH / gate_pixel_width;
+    interface->real_x = pixel_to_real * pixel_x;
+    interface->real_y = pixel_to_real * pixel_y;
+    interface->range = (pixel_to_real * _filtered_img->width) / TAN_FOV_X;
+    //printf ("Gate Real: (%d, %d),  range %d.\n", interface->real_x, interface->real_y, interface->range);
 }
 
 
