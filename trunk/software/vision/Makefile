@@ -10,8 +10,9 @@ OBJ=$(OBJDIR)mgui.o $(OBJDIR)mv.o $(OBJDIR)mvHSVFilter.o $(OBJDIR)mfile.o $(OBJD
 VOBJ=$(OBJDIR)mda_vision.o
 TEST=$(OBJDIR)main.o
 WEBCAM=$(OBJDIR)webcam.o
+RANGE_TEST=$(OBJDIR)camera_range_test.o
 
-all: test webcam $(A)
+all: test webcam camera_range_test $(A)
 
 $(OBJDIR)%.o: $(SRCDIR)%.cpp $(INC)
 	$(CC) -I$(LIBDIR) -c $< -o $@ $(CVFLAGS)
@@ -22,12 +23,15 @@ test: $(OBJ) $(VOBJ) $(TEST)
 # webcam is another executable
 webcam: $(OBJ) $(VOBJ) $(WEBCAM)
 	$(CC) $(OBJ) $(VOBJ) $(WEBCAM) -o $@ $(CVFLAGS)
+# range_test executable
+camera_range_test: $(OBJ) $(VOBJ) $(RANGE_TEST)
+	$(CC) $(OBJ) $(VOBJ) $(RANGE_TEST) -o $@ $(CVFLAGS)
 # archive file
 $(A): $(OBJ) $(VOBJ)
 	ar -cvq $@ $(OBJ) $(VOBJ)
 
 clean:
-	rm -f test webcam ./obj/* $(A) ./*~
+	rm -f test webcam camera_range_test ./obj/* $(A) ./*~
 	rm -f $(LIBDIR)*~
 	rm -f $(SRCDIR)*~
 	rm -f ./settings/*~

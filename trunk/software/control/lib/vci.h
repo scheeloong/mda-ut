@@ -11,28 +11,28 @@ class VCI {
 	friend class MDA_VISION_MODULE_BUOY;
 
 protected:
-	int x, y;
-	int range;
+	int real_x, real_y; 		// these are real lengths in CENTIMETERS
+	int range;					
 	int angle;
 
 public:
 	static const int VCI_UNDEFINED_VALUE = -88888888;
 
 	VCI () {
-		x = y = range = angle = VCI_UNDEFINED_VALUE;
+		real_x = real_y = range = angle = VCI_UNDEFINED_VALUE;
 	} 
 
 	void clear () {
-		x = y = range = angle = VCI_UNDEFINED_VALUE;
+		real_x = real_y = range = angle = VCI_UNDEFINED_VALUE;
 	}
 
-	int get_x() { 
-		assert (x != VCI_UNDEFINED_VALUE);
-		return x;
+	int get_real_x() { 
+		assert (real_x != VCI_UNDEFINED_VALUE);
+		return real_x;
 	}
-	int get_y() {
-		assert (y != VCI_UNDEFINED_VALUE);
-		return y;
+	int get_real_y() {
+		assert (real_y != VCI_UNDEFINED_VALUE);
+		return real_y;
 	}
 	int get_range() {
 		assert (range != VCI_UNDEFINED_VALUE);
