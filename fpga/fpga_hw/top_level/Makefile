@@ -55,7 +55,7 @@ STA_ARGS =
 STAMP = echo done >
 
 $(SOPCINFO_FILE): $(SOPCINFO_FILE_DEPENDS)
-	- sopc_builder --generate $(SOPC_FILE)
+	sopc_builder --generate $(SOPC_FILE) || [ $$? -eq 4 ]
 
 $(PROJECT).map.rpt: map.chg $(SOURCE_FILES) 
 	quartus_map $(MAP_ARGS) $(PROJECT)
