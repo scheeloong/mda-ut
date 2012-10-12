@@ -33,7 +33,7 @@ protected:
     
 public:
     MDA_VISION_MODULE_BASE () { _resized_ = mvCreateImage_Color(); }
-    ~MDA_VISION_MODULE_BASE () { delete _resized_; }
+    ~MDA_VISION_MODULE_BASE () { cvReleaseImage (&_resized_); } 
 
     void filter (const IplImage* src, VCI* interface) {
         assert (src != NULL);

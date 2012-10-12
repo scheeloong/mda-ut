@@ -24,29 +24,31 @@ public:
 
 /** Main Function */
 
+
 int main (int argc, char** argv) {
     MDA_CAMERA_RANGE_TEST test;
     mvCamera camera (0, 0);
-    mvWindow win1 ("webcam");
     VCI interface;
 
     char c;
     IplImage* frame;
 
     for (;;) {
-        frame = camera.getFrameResized();
+        frame = camera.getFrame();
         test.filter (frame, &interface);
 
         c = cvWaitKey (20);
         if (c == 'q')
            break;
     }
+
+    return 0;
 }
 
 /** Class methods */
 
 MDA_CAMERA_RANGE_TEST:: MDA_CAMERA_RANGE_TEST () {
-    _filtered_img = mvCreateImage_Color ();
+    _filtered_img = mvCreateImage ();
     _window = new mvWindow ("Camera Range Test");
     _HSVFilter = new mvHSVFilter (MODULE_SETTINGS);
     _HoughLines = new mvHoughLines (MODULE_SETTINGS);
@@ -55,7 +57,7 @@ MDA_CAMERA_RANGE_TEST:: MDA_CAMERA_RANGE_TEST () {
 }
 
 MDA_CAMERA_RANGE_TEST:: ~MDA_CAMERA_RANGE_TEST () {
-    delete _filtered_img;
+    cvReleaseImage (&_filtered_img);
     delete _window;
     delete _HSVFilter;
     delete _HoughLines;
@@ -66,6 +68,7 @@ MDA_CAMERA_RANGE_TEST:: ~MDA_CAMERA_RANGE_TEST () {
 void MDA_CAMERA_RANGE_TEST:: primary_filter (const IplImage* src) {
     _HSVFilter->filter (src, _filtered_img);
     _filtered_img->origin = src->origin;
+    _lines->clearData ();
     
     _HoughLines->findLines (_filtered_img, _lines);
     _KMeans->cluster_auto (1, 2, _lines);
@@ -73,7 +76,6 @@ void MDA_CAMERA_RANGE_TEST:: primary_filter (const IplImage* src) {
 
     //_lines->drawOntoImage (_filtered_img);
     _window->showImage (_filtered_img);
-    _lines->clearData ();
 }
 
 void MDA_CAMERA_RANGE_TEST:: calc_vci (VCI* interface) {
