@@ -12,7 +12,7 @@ MDA_VISION_MODULE_TEST:: MDA_VISION_MODULE_TEST () {
 }
 
 MDA_VISION_MODULE_TEST:: ~MDA_VISION_MODULE_TEST () {
-    delete _filtered_img;
+    cvReleaseImage (&_filtered_img);
     delete _window;
     delete _HSVFilter;
     delete _HoughLines;
@@ -57,7 +57,7 @@ MDA_VISION_MODULE_GATE:: MDA_VISION_MODULE_GATE () {
 }
 
 MDA_VISION_MODULE_GATE:: ~MDA_VISION_MODULE_GATE () {
-    delete _filtered_img;
+    cvReleaseImage (&_filtered_img);
     delete _window;
     delete _HSVFilter;
     delete _HoughLines;
