@@ -135,7 +135,7 @@ int MDA_VISION_MODULE_GATE:: calc_vci (VCI* interface) {
         float gate_width_to_height_ratio = abs((float)gate_pixel_width / gate_pixel_height);
         if (gate_width_to_height_ratio > 1.3*GATE_WIDTH_TO_HEIGHT_RATIO || 1.3*gate_width_to_height_ratio < GATE_WIDTH_TO_HEIGHT_RATIO) {
             printf ("Gate Sanity Failure: Gate dimensions inconsistent with data\n");
-        //    return;
+            return 3;
         }
 
         int pixel_x = (int)((x00+x01+x10+x11)*0.25 - _filtered_img->width*0.5);
