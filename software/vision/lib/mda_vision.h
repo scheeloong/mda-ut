@@ -29,13 +29,13 @@ protected:
 
     /// you must implement these yourself!
     virtual void primary_filter (const IplImage* src) = 0;
-    virtual void calc_vci (VCI* interface) = 0;
+    virtual int calc_vci (VCI* interface) = 0;
     
 public:
     MDA_VISION_MODULE_BASE () { _resized_ = mvCreateImage_Color(); }
     ~MDA_VISION_MODULE_BASE () { cvReleaseImage (&_resized_); } 
 
-    void filter (const IplImage* src, VCI* interface) {
+    int filter (const IplImage* src, VCI* interface) {
         assert (src != NULL);
         assert (src->nChannels == 3);
         
@@ -45,7 +45,7 @@ public:
         interface->clear();
         
         primary_filter (_resized_);
-        calc_vci (interface);
+        return calc_vci (interface);
     };
 
 };
@@ -62,6 +62,7 @@ class MDA_VISION_MODULE_TEST : public MDA_VISION_MODULE_BASE {
     mvWindow* _window;
     mvHSVFilter* _HSVFilter;
     mvHoughLines* _HoughLines;
+    mvKMeans* _KMeans;
     mvLines* _lines;
     
     IplImage* _filtered_img;
@@ -71,7 +72,7 @@ public:
     ~MDA_VISION_MODULE_TEST ();
     
     void primary_filter (const IplImage* src);
-    void calc_vci (VCI* interface);
+    int calc_vci (VCI* interface);
 };
 
 
@@ -99,7 +100,7 @@ public:
     ~MDA_VISION_MODULE_GATE ();
     
     void primary_filter (const IplImage* src);
-    void calc_vci (VCI* interface);
+    int calc_vci (VCI* interface);
 };
 
 
@@ -113,7 +114,7 @@ public:
     ~MDA_VISION_MODULE_PATH ();
     
     void primary_filter (const IplImage* src);
-    void calc_vci (VCI* interface);
+    int calc_vci (VCI* interface);
 };
 
 /// ########################################################################
@@ -126,7 +127,7 @@ public:
     ~MDA_VISION_MODULE_BUOY ();
     
     void primary_filter (const IplImage* src);
-    void calc_vci (VCI* interface);
+    int calc_vci (VCI* interface);
 };
 
 #endif

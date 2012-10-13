@@ -68,12 +68,13 @@ class mvHoughLines {
 
 
 /** The following code deal with K-Means clustering */
-#define MAX_CLUSTERS 10
-#define _MIN_DIST_BETWEEN_PARALLEL_LINES_MULTIPLIER_ 0.05
 #define _OUTLIER_CUTOFF_MULTIPLIER 40
+#define GLOBAL_INT_FACTOR 1000  // factor to keep all numbers integer
 
 class mvKMeans {
-    unsigned MIN_DIST_BETWEEN_PARALLEL_LINES;
+    static const unsigned MAX_CLUSTERS = 10;
+    static const unsigned SINGLE_LINE__CLUSTER_INTRA_DIFF = 1;      // intra cluster diff if cluster has 1 line
+    static const unsigned SINGLE_CLUSTER__INTER_DIFF = 0.2;         // inter cluster diff if only 1 cluster
     
     // The below _Clusters_**** are arrays of CvPoint[2]. Each CvPoint[2] which store the beginning 
     // and end points of a line. The lines are the "clusters" we are trying to get and each array
@@ -111,6 +112,7 @@ class mvKMeans {
 
     // this function does all the clustering, trying each value of nclusters between the min and max specified
     int cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvLines* lines, unsigned iterations=1);
+    void clearData () { _nClusters_Final = 0; }
     
     // accessor function for the lines
     CvPoint* operator [] (unsigned index) { return (CvPoint*)_Clusters_Best[index]; }

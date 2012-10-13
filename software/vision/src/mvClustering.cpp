@@ -8,6 +8,7 @@
 
 #define ABS(X) (((X) > 0) ? (X) : (-(X)))
 #define SQR(X) ((X)*(X))
+#define CLUSTERING_DEBUG
 
 /** Helper Functions */
 inline
@@ -21,12 +22,12 @@ unsigned Line_Difference_Metric (int x1,int y1, int x2,int y2, int x3,int y3, in
     
     return ABS(a123) + ABS(a134) + ABS(a124) + ABS(a234);
 */
-    unsigned d1 = SQR(x3-x1) + SQR(y3-y1);
-    unsigned d2 = SQR(x4-x2) + SQR(y4-y2);
-    unsigned L = SQR(x2-x1) + SQR(y2-y1) + SQR(x4-x3) + SQR(y4-y3);
+    unsigned d1 = SQR(x3-x1) + SQR(y3-y1); // distance between first points of each line
+    unsigned d2 = SQR(x4-x2) + SQR(y4-y2); // second points
+    unsigned L = SQR(x2-x1) + SQR(y2-y1) + SQR(x4-x3) + SQR(y4-y3); // length of lines
     if (L == 0)
         return 100000;
-    return 1000 * (d1+d2) / L;
+    return GLOBAL_INT_FACTOR * (d1+d2) / L;
 }
 
 inline 
@@ -70,7 +71,6 @@ void copy_line (const CvPoint* src, CvPoint* dst) {
 mvKMeans:: mvKMeans () {   
     unsigned width;
     read_common_mv_setting ("IMG_WIDTH_COMMON", width);
-    MIN_DIST_BETWEEN_PARALLEL_LINES = 400; //(unsigned) (_MIN_DIST_BETWEEN_PARALLEL_LINES_MULTIPLIER_ * width);
     
     for (unsigned i = 0; i < MAX_CLUSTERS; i++) {
         _Clusters_Seed[i] = new CvPoint[2];
@@ -248,10 +248,10 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
     float minimum_inter_cluster_diff = 1E12;
     float avg_inter_cluster_diff = 0;
     if (nClusters == 1) {
-        // this equation basically says "when comparing 1 cluster vs 2 clusters, the 2 clusters have to be a distance apart
-        // roughly equal to MIN_DIST_BETWEEN_PARALLEL_LINES for the 2 clusters to be better than the 1
-        minimum_inter_cluster_diff = MIN_DIST_BETWEEN_PARALLEL_LINES; // * line_sqr_length(_Clusters_Seed[0]);
-        avg_inter_cluster_diff = MIN_DIST_BETWEEN_PARALLEL_LINES; // * line_sqr_length(_Clusters_Seed[0]);
+        // this equation basically says "when comparing 1 cluster vs 2 clusters, the 2 clusters have to be a ratio
+        // of perpendicular dist over length of less than 0.2 to be better than the 1 cluster configuration
+        minimum_inter_cluster_diff = GLOBAL_INT_FACTOR * SINGLE_CLUSTER__INTER_DIFF; // * line_sqr_length(_Clusters_Seed[0]);
+        avg_inter_cluster_diff = GLOBAL_INT_FACTOR * SINGLE_CLUSTER__INTER_DIFF; // * line_sqr_length(_Clusters_Seed[0]);
     }
     else {
         for (unsigned i = 0; i < nClusters; i++) { // loop over all combinations of clusters, find min_inter_cluster_diff
