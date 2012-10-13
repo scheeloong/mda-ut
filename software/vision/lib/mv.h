@@ -51,6 +51,16 @@ inline IplImage* mvCreateImage_Color (IplImage *img) {
 inline void mvGaussian (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h) {
     cvSmooth (src, dst, CV_GAUSSIAN, kern_w, kern_h);
 }
+inline void mvDilate (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
+    IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
+    cvDilate (src, dst, kernel, iterations);
+    cvReleaseStructuringElement (&kernel);
+}
+inline void mvErode (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
+    IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
+    cvErode (src, dst, kernel, iterations);
+    cvReleaseStructuringElement (&kernel);
+}
 inline void mvOpen (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
     IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
     cvMorphologyEx (src, dst, NULL, kernel, CV_MOP_OPEN, iterations);

@@ -8,7 +8,7 @@
 
 #define ABS(X) (((X) > 0) ? (X) : (-(X)))
 #define SQR(X) ((X)*(X))
-#define CLUSTERING_DEBUG
+//#define CLUSTERING_DEBUG
 
 /** Helper Functions */
 inline

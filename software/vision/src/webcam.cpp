@@ -9,8 +9,8 @@
 #include "mvCircles.h"
 
 int main( int argc, char** argv ) {
-    unsigned CAM_NUMBER = 0, DISPLAY = 1, WRITE = 0, 
-             LINE = 0, CIRCLE = 0, LOAD = 0;
+    unsigned CAM_NUMBER=0, WRITE=0, TEST=0, CARTOON=0,
+             LINE=0, CIRCLE=0, LOAD=0;
     unsigned long nframes = 0, t_start, t_end;
     
     if (argc == 1) 
@@ -19,8 +19,10 @@ int main( int argc, char** argv ) {
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i],"1") || !strcmp(argv[i],"2"))
             CAM_NUMBER = atoi (argv[i]);
-        else if (!strcmp (argv[i], "--no_display") || !strcmp (argv[i], "--no_disp"))
-            DISPLAY = 0;
+        else if (!strcmp (argv[i], "--cartoon"))
+            CARTOON = 1;
+        else if (!strcmp (argv[i], "--test"))
+            TEST = 1;
         else if (!strcmp (argv[i], "--write"))
             WRITE = 1;
         else if (!strcmp (argv[i], "--line"))
@@ -50,9 +52,9 @@ int main( int argc, char** argv ) {
         camera = new mvCamera (argv[LOAD]);
     
     // init windows
-    mvWindow* win1 = DISPLAY ? new mvWindow ("webcam") : NULL;
-    mvWindow* win2 = DISPLAY ? new mvWindow ("filtered") : NULL;
-    mvWindow* win3 = DISPLAY ? new mvWindow ("result") : NULL;
+    mvWindow* win1 = new mvWindow ("webcam");
+    mvWindow* win2 = new mvWindow ("filtered");
+    mvWindow* win3 = new mvWindow ("result");
 
     // declare filters we need
     mvHSVFilter HSVFilter ("test_settings.csv"); // color filter
@@ -63,6 +65,7 @@ int main( int argc, char** argv ) {
     mvKMeans kmeans;
 
     // declare images we need
+    IplImage* myframe = mvCreateImage_Color();
     IplImage* filter_img = mvCreateImage ();
     IplImage* grad_img = mvCreateImage ();
     
@@ -84,12 +87,46 @@ int main( int argc, char** argv ) {
         }
 
         HSVFilter.filter (frame, filter_img); // process it
-        mvOpen (filter_img, filter_img, 5, 5);
-        mvClose (filter_img, filter_img, 7, 7);
+        mvDilate (filter_img, filter_img, 5, 5);
+        mvErode (filter_img, filter_img, 7, 7);
         
         mvGradient (filter_img, grad_img, 5, 5);
         //cvDilate (grad_img, grad_img);
         
+        if (CARTOON) {
+            cvZero (filter_img);
+            cvCopy (frame, myframe);
+
+            win1->showImage (myframe);
+
+            for (int i = 0; i < myframe->height; i+=40) {
+                for (int j = 0; j < myframe->width; j+=40) {
+                    unsigned char* pixel = (unsigned char*) (myframe->imageData + i*myframe->widthStep + j*3);
+                    CvScalar mycolor = cvScalar(*(pixel+0), *(pixel+1), *(pixel+2));
+                    
+                    cvFloodFill(myframe, cvPoint(j,i), mycolor, cvScalar(20,20,20), cvScalar(20,20,20), NULL, CV_FLOODFILL_FIXED_RANGE);
+                }    
+            }
+
+            cvCvtColor (myframe, filter_img, CV_RGB2GRAY);
+            mvGradient (filter_img, grad_img, 5, 5);
+            mvErode (grad_img, grad_img, 3, 3);
+
+            for (int i = 0; i < myframe->height; i++) {
+                for (int j = 0; j < myframe->width; j++) {
+                    unsigned char* pixel = (unsigned char*) (myframe->imageData + i*myframe->widthStep + j*3);
+                    unsigned char* gpixel = (unsigned char*) (grad_img->imageData + i*grad_img->widthStep + j);
+
+                    if (*gpixel > 40) {
+                        *pixel = *(pixel+1) = *(pixel+2) = 0;
+                    }
+                }    
+            }
+
+            win2->showImage (myframe);
+            win3->showImage (grad_img);
+        }
+
         if (LINE) {
             HoughLines.findLines (grad_img, &lines);
             kmeans.cluster_auto (1, 8, &lines, 1);
@@ -100,6 +137,10 @@ int main( int argc, char** argv ) {
             
             lines.clearData(); // erase line data and reuse allocated mem
             //kmeans.clearData();
+            
+            win1->showImage (frame);
+            win2->showImage (filter_img);
+            win3->showImage (grad_img);
         }
 
         if (CIRCLE) {
@@ -107,14 +148,11 @@ int main( int argc, char** argv ) {
             printf ("ncircles = %d\n", circles.ncircles());
             circles.drawOntoImage (grad_img);
             //circles.clearData();
-        }
-
-        if (DISPLAY) {
             win1->showImage (frame);
             win2->showImage (filter_img);
             win3->showImage (grad_img);
         }
-
+        
         if (WRITE)
             camera->writeFrame (frame);
     

@@ -8,18 +8,18 @@ A=libvision.a
 INC=$(LIBDIR)mgui.h $(LIBDIR)mv.h $(LIBDIR)mvLines.h $(LIBDIR)mvCircles.h $(LIBDIR)mda_vision.h
 OBJ=$(OBJDIR)mgui.o $(OBJDIR)mv.o $(OBJDIR)mvHSVFilter.o $(OBJDIR)mfile.o $(OBJDIR)mvLines.o $(OBJDIR)mvClustering.o $(OBJDIR)mvCircles.o
 VOBJ=$(OBJDIR)mda_vision.o
-TEST=$(OBJDIR)main.o
+MAIN=$(OBJDIR)main.o
 WEBCAM=$(OBJDIR)webcam.o
 RANGE_TEST=$(OBJDIR)camera_range_test.o
 
-all: test webcam camera_range_test $(A)
+all: main webcam camera_range_test $(A)
 
 $(OBJDIR)%.o: $(SRCDIR)%.cpp $(INC)
 	$(CC) -I$(LIBDIR) -c $< -o $@ $(CVFLAGS)
 
 # test is the main executable and depends on each object
-test: $(OBJ) $(VOBJ) $(TEST)
-	$(CC) $(OBJ) $(VOBJ) $(TEST) -o $@ $(CVFLAGS)
+main: $(OBJ) $(VOBJ) $(MAIN)
+	$(CC) $(OBJ) $(VOBJ) $(MAIN) -o $@ $(CVFLAGS)
 # webcam is another executable
 webcam: $(OBJ) $(VOBJ) $(WEBCAM)
 	$(CC) $(OBJ) $(VOBJ) $(WEBCAM) -o $@ $(CVFLAGS)
@@ -31,7 +31,7 @@ $(A): $(OBJ) $(VOBJ)
 	ar -cvq $@ $(OBJ) $(VOBJ)
 
 clean:
-	rm -f test webcam camera_range_test ./obj/* $(A) ./*~
+	rm -f main webcam camera_range_test ./obj/* $(A) ./*~
 	rm -f $(LIBDIR)*~
 	rm -f $(SRCDIR)*~
 	rm -f ./settings/*~
