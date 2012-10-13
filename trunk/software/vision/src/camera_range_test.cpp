@@ -19,7 +19,7 @@ public:
     ~MDA_CAMERA_RANGE_TEST ();
     
     void primary_filter (const IplImage* src);
-    void calc_vci (VCI* interface);
+    int calc_vci (VCI* interface);
 };
 
 /** Main Function */
@@ -71,34 +71,36 @@ void MDA_CAMERA_RANGE_TEST:: primary_filter (const IplImage* src) {
     _lines->clearData ();
     
     _HoughLines->findLines (_filtered_img, _lines);
-    _KMeans->cluster_auto (1, 2, _lines);
+    _KMeans->cluster_auto (2, 4, _lines);
     _KMeans->drawOntoImage (_filtered_img);
 
     //_lines->drawOntoImage (_filtered_img);
     _window->showImage (_filtered_img);
 }
 
-void MDA_CAMERA_RANGE_TEST:: calc_vci (VCI* interface) {
-    int x00 = (*_KMeans)[0][0].x,   y00 = (*_KMeans)[0][0].y;
-    int x01 = (*_KMeans)[0][1].x,   y01 = (*_KMeans)[0][1].y;
-    int x10 = (*_KMeans)[1][0].x,   y10 = (*_KMeans)[1][0].y;
-    int x11 = (*_KMeans)[1][1].x,   y11 = (*_KMeans)[1][1].y;
-    
-    /// sanity checks
-    float dy0 = abs(y01 - y00); // height of first 1ine
-    float dx0 = abs(x01 - x00);
-    float dy1 = abs(y11 - y10); // height of second line
-    //float dx1 = abs(x11 - x10);
-    
-    if (dy0 > 1.3*dy1 || 1.3*dy0 < dy1) {
-        printf ("Gate Sanity Failure: Lines too dissimilar\n");
-        return;
+int MDA_CAMERA_RANGE_TEST:: calc_vci (VCI* interface) {
+    /// find the indices of horiz and vert lines
+    int h1, h2, v1, v2;
+    h1 = h2 = v1 = v2 = -1;
+    for (unsigned i = 0; i < _KMeans->nClusters(); i++) {
+        float ratio = float((*_KMeans)[i][1].y - (*_KMeans)[i][0].y) / ((*_KMeans)[i][1].x - (*_KMeans)[i][0].x);
+        
+        if (abs(ratio) > 2) { // a vertical line
+            if (v1 == -1) v1 = i; else v2 = i;
+        }
+        else if (abs(ratio) < 0.5) { // a horiz line
+            if (h1 == -1) h1 = i; else h2 = i;
+        }
+        else {
+            printf ("Cluster %i has y/x ratio %f, which is really wierd\n", i, abs(ratio));
+        }
     }
-    if (dy0 < 9.5*dx0) { // this is like +- 6 degrees
-        printf ("Gate Sanity Failure: Lines not vertical enough\n");
-        return;
+
+    if (v1 == -1 || v2 == -1 || h1 == -1 || h2 == -1) {
+        printf ("You dont have 2 horiz and 2 vertical lines!\n");
+        return 1;
     }
-    
+/*
     /// calculations, treat center of image as 0,0   
     int gate_pixel_width = (int)( abs(x00+x01-x10-x11) * 0.5);
     int gate_pixel_height = (int)( (abs(y00-y01) + abs(y10-y11)) * 0.5);
@@ -112,7 +114,8 @@ void MDA_CAMERA_RANGE_TEST:: calc_vci (VCI* interface) {
     int real_y = pixel_to_real * pixel_y;
     int range = (pixel_to_real * _filtered_img->width) / TAN_FOV_X;
     int range_y = (pixel_to_real_y * _filtered_img->height) / TAN_FOV_Y;
-    printf ("Obj Real: (%d, %d),  range %d or %d.\n", real_x, real_y, range, range_y);
+    printf ("Obj Real: (%d, %d),  range %d or %d.\n", real_x, real_y, range, range_y);*/
+    return 0;
 }
 
 
