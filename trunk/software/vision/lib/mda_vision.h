@@ -108,6 +108,16 @@ public:
 /// this class is for the path
 /// ########################################################################
 class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
+#define MDA_VISION_PATH_SETTINGS "vision_path_settings.csv"
+    mvWindow* _window;
+    mvHSVFilter* _HSVFilter;
+    mvHoughLines* _HoughLines;
+    mvKMeans* _KMeans;
+
+    mvLines* _lines;
+    
+    IplImage* _filtered_img;
+    IplImage* _grad_img;
 
 public:
     MDA_VISION_MODULE_PATH ();

@@ -15,19 +15,20 @@ inline
 unsigned Line_Difference_Metric (int x1,int y1, int x2,int y2, int x3,int y3, int x4,int y4) {
 
     // this is 8x the area of the quadrilateral
-/*    int a123 = (x2-x1)*(y3-y1) - (x3-x1)*(y2-y1);
+    int a123 = (x2-x1)*(y3-y1) - (x3-x1)*(y2-y1);
     int a134 = (x3-x1)*(y4-y1) - (x4-x1)*(y3-y1);
     int a124 = (x2-x1)*(y4-y1) - (x4-x1)*(y2-y1);
     int a234 = (x3-x2)*(y4-y2) - (x4-x2)*(y3-y2);
     
-    return ABS(a123) + ABS(a134) + ABS(a124) + ABS(a234);
-*/
-    unsigned d1 = SQR(x3-x1) + SQR(y3-y1); // distance between first points of each line
-    unsigned d2 = SQR(x4-x2) + SQR(y4-y2); // second points
+    return GLOBAL_INT_FACTOR*(ABS(a123) + ABS(a134) + ABS(a124) + ABS(a234));
+
+   /* float d1 = SQR(x3-x1) + SQR(y3-y1); // distance between first points of each line
+    float d2 = SQR(x4-x2) + SQR(y4-y2); // second points
     unsigned L = SQR(x2-x1) + SQR(y2-y1) + SQR(x4-x3) + SQR(y4-y3); // length of lines
+    //unsigned L = ABS(x2-x1) + ABS(y2-y1) + ABS(x4-x3) + ABS(y4-y3); // length of lines
     if (L == 0)
         return 100000;
-    return GLOBAL_INT_FACTOR * (d1+d2) / L;
+    return (unsigned)(GLOBAL_INT_FACTOR * (d1+d2) / L);*/
 }
 
 inline 
@@ -141,7 +142,7 @@ void mvKMeans:: KMeans_CreateStartingClusters (unsigned nClusters) {
         for (unsigned line_index = 0; line_index < _nLines; line_index++) { 
             if (line_already_chosen[line_index] == true) continue;
             
-            unsigned min_diff_from_cluster = 1E8;       // init this to a huge number
+            unsigned long min_diff_from_cluster = 1E15;       // init this to a huge number
             // loop to find min_diff_from_cluster
             for (unsigned cluster_index = 0; cluster_index < N; cluster_index++) {   
                 unsigned diff_from_cluster_i = Get_Line_ClusterSeed_Diff (cluster_index, line_index);
@@ -191,7 +192,7 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
         /// loop over each line and bin that line to a cluster
         for (unsigned line_index = 0; line_index < _nLines; line_index++) {
             unsigned closest_cluster_index = 0;
-            unsigned closest_cluster_diff = 1E9;
+            unsigned long closest_cluster_diff = 1E15;
             unsigned cluster_diff_i;
             
             /// go thru each cluster and find the one that is closest (least diff) wrt this line
@@ -208,7 +209,7 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
 
 
             /// add the line to the temp cluster
-            weight = 1; //line_sqr_length((*_Lines)[line_index]);
+            weight = line_sqr_length((*_Lines)[line_index]);
             _Clusters_Temp[closest_cluster_index][0].x += weight * ((*_Lines)[line_index][0].x);
             _Clusters_Temp[closest_cluster_index][0].y += weight * ((*_Lines)[line_index][0].y);
             _Clusters_Temp[closest_cluster_index][1].x += weight * ((*_Lines)[line_index][1].x);
@@ -232,12 +233,17 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
         }
     }
     
-    float avg_intra_cluster_diff = 0;
-    //unsigned product_of_lines_per_cluster = 1;
-    
+    float avg_intra_cluster_diff = 0.0;
+    float avg_inter_cluster_diff = 0.0;
+
     /// calculate avg_intra_cluster_diff
-    for (unsigned line_index = 0; line_index < _nLines; line_index++) {
-        avg_intra_cluster_diff += Get_Line_ClusterSeed_Diff (cluster_of_line[line_index], line_index);
+    if (nClusters == _nLines) {
+        avg_intra_cluster_diff = GLOBAL_INT_FACTOR * SINGLE_LINE__CLUSTER_INTRA_DIFF;
+    }
+    else {
+        for (unsigned line_index = 0; line_index < _nLines; line_index++) {
+            avg_intra_cluster_diff += Get_Line_ClusterSeed_Diff (cluster_of_line[line_index], line_index);
+        }
     }
     /*for (unsigned i = 0, product_of_lines_per_cluster = 1; i < nClusters; i++) {
         product_of_lines_per_cluster *= lines_per_cluster[i];
@@ -245,12 +251,10 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
     avg_intra_cluster_diff = avg_intra_cluster_diff / _nLines;//product_of_lines_per_cluster / nClusters;
     
     /// now calculate the minimum_inter_cluster_diff and the validity score
-    float minimum_inter_cluster_diff = 1E12;
-    float avg_inter_cluster_diff = 0;
     if (nClusters == 1) {
         // this equation basically says "when comparing 1 cluster vs 2 clusters, the 2 clusters have to be a ratio
         // of perpendicular dist over length of less than 0.2 to be better than the 1 cluster configuration
-        minimum_inter_cluster_diff = GLOBAL_INT_FACTOR * SINGLE_CLUSTER__INTER_DIFF; // * line_sqr_length(_Clusters_Seed[0]);
+        //minimum_inter_cluster_diff = GLOBAL_INT_FACTOR * SINGLE_CLUSTER__INTER_DIFF; // * line_sqr_length(_Clusters_Seed[0]);
         avg_inter_cluster_diff = GLOBAL_INT_FACTOR * SINGLE_CLUSTER__INTER_DIFF; // * line_sqr_length(_Clusters_Seed[0]);
     }
     else {
@@ -266,7 +270,7 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
     avg_inter_cluster_diff /= nClusters;
 
 #ifdef CLUSTERING_DEBUG
-    printf ("  intra = %f,  inter = %f\n", avg_intra_cluster_diff, avg_inter_cluster_diff);
+    printf ("  nClusters = %d.  intra = %f,  inter = %f\n", nClusters, avg_intra_cluster_diff, avg_inter_cluster_diff);
 #endif
     return avg_intra_cluster_diff / avg_inter_cluster_diff; 
 }
@@ -290,7 +294,7 @@ int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvL
     _Lines->sortXY ();
     
     /// we now run the algorithm
-    float min_validity = 1E12;
+    float min_validity = 1E20;
     
     for (unsigned N = nclusters_min; N <= nclusters_max; N++) {
         if (_nLines < N) {

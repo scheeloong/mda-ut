@@ -76,7 +76,6 @@ void MDA_VISION_MODULE_GATE:: primary_filter (const IplImage* src) {
     _KMeans->cluster_auto (1, 2, _lines);
     _KMeans->drawOntoImage (_filtered_img);
 
-    //_lines->drawOntoImage (_filtered_img);
     _window->showImage (_filtered_img);
 }
 
@@ -88,6 +87,7 @@ int MDA_VISION_MODULE_GATE:: calc_vci (VCI* interface) {
     }
     else if (_KMeans->nClusters() == 1) {
         /// single line, not much we can do but return its center and estimate range
+        printf ("1 cluster =|\n");
         int x00 = (*_KMeans)[0][0].x,   y00 = (*_KMeans)[0][0].y;
         int x01 = (*_KMeans)[0][1].x,   y01 = (*_KMeans)[0][1].y;
         float dy0 = abs(y01 - y00);
@@ -99,6 +99,8 @@ int MDA_VISION_MODULE_GATE:: calc_vci (VCI* interface) {
             return 2;
         }
 
+        printf ("Gate: (%d, %d),  height %d.\n", (x00+x01)/2, (y00+y01)/2, (int)dy0);
+
         /// calculations
         const float pixel_to_real = GATE_REAL_HEIGHT / dy0;
         interface->real_x = (x00 + x01 - _filtered_img->width)*0.5;
@@ -108,7 +110,8 @@ int MDA_VISION_MODULE_GATE:: calc_vci (VCI* interface) {
     }
     else {
         assert (_KMeans->nClusters() == 2);
-    
+        printf ("2 clusters =)\n");
+
         int x00 = (*_KMeans)[0][0].x,   y00 = (*_KMeans)[0][0].y;
         int x01 = (*_KMeans)[0][1].x,   y01 = (*_KMeans)[0][1].y;
         int x10 = (*_KMeans)[1][0].x,   y10 = (*_KMeans)[1][0].y;
@@ -157,12 +160,40 @@ int MDA_VISION_MODULE_GATE:: calc_vci (VCI* interface) {
 /// MODULE_PATH methods
 /// ########################################################################
 MDA_VISION_MODULE_PATH:: MDA_VISION_MODULE_PATH () {
+    _filtered_img = mvCreateImage (); // common size
+    _grad_img = mvCreateImage ();
+    _window = new mvWindow ("Path Vision Module");
+    _HSVFilter = new mvHSVFilter (MDA_VISION_PATH_SETTINGS);
+    _HoughLines = new mvHoughLines (MDA_VISION_PATH_SETTINGS);
+    _KMeans = new mvKMeans ();
+    _lines = new mvLines ();
 }
 
 MDA_VISION_MODULE_PATH:: ~MDA_VISION_MODULE_PATH () {
+    cvReleaseImage (&_filtered_img);
+    cvReleaseImage (&_grad_img);
+    delete _window;
+    delete _HSVFilter;
+    delete _HoughLines;
+    delete _KMeans;
+    delete _lines;
 }
 
 void MDA_VISION_MODULE_PATH:: primary_filter (const IplImage* src) {
+    _HSVFilter->filter (src, _filtered_img);
+    _filtered_img->origin = src->origin;
+    _grad_img->origin = src->origin;
+    _lines->clearData ();
+    _KMeans->clearData ();
+    
+    mvGradient (_filtered_img, _grad_img, 5, 5);
+    _HoughLines->findLines (_grad_img, _lines);
+    _KMeans->cluster_auto (1, 2, _lines, 2);
+
+    _lines->drawOntoImage (_grad_img);
+    _KMeans->drawOntoImage (_grad_img);
+
+    _window->showImage (_grad_img);
 }
 
 int MDA_VISION_MODULE_PATH:: calc_vci (VCI* interface) {
