@@ -176,7 +176,7 @@ wire [2:0] voltage_mux;
 assign reset_n = 1'b1;
 assign GPIO_1[33] = power;
 assign {GPIO_1[29], GPIO_1[31], GPIO_1[25]} = voltage_mux;
-assign LED[3:0] = {2'b10, GPIO_2[7], gpio_2_wire[5]};
+assign LED[3:0] = {2'b10, GPIO_1[24], gpio_2_wire[5]};
 
 global_disable #(
   .NUM_IN(2+1),
@@ -212,7 +212,7 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
                       .ADC_SDAT_to_the_imu_controller_0(ADC_SDAT),
 
                       // RS232 Signals (add signals later)
-                      .UART_RXD_to_the_RS232_0(!power | GPIO_2[7]), // 1 if power is off
+                      .UART_RXD_to_the_RS232_0(!power | GPIO_1[24]), // 1 if power is off
                       .UART_TXD_from_the_RS232_0(gpio_2_wire[5]),
 
                       // Power Management
