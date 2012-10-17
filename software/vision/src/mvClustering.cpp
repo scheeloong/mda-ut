@@ -9,6 +9,11 @@
 #define ABS(X) (((X) > 0) ? (X) : (-(X)))
 #define SQR(X) ((X)*(X))
 //#define CLUSTERING_DEBUG
+#ifdef CLUSTERING_DEBUG
+    #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
+#else
+    #define DEBUG_PRINT(format, ...)
+#endif
 
 /** Helper Functions */
 inline
@@ -50,13 +55,6 @@ unsigned mvKMeans:: Get_Line_ClusterSeed_Diff (unsigned cluster_index, unsigned 
         (*_Lines)[line_index][0].x, (*_Lines)[line_index][0].y,
         (*_Lines)[line_index][1].x, (*_Lines)[line_index][1].y
     );
-}
-
-inline 
-unsigned line_sqr_length (const CvPoint* line) {
-    int dx = (line[1].x - line[0].x);
-    int dy = (line[1].y - line[0].y);
-    return unsigned(dx*dx + dy*dy);
 }
 
 inline
@@ -103,12 +101,9 @@ void mvKMeans:: KMeans_CreateStartingClusters (unsigned nClusters) {
     for (unsigned i = 0; i < _nLines; i++)
         line_already_chosen[i] = false;
     
-    /*for (unsigned i = 0; i < MAX_CLUSTERS; i++)
-        _Clusters_Seed[i] = NULL;
-    */
     /// choose first seed cluster, then 2nd, etc in this loop
     for (unsigned N = 0; N < nClusters; N++) {  
-        //printf ("Choosing cluster %d\n", N);
+        //DEBUG_PRINT ("Choosing cluster %d\n", N);
         
         /// For first cluster choose line[0];
         if (N == 0) {
@@ -119,7 +114,6 @@ void mvKMeans:: KMeans_CreateStartingClusters (unsigned nClusters) {
         }
         
         /// For other clusters, loop over each line and chose a line based on the method specified
-        
         unsigned next_cluster_index = 0;       
         unsigned next_cluster_max_diff = 0;
         
@@ -146,7 +140,7 @@ void mvKMeans:: KMeans_CreateStartingClusters (unsigned nClusters) {
             // loop to find min_diff_from_cluster
             for (unsigned cluster_index = 0; cluster_index < N; cluster_index++) {   
                 unsigned diff_from_cluster_i = Get_Line_ClusterSeed_Diff (cluster_index, line_index);
-                //printf ("      Cluster %d - line %d: diff = %d\n", cluster_index,line_index,diff_from_cluster_i);
+                //DEBUG_PRINT ("      Cluster %d - line %d: diff = %d\n", cluster_index,line_index,diff_from_cluster_i);
                 
                 if (diff_from_cluster_i < min_diff_from_cluster)
                     min_diff_from_cluster = diff_from_cluster_i;
@@ -269,9 +263,7 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
     }
     avg_inter_cluster_diff /= nClusters;
 
-#ifdef CLUSTERING_DEBUG
-    printf ("  nClusters = %d.  intra = %f,  inter = %f\n", nClusters, avg_intra_cluster_diff, avg_inter_cluster_diff);
-#endif
+    DEBUG_PRINT ("  nClusters = %d.  intra = %f,  inter = %f\n", nClusters, avg_intra_cluster_diff, avg_inter_cluster_diff);
     return avg_intra_cluster_diff / avg_inter_cluster_diff; 
 }
 
@@ -282,11 +274,9 @@ int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvL
     assert (nclusters_min <= nclusters_max);
     
     /// if the nlines < nclusters then quit (with the clusters being NULL)
-#ifdef CLUSTERING_DEBUG
-    printf ("_nLines = %d\n", _nLines);
-#endif
-    if (nclusters_min >= _nLines) { 
-        printf ("Not enough lines.\n");
+    DEBUG_PRINT ("_nLines = %d\n", _nLines);
+    if (_nLines < nclusters_min) { 
+        DEBUG_PRINT ("Not enough lines for %d clusters.\n", nclusters_min);
         return 1;
     }
     
@@ -297,19 +287,13 @@ int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvL
     float min_validity = 1E20;
     
     for (unsigned N = nclusters_min; N <= nclusters_max; N++) {
-        if (_nLines < N) {
-            printf ("Cannot create %d clusters. Not enough lines.\n", N);
-            continue;
-        }
-
         // create required num of clusters
         KMeans_CreateStartingClusters (N);
         
         // run the clustering algorithm through the desired num of iterations
         float validity = KMeans_Cluster (N, iterations);
-#ifdef CLUSTERING_DEBUG
-        printf ("  nClusters = %d. validity = %f\n", N, validity);
-#endif
+        DEBUG_PRINT ("  nClusters = %d. validity = %f\n", N, validity);
+
         // check validity. If better than current validity pointer copy temp to best and
         // reallocate temp. Otherwise leave temp and it will be overwritten next iteration
         if (validity < min_validity) {
@@ -321,9 +305,8 @@ int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvL
         }
     }
     
-#ifdef CLUSTERING_DEBUG
-    printf ("Final nClusters = %d, validity = %f\n", _nClusters_Final, min_validity);
-#endif
+    DEBUG_PRINT ("Final nClusters = %d, validity = %f\n", _nClusters_Final, min_validity);
+
     /// cleanup
     _Lines = NULL;
     _nLines = 0;

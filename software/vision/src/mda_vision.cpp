@@ -1,4 +1,12 @@
 #include "mda_vision.h"
+
+#define VISION_DEBUG
+#ifdef VISION_DEBUG
+    #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
+#else
+    #define DEBUG_PRINT(format, ...)
+#endif
+
 /// ########################################################################
 /// MODULE_TEST methods
 /// ########################################################################
@@ -80,56 +88,61 @@ void MDA_VISION_MODULE_GATE:: primary_filter (const IplImage* src) {
 }
 
 int MDA_VISION_MODULE_GATE:: calc_vci (VCI* interface) {
+    int retval = 0;
+    int pixel_x = 0, pixel_y = 0;
+
     if (_KMeans->nClusters() == 0) {
         /// NO CLUSTERS
-        printf ("No clusters =(\n");
+        printf ("Gate: No clusters =(\n");
         return -1;
     }
     else if (_KMeans->nClusters() == 1) {
         /// single line, not much we can do but return its center and estimate range
-        printf ("1 cluster =|\n");
+        DEBUG_PRINT ("Gate: 1 cluster =|\n");
         int x00 = (*_KMeans)[0][0].x,   y00 = (*_KMeans)[0][0].y;
         int x01 = (*_KMeans)[0][1].x,   y01 = (*_KMeans)[0][1].y;
-        float dy0 = abs(y01 - y00);
-        float dx0 = abs(x01 - x00);
+        pixel_x = (x00 + x01 - _filtered_img->width)*0.5;       // centroid of line
+        pixel_y = (y00 + y01 - _filtered_img->height)*0.5;
+        unsigned line_height = abs(y01 - y00);
+        unsigned line_width = abs(x01 - x00);
 
         /// check that the line is at least vertical
-        if (dy0 < 9.5*dx0) { // this is like +- 6 degrees
-            printf ("Gate Sanity Failure: Single line not vertical enough\n");
-            return 2;
+        if (line_height < 9.5*line_width) { // this is like +- 6 degrees
+            DEBUG_PRINT ("Gate Sanity Failure: Single line not vertical enough\n");
+            retval = 2;
+            goto RETURN_CENTROID;   
         }
-
-        printf ("Gate: (%d, %d),  height %d.\n", (x00+x01)/2, (y00+y01)/2, (int)dy0);
-
-        /// calculations
-        const float pixel_to_real = GATE_REAL_HEIGHT / dy0;
-        interface->real_x = (x00 + x01 - _filtered_img->width)*0.5;
-        interface->real_y = (y00 + y01 - _filtered_img->height)*0.5;
-        interface->range = (pixel_to_real * _filtered_img->height) / TAN_FOV_Y;
-        return 1;
+    
+        /// calculate range if we pass sanity check
+        interface->range = (GATE_REAL_HEIGHT * _filtered_img->height) / (line_height * TAN_FOV_Y);
+        DEBUG_PRINT ("Gate Range: %d\n", interface->range);
+        retval = 0;       
+        goto RETURN_CENTROID;
     }
     else {
         assert (_KMeans->nClusters() == 2);
-        printf ("2 clusters =)\n");
-
+        DEBUG_PRINT ("Gate: 2 clusters =)\n");
         int x00 = (*_KMeans)[0][0].x,   y00 = (*_KMeans)[0][0].y;
         int x01 = (*_KMeans)[0][1].x,   y01 = (*_KMeans)[0][1].y;
         int x10 = (*_KMeans)[1][0].x,   y10 = (*_KMeans)[1][0].y;
         int x11 = (*_KMeans)[1][1].x,   y11 = (*_KMeans)[1][1].y;
+        pixel_x = (int)((x00+x01+x10+x11)*0.25 - _filtered_img->width*0.5);
+        pixel_y = (int)((y00+y01+y10+y11)*0.25 - _filtered_img->height*0.5); 
         
         /// sanity checks
-        float dy0 = abs(y01 - y00); // height of first 1ine
-        float dx0 = abs(x01 - x00);
-        float dy1 = abs(y11 - y10); // height of second line
-        //float dx1 = abs(x11 - x10);
+        float gate_height_0 = abs(y01 - y00); // height of first 1ine
+        float gate_height_1 = abs(y11 - y10); // height of second line
+        float gate_width = (abs(x01 - x00) + abs(x11 - x10)) / 2;
         
-        if (dy0 > 1.3*dy1 || 1.3*dy0 < dy1) {
-            printf ("Gate Sanity Failure: Lines too dissimilar\n");
-            return 2;
+        if (gate_height_0 > 1.3*gate_height_1 || 1.3*gate_height_0 < gate_height_1) {
+            DEBUG_PRINT ("Gate Sanity Failure: Lines too dissimilar\n");
+            retval = 2;
+            goto RETURN_CENTROID;
         }
-        if (dy0 < 9.5*dx0) { // this is like +- 6 degrees
-            printf ("Gate Sanity Failure: Lines not vertical enough\n");
-            return 2;
+        if (gate_height_0 < 9.5*gate_width) { // this is like +- 6 degrees
+            DEBUG_PRINT ("Gate Sanity Failure: Lines not vertical enough\n");
+            retval = 2;
+            goto RETURN_CENTROID;
         }
         
         /// calculations, treat center of image as 0,0   
@@ -137,22 +150,25 @@ int MDA_VISION_MODULE_GATE:: calc_vci (VCI* interface) {
         int gate_pixel_height = (int)( (abs(y00-y01) + abs(y10-y11)) * 0.5);
         float gate_width_to_height_ratio = abs((float)gate_pixel_width / gate_pixel_height);
         if (gate_width_to_height_ratio > 1.3*GATE_WIDTH_TO_HEIGHT_RATIO || 1.3*gate_width_to_height_ratio < GATE_WIDTH_TO_HEIGHT_RATIO) {
-            printf ("Gate Sanity Failure: Gate dimensions inconsistent with data\n");
-            return 3;
+            DEBUG_PRINT ("Gate Sanity Failure: Gate dimensions inconsistent with data\n");
+            retval = 2;
+            goto RETURN_CENTROID;
         }
 
-        int pixel_x = (int)((x00+x01+x10+x11)*0.25 - _filtered_img->width*0.5);
-        int pixel_y = (int)((y00+y01+y10+y11)*0.25 - _filtered_img->height*0.5);   
-        printf ("Gate: (%d, %d),  %d X %d.\n", pixel_x, pixel_y, gate_pixel_width, gate_pixel_height);
-
         // calculate real distances
-        const float pixel_to_real = GATE_REAL_WIDTH / gate_pixel_width;
-        interface->real_x = pixel_to_real * pixel_x;
-        interface->real_y = pixel_to_real * pixel_y;
-        interface->range = (pixel_to_real * _filtered_img->width) / TAN_FOV_X;
-        //printf ("Gate Real: (%d, %d),  range %d.\n", interface->real_x, interface->real_y, interface->range);
-        return 0;
+        interface->range = (GATE_REAL_WIDTH * _filtered_img->width) / (gate_pixel_width * TAN_FOV_X);
+        DEBUG_PRINT ("Gate Range: %d\n", interface->range);
+        retval = 0;
+        goto RETURN_CENTROID;
     }
+
+    /// if we encounter any sort of sanity error, we will return only the centroid
+    RETURN_CENTROID:
+        interface->angle_x = RAD_TO_DEG * atan(TAN_FOV_X * pixel_x / _filtered_img->width);
+        interface->angle_y = RAD_TO_DEG * atan(TAN_FOV_Y * pixel_y / _filtered_img->height);
+        DEBUG_PRINT ("Gate (pixels, degrees): <%d,%d> <%5.2f,%5.2f>\n", pixel_x, pixel_y, 
+            interface->angle_x, interface->angle_y); 
+        return retval;
 }
 
 
@@ -197,7 +213,73 @@ void MDA_VISION_MODULE_PATH:: primary_filter (const IplImage* src) {
 }
 
 int MDA_VISION_MODULE_PATH:: calc_vci (VCI* interface) {
-    return 0;
+    int retval = 0;
+    int pixel_x = 0, pixel_y = 0;
+
+    if (_KMeans->nClusters() == 0) {
+        /// NO CLUSTERS
+        printf ("Path: No clusters =(\n");
+        return -1;
+    }
+    else if (_KMeans->nClusters() == 1) {
+        /// single line, not much we can do but return its center and estimate range
+        DEBUG_PRINT ("Path: 1 cluster =|\n");
+        pixel_x = ((*_KMeans)[0][0].x + (*_KMeans)[0][1].x - _filtered_img->width)*0.5;       // centroid of line
+        pixel_y = ((*_KMeans)[0][0].y + (*_KMeans)[0][1].y - _filtered_img->height)*0.5;
+        unsigned length = line_sqr_length((*_KMeans)[0]);
+
+        /// check that the line is near center of image
+        
+        /// calculate range if we pass sanity check
+        interface->range = (PATH_REAL_LENGTH * _filtered_img->width) / (length * TAN_FOV_X);
+        interface->angle = RAD_TO_DEG * line_angle_to_vertical((*_KMeans)[0]);
+        DEBUG_PRINT ("Path Range = %d, Angle = %5.2f\n", interface->range, interface->angle);
+        retval = 0;       
+        goto RETURN_CENTROID;
+    }
+    else {
+        assert (_KMeans->nClusters() == 2);
+        DEBUG_PRINT ("Path: 2 clusters =)\n");
+        int x00 = (*_KMeans)[0][0].x,   y00 = (*_KMeans)[0][0].y;
+        int x01 = (*_KMeans)[0][1].x,   y01 = (*_KMeans)[0][1].y;
+        int x10 = (*_KMeans)[1][0].x,   y10 = (*_KMeans)[1][0].y;
+        int x11 = (*_KMeans)[1][1].x,   y11 = (*_KMeans)[1][1].y;
+        pixel_x = (int)((x00+x01+x10+x11)*0.25 - _filtered_img->width*0.5);
+        pixel_y = (int)((y00+y01+y10+y11)*0.25 - _filtered_img->height*0.5);
+
+        float position_angle_0 = RAD_TO_DEG * line_angle_to_vertical((*_KMeans)[0]); 
+        float position_angle_1 = RAD_TO_DEG * line_angle_to_vertical((*_KMeans)[1]);
+
+        /// sanity checks
+        unsigned length_0 = line_sqr_length((*_KMeans)[0]);
+        unsigned length_1 = line_sqr_length((*_KMeans)[1]);
+        
+        if (length_0 > 1.3*length_1 || 1.3*length_0 < length_1) {
+            DEBUG_PRINT ("Path Sanity Failure: Lines too dissimilar\n");
+            retval = 2;
+            goto RETURN_CENTROID;
+        }
+        if (position_angle_0 > 1.2*position_angle_1 || 1.2*position_angle_0 < position_angle_1) {
+            DEBUG_PRINT ("Path Sanity Failure: Line angles do not match\n");
+            retval = 2;
+            goto RETURN_CENTROID;
+        }
+
+        // calculate values
+        interface->range = (PATH_REAL_LENGTH * _filtered_img->width) / ((length_0+length_1)*0.5 * TAN_FOV_X);
+        interface->angle = (position_angle_0 + position_angle_1) * 0.5;
+        DEBUG_PRINT ("Path Range = %d, Angle = %5.2f\n", interface->range, interface->angle);
+        retval = 0;
+        goto RETURN_CENTROID;
+    }
+
+    /// if we encounter any sort of sanity error, we will return only the centroid
+    RETURN_CENTROID:
+        interface->angle_x = RAD_TO_DEG * atan(TAN_FOV_X * pixel_x / _filtered_img->width);
+        interface->angle_y = RAD_TO_DEG * atan(TAN_FOV_Y * pixel_y / _filtered_img->height);
+        DEBUG_PRINT ("Path (pixels, degrees): <%d,%d> <%5.2f,%5.2f>\n", pixel_x, pixel_y, 
+            interface->angle_x, interface->angle_y); 
+        return retval;
 }
 
 

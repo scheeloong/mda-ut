@@ -119,4 +119,22 @@ class mvKMeans {
     void drawOntoImage (IplImage* img);
 };
 
+
+/** Helper functions, even for stuff outside of these classes */
+inline 
+unsigned line_sqr_length (const CvPoint* line) {
+    int dx = (line[1].x - line[0].x);
+    int dy = (line[1].y - line[0].y);
+    return unsigned(dx*dx + dy*dy);
+}
+inline 
+float line_angle_to_vertical (const CvPoint* line) {
+    int dx = (line[1].x - line[0].x);
+    int dy = (line[1].y - line[0].y);
+    if (dy == 0)
+        return 0;
+    else
+        return atan((float)dx/dy);
+}
+
 #endif
