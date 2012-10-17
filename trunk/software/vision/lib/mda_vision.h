@@ -23,6 +23,7 @@ protected:
     /// definitions related to camera and vision
     static const float TAN_FOV_X = 1.2;     // tangent of camera FOV, equal to real width/range
     static const float TAN_FOV_Y = 1.0;
+    static const float RAD_TO_DEG = 57.2958;
 
     // stores resized image
     IplImage* _resized_; 
@@ -109,6 +110,8 @@ public:
 /// ########################################################################
 class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
 #define MDA_VISION_PATH_SETTINGS "vision_path_settings.csv"
+    static const float PATH_REAL_LENGTH = 120.0;
+
     mvWindow* _window;
     mvHSVFilter* _HSVFilter;
     mvHoughLines* _HoughLines;
