@@ -21,12 +21,12 @@ mvHSVFilter:: ~mvHSVFilter () {
 }
 
 void mvHSVFilter:: setHSV (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax) {
-    if (hmin != _SAME_) HMIN = (hmin>=0) ? hmin : hmin+180; 
-    if (hmax != _SAME_) HMAX = (hmax<180) ? hmax : hmax-180; 
-    if (smin != _SAME_) SMIN = smin;
-    if (smax != _SAME_) SMAX = smax;
-    if (vmin != _SAME_) VMIN = vmin;
-    if (vmax != _SAME_) VMAX = vmax;
+    if (hmin != (int)UNCHANGED) HMIN = (hmin>=0) ? hmin : hmin+180; 
+    if (hmax != (int)UNCHANGED) HMAX = (hmax<180) ? hmax : hmax-180; 
+    if (smin != UNCHANGED) SMIN = smin;
+    if (smax != UNCHANGED) SMAX = smax;
+    if (vmin != UNCHANGED) VMIN = vmin;
+    if (vmax != UNCHANGED) VMAX = vmax;
 }
 
 int mvHSVFilter:: hueInRange (unsigned char hue) { // helper function for the filter

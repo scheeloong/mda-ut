@@ -84,7 +84,7 @@ inline void mvGradient (const IplImage* src, IplImage* dst, unsigned kern_w, uns
 /** HSV color limit filter */
 // Currently support for changing the HSV values on the fly are limited
 class mvHSVFilter {
-    #define _SAME_ 999999
+    static const unsigned UNCHANGED = 9999;  // value passed in to keep a value unchanged  
     IplImage* HSVImg;
     
     unsigned IMG_WIDTH, IMG_HEIGHT;
@@ -98,9 +98,9 @@ class mvHSVFilter {
     mvHSVFilter (const char* settings_file);
     ~mvHSVFilter ();
     void filter (const IplImage* img, IplImage* result);
-    void setHSV (int hmin=_SAME_, int hmax=_SAME_, 
-                 unsigned smin=_SAME_, unsigned smax=_SAME_, 
-                 unsigned vmin=_SAME_, unsigned vmax=_SAME_
+    void setHSV (int hmin=UNCHANGED, int hmax=UNCHANGED, 
+                 unsigned smin=UNCHANGED, unsigned smax=UNCHANGED, 
+                 unsigned vmin=UNCHANGED, unsigned vmax=UNCHANGED
                 );    
 };
 

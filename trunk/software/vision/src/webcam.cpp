@@ -126,8 +126,7 @@ int main( int argc, char** argv ) {
             win2->showImage (myframe);
             win3->showImage (grad_img);
         }
-
-        if (LINE) {
+        else if (LINE) {
             HoughLines.findLines (grad_img, &lines);
             kmeans.cluster_auto (1, 8, &lines, 1);
         
@@ -142,12 +141,16 @@ int main( int argc, char** argv ) {
             win2->showImage (filter_img);
             win3->showImage (grad_img);
         }
-
-        if (CIRCLE) {
+        else if (CIRCLE) {
             HoughCircles.findCircles (grad_img, &circles);
             printf ("ncircles = %d\n", circles.ncircles());
             circles.drawOntoImage (grad_img);
             //circles.clearData();
+            win1->showImage (frame);
+            win2->showImage (filter_img);
+            win3->showImage (grad_img);
+        }
+        else {
             win1->showImage (frame);
             win2->showImage (filter_img);
             win3->showImage (grad_img);
