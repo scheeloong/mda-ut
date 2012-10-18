@@ -14,3 +14,4 @@ Important Things:
     factor from zero to 1. In the code this ratio is multiplied by an
     appropriate value indicated in the comments. 
   - A setting like LENGTH without underscores will behave as the value itself.
+  - Use "gtk-v4l" to edit hardware camera settings
