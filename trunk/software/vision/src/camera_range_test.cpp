@@ -92,7 +92,7 @@ int MDA_CAMERA_RANGE_TEST:: calc_vci (VCI* interface) {
             if (h1 == -1) h1 = i; else h2 = i;
         }
         else {
-            printf ("Cluster %i has y/x ratio %f, which is really wierd\n", i, abs(ratio));
+            printf ("Cluster %i has y/x ratio %f, which is really wierd\n", i, fabs(ratio));
         }
     }
 
