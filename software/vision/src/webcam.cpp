@@ -68,14 +68,32 @@ int main( int argc, char** argv ) {
     IplImage* myframe = mvCreateImage_Color();
     IplImage* filter_img = mvCreateImage ();
     IplImage* grad_img = mvCreateImage ();
-    
+ 
+    /// kernels for morphology
+    IplConvKernel* kern5x5 = cvCreateStructuringElementEx (5, 5, 3, 3, CV_SHAPE_ELLIPSE); 
+    //IplConvKernel* kern7x7 = cvCreateStructuringElementEx (7, 7, 4, 4, CV_SHAPE_ELLIPSE); 
+    IplImage* temp_img = mvCreateImage ();   
+
     /// execution
     char c;
     IplImage* frame;
     t_start = clock();    
     
+    float t_reset;
+    float t_getFrame = 0;
+    float t_HSV = 0;
+    float t_morph = 0;
+    float t_grad = 0;
+    float t_line = 0;
+    float t_cluster = 0;
+    float t_draw = 0;
+    float t_display = 0;
+
     for (;;) {
+          t_reset = clock();
         frame = camera->getFrameResized(); // read frame from cam
+          t_getFrame += clock() - t_reset;        
+
         if (!frame) {
             printf ("Video Finished.\n");
             break;
@@ -86,13 +104,23 @@ int main( int argc, char** argv ) {
             continue;
         }
 
+	  t_reset = clock();
         HSVFilter.filter (frame, filter_img); // process it
-        mvDilate (filter_img, filter_img, 5, 5);
-        mvErode (filter_img, filter_img, 7, 7);
+          t_HSV += clock() - t_reset;        
+
+	  t_reset = clock();
+        cvErode (filter_img, filter_img, kern5x5);
+        cvDilate (filter_img, filter_img, kern5x5);
+          t_morph += clock() - t_reset;
         
-        mvGradient (filter_img, grad_img, 5, 5);
-        //cvDilate (grad_img, grad_img);
+	  t_reset = clock();
+        cvMorphologyEx (filter_img, grad_img, temp_img, kern5x5, CV_MOP_GRADIENT);
+          t_grad += clock() - t_reset;
+	//cvDilate (grad_img, grad_img);
         
+        if (TEST) {
+        }
+
         if (CARTOON) {
             cvZero (filter_img);
             cvCopy (frame, myframe);
@@ -127,19 +155,26 @@ int main( int argc, char** argv ) {
             win3->showImage (grad_img);
         }
         else if (LINE) {
+	      t_reset = clock();
             HoughLines.findLines (grad_img, &lines);
+              t_line += clock() - t_reset;
+	      t_reset = clock();
             kmeans.cluster_auto (1, 8, &lines, 1);
+              t_cluster += clock() - t_reset;
         
+              t_reset = clock();
             lines.drawOntoImage (grad_img);
             //kmeans.drawOntoImage (grad_img);
             kmeans.drawOntoImage (frame);
-            
+              t_draw += clock() - t_reset;
             lines.clearData(); // erase line data and reuse allocated mem
             //kmeans.clearData();
             
+              t_reset = clock();
             win1->showImage (frame);
             win2->showImage (filter_img);
             win3->showImage (grad_img);
+              t_display += clock() - t_reset;
         }
         else if (CIRCLE) {
             HoughCircles.findCircles (grad_img, &circles);
@@ -169,6 +204,26 @@ int main( int argc, char** argv ) {
     
     t_end = clock ();
     printf ("\nAverage Framerate = %f\n", (float)nframes/(t_end - t_start)*CLOCKS_PER_SEC);
+    
+    t_getFrame /= CLOCKS_PER_SEC;
+    t_HSV /= CLOCKS_PER_SEC;
+    t_morph /= CLOCKS_PER_SEC;
+    t_grad /= CLOCKS_PER_SEC;
+    t_line /= CLOCKS_PER_SEC;
+    t_cluster /= CLOCKS_PER_SEC;
+    t_draw /= CLOCKS_PER_SEC;
+    t_display /= CLOCKS_PER_SEC;
+    printf ("getFrame:   %6.3f secs\n", t_getFrame);
+    printf ("HSV:        %6.3f secs\n", t_HSV);
+    printf ("Morphology: %6.3f secs\n", t_morph);
+    printf ("Gradient:   %6.3f secs\n", t_grad);
+    printf ("Line Find:  %6.3f secs\n", t_line);
+    printf ("Clustering: %6.3f secs\n", t_cluster);
+    printf ("Drawing:    %6.3f secs\n", t_draw);
+    printf ("Display:    %6.3f secs\n", t_display);
 
+    cvReleaseImage (&filter_img);
+    cvReleaseImage (&grad_img);
+    cvReleaseImage (&temp_img);
     return 0;
 }

@@ -136,7 +136,7 @@ void mvKMeans:: KMeans_CreateStartingClusters (unsigned nClusters) {
         for (unsigned line_index = 0; line_index < _nLines; line_index++) { 
             if (line_already_chosen[line_index] == true) continue;
             
-            unsigned long min_diff_from_cluster = 1E15;       // init this to a huge number
+            unsigned long min_diff_from_cluster = 1E9;       // init this to a huge number
             // loop to find min_diff_from_cluster
             for (unsigned cluster_index = 0; cluster_index < N; cluster_index++) {   
                 unsigned diff_from_cluster_i = Get_Line_ClusterSeed_Diff (cluster_index, line_index);
@@ -186,7 +186,7 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
         /// loop over each line and bin that line to a cluster
         for (unsigned line_index = 0; line_index < _nLines; line_index++) {
             unsigned closest_cluster_index = 0;
-            unsigned long closest_cluster_diff = 1E15;
+            unsigned long closest_cluster_diff = 1E9;
             unsigned cluster_diff_i;
             
             /// go thru each cluster and find the one that is closest (least diff) wrt this line
