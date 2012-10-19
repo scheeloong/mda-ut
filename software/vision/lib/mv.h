@@ -83,6 +83,18 @@ inline void mvGradient (const IplImage* src, IplImage* dst, unsigned kern_w, uns
     cvReleaseStructuringElement (&kernel);
 }
 
+/** Binary Filters */
+// These are fast filters designed specifically for binary images with very
+// few bright pixels
+enum MV_KERNEL_SHAPE {MV_KERN_RECT, MV_KERN_ELLIPSE};
+enum MV_MORPHOLOGY_TYPE {MV_DILATE, MV_ERODE, MV_OPEN, MV_CLOSE};
+void mvBinaryMorphology (
+        MV_MORPHOLOGY_TYPE morphology_type,
+        const IplImage* src, IplImage* dst, IplImage* temp=NULL, 
+        int kernel_width=3, int kernel_height=3,
+        MV_KERNEL_SHAPE shape=MV_KERN_RECT
+        );
+
 /** HSV color limit filter */
 // Currently support for changing the HSV values on the fly are limited
 class mvHSVFilter {
