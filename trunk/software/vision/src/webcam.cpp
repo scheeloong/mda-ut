@@ -104,19 +104,20 @@ int main( int argc, char** argv ) {
             continue;
         }
 
-	  t_reset = clock();
+          t_reset = clock();
         HSVFilter.filter (frame, filter_img); // process it
           t_HSV += clock() - t_reset;        
-
-	  t_reset = clock();
-        cvErode (filter_img, filter_img, kern5x5);
-        cvDilate (filter_img, filter_img, kern5x5);
+          
+          t_reset = clock();
+        //cvErode (filter_img, filter_img, kern5x5);
+        //cvDilate (filter_img, filter_img, kern5x5);
+        mvBinaryMorphology (MV_ERODE, filter_img, filter_img, temp_img, 5,5);  
+        mvBinaryMorphology (MV_DILATE, filter_img, filter_img, temp_img, 5,5);  
           t_morph += clock() - t_reset;
         
-	  t_reset = clock();
+          t_reset = clock();
         cvMorphologyEx (filter_img, grad_img, temp_img, kern5x5, CV_MOP_GRADIENT);
           t_grad += clock() - t_reset;
-	//cvDilate (grad_img, grad_img);
         
         if (TEST) {
         }
@@ -155,10 +156,10 @@ int main( int argc, char** argv ) {
             win3->showImage (grad_img);
         }
         else if (LINE) {
-	      t_reset = clock();
+              t_reset = clock();
             HoughLines.findLines (grad_img, &lines);
               t_line += clock() - t_reset;
-	      t_reset = clock();
+              t_reset = clock();
             kmeans.cluster_auto (1, 8, &lines, 1);
               t_cluster += clock() - t_reset;
         
