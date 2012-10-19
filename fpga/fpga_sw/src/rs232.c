@@ -85,24 +85,18 @@ static void read_interrupt(void *context, alt_u32 id)
   static char buffer[READ_BUF_LEN+1];
   static int index = 0;
 
-  int read_avail = IORD(RS232_0_BASE, RS232_DATA_OFFSET) >> 16;
-  int max_index = index + read_avail;
-
   while (1) {
-    char ch = IORD(RS232_0_BASE, RS232_DATA_OFFSET);
+    int data = IORD(RS232_0_BASE, RS232_DATA_OFFSET);
+    int read_avail = data >> 16;
+    char ch = (char)data;
     buffer[index++] = ch;
-
-    // Don't print null characters
-    if(ch) {
-      putchar(ch);
-    }
 
     // End of command, break
     if (ch == '\0' || ch == '\n' || index == READ_BUF_LEN) {
       break;
     }
     // End of data, return
-    if (index >= max_index) {
+    if (read_avail == 0) {
       return;
     }
   }
