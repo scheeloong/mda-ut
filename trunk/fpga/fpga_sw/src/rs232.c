@@ -88,16 +88,18 @@ static void read_interrupt(void *context, alt_u32 id)
   while (1) {
     int data = IORD(RS232_0_BASE, RS232_DATA_OFFSET);
     int read_avail = data >> 16;
+
+    // End of data, return
+    if (read_avail == 0) {
+      return;
+    }
+
     char ch = (char)data;
     buffer[index++] = ch;
 
     // End of command, break
     if (ch == '\0' || ch == '\n' || index == READ_BUF_LEN) {
       break;
-    }
-    // End of data, return
-    if (read_avail == 0) {
-      return;
     }
   }
 
