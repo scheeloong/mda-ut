@@ -7,6 +7,7 @@
 #include "mv.h"
 #include "mvLines.h"
 #include "mvCircles.h"
+#include "profile_bin.h"
 
 int main( int argc, char** argv ) {
     unsigned CAM_NUMBER=0, WRITE=0, TEST=0, CARTOON=0,
@@ -88,6 +89,8 @@ int main( int argc, char** argv ) {
     float t_cluster = 0;
     float t_draw = 0;
     float t_display = 0;
+        
+    PROFILE_BIN bin;
 
     for (;;) {
           t_reset = clock();
@@ -123,6 +126,7 @@ int main( int argc, char** argv ) {
         }
 
         if (CARTOON) {
+            bin.start();
             cvZero (filter_img);
             cvCopy (frame, myframe);
 
@@ -154,6 +158,7 @@ int main( int argc, char** argv ) {
 
             win2->showImage (myframe);
             win3->showImage (grad_img);
+            bin.stop();
         }
         else if (LINE) {
               t_reset = clock();
