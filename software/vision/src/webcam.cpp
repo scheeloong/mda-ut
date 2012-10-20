@@ -90,7 +90,7 @@ int main( int argc, char** argv ) {
     float t_draw = 0;
     float t_display = 0;
         
-    PROFILE_BIN bin;
+    PROFILE_BIN bin("Cartoon Filter");
 
     for (;;) {
           t_reset = clock();
@@ -124,7 +124,7 @@ int main( int argc, char** argv ) {
         
         if (TEST) {
         }
-
+	
         if (CARTOON) {
             bin.start();
             cvZero (filter_img);
