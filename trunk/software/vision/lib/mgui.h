@@ -22,8 +22,13 @@
 #define COMMENT_CHAR '#'
 template <typename TYPE>
 void read_mv_setting (const char filename[], const char setting_name[], TYPE &value);
+void read_mv_setting (const char filename[], const char setting_name[], std::string &value);
 template <typename TYPE>
 void read_common_mv_setting (const char setting_name[], TYPE &value) 
+{
+    return read_mv_setting (COMMON_SETTINGS_FILE, setting_name, value);
+}
+inline void read_common_mv_setting (const char setting_name[], std::string &value)
 {
     return read_mv_setting (COMMON_SETTINGS_FILE, setting_name, value);
 }
