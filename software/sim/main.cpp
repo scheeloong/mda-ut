@@ -84,6 +84,8 @@ int main(int argc, char** argv)
             cv_task_enum = CV_VISION_PATH;
         else if (!strcmp(argv[i], "--vbuoy") || !strcmp(argv[i], "--buoy"))
             cv_task_enum = CV_VISION_BUOY;
+        else if (!strcmp(argv[i], "--vframe") || !strcmp(argv[i], "--frame"))
+            cv_task_enum = CV_VISION_FRAME;
     }
    
    /*glut inits*/

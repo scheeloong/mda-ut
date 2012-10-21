@@ -110,16 +110,18 @@ int main( int argc, char** argv ) {
           t_reset = clock();
         HSVFilter.filter (frame, filter_img); // process it
           t_HSV += clock() - t_reset;        
-          
+           
           t_reset = clock();
-        //cvErode (filter_img, filter_img, kern5x5);
-        //cvDilate (filter_img, filter_img, kern5x5);
-        mvBinaryMorphology (MV_ERODE, filter_img, filter_img, temp_img, 5,5);  
-        mvBinaryMorphology (MV_DILATE, filter_img, filter_img, temp_img, 5,5);  
+        cvErode (filter_img, filter_img, kern5x5);
+        cvDilate (filter_img, filter_img, kern5x5);
+        //mvBinaryMorphology (MV_ERODE, filter_img, filter_img, temp_img, 5,5);  
+        //mvBinaryMorphology (MV_DILATE, filter_img, filter_img, temp_img, 5,5);  
+        //mvBinaryMorphology (MV_OPEN, filter_img, filter_img, temp_img, 5,5);  
           t_morph += clock() - t_reset;
-        
+
           t_reset = clock();
         cvMorphologyEx (filter_img, grad_img, temp_img, kern5x5, CV_MOP_GRADIENT);
+        //mvBinaryMorphology (MV_GRADIENT, filter_img, grad_img, temp_img, 5,5); 
           t_grad += clock() - t_reset;
         
         if (TEST) {

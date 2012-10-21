@@ -87,7 +87,7 @@ inline void mvGradient (const IplImage* src, IplImage* dst, unsigned kern_w, uns
 // These are fast filters designed specifically for binary images with very
 // few bright pixels
 enum MV_KERNEL_SHAPE {MV_KERN_RECT, MV_KERN_ELLIPSE};
-enum MV_MORPHOLOGY_TYPE {MV_DILATE, MV_ERODE, MV_OPEN, MV_CLOSE};
+enum MV_MORPHOLOGY_TYPE {MV_DILATE, MV_ERODE, MV_OPEN, MV_CLOSE, MV_GRADIENT};
 void mvBinaryMorphology (
         MV_MORPHOLOGY_TYPE morphology_type,
         const IplImage* src, IplImage* dst, IplImage* temp=NULL, 
