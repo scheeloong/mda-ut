@@ -16,12 +16,6 @@
 #define WINDOW_SIZE_X 352
 #define WINDOW_SIZE_Y 288
 
-/** Flag for whether the program is in interactive mode*/
-extern char is_interactive;
-
-/** Random number to modify the sim layout and lighting*/
-extern unsigned int randNum;
-
 /** Current sub position in the sim*/
 typedef struct
 {
