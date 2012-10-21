@@ -41,6 +41,8 @@ void cv_init () {
     }
     else if (cv_task_enum == CV_VISION_BUOY)
         vision_module = new MDA_VISION_MODULE_BUOY;
+    else if (cv_task_enum == CV_VISION_FRAME)
+        vision_module = new MDA_VISION_MODULE_FRAME;
 
     cv_img_fwd = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
     cv_img_fwd->origin = 1;

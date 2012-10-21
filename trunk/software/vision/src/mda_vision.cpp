@@ -204,7 +204,7 @@ void MDA_VISION_MODULE_PATH:: primary_filter (const IplImage* src) {
     
     mvGradient (_filtered_img, _grad_img, 5, 5);
     _HoughLines->findLines (_grad_img, _lines);
-    _KMeans->cluster_auto (1, 2, _lines, 2);
+    _KMeans->cluster_auto (1, 2, _lines, 1);
 
     _lines->drawOntoImage (_grad_img);
     _KMeans->drawOntoImage (_grad_img);
@@ -296,5 +296,45 @@ void MDA_VISION_MODULE_BUOY:: primary_filter (const IplImage* src) {
 }
 
 int MDA_VISION_MODULE_BUOY:: calc_vci (VCI* interface) {
+    return 0;
+}
+
+/// ########################################################################
+/// MODULE_FRAME methods
+/// ########################################################################
+MDA_VISION_MODULE_FRAME:: MDA_VISION_MODULE_FRAME () {
+    _filtered_img = mvCreateImage (); // common size
+    _window = new mvWindow ("Frame Vision Module");
+    _HSVFilter = new mvHSVFilter (MDA_VISION_FRAME_SETTINGS);
+    _HoughLines = new mvHoughLines (MDA_VISION_FRAME_SETTINGS);
+    _KMeans = new mvKMeans ();
+    _lines = new mvLines ();
+}
+
+MDA_VISION_MODULE_FRAME:: ~MDA_VISION_MODULE_FRAME () {
+    cvReleaseImage (&_filtered_img);
+    delete _window;
+    delete _HSVFilter;
+    delete _HoughLines;
+    delete _KMeans;
+    delete _lines;
+}
+
+void MDA_VISION_MODULE_FRAME:: primary_filter (const IplImage* src) {
+    _HSVFilter->filter (src, _filtered_img);
+    _filtered_img->origin = src->origin;
+    _lines->clearData ();
+    _KMeans->clearData ();
+    
+    _HoughLines->findLines (_filtered_img, _lines);
+    _KMeans->cluster_auto (1, 3, _lines, 1);
+
+    _lines->drawOntoImage (_filtered_img);
+    _KMeans->drawOntoImage (_filtered_img);
+
+    _window->showImage (_filtered_img);
+}
+
+int MDA_VISION_MODULE_FRAME:: calc_vci (VCI* interface) {
     return 0;
 }

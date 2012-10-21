@@ -111,6 +111,7 @@ public:
 class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
 #define MDA_VISION_PATH_SETTINGS "vision_path_settings.csv"
     static const float PATH_REAL_LENGTH = 120.0;
+    static const float PATH_REAL_WIDTH = 15.0;
 
     mvWindow* _window;
     mvHSVFilter* _HSVFilter;
@@ -134,10 +135,37 @@ public:
 /// this class is for the buoy
 /// ########################################################################
 class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
+    static const float BUOY_REAL_DIAMTER = 23;
 
 public:
     MDA_VISION_MODULE_BUOY ();
     ~MDA_VISION_MODULE_BUOY ();
+    
+    void primary_filter (const IplImage* src);
+    int calc_vci (VCI* interface);
+};
+
+/// ########################################################################
+/// this class is for the frame
+/// ########################################################################
+class MDA_VISION_MODULE_FRAME : public MDA_VISION_MODULE_BASE {
+#define MDA_VISION_FRAME_SETTINGS "vision_frame_settings.csv"
+    static const float FRAME_REAL_WIDTH = 180.0;
+    static const float FRAME_REAL_HEIGHT = 120.0;
+    static const float FRAME_REAL_VERTICAL_SEGMENT_LENGTH = 40.0;
+
+    mvWindow* _window;
+    mvHSVFilter* _HSVFilter;
+    mvHoughLines* _HoughLines;
+    mvKMeans* _KMeans;
+
+    mvLines* _lines;
+    
+    IplImage* _filtered_img;
+
+public:
+    MDA_VISION_MODULE_FRAME ();
+    ~MDA_VISION_MODULE_FRAME ();
     
     void primary_filter (const IplImage* src);
     int calc_vci (VCI* interface);

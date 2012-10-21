@@ -9,6 +9,7 @@ class VCI {
 	friend class MDA_VISION_MODULE_GATE;
 	friend class MDA_VISION_MODULE_PATH;
 	friend class MDA_VISION_MODULE_BUOY;
+	friend class MDA_VISION_MODULE_FRAME;
 
 protected:
 	int pixel_x, pixel_y; 		
