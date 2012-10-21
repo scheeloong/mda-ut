@@ -27,8 +27,6 @@ unsigned DEBUG_MODEL = 0;
 CV_TASK_ENUM cv_task_enum;
 
 unsigned int randNum;   // global to determine fog thickness and site positions
-GLuint texName[10];     // global for names of textures
-unsigned clock_ticks_elapsed = 0;   // ticks is system ticks, not seconds.
 
 /* physical model*/
 physical_model model;
