@@ -18,8 +18,7 @@ int list;
 GLUquadricObj *g1/**Side gate post*/, *g2/**Other side gate post*/, *g3/**Top gate post*/, *buoys[2 * NUM_BUOYS], *EXIT[2 * EXIT_SIDES], *window_cutout[WINDOW_CUTOUT_PARTS], *u_gate[U_GATE_PARTS];
 #define NLIST 4
 
-GLuint texName[10];
-int clock_ticks_elapsed;
+extern GLuint texName[10];
 extern unsigned int randNum;
 
 #define FOG_PANEL 0

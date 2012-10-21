@@ -6,6 +6,10 @@
 #include "sim.h"
 
 const float sky[4] = { .527343, .804687, 5/*1*/, 1.0f};
+int clock_ticks_elapsed;
+GLuint texName[10];
+
+extern physical_model model;
 
 /**
 * @brief makes texture from given file

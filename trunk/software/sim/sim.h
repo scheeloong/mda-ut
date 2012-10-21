@@ -1,12 +1,6 @@
 #ifndef _SIM_COMMON_H_
 #define _SIM_COMMON_H_
 
-extern unsigned DEBUG_MODEL;
-
-extern physical_model model;
-extern GLuint texName[10];
-extern unsigned clock_ticks_elapsed;
-
 #define VERBOSE_CAMERA 0 // print lots of random stuff if 1
 #define FRAME_DELAY 0.01 // max refresh rate in seconds
 
@@ -36,9 +30,6 @@ enum CV_TASK_ENUM {
 };
 
 #define CAMERA_FIELD_OF_VIEW 52 //37
-extern physical_model model;
-extern Motors m;
-extern CV_TASK_ENUM cv_task_enum;
 
 /** OpenCV integration section starts here.
  *  Info:

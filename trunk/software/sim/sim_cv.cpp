@@ -20,6 +20,11 @@ IplImage* cv_img_result;
 
 bool FLAG_USE_IMG_DOWN; // make this true if you want to use img_down instead of img_fwd
 
+extern unsigned DEBUG_MODEL;
+extern CV_TASK_ENUM cv_task_enum;
+extern physical_model model;
+extern Motors m;
+
 // variables for vision and control
 MDA_VISION_MODULE_BASE* vision_module;
 MDA_CONTROL_MODULE_BASE* control_module;
