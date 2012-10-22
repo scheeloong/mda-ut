@@ -42,11 +42,18 @@ inline void int_handler(int signal)
 
 inline void init()
 {
+  static bool initialized = false;
+  if (initialized) {
+    return;
+  }
+
   // Fork a nios2-terminal for communication
   spawn_nios2_term();
 
   // Call int_handler on SIGINT (Ctrl+C)
   signal(SIGINT, int_handler);
+
+  initialized = true;
 }
 
 #endif
