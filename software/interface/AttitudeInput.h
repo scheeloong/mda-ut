@@ -37,6 +37,9 @@ class AttitudeInputNull : public AttitudeInput {
 /* Simulator implementation */
 class AttitudeInputSimulator : public AttitudeInput {
   public:
+    AttitudeInputSimulator();
+    virtual ~AttitudeInputSimulator();
+
     virtual int yaw();
     virtual int pitch();
     virtual int roll();
@@ -46,6 +49,9 @@ class AttitudeInputSimulator : public AttitudeInput {
 /* The real submarine implementation */
 class AttitudeInputSubmarine : public AttitudeInput {
   public:
+    AttitudeInputSubmarine();
+    virtual ~AttitudeInputSubmarine();
+
     virtual int yaw();
     virtual int pitch();
     virtual int roll();
