@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 class SimulatorSingleton {
   public:
     static SimulatorSingleton& get_instance()
@@ -23,4 +25,5 @@ class SimulatorSingleton {
     void destroy();
 
     int instances = 0;
+    bool created = false;
 };
