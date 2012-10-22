@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 class SubmarineSingleton {
   public:
     static SubmarineSingleton& get_instance()
@@ -23,4 +25,5 @@ class SubmarineSingleton {
     void destroy();
 
     int instances = 0;
+    bool created = false;
 };
