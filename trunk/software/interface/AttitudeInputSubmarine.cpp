@@ -1,9 +1,18 @@
 #include "AttitudeInput.h"
-#include "../scripts/scripts.h"
+#include "CHeader.h"
 
-// The caller must construct and destruct the FPGA resource!
-// This is because there may be multiple interfaces to the FPGA, but altogether,
-// they can only be constructed and destructed once.
+AttitudeInputSubmarine::AttitudeInputSubmarine()
+{
+  SubmarineSingleton s = SubmarineSingleton::get_instance();
+  s.increment_instance();
+  // no need to register anything with the singleton
+}
+
+AttitudeInputSubmarine::~AttitudeInputSubmarine()
+{
+  SubmarineSingleton s = SubmarineSingleton::get_instance();
+  s.decrement_instance();
+}
 
 // TODO: implement yaw, pitch and roll
 

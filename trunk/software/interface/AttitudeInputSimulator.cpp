@@ -4,9 +4,18 @@
 // global sim data
 extern physical_model model;
 
-// The caller must construct and destruct the sim resource!
-// This is because there may be multiple interfaces to the sim, but altogether,
-// they can only be constructed and destructed once.
+AttitudeInputSimulator::AttitudeInputSimulator()
+{
+  SimulatorSingleton s = SimulatorSingleton::get_instance();
+  s.increment_instace();
+  // no need to register anything with the singleton
+}
+
+AttitudeInputSimulator::~AttitudeInputSimulator()
+{
+  SimulatorSingleton s = SimulatorSingleton::get_instance();
+  s.decrement_instance();
+}
 
 // yaw, pitch and roll are in degrees
 int AttitudeInputSimulator::yaw()
