@@ -15,7 +15,7 @@
 #define U_GATE_PARTS 5
 
 int list;
-GLUquadricObj *g1/**Side gate post*/, *g2/**Other side gate post*/, *g3/**Top gate post*/, *buoys[2 * NUM_BUOYS], *EXIT[2 * EXIT_SIDES], *window_cutout[WINDOW_CUTOUT_PARTS], *u_gate[U_GATE_PARTS];
+GLUquadricObj *g1/**Side gate post*/, *g2/**Other side gate post*/, *g3/**Top gate post*/, *buoys[2 * NUM_BUOYS], *EXIT[2 * EXIT_SIDES], *window_cutout[WINDOW_CUTOUT_PARTS], *u_gate[2 * U_GATE_PARTS];
 #define NLIST 4
 
 extern GLuint texName[10];

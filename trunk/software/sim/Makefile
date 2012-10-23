@@ -15,7 +15,7 @@ CVDIR=../vision/
 CVA=libvision.a
 
 sim: $(INC) $(OBJS) $(CVDIR)$(CVA) $(MOTORSDIR)$(MOTORSA)
-	g++ -o $@ $(OBJS) $(LIBS) $(AFLAGS) $(FLAGS)
+	g++ -O3 -o $@ $(OBJS) $(LIBS) $(AFLAGS) $(FLAGS)
 
 $(CVDIR)$(CVA):
 	make -C $(CVDIR) $(CVA)
@@ -25,7 +25,7 @@ $(MOTORSDIR)$(MOTORSA):
 	make -C $(MOTORSDIR) $(MOTORSA)
 
 .cpp.o: $(INC)
-	g++ -c $< $(FLAGS)
+	g++ -O3 -c $< $(FLAGS)
 
 clean:
 	rm -f $(OBJS) *.o sim *.bmp *~
