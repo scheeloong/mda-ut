@@ -1,6 +1,6 @@
 #include "AttitudeInput.h"
-#include "CHeader.h"
 #include "SubmarineSingleton.h"
+#include "../scripts/scripts.h"
 
 AttitudeInputSubmarine::AttitudeInputSubmarine()
 {

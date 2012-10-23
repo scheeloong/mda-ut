@@ -21,6 +21,11 @@
 extern unsigned cmd_ok;
 
 int atoi_safe (char *str);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void kill_child ();
 void exit_safe ();
 void cmd_error ();
@@ -45,5 +50,9 @@ void dyn_set_target_depth(int);
 
 void get_accel(int *, int *, int *);
 int get_depth();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
