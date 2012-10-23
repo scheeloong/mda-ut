@@ -246,7 +246,8 @@ void bmp_08_data_write ( ofstream &file_out, unsigned long int width,
 //    Input, unsigned char *RARRAY, pointer to the red color array.
 //
 {
-   unsigned i, j;
+   unsigned i;
+   int j;
    unsigned char *indexr;
    unsigned padding;
 //
@@ -279,7 +280,8 @@ bool bmp_24_merged_read ( ifstream &file_in, unsigned long int width, long int h
 {
    char c;
    bool error;
-   unsigned i, j;
+   unsigned i;
+   int j;
    unsigned numbyte, padding;
 //
 //  Set the padding.
@@ -424,7 +426,7 @@ bool bmp_24_data_read ( ifstream &file_in, unsigned long int width, long int hei
 {
    char c;
    bool error;
-   unsigned i, j;
+   unsigned i; int j;
    unsigned char *indexb;
    unsigned char *indexg;
    unsigned char *indexr;
@@ -574,7 +576,7 @@ void bmp_24_data_write ( ofstream &file_out, unsigned long int width,
 //    and blue color arrays.
 //
 {
-   unsigned i, j;
+   unsigned i; int j;
    unsigned char *indexb;
    unsigned char *indexg;
    unsigned char *indexr;
@@ -613,13 +615,12 @@ void bmp_24_data_write ( ofstream &file_out, unsigned long int width,
 void bmp_24_data_merged_write ( ofstream &file_out, unsigned long int width,
                                 long int height, unsigned char *array )
 {
-   unsigned i, j;
+   unsigned i; int j;
    unsigned padding;
 //
 //  Set the padding.
 //
    padding = ( 4 - ( ( 3 * width ) % 4 ) ) % 4;
-
 
    for ( j = 0; j < abs ( height ); j++ )
    {
@@ -2289,7 +2290,7 @@ bool bmp_08_write_test ( char *file_out_name )
 //
    indexr = rarray;
 
-   for (unsigned j = 0; j < height; j++ )
+   for (int j = 0; j < height; j++ )
    {
       for (unsigned i = 0; i < width; i++ )
       {
