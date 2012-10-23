@@ -2,6 +2,7 @@
 
 class SubmarineSingleton {
   public:
+    SubmarineSingleton() : instances(0), created(false) {}
     static SubmarineSingleton& get_instance()
     {
       static SubmarineSingleton instance;
@@ -18,12 +19,11 @@ class SubmarineSingleton {
     }
     void create();
   private:
-    SubmarineSingleton();
     SubmarineSingleton(SubmarineSingleton const&); // Don't implement
     void operator=(SubmarineSingleton const&);     // Don't implement
 
     void destroy();
 
-    int instances = 0;
-    bool created = false;
+    int instances;
+    bool created;
 };

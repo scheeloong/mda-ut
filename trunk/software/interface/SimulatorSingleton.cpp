@@ -1,6 +1,8 @@
+#include "SimulatorSingleton.h"
+
 /* Constructor and destructor for sim resource */
 
-SimulatorSingleton::create()
+void SimulatorSingleton::create()
 {
   if (instances == 0) {
     return;
@@ -10,7 +12,7 @@ SimulatorSingleton::create()
   // Start simulation (may need to use passed in data)
 }
 
-SimulatorSingleton::destroy()
+void SimulatorSingleton::destroy()
 {
   if (!created) {
     return;

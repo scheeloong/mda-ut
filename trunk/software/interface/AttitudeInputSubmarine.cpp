@@ -1,17 +1,16 @@
 #include "AttitudeInput.h"
 #include "CHeader.h"
+#include "SubmarineSingleton.h"
 
 AttitudeInputSubmarine::AttitudeInputSubmarine()
 {
-  SubmarineSingleton s = SubmarineSingleton::get_instance();
-  s.increment_instance();
+  SubmarineSingleton::get_instance().increment_instances();
   // no need to register anything with the singleton
 }
 
 AttitudeInputSubmarine::~AttitudeInputSubmarine()
 {
-  SubmarineSingleton s = SubmarineSingleton::get_instance();
-  s.decrement_instance();
+  SubmarineSingleton::get_instance().increment_instances();
 }
 
 // TODO: implement yaw, pitch and roll

@@ -1,4 +1,5 @@
 #include "AttitudeInput.h"
+#include "SimulatorSingleton.h"
 #include "physical_model.h"
 
 // global sim data
@@ -6,15 +7,13 @@ extern physical_model model;
 
 AttitudeInputSimulator::AttitudeInputSimulator()
 {
-  SimulatorSingleton s = SimulatorSingleton::get_instance();
-  s.increment_instace();
+  SimulatorSingleton::get_instance().increment_instances();
   // no need to register anything with the singleton
 }
 
 AttitudeInputSimulator::~AttitudeInputSimulator()
 {
-  SimulatorSingleton s = SimulatorSingleton::get_instance();
-  s.decrement_instance();
+  SimulatorSingleton::get_instance().decrement_instances();
 }
 
 // yaw, pitch and roll are in degrees
