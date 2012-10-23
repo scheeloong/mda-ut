@@ -7,19 +7,28 @@
 #include <stdlib.h>
 #include "../../fpga/ui/utils.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void init();
+
+#ifdef __cplusplus
+}
+#endif
+
 inline void spawn_nios2_term()
 {
   char nios2_shell_path[128];
   FILE *fp;
 
   fp = popen("which nios2-terminal", "r");
-  fscanf(fp, "%127s", nios2_shell_path);
-  pclose(fp);
-
-  if (nios2_shell_path[0] != '/') {
+  int err = fscanf(fp, "%127s", nios2_shell_path);
+  if (err != 1) {
     puts("nios2-terminal is not on your path, exiting");
     exit(1);
   }
+  pclose(fp);
 
   spawn_term(nios2_shell_path);
 }

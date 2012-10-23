@@ -1,5 +1,5 @@
-#include "CHeader.h"
 #include "SubmarineSingleton.h"
+#include "../scripts/scripts.h"
 
 /* Constructor and destructor for submarine's FPGA resource */
 
