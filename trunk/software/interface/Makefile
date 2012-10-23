@@ -1,7 +1,8 @@
 CC=g++ -O3 -Wall -I ../sim
 
 INC=*.h
-OBJ=AttitudeInputSimulator.o AttitudeInputSubmarine.o SimulatorSingleton.o SubmarineSingleton.o
+SRCS:=$(wildcard *.cpp)
+OBJ:=$(patsubst %.cpp,%.o,$(SRCS))
 
 all: $(OBJ)
 
