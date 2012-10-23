@@ -1,31 +1,8 @@
-SIM_DIR=./sim/
-MOTORS_DIR=./motors/
-VISION_DIR=./vision/
-CONTROL_DIR=./control/
-SCRIPTS_DIR=./scripts/
+DIRS = sim motors vision control scripts interface
 
-all: motors vision control sim scripts
-
-motors:
-	$(MAKE) -C $(MOTORS_DIR)
-
-vision:
-	$(MAKE) -C $(VISION_DIR)
-
-control:
-	$(MAKE) -C $(CONTROL_DIR)
-
-sim:
-	$(MAKE) -C $(SIM_DIR)
-
-scripts:
-	$(MAKE) -C $(SCRIPTS_DIR)
-
+all:
+	for dir in $(DIRS); do make -C $$dir; done
 clean:
-	$(MAKE) -C $(MOTORS_DIR) clean
-	$(MAKE) -C $(VISION_DIR) clean
-	$(MAKE) -C $(CONTROL_DIR) clean
-	$(MAKE) -C $(SIM_DIR) clean
-	$(MAKE) -C $(SCRIPTS_DIR) clean
+	for dir in $(DIRS); do make $@ -C $$dir; done
 
-.PHONY: all clean motors vision control sim scripts
+.PHONY: all clean $(DIRS)
