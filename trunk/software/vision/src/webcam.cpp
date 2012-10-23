@@ -59,6 +59,7 @@ int main( int argc, char** argv ) {
 
     // declare filters we need
     mvHSVFilter HSVFilter ("test_settings.csv"); // color filter
+    mvBinaryMorphology Morphology (5,5, MV_KERN_RECT);
     mvHoughLines HoughLines ("test_settings.csv");
     mvLines lines; // data struct to store lines
     mvHoughCircles HoughCircles ("test_settings.csv");
@@ -70,11 +71,6 @@ int main( int argc, char** argv ) {
     IplImage* filter_img = mvCreateImage ();
     IplImage* grad_img = mvCreateImage ();
  
-    /// kernels for morphology
-    IplConvKernel* kern5x5 = cvCreateStructuringElementEx (5, 5, 3, 3, CV_SHAPE_ELLIPSE); 
-    //IplConvKernel* kern7x7 = cvCreateStructuringElementEx (7, 7, 4, 4, CV_SHAPE_ELLIPSE); 
-    IplImage* temp_img = mvCreateImage ();   
-
     /// execution
     char c;
     IplImage* frame;
@@ -112,16 +108,11 @@ int main( int argc, char** argv ) {
           t_HSV += clock() - t_reset;        
            
           t_reset = clock();
-        cvErode (filter_img, filter_img, kern5x5);
-        cvDilate (filter_img, filter_img, kern5x5);
-        //mvBinaryMorphology (MV_ERODE, filter_img, filter_img, temp_img, 5,5);  
-        //mvBinaryMorphology (MV_DILATE, filter_img, filter_img, temp_img, 5,5);  
-        //mvBinaryMorphology (MV_OPEN, filter_img, filter_img, temp_img, 5,5);  
+        Morphology.open (filter_img, filter_img);
           t_morph += clock() - t_reset;
 
           t_reset = clock();
-        cvMorphologyEx (filter_img, grad_img, temp_img, kern5x5, CV_MOP_GRADIENT);
-        //mvBinaryMorphology (MV_GRADIENT, filter_img, grad_img, temp_img, 5,5); 
+        Morphology.gradient (filter_img, grad_img);
           t_grad += clock() - t_reset;
         
         if (TEST) {
@@ -171,9 +162,8 @@ int main( int argc, char** argv ) {
               t_cluster += clock() - t_reset;
         
               t_reset = clock();
-            lines.drawOntoImage (grad_img);
-            //kmeans.drawOntoImage (grad_img);
-            kmeans.drawOntoImage (frame);
+            //lines.drawOntoImage (grad_img);
+            kmeans.drawOntoImage (grad_img);
               t_draw += clock() - t_reset;
             lines.clearData(); // erase line data and reuse allocated mem
             //kmeans.clearData();
@@ -232,6 +222,5 @@ int main( int argc, char** argv ) {
 
     cvReleaseImage (&filter_img);
     cvReleaseImage (&grad_img);
-    cvReleaseImage (&temp_img);
     return 0;
 }
