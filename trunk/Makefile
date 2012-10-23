@@ -7,19 +7,12 @@
 # You should only have to change the name of the directories listed at the top 
 # to change what you want to build
 #
-FPGA_DIR=./fpga
-SOFTWARE_DIR=./software
 
-all: vision sim fpga motors
+DIRS = fpga software
 
-fpga:
-	$(MAKE) -C $(FPGA_DIR)
-
-software:
-	$(MAKE) -C $(SOFTWARE_DIR)
-
+all:
+	for dir in $(DIRS); do make -C $$dir; done
 clean:
-	$(MAKE) -C $(FPGA_DIR) $@
-	$(MAKE) -C $(SOFTWARE_DIR) $@
+	for dir in $(DIRS); do make $@ -C $$dir; done
 
-.PHONY: all clean fpga vision sim motors
+.PHONY: all clean $(DIRS)
