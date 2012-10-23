@@ -2,6 +2,7 @@
 
 class SimulatorSingleton {
   public:
+    SimulatorSingleton() : instances(0), created(false) {}
     static SimulatorSingleton& get_instance()
     {
       static SimulatorSingleton instance;
@@ -18,12 +19,11 @@ class SimulatorSingleton {
     }
     void create();
   private:
-    SimulatorSingleton();
     SimulatorSingleton(SimulatorSingleton const&); // Don't implement
     void operator=(SimulatorSingleton const&);     // Don't implement
 
     void destroy();
 
-    int instances = 0;
-    bool created = false;
+    int instances;
+    bool created;
 };

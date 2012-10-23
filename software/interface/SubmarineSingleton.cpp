@@ -1,8 +1,9 @@
 #include "CHeader.h"
+#include "SubmarineSingleton.h"
 
 /* Constructor and destructor for submarine's FPGA resource */
 
-SimulatorSingleton::create()
+void SubmarineSingleton::create()
 {
   if (instances == 0) {
     return;
@@ -13,7 +14,7 @@ SimulatorSingleton::create()
   power_on();
 }
 
-SimulatorSingleton::destroy()
+void SubmarineSingleton::destroy()
 {
   if (!created) {
     return;

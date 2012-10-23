@@ -32,7 +32,7 @@ class AttitudeInputNull : public AttitudeInput {
     virtual int pitch() { return 0;}
     virtual int roll() { return 0;}
     virtual int depth() { return 0;}
-}
+};
 
 /* Simulator implementation */
 class AttitudeInputSimulator : public AttitudeInput {
@@ -44,7 +44,7 @@ class AttitudeInputSimulator : public AttitudeInput {
     virtual int pitch();
     virtual int roll();
     virtual int depth();
-}
+};
 
 /* The real submarine implementation */
 class AttitudeInputSubmarine : public AttitudeInput {
@@ -61,6 +61,6 @@ class AttitudeInputSubmarine : public AttitudeInput {
     virtual int target_pitch();
     virtual int target_roll();
     virtual int target_depth();
-}
+};
 
 #endif
