@@ -2,6 +2,7 @@
 #include <cv.h>
 #include "types.h"
 #include "physical_model.h"
+#include "motors.h"
 #include "sim.h"
 
 #include "../vision/lib/mda_vision.h"

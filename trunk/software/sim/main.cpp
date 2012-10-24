@@ -18,7 +18,7 @@
 
 #include <highgui.h>
 
-#include "../motors/motors.h"
+#include "motors.h"
 
 // debug flags
 unsigned DEBUG_MODEL = 0;
