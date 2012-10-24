@@ -136,6 +136,9 @@ class mvHSVFilter {
     int HMIN,HMAX;
     unsigned SMIN,SMAX, VMIN, VMAX;
     
+    PROFILE_BIN bin_WorkingLoop;
+    PROFILE_BIN bin_CvtColor;
+
     private:
     int hueInRange (unsigned char hue);
     

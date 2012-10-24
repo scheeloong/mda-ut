@@ -86,8 +86,6 @@ int main( int argc, char** argv ) {
     float t_draw = 0;
     float t_display = 0;
         
-    PROFILE_BIN bin("Cartoon Filter");
-
     for (;;) {
           t_reset = clock();
         frame = camera->getFrameResized(); // read frame from cam
@@ -119,7 +117,6 @@ int main( int argc, char** argv ) {
         }
 	
         if (CARTOON) {
-            bin.start();
             cvZero (filter_img);
             cvCopy (frame, myframe);
 
@@ -151,7 +148,6 @@ int main( int argc, char** argv ) {
 
             win2->showImage (myframe);
             win3->showImage (grad_img);
-            bin.stop();
         }
         else if (LINE) {
               t_reset = clock();
@@ -222,5 +218,9 @@ int main( int argc, char** argv ) {
 
     cvReleaseImage (&filter_img);
     cvReleaseImage (&grad_img);
+    delete camera;
+    delete win1;
+    delete win2;
+    delete win3;
     return 0;
 }
