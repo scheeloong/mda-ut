@@ -18,7 +18,6 @@ void destroy();
 /** opencv related functions below */
 
 #include <highgui.h>
-#include "../motors/motors.h"
 
 enum CV_TASK_ENUM {
     NO_TASK,
