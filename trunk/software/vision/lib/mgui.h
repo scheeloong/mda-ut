@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <cv.h>
 
+#include "profile_bin.h"
+
 // Hopefully this is the only hardcoded settings file
 #define MDA_SETTINGS_DIR_ENV_VAR "MDA_VISION_SETTINGS_PATH"
 #define MDA_BACKUP_SETTINGS_DIR "./settings/"
@@ -54,10 +56,13 @@ class mvWindow {
 // This class lets you open a camera and write video to disk 
 // Usage is simple. 
 class mvCamera {
-    #define FRAMERATE 30
+    static const unsigned FRAMERATE = 30;
     CvCapture* _capture;
     CvVideoWriter* _writer;
     IplImage* _imgResized;
+
+    PROFILE_BIN bin_resize;
+    PROFILE_BIN bin_getFrame;
 
     public:
     mvCamera (unsigned cam_number, unsigned write=0);
@@ -72,12 +77,26 @@ class mvCamera {
      * called the image will be overwritten. This img also must not be freed/
      * modified by the user.
      */ 
-    IplImage* getFrame () { return cvQueryFrame(_capture); } 
+    IplImage* getFrame () {
+          bin_getFrame.start();
+        IplImage* ret = cvQueryFrame(_capture); 
+          bin_getFrame.stop();
+
+        return ret;
+    } 
     IplImage* getFrameResized () {
+          bin_getFrame.start();
         IplImage* frame = cvQueryFrame (_capture);
-        if (!frame)
+          bin_getFrame.stop();
+        
+        if (!frame) {
             return NULL;
-        cvResize (frame, _imgResized, CV_INTER_LINEAR); // bilienar interpolation
+        }
+
+          bin_resize.start();
+        cvResize (frame, _imgResized, CV_INTER_NN); // bilienar interpolation
+          bin_resize.stop();
+
         return _imgResized;
     } 
 

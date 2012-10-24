@@ -2,7 +2,10 @@
 #include "mgui.h"
 #include <cv.h>   
     
-mvHSVFilter:: mvHSVFilter (const char* settings_file) {
+mvHSVFilter:: mvHSVFilter (const char* settings_file) :
+    bin_WorkingLoop ("HSV - Working Loop"),
+    bin_CvtColor ("HSV - CvtColor")
+ {
     read_mv_setting (settings_file, "HUE_MIN", HMIN);
     read_mv_setting (settings_file, "HUE_MAX", HMAX);
     read_mv_setting (settings_file, "SAT_MIN", SMIN);
@@ -20,6 +23,7 @@ mvHSVFilter:: ~mvHSVFilter () {
     cvReleaseImage (&HSVImg);
 }
 
+inline
 void mvHSVFilter:: setHSV (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax) {
     if (hmin != (int)UNCHANGED) HMIN = (hmin>=0) ? hmin : hmin+180; 
     if (hmax != (int)UNCHANGED) HMAX = (hmax<180) ? hmax : hmax-180; 
@@ -29,6 +33,7 @@ void mvHSVFilter:: setHSV (int hmin, int hmax, unsigned smin, unsigned smax, uns
     if (vmax != UNCHANGED) VMAX = vmax;
 }
 
+inline
 int mvHSVFilter:: hueInRange (unsigned char hue) { // helper function for the filter
  if (HMAX >= HMIN) 
         return (hue >= HMIN && hue <= HMAX);
@@ -42,13 +47,16 @@ void mvHSVFilter:: filter (const IplImage* img, IplImage* result) {
     assert (result != NULL);
     assert (result->nChannels == 1);
 
+      bin_CvtColor.start();
     cvCvtColor (img, HSVImg, CV_BGR2HSV); // convert to HSV 
+      bin_CvtColor.stop();
 
     /* go through each pixel, set the result image's pixel to 0 or 255 based on whether the
      * origin img's HSV values are withing bounds
      */
     unsigned char *imgPtr, *resPtr;
     
+      bin_WorkingLoop.start();
     for (int r = 0; r < result->height; r++) {                         
         imgPtr = (unsigned char*) (HSVImg->imageData + r*HSVImg->widthStep); // imgPtr = first pixel of rth's row
         resPtr = (unsigned char*) (result->imageData + r*result->widthStep);
@@ -66,4 +74,5 @@ void mvHSVFilter:: filter (const IplImage* img, IplImage* result) {
             imgPtr+=3; resPtr++;
         }
     }
+      bin_WorkingLoop.stop();
 }
