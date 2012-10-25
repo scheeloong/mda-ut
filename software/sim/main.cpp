@@ -30,7 +30,6 @@ unsigned int randNum;   // global to determine fog thickness and site positions
 
 /* physical model*/
 physical_model model;
-Motors m(&model);
 
 /**
 * @brief Main loop for sim

@@ -11,7 +11,6 @@
 
 // Global variables needed by sim
 physical_model model;
-Motors m = Motors(&model);
 unsigned DEBUG_MODEL = 0;
 CV_TASK_ENUM cv_task_enum;
 unsigned int randNum;

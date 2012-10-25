@@ -24,7 +24,6 @@ bool FLAG_USE_IMG_DOWN; // make this true if you want to use img_down instead of
 extern unsigned DEBUG_MODEL;
 extern CV_TASK_ENUM cv_task_enum;
 extern physical_model model;
-extern Motors m;
 
 // variables for vision and control
 MDA_VISION_MODULE_BASE* vision_module;
@@ -136,6 +135,8 @@ void range_angle(float& angle)
 
 void cv_keyboard(unsigned char key, int x, int y)
 {
+    static Motors m = Motors(&model);
+
     if (key == 'q' || key == 27) { // q or escape
         destroy ();
         exit(0);

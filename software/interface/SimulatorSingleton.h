@@ -21,7 +21,6 @@ class SimulatorSingleton {
     }
     void create();
 
-    bool exists() {return created;}
     physical_model& attitude();
   private:
     SimulatorSingleton(SimulatorSingleton const&); // Don't implement
