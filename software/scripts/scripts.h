@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-void init();
+void init_fpga();
 
 #ifdef __cplusplus
 }
@@ -49,7 +49,7 @@ inline void int_handler(int signal)
   exit_safe();
 }
 
-inline void init()
+inline void init_fpga()
 {
   static bool initialized = false;
   if (initialized) {

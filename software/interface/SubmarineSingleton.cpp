@@ -10,7 +10,7 @@ void SubmarineSingleton::create()
   }
   created = true;
 
-  init();
+  init_fpga();
   power_on();
 }
 
