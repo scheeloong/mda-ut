@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <pthread.h>
 
 #include "physical_model.h"
 
@@ -30,5 +31,5 @@ class SimulatorSingleton {
 
     int instances;
     bool created;
-    int child_pid;
+    pthread_t sim_thread;
 };
