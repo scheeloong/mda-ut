@@ -22,7 +22,9 @@ class SimulatorSingleton {
     }
     void create();
 
-    physical_model& attitude();
+    physical_model attitude();
+    void add_position(world_vector);
+    void add_orientation(orientation);
   private:
     SimulatorSingleton(SimulatorSingleton const&); // Don't implement
     void operator=(SimulatorSingleton const&);     // Don't implement
