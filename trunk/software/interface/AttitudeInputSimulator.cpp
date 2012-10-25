@@ -3,7 +3,7 @@
 #include "physical_model.h"
 
 // global sim data
-extern physical_model model;
+physical_model model;
 
 AttitudeInputSimulator::AttitudeInputSimulator()
 {

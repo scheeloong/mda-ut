@@ -12,26 +12,25 @@
 /* Attitude Input interface */
 class AttitudeInput {
   public:
-    virtual ~AttitudeInput();
+    virtual ~AttitudeInput() {}
 
-    virtual int yaw() = 0;
-    virtual int pitch() = 0;
-    virtual int roll() = 0;
+    virtual int yaw() {return 0;}
+    virtual int pitch() {return 0;}
+    virtual int roll() {return 0;}
     virtual int depth() = 0;
 
-    virtual int target_yaw() { return 0;}
-    virtual int target_pitch() { return 0;}
-    virtual int target_roll() { return 0;}
-    virtual int target_depth() { return 0;}
+    virtual int target_yaw() {return 0;}
+    virtual int target_pitch() {return 0;}
+    virtual int target_roll() {return 0;}
+    virtual int target_depth() {return 0;}
 };
 
 /* A don't care implementation */
 class AttitudeInputNull : public AttitudeInput {
   public:
-    virtual int yaw() { return 0;}
-    virtual int pitch() { return 0;}
-    virtual int roll() { return 0;}
-    virtual int depth() { return 0;}
+    virtual ~AttitudeInputNull() {}
+
+    virtual int depth() {return 0;}
 };
 
 /* Simulator implementation */
@@ -52,15 +51,7 @@ class AttitudeInputSubmarine : public AttitudeInput {
     AttitudeInputSubmarine();
     virtual ~AttitudeInputSubmarine();
 
-    virtual int yaw();
-    virtual int pitch();
-    virtual int roll();
     virtual int depth();
-
-    virtual int target_yaw();
-    virtual int target_pitch();
-    virtual int target_roll();
-    virtual int target_depth();
 };
 
 #endif
