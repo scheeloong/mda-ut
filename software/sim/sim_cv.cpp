@@ -74,14 +74,14 @@ void cv_display () {
    
     if (cv_task_enum != NO_TASK) {
         // first grab both front and bottom cam images       
-        model.angle.pitch = 90;      // grab downwards first
+        model.angle.pitch += 90;      // grab downwards first
         glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
         set_camera();
         draw();
         cvQueryFrameGL (cv_img_down);
         
-        model.angle.pitch = 0;
+        model.angle.pitch -= 90;
         glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
         glLoadIdentity();
         set_camera();
