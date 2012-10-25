@@ -5,7 +5,7 @@
 #include "SimulatorSingleton.h"
 
 // Global variables needed by sim
-physical_model model;
+volatile physical_model model;
 unsigned DEBUG_MODEL = 0;
 CV_TASK_ENUM cv_task_enum;
 unsigned int randNum;
@@ -36,9 +36,31 @@ void SimulatorSingleton::destroy()
 
 /* Accessors */
 
-physical_model& SimulatorSingleton::attitude()
+physical_model SimulatorSingleton::attitude()
+// Returns a copy of the model.
+//
+// Since model is volatile, it must be copied (memcpy is safe to cast away the volatile pointer)
 {
-  return model;
+  physical_model m;
+  memcpy(&m, (char *)&model, sizeof(physical_model));
+  return m;
+}
+
+
+/* Mutators */
+
+void SimulatorSingleton::add_position(world_vector p)
+{
+  model.position.x += p.x;
+  model.position.y += p.y;
+  model.position.z += p.z;
+}
+
+void add_orientation(orientation a)
+{
+  model.angle.yaw += a.yaw;
+  model.angle.pitch += a.pitch;
+  model.angle.roll += a.roll;
 }
 
 /* pthread function */
