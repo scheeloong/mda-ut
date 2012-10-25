@@ -55,7 +55,6 @@ void SimulatorSingleton::destroy()
 
   printf("Press enter to quit");
   getchar();
-  putchar('\n');
 
   // Clean up resources
   kill(child_pid, SIGTERM);
