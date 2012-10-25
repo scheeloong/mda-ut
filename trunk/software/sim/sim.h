@@ -11,7 +11,7 @@ void set_camera();
 /* simulates speed */
 void anim_scene(); 
 /* reads textures and define lighting */
-void init();
+void init_sim();
 /* destroys defined objects */
 void destroy();
 

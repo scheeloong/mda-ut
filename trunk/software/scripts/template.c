@@ -11,7 +11,7 @@
 int main()
 {
   // Initialize by connecting to the FPGA
-  init();
+  init_fpga();
 
   // Power on the system
   power_on();

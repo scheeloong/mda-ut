@@ -23,14 +23,14 @@ AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
     }
     m_attitude_input = new AttitudeInputNull();
   }
-
-  // Initialize singletons if necessary
-  SimulatorSingleton::get_instance().create();
-  SubmarineSingleton::get_instance().create();
 }
 
 void AquaTux::work()
 {
+  // Initialize singletons if necessary
+  SimulatorSingleton::get_instance().create();
+  SubmarineSingleton::get_instance().create();
+
   // start the control algorithm until mission completes
 }
 

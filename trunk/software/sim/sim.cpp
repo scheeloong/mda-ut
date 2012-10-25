@@ -88,7 +88,7 @@ void anim_scene()
 // x is pointing right
 // y is pointing up
 // z is pointing towards the programmer
-void init() {
+void init_sim() {
    glEnable (GL_LINE_SMOOTH);
    glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
    glLineWidth (1.5);

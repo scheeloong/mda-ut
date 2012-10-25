@@ -3,7 +3,7 @@
 *
 * @brief This is the main file for the both simulators
 *
-* This is the main file for simulator, calls init() from site.cpp
+* This is the main file for simulator, calls init_sim() from site.cpp
 */
 
 #include <GL/glut.h>
@@ -92,7 +92,7 @@ int main(int argc, char** argv)
    glutInitWindowSize (WINDOW_SIZE_X, WINDOW_SIZE_Y);
    glutInitWindowPosition(10, 0);
    glutCreateWindow ("Forwards Cam");
-   init();
+   init_sim();
    cv_init(); 
    
    /** register callback functions for glut */

@@ -6,7 +6,7 @@
 
 int main()
 {
-  init();
+  init_fpga();
 
   power_on();
 
