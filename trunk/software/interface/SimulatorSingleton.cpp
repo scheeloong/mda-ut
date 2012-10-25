@@ -1,5 +1,6 @@
 #include <GL/glut.h>
 
+#include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
 
@@ -26,7 +27,19 @@ void SimulatorSingleton::create()
 
   // Start simulation (may need to use passed in data)
   child_pid = fork();
-  if (fork() == 0) {
+  if (child_pid == 0) {
+    int argc = 0;
+    char *argv[1];
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_DEPTH | GLUT_RGB | GLUT_DOUBLE);
+    glutInitWindowSize (WINDOW_SIZE_X, WINDOW_SIZE_Y);
+    glutInitWindowPosition(10, 0);
+    glutCreateWindow ("Forwards Cam");
+
+    glutReshapeFunc  (cv_reshape);
+    glutDisplayFunc  (cv_display);
+    glutIdleFunc     (anim_scene);
+
     init_sim();
     cv_init(); 
 
@@ -39,6 +52,10 @@ void SimulatorSingleton::destroy()
   if (!created) {
     return;
   }
+
+  printf("Press enter to quit");
+  getchar();
+  putchar('\n');
 
   // Clean up resources
   kill(child_pid, SIGTERM);
