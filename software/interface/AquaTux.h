@@ -1,4 +1,5 @@
 #include "AttitudeInput.h"
+#include "ImageInput.h"
 
 class AquaTux {
   public:
@@ -7,4 +8,5 @@ class AquaTux {
     ~AquaTux();
   private:
     AttitudeInput *m_attitude_input;
+    ImageInput *m_image_input;
 };
