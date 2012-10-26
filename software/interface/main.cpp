@@ -9,4 +9,6 @@ int main(int argc, char **argv)
     AquaTux at = AquaTux("default_aquatux.csv");
     at.work();
   }
+
+  return 0;
 }

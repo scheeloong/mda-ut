@@ -94,7 +94,7 @@ class mvCamera {
         }
 
           bin_resize.start();
-        cvResize (frame, _imgResized, CV_INTER_NN); // bilienar interpolation
+        cvResize (frame, _imgResized, CV_INTER_NN); // nearest neighbour interpolation
           bin_resize.stop();
 
         return _imgResized;
