@@ -10,10 +10,11 @@ using namespace std;
 AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
 {
   // Read settings for input, control algorithm and output classes
-  string attitude_input, image_input, control_algorithm;
+  string attitude_input, image_input, control_algorithm, actuator_output;
   read_mv_setting(settings_file, "ATTITUDE_INPUT", attitude_input);
   read_mv_setting(settings_file, "IMAGE_INPUT", image_input);
   read_mv_setting(settings_file, "CONTROL_ALGORITHM", control_algorithm);
+  read_mv_setting(settings_file, "ACTUATOR_OUTPUT", actuator_output);
 
   if (attitude_input == "SIMULATOR") {
     m_attitude_input = new AttitudeInputSimulator();
@@ -50,8 +51,19 @@ AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
     m_control_algorithm = new ControlAlgorithmNull();
   }
 
+  if (actuator_output == "SIMULATOR") {
+    m_actuator_output = new ActuatorOutputSimulator();
+  } else if (actuator_output == "SUBMARINE") {
+    m_actuator_output = new ActuatorOutputSubmarine();
+  } else {
+    if (actuator_output != "NULL") {
+      cout << "Warning: unrecognized actuator output " << actuator_output << ", defaulting to no actuator output\n";
+    }
+    m_actuator_output = new ActuatorOutputNull();
+  }
+
   // Pass the inputs and outputs to the control algorithm
-  m_control_algorithm->initialize(m_attitude_input, m_image_input);
+  m_control_algorithm->initialize(m_attitude_input, m_image_input, m_actuator_output);
 }
 
 void AquaTux::work()
