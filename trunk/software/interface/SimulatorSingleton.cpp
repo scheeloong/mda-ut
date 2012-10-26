@@ -31,7 +31,7 @@ void SimulatorSingleton::destroy()
     return;
   }
 
-  pthread_join(sim_thread, NULL);
+  ::destroy();
 }
 
 /* Accessors */

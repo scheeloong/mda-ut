@@ -7,6 +7,8 @@
 #ifndef CONTROL_ALGORITHM_H
 #define CONTROL_ALGORITHM_H
 
+#include <stdio.h>
+
 #include "AttitudeInput.h"
 #include "ImageInput.h"
 #include "ActuatorOutput.h"
@@ -31,7 +33,11 @@ class ControlAlgorithmNull : public ControlAlgorithm {
       image_input = i;
       actuator_output = o;
     }
-    virtual void work() {}
+    virtual void work()
+    {
+        printf("Press enter to quit...");
+        getchar();
+    }
   private:
     AttitudeInput *attitude_input;
     ImageInput *image_input;
