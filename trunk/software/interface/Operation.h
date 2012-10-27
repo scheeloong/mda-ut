@@ -1,11 +1,11 @@
-/* ControlAlgorithm interface.
+/* Operation interface.
 
    This interface represents the operation of the submarine, given attitude and image inputs, and
    a method to actuate the submarine.
 */
 
-#ifndef CONTROL_ALGORITHM_H
-#define CONTROL_ALGORITHM_H
+#ifndef OPERATION_H
+#define OPERATION_H
 
 #include <curses.h>
 #include <stdio.h>
@@ -17,10 +17,10 @@
 #include "ActuatorOutput.h"
 #include "SimulatorSingleton.h"
 
-/* Image Input interface */
-class ControlAlgorithm {
+/* Operation interface */
+class Operation {
   public:
-    virtual ~ControlAlgorithm() {}
+    virtual ~Operation() {}
 
     virtual void initialize(AttitudeInput *, ImageInput *, ActuatorOutput *) = 0;
     virtual void work() = 0;
@@ -55,9 +55,9 @@ class ControlAlgorithm {
 };
 
 /* A don't care implementation */
-class ControlAlgorithmNull : public ControlAlgorithm {
+class OperationNull : public Operation {
   public:
-    virtual ~ControlAlgorithmNull() {}
+    virtual ~OperationNull() {}
 
     virtual void initialize(AttitudeInput *a, ImageInput *i, ActuatorOutput *o)
     {
@@ -89,9 +89,9 @@ class ControlAlgorithmNull : public ControlAlgorithm {
 };
 
 /* Joystick implementation */
-class ControlAlgorithmJoystick : public ControlAlgorithm {
+class JoystickOperation: public Operation {
   public:
-    virtual ~ControlAlgorithmJoystick() {}
+    virtual ~JoystickOperation() {}
 
     virtual void initialize(AttitudeInput *a, ImageInput *i, ActuatorOutput *o)
     {
@@ -107,9 +107,9 @@ class ControlAlgorithmJoystick : public ControlAlgorithm {
 };
 
 /* Command Line implementation */
-class ControlAlgorithmCommandLine : public ControlAlgorithm {
+class CommandLineOperation: public Operation {
   public:
-    virtual ~ControlAlgorithmCommandLine() {}
+    virtual ~CommandLineOperation() {}
 
     virtual void initialize(AttitudeInput *a, ImageInput *i, ActuatorOutput *o)
     {
@@ -125,9 +125,9 @@ class ControlAlgorithmCommandLine : public ControlAlgorithm {
 };
 
 /* The real submarine implementation */
-class ControlAlgorithmSubmarine : public ControlAlgorithm {
+class Mission : public Operation {
   public:
-    virtual ~ControlAlgorithmSubmarine();
+    virtual ~Mission();
 
     virtual void initialize(AttitudeInput *a, ImageInput *i, ActuatorOutput *o);
     virtual void work();
