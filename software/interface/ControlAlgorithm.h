@@ -7,6 +7,7 @@
 #ifndef CONTROL_ALGORITHM_H
 #define CONTROL_ALGORITHM_H
 
+#include <curses.h>
 #include <stdio.h>
 
 #include "AttitudeInput.h"
@@ -35,8 +36,12 @@ class ControlAlgorithmNull : public ControlAlgorithm {
     }
     virtual void work()
     {
-        printf("Press enter to quit...");
-        getchar();
+        initscr();
+        cbreak();
+        noecho();
+        printw("Press 'q' to quit...");
+        while(getch() != 'q') ;
+        endwin();
     }
   private:
     AttitudeInput *attitude_input;
