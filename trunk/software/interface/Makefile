@@ -14,6 +14,9 @@ LIB=$(LIBVISION) $(LIBSIM) $(LIBUI)
 
 AQUATUX=aquatux
 
+parallel:
+	make -j4 all
+
 all: $(AQUATUX)
 
 $(AQUATUX): $(OBJ) $(LIB)
@@ -34,4 +37,4 @@ $(LIBUI):
 clean:
 	rm -f $(OBJ)
 
-.PHONY: all clean
+.PHONY: parallel all clean

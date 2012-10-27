@@ -12,6 +12,9 @@ MAIN=$(OBJDIR)main.o
 WEBCAM=$(OBJDIR)webcam.o
 RANGE_TEST=$(OBJDIR)camera_range_test.o
 
+parallel:
+	make -j4 all
+
 all: main webcam camera_range_test $(A)
 
 $(OBJDIR)%.o: $(SRCDIR)%.cpp $(INC)
@@ -36,4 +39,4 @@ clean:
 	rm -f $(SRCDIR)*~
 	rm -f ./settings/*~
 
-.PHONY: all clean
+.PHONY: parallel all clean
