@@ -1,7 +1,7 @@
 CC=g++
 CVFLAGS=`pkg-config --cflags --libs opencv` -lvision -L../vision/
 GLFLAGS=-lm -lGL -lglut -lGLU -lsim -L../sim
-CFLAGS=-O3 -Wall -I ../sim -I ../vision/lib -pthread
+CFLAGS=-O3 -Wall -I ../sim -I ../vision/lib -pthread -lncurses
 ALLFLAGS=$(CVFLAGS) $(GLFLAGS) $(CFLAGS) -lui -L../../fpga/ui/
 
 INC=*.h
