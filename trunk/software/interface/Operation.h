@@ -71,7 +71,7 @@ class OperationNull : public Operation {
         initscr();
         cbreak();
 
-        // regular io
+        // regular IO
         printf("Press 'q' to quit...");
         fflush(stdout);
 
@@ -101,6 +101,8 @@ class JoystickOperation: public Operation {
     }
     virtual void work();
   private:
+    void dump_image();
+
     AttitudeInput *attitude_input;
     ImageInput *image_input;
     ActuatorOutput *actuator_output;
