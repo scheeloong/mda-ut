@@ -9,10 +9,13 @@
 
 #include <curses.h>
 #include <stdio.h>
+#include <sys/select.h>
+#include <unistd.h>
 
 #include "AttitudeInput.h"
 #include "ImageInput.h"
 #include "ActuatorOutput.h"
+#include "SimulatorSingleton.h"
 
 /* Image Input interface */
 class ControlAlgorithm {
@@ -21,6 +24,34 @@ class ControlAlgorithm {
 
     virtual void initialize(AttitudeInput *, ImageInput *, ActuatorOutput *) = 0;
     virtual void work() = 0;
+
+    char get_next_char()
+    {
+      fd_set readfds;
+      struct timeval tv = {100000, 0};
+
+      // May use ncurses
+      while (1) {
+        FILE *sim_fd = SimulatorSingleton::get_instance().read_fp();
+        int sim_fileno = 0;
+
+        FD_ZERO(&readfds);
+        FD_SET(STDIN_FILENO, &readfds);
+        if (sim_fd) {
+          sim_fileno = fileno(sim_fd);
+          FD_SET(sim_fileno, &readfds);
+        }
+        
+        if (select(FD_SETSIZE, &readfds, NULL, NULL, &tv) > 0) {
+          if (FD_ISSET(STDIN_FILENO, &readfds)) {
+            return fgetc(stdin);
+          }
+          if (sim_fd && FD_ISSET(sim_fileno, &readfds)) {
+            return fgetc(sim_fd);
+          }
+        }
+      }
+    }
 };
 
 /* A don't care implementation */
@@ -36,12 +67,19 @@ class ControlAlgorithmNull : public ControlAlgorithm {
     }
     virtual void work()
     {
+        // ncurses stuff
         initscr();
         cbreak();
-        noecho();
-        printw("Press 'q' to quit...");
-        while (getch() != 'q')
+
+        // regular io
+        printf("Press 'q' to quit...");
+        fflush(stdout);
+
+        // wait on glut window and terminal for quit character
+        while (get_next_char() != 'q')
           ;
+
+        // close ncurses
         endwin();
     }
   private:

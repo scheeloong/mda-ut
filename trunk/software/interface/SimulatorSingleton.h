@@ -9,7 +9,7 @@
 
 class SimulatorSingleton {
   public:
-    SimulatorSingleton() : instances(0), created(false) {}
+    SimulatorSingleton() : instances(0), created(false), read(NULL), write(NULL) {}
     static SimulatorSingleton& get_instance()
     {
       static SimulatorSingleton instance;
