@@ -40,7 +40,8 @@ class ControlAlgorithmNull : public ControlAlgorithm {
         cbreak();
         noecho();
         printw("Press 'q' to quit...");
-        while(getch() != 'q') ;
+        while (getch() != 'q')
+          ;
         endwin();
     }
   private:
