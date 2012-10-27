@@ -225,3 +225,35 @@ void mvBinaryGradient (
     }
 }
 
+// Takes in 3 numbers B,R,G, and modifies them to instead be in H,S,V format
+typedef unsigned char uchar;
+inline void tripletBRG2HSV (uchar Blue, uchar Red, uchar Green, uchar &Hue, uchar &Sat, uchar &Val) {
+    /// find the max and min color component
+    uchar M, m, Chroma;
+    if (Blue > Red) {
+        M = std::max(Blue, Green);
+        m = std::min(Red, Green);
+    }
+    else {
+        M = std::max(Red, Green);
+        m = std::min(Blue, Green);
+    }
+    Chroma = M - m;
+
+    /// calculate HSV components
+    if (Chroma == 0) {
+        Hue = Sat = 0;
+        Val = M;
+        return;
+    }
+    else if (M == Blue)
+        Hue = 30 *(((Green - Blue) / Chroma) % 6);
+    else if (M == Red)
+        Hue = 30 * ((Blue - Red) / Chroma + 2);
+    else if (M == Green)
+        Hue = 30 * ((Red - Green) / Chroma + 4);
+
+    Val = M;
+    Sat = Chroma / Val;
+}
+
