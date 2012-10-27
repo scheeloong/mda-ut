@@ -54,8 +54,8 @@ int main( int argc, char** argv ) {
     
     // init windows
     mvWindow* win1 = new mvWindow ("webcam");
-    mvWindow* win2 = new mvWindow ("filtered");
-    mvWindow* win3 = new mvWindow ("result");
+    mvWindow* win2 = new mvWindow ("win2");
+    mvWindow* win3 = new mvWindow ("win3");
 
     // declare filters we need
     mvHSVFilter HSVFilter ("test_settings.csv"); // color filter
@@ -86,6 +86,10 @@ int main( int argc, char** argv ) {
     float t_draw = 0;
     float t_display = 0;
         
+    PROFILE_BIN cv_bin("CV");
+    PROFILE_BIN mv_bin("MV");
+    
+    
     for (;;) {
           t_reset = clock();
         frame = camera->getFrameResized(); // read frame from cam
@@ -114,6 +118,22 @@ int main( int argc, char** argv ) {
           t_grad += clock() - t_reset;
         
         if (TEST) {
+	  IplImage* cvImage, *mvImage;
+	  cvImage = mvCreateImage_Color();
+	  mvImage = mvCreateImage_Color();
+	  
+	  cv_bin.start();
+	  cvCvtColor(frame ,cvImage, CV_BGR2HSV);
+	  cv_bin.stop();
+	  
+	  mv_bin.start();
+	  mvBRG2HSV(frame, mvImage);
+	  mv_bin.stop();
+	  
+	  win1->showImage(frame);
+	  win2 ->showImage(cvImage);
+	  win3 ->showImage(mvImage);
+	  
         }
 	
         if (CARTOON) {

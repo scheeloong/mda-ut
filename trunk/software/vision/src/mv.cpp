@@ -224,10 +224,9 @@ void mvBinaryGradient (
         }
     }
 }
-
 // Takes in 3 numbers B,R,G, and modifies them to instead be in H,S,V format
 typedef unsigned char uchar;
-inline void tripletBRG2HSV (uchar Blue, uchar Red, uchar Green, uchar &Hue, uchar &Sat, uchar &Val) {
+void tripletBRG2HSV (uchar Blue, uchar Green, uchar Red, uchar &Hue, uchar &Sat, uchar &Val) {
     /// find the max and min color component
     uchar M, m, Chroma;
     if (Blue > Red) {
@@ -246,14 +245,40 @@ inline void tripletBRG2HSV (uchar Blue, uchar Red, uchar Green, uchar &Hue, ucha
         Val = M;
         return;
     }
-    else if (M == Blue)
-        Hue = 30 *(((Green - Blue) / Chroma) % 6);
     else if (M == Red)
-        Hue = 30 * ((Blue - Red) / Chroma + 2);
+        Hue = 30 *(((Green - Blue) / Chroma) % 6);
     else if (M == Green)
+        Hue = 30 * ((Blue - Red) / Chroma + 2);
+    else
         Hue = 30 * ((Red - Green) / Chroma + 4);
 
     Val = M;
-    Sat = Chroma / Val;
+    Sat = 255 *Chroma / Val;
+}
+
+void mvBRG2HSV(const IplImage* src, IplImage* dst) {
+    
+    assert (src != NULL);
+    assert (dst != NULL);
+    assert (src->nChannels == 3);
+    assert (dst->nChannels == 3);
+    
+    int i, j;
+    unsigned char* srcPtr, * dstPtr;
+
+    for ( i = 0; i < src->height; i++) {
+      	srcPtr = (unsigned char *)((src->imageData) + i*(src->widthStep));
+	dstPtr = (unsigned char *)((dst->imageData) + i*(dst->widthStep));
+        for ( j = 0; j < src->width; j++) {
+	    
+	    tripletBRG2HSV(*srcPtr, *(srcPtr+1), *(srcPtr+2), *dstPtr, *(dstPtr+1), *(dstPtr+2));
+	    srcPtr +=3;
+	    dstPtr +=3;
+	  
+	}
+    }
+    
+  return;
+  
 }
 
