@@ -13,6 +13,9 @@ INC=init.h sim.h physical_model.h planks.h types.h $(MOTORSDIR)/motors.h
 CVDIR=../vision/
 CVA=libvision.a
 
+parallel:
+	make -j4 all
+
 all: $(EXE) $(A)
 
 $(EXE): $(MAIN) $(OBJS) $(CVDIR)$(CVA)
@@ -30,4 +33,4 @@ $(A): $(OBJS)
 clean:
 	rm -f $(OBJS) $(EXE) $(A) *.bmp *~
 
-.PHONY: all clean
+.PHONY: parallel all clean
