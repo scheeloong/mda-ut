@@ -1,3 +1,6 @@
+#ifndef SUBMARINE_SINGLETON_H
+#define SUBMARINE_SINGLETON_H
+
 #include <stdbool.h>
 
 class SubmarineSingleton {
@@ -27,3 +30,5 @@ class SubmarineSingleton {
     int instances;
     bool created;
 };
+
+#endif

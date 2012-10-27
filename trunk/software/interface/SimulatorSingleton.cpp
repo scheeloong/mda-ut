@@ -1,5 +1,7 @@
 #include <GL/glut.h>
 
+#include <unistd.h>
+
 #include "sim.h"
 
 #include "SimulatorSingleton.h"
@@ -20,6 +22,17 @@ void SimulatorSingleton::create()
     return;
   }
   created = true;
+
+  int p[2];
+  if (pipe(p)) {
+    puts("pipe failed");
+    exit(1);
+  }
+
+  rh = p[0];
+  wh = p[1];
+  read = fdopen(rh, "r");
+  write = fdopen(wh, "w");
 
   // Start simulation (may need to use passed in data)
   pthread_create(&sim_thread, NULL, run_sim, NULL);
@@ -65,6 +78,8 @@ void add_orientation(orientation a)
 
 /* pthread function */
 
+void sim_keyboard(unsigned char, int, int);
+
 void *run_sim(void *args)
 {
   int argc = 0;
@@ -78,10 +93,19 @@ void *run_sim(void *args)
   glutReshapeFunc  (cv_reshape);
   glutDisplayFunc  (cv_display);
   glutIdleFunc     (anim_scene);
+  glutKeyboardFunc (sim_keyboard);
 
   init_sim();
   cv_init(); 
 
   glutMainLoop();
   return NULL;
+}
+
+void sim_keyboard(unsigned char key, int x, int y)
+{
+  FILE *write_fp = SimulatorSingleton::get_instance().write_fp();
+  putchar(key);
+  fputc(key, write_fp);
+  fflush(write_fp);
 }

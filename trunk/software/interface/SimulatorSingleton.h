@@ -1,4 +1,8 @@
+#ifndef SIMULATOR_SINGLETON_H
+#define SIMULATOR_SINGLETON_H
+
 #include <stdbool.h>
+#include <stdio.h>
 #include <pthread.h>
 
 #include "physical_model.h"
@@ -25,6 +29,8 @@ class SimulatorSingleton {
     physical_model attitude();
     void add_position(world_vector);
     void add_orientation(orientation);
+    FILE *write_fp() {return write;}
+    FILE *read_fp() {return read;}
   private:
     SimulatorSingleton(SimulatorSingleton const&); // Don't implement
     void operator=(SimulatorSingleton const&);     // Don't implement
@@ -34,4 +40,8 @@ class SimulatorSingleton {
     int instances;
     bool created;
     pthread_t sim_thread;
+    FILE *read, *write;
+    int rh, wh;
 };
+
+#endif
