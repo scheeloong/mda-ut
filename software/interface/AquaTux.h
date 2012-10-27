@@ -1,3 +1,6 @@
+#ifndef AQUATUX_H
+#define AQUATUX_H
+
 #include "AttitudeInput.h"
 #include "ImageInput.h"
 #include "ControlAlgorithm.h"
@@ -14,3 +17,5 @@ class AquaTux {
     ControlAlgorithm *m_control_algorithm;
     ActuatorOutput *m_actuator_output;
 };
+
+#endif
