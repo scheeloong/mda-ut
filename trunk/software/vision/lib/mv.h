@@ -50,6 +50,10 @@ inline IplImage* mvCreateImage_Color (IplImage *img) {
     return temp;
 }
 
+/*BRG2HSV -- faster implementation to convert BRG images into HSV format */
+
+void mvBRG2HSV(const IplImage* src, IplImage* dst);
+
 inline void mvGaussian (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h) {
     cvSmooth (src, dst, CV_GAUSSIAN, kern_w, kern_h);
 }
