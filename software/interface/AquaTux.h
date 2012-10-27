@@ -3,7 +3,7 @@
 
 #include "AttitudeInput.h"
 #include "ImageInput.h"
-#include "ControlAlgorithm.h"
+#include "Operation.h"
 #include "ActuatorOutput.h"
 
 class AquaTux {
@@ -14,7 +14,7 @@ class AquaTux {
   private:
     AttitudeInput *m_attitude_input;
     ImageInput *m_image_input;
-    ControlAlgorithm *m_control_algorithm;
+    Operation *m_operation;
     ActuatorOutput *m_actuator_output;
 };
 
