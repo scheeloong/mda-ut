@@ -11,3 +11,9 @@ ImageInputSimulator::~ImageInputSimulator()
 {
   SimulatorSingleton::get_instance().decrement_instances();
 }
+
+const IplImage *ImageInputSimulator::get_image(ImageDirection dir)
+{
+  // TODO: implement
+  return NULL;
+}

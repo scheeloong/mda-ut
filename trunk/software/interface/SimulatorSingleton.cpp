@@ -104,8 +104,12 @@ void *run_sim(void *args)
 
 void sim_keyboard(unsigned char key, int x, int y)
 {
-  FILE *write_fp = SimulatorSingleton::get_instance().write_fp();
+  SimulatorSingleton::get_instance().sim_keyboard(key);
+}
+
+void SimulatorSingleton::sim_keyboard(unsigned char key)
+{
   putchar(key);
-  fputc(key, write_fp);
-  fflush(write_fp);
+  fputc(key, write);
+  fflush(write);
 }
