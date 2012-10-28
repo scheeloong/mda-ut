@@ -1,10 +1,13 @@
 #ifndef __MDA_VISION__MDA_VISION__
 #define __MDA_VISION__MDA_VISION__
 
+#include <highgui.h>
+#include <cv.h>
+
 #include "mgui.h"
 #include "mv.h"
 #include "mvLines.h"
-#include "../../control/lib/vci.h"
+#include "vci.h"
 
 /// ########################################################################
 /** This is the base class for a vision module. Every vision module needs to implement
@@ -60,11 +63,11 @@ public:
 /// ########################################################################
 class MDA_VISION_MODULE_TEST : public MDA_VISION_MODULE_BASE {
 #define MDA_VISION_MODULE_TEST_SETTINGS "vision_test_settings.csv"
-    mvWindow* _window;
-    mvHSVFilter* _HSVFilter;
-    mvHoughLines* _HoughLines;
-    mvKMeans* _KMeans;
-    mvLines* _lines;
+    mvWindow _window;
+    mvHSVFilter _HSVFilter;
+    mvHoughLines _HoughLines;
+    mvKMeans _KMeans;
+    mvLines _lines;
     
     IplImage* _filtered_img;
     
@@ -87,12 +90,12 @@ class MDA_VISION_MODULE_GATE : public MDA_VISION_MODULE_BASE {
     static const float GATE_REAL_SLENDERNESS = 0.017;
     static const float GATE_WIDTH_TO_HEIGHT_RATIO = 2.50;
 
-    mvWindow* _window;
-    mvHSVFilter* _HSVFilter;
-    mvHoughLines* _HoughLines;
-    mvKMeans* _KMeans;
+    mvWindow _window;
+    mvHSVFilter _HSVFilter;
+    mvHoughLines _HoughLines;
+    mvKMeans _KMeans;
 
-    mvLines* _lines;
+    mvLines _lines;
     
     IplImage* _filtered_img;
 
@@ -113,15 +116,15 @@ class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
     static const float PATH_REAL_LENGTH = 120.0;
     static const float PATH_REAL_WIDTH = 15.0;
 
-    mvWindow* _window;
-    mvHSVFilter* _HSVFilter;
-    mvHoughLines* _HoughLines;
-    mvKMeans* _KMeans;
+    mvWindow _window;
+    mvHSVFilter _HSVFilter;
+    mvBinaryMorphology _Morphology;
+    mvHoughLines _HoughLines;
+    mvKMeans _KMeans;
 
-    mvLines* _lines;
+    mvLines _lines;
     
     IplImage* _filtered_img;
-    IplImage* _grad_img;
 
 public:
     MDA_VISION_MODULE_PATH ();
@@ -154,12 +157,12 @@ class MDA_VISION_MODULE_FRAME : public MDA_VISION_MODULE_BASE {
     static const float FRAME_REAL_HEIGHT = 120.0;
     static const float FRAME_REAL_VERTICAL_SEGMENT_LENGTH = 40.0;
 
-    mvWindow* _window;
-    mvHSVFilter* _HSVFilter;
-    mvHoughLines* _HoughLines;
-    mvKMeans* _KMeans;
+    mvWindow _window;
+    mvHSVFilter _HSVFilter;
+    mvHoughLines _HoughLines;
+    mvKMeans _KMeans;
 
-    mvLines* _lines;
+    mvLines _lines;
     
     IplImage* _filtered_img;
 

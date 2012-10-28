@@ -4,11 +4,11 @@
 #include "physical_model.h"
 #include "motors.h"
 #include "sim.h"
-
+/*
 #include "../vision/lib/mda_vision.h"
 #include "../control/lib/vci.h"
 #include "../control/lib/mda_control.h"
-
+*/
 /**
  * Because the opencv code we have assumes that images passed to it are of the size 
  * COMMON_IMG_WIDTH and COMMON_IMG_HEIGHT in the settings file, we have to ensure we
@@ -26,16 +26,16 @@ extern CV_TASK_ENUM cv_task_enum;
 extern physical_model model;
 
 // variables for vision and control
-MDA_VISION_MODULE_BASE* vision_module;
+/*MDA_VISION_MODULE_BASE* vision_module;
 MDA_CONTROL_MODULE_BASE* control_module;
 VCI interface;
-
+*/
 void cv_init () {
     unsigned width=600, height = 400; // temporary
     
-    vision_module = NULL;
+    //vision_module = NULL;
     FLAG_USE_IMG_DOWN = false;
-    
+/*  
     if (cv_task_enum == CV_VISION_TEST)
         vision_module = new MDA_VISION_MODULE_TEST;
     else if (cv_task_enum == CV_VISION_GATE)
@@ -48,7 +48,7 @@ void cv_init () {
         vision_module = new MDA_VISION_MODULE_BUOY;
     else if (cv_task_enum == CV_VISION_FRAME)
         vision_module = new MDA_VISION_MODULE_FRAME;
-
+*/
     cv_img_fwd = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
     cv_img_fwd->origin = 1;
     cv_img_down = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
@@ -94,9 +94,8 @@ void cv_display () {
         img_to_use = FLAG_USE_IMG_DOWN ? cv_img_down : cv_img_fwd;
         
         /** OPENCV CODE GOES HERE. */    
-        if (vision_module != NULL) {
-            vision_module->filter (img_to_use, &interface);
-        }
+        
+        
         /** END OPENCV CODE */
 
         char c = cvWaitKey(5); // without 5ms delay the window will not show properly

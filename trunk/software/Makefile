@@ -1,4 +1,4 @@
-DIRS = sim vision control scripts interface
+DIRS = vision sim tasks scripts interface
 
 all:
 	for dir in $(DIRS); do make -C $$dir; done
