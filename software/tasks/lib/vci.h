@@ -1,5 +1,5 @@
 #include <limits.h>
-#include "../../vision/lib/mda_vision.h"
+#include "mda_vision.h"
 
 #ifndef __MDA_CONTROL__VCI__
 #define __MDA_CONTROL__VCI__

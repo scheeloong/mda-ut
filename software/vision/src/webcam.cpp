@@ -100,7 +100,7 @@ int main( int argc, char** argv ) {
             break;
         }
         
-        if (nframes < 40) {// || nframes % 2 != 0) {
+        if (nframes < 10) {// || nframes % 2 != 0) {
             nframes++;
             continue;
         }
