@@ -65,6 +65,6 @@ void JoystickOperation::dump_image()
 
   const IplImage *img_dwn = image_input->get_image(DWN_IMG);
   if (img_dwn) {
-    cvSaveImage ("image_fwd.jpg", img_dwn);
+    cvSaveImage ("image_dwn.jpg", img_dwn);
   }
 }

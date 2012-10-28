@@ -51,7 +51,7 @@ class SimulatorSingleton {
     int rh, wh;
     IplImage *img_fwd, *img_dwn;
     volatile bool img_copy_start, img_copy_done;
-    ImageDirection img_dir;
+    volatile ImageDirection img_dir;
 };
 
 #endif
