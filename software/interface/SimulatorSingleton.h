@@ -25,11 +25,11 @@ class SimulatorSingleton {
       }
     }
     void create();
+    void sim_keyboard(unsigned char);
 
     physical_model attitude();
     void add_position(world_vector);
     void add_orientation(orientation);
-    FILE *write_fp() {return write;}
     FILE *read_fp() {return read;}
   private:
     SimulatorSingleton(SimulatorSingleton const&); // Don't implement
