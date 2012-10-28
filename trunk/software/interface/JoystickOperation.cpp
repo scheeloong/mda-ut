@@ -1,5 +1,8 @@
 #include <assert.h>
+#include <cv.h>
+#include <highgui.h>
 
+#include "ImageInput.h"
 #include "Operation.h"
 
 void JoystickOperation::work()
@@ -55,4 +58,13 @@ void JoystickOperation::message(const char *msg)
 void JoystickOperation::dump_image()
 {
   message("Saved images");
+  const IplImage *img_fwd = image_input->get_image();
+  if (img_fwd) {
+    cvSaveImage ("image_fwd.jpg", img_fwd);
+  }
+
+  const IplImage *img_dwn = image_input->get_image(DWN_IMG);
+  if (img_dwn) {
+    cvSaveImage ("image_fwd.jpg", img_dwn);
+  }
 }
