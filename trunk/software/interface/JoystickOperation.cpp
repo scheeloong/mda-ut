@@ -1,3 +1,5 @@
+#include <assert.h>
+
 #include "Operation.h"
 
 void JoystickOperation::work()
@@ -25,6 +27,9 @@ void JoystickOperation::work()
       case 'p':
          dump_image();
          break;
+      case '\0':
+         message("");
+         break;
     }
   }
 
@@ -32,9 +37,22 @@ void JoystickOperation::work()
   endwin();
 }
 
+void JoystickOperation::message(const char *msg)
+{
+  int x, y;
+  getmaxyx(stdscr, y, x);
+  assert(y > 0);
+
+  putchar('\r');
+  for (int i = 0; i < x; i++) {
+    putchar(' ');
+  }
+  printf("\r%s", msg);
+
+  fflush(stdout);
+}
+
 void JoystickOperation::dump_image()
 {
-  clrtoeol();
-  printf("\rSaved images");
-  fflush(stdout);
+  message("Saved images");
 }
