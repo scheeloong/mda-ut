@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <cv.h>
-#include <highgui.h>
 
 #include "ImageInput.h"
 #include "Operation.h"
@@ -28,7 +27,7 @@ void JoystickOperation::work()
          loop = false;
          break;
       case 'p':
-         dump_image();
+         dump_images();
          break;
       case '\0':
          message("");
@@ -55,16 +54,8 @@ void JoystickOperation::message(const char *msg)
   fflush(stdout);
 }
 
-void JoystickOperation::dump_image()
+void JoystickOperation::dump_images()
 {
   message("Saved images");
-  const IplImage *img_fwd = image_input->get_image();
-  if (img_fwd) {
-    cvSaveImage ("image_fwd.jpg", img_fwd);
-  }
-
-  const IplImage *img_dwn = image_input->get_image(DWN_IMG);
-  if (img_dwn) {
-    cvSaveImage ("image_dwn.jpg", img_dwn);
-  }
+  image_input->dump_images();
 }

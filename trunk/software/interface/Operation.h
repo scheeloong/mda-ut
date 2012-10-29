@@ -101,7 +101,7 @@ class JoystickOperation: public Operation {
     }
     virtual void work();
   private:
-    void dump_image();
+    void dump_images();
     void message(const char *);
 
     AttitudeInput *attitude_input;
