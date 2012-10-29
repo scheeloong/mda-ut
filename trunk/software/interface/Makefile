@@ -1,10 +1,8 @@
-CC=g++
 CVFLAGS=`pkg-config --cflags --libs opencv` -lvision -L../vision/
 GLFLAGS=-lm -lGL -lglut -lGLU -lsim -L../sim
 CFLAGS=-O3 -Wall -I ../sim -I ../vision/lib -pthread -lncurses
-ALLFLAGS=$(CVFLAGS) $(GLFLAGS) $(CFLAGS) -lui -L../../fpga/ui/
+CXXFLAGS=$(CVFLAGS) $(GLFLAGS) $(CFLAGS) -lui -L../../fpga/ui/
 
-INC=*.h
 SRCS:=$(wildcard *.cpp)
 OBJ:=$(patsubst %.cpp,%.o,$(SRCS))
 LIBVISION=../vision/libvision.a
@@ -20,10 +18,7 @@ parallel:
 all: $(AQUATUX)
 
 $(AQUATUX): $(OBJ) $(LIB)
-	$(CC) -o $@ $(OBJ) $(LIB) $(ALLFLAGS)
-
-%.o: %.cpp $(INC)
-	$(CC) -c $< -o $@ $(CVFLAGS) $(CFLAGS)
+	$(CC) -o $@ $(OBJ) $(LIB) $(CXXFLAGS)
 
 $(LIBVISION):
 	make -C ../vision `basename $@`
@@ -34,7 +29,12 @@ $(LIBSIM):
 $(LIBUI):
 	make -C ../../fpga/ui `basename $@`
 
+deps:
+	$(CC) -MM $(CFLAGS) $(SRCS) > Makefile.deps
+
+include Makefile.deps
+
 clean:
 	rm -f $(OBJ)
 
-.PHONY: parallel all clean
+.PHONY: parallel all deps clean
