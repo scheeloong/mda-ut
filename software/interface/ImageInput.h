@@ -8,6 +8,8 @@
 #define IMAGE_INPUT_H
 
 #include <cv.h>
+#include <highgui.h>
+#include <sstream>
 
 enum ImageDirection {
   FWD_IMG,
@@ -19,8 +21,27 @@ class ImageInput {
   public:
     virtual ~ImageInput() {}
 
-    // some method to return an image (to be determined)
     virtual const IplImage* get_image(ImageDirection dir = FWD_IMG) = 0;
+    virtual void dump_images()
+    {
+      static int count = 0;
+
+      const IplImage *img_fwd = get_image();
+      if (img_fwd) {
+        std::ostringstream oss;
+        oss << "image_fwd_" << count << ".jpg";
+        cvSaveImage (oss.str().c_str(), img_fwd);
+      }
+
+      const IplImage *img_dwn = get_image(DWN_IMG);
+      if (img_dwn) {
+        std::ostringstream oss;
+        oss << "image_dwn_" << count << ".jpg";
+        cvSaveImage (oss.str().c_str(), img_dwn);
+      }
+
+      count++;
+    }
 };
 
 /* A don't care implementation */
