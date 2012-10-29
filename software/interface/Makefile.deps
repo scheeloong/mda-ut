@@ -1,0 +1,34 @@
+ActuatorOutputSimulator.o: ActuatorOutputSimulator.cpp ActuatorOutput.h \
+ SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h ImageInput.h
+ActuatorOutputSubmarine.o: ActuatorOutputSubmarine.cpp ActuatorOutput.h \
+ SubmarineSingleton.h
+AquaTux.o: AquaTux.cpp AquaTux.h AttitudeInput.h ImageInput.h Operation.h \
+ ActuatorOutput.h SimulatorSingleton.h ../sim/physical_model.h \
+ ../sim/types.h SubmarineSingleton.h ../vision/lib/mgui.h \
+ ../vision/lib/profile_bin.h
+AttitudeInputSimulator.o: AttitudeInputSimulator.cpp AttitudeInput.h \
+ SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h ImageInput.h
+AttitudeInputSubmarine.o: AttitudeInputSubmarine.cpp AttitudeInput.h \
+ SubmarineSingleton.h ../scripts/scripts.h \
+ ../scripts/../../fpga/ui/utils.h
+CommandLineOperation.o: CommandLineOperation.cpp Operation.h \
+ AttitudeInput.h ImageInput.h ActuatorOutput.h SimulatorSingleton.h \
+ ../sim/physical_model.h ../sim/types.h
+ImageInputSimulator.o: ImageInputSimulator.cpp ImageInput.h \
+ SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h
+ImageInputSubmarine.o: ImageInputSubmarine.cpp ImageInput.h \
+ SubmarineSingleton.h
+ImageInputVideo.o: ImageInputVideo.cpp ImageInput.h
+JoystickOperation.o: JoystickOperation.cpp ImageInput.h Operation.h \
+ AttitudeInput.h ActuatorOutput.h SimulatorSingleton.h \
+ ../sim/physical_model.h ../sim/types.h
+main.o: main.cpp AquaTux.h AttitudeInput.h ImageInput.h Operation.h \
+ ActuatorOutput.h SimulatorSingleton.h ../sim/physical_model.h \
+ ../sim/types.h
+Mission.o: Mission.cpp Operation.h AttitudeInput.h ImageInput.h \
+ ActuatorOutput.h SimulatorSingleton.h ../sim/physical_model.h \
+ ../sim/types.h
+SimulatorSingleton.o: SimulatorSingleton.cpp ../sim/sim.h \
+ SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h ImageInput.h
+SubmarineSingleton.o: SubmarineSingleton.cpp SubmarineSingleton.h \
+ ../scripts/scripts.h ../scripts/../../fpga/ui/utils.h
