@@ -14,7 +14,6 @@
 #include "types.h"
 #include "physical_model.h"
 #include "sim.h"
-#include "../vision/lib/mda_vision.h"
 
 #include <highgui.h>
 

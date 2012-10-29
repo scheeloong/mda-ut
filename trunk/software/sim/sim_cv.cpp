@@ -70,8 +70,6 @@ void cv_display () {
 // this function is called by glutMainLoop every time the window needs to be redrawn 
 // the redraw flag is raised by the function glutPostRedisplay();
 // with CV_VISION_FLAG the cv code will run every time the window is updated.
-    IplImage* img_to_use = NULL;
-   
     if (cv_task_enum != NO_TASK) {
         // first grab both front and bottom cam images       
         model.angle.pitch += 90;      // grab downwards first
@@ -90,8 +88,6 @@ void cv_display () {
         cvQueryFrameGL (cv_img_fwd);       
 
         cvShowImage ("Downwards Cam", cv_img_down);
-        
-        img_to_use = FLAG_USE_IMG_DOWN ? cv_img_down : cv_img_fwd;
         
         /** OPENCV CODE GOES HERE. */    
         
