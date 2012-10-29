@@ -12,7 +12,7 @@ all: $(EXE) $(A)
 .c.o: $(INC)
 	$(CC) -c $< $(CFLAGS) -o $@
 
-$(EXE): utils.o main.o
+$(EXE): $(OBJ) main.o
 	$(CC) main.o $(OBJ) $(CFLAGS) -o $(EXE)
 
 $(A): $(EXE) $(INC)

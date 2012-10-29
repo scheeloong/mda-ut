@@ -1,7 +1,7 @@
 #ifndef MOTORS_H
 #define MOTORS_H
 
-#include "../sim/physical_model.h"
+#include "physical_model.h"
 #include <stdlib.h>
 
 #define DEFAULT_ACCEL 1
