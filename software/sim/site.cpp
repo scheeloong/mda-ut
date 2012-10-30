@@ -23,7 +23,7 @@ extern unsigned int randNum;
 
 #define FOG_PANEL 0
 
-#define NUM_PANELS_FLOOR  4
+#define NUM_PANELS_FLOOR  5
 #define NUM_BOARDS        8
 #define NUM_PANELS_BOARDS 1
 
@@ -46,6 +46,8 @@ world_vector vertices[NUM_PANELS_FLOOR*4] =
    {PRIGHT, 0.0, PBACK}, {PRIGHT, POOL_HEIGHT, PBACK}, {PRIGHT, POOL_HEIGHT, PFRONT}, {PRIGHT, 0.0, PFRONT},
    // vert back
    {PLEFT, 0.0, PBACK}, {PRIGHT, 0.0, PBACK}, {PRIGHT, POOL_HEIGHT, PBACK}, {PLEFT, POOL_HEIGHT, PBACK},
+   // vert front
+   {PLEFT, 0.0, PFRONT}, {PRIGHT, 0.0, PFRONT}, {PRIGHT, POOL_HEIGHT, PFRONT}, {PLEFT, POOL_HEIGHT, PFRONT},
 };
 
 world_vector ceiling[1*4] =
