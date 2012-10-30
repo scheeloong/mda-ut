@@ -163,28 +163,33 @@ class mvHSVFilter {
  *  will "stretch" the bounds (_min,_max). Over time the box will grow adapt
  *  to new data
  */
+enum MODULO_ENUM {MOD_NONE, MOD_180};
 class mvAdaptiveBox {
-    uchar min, max;         // min and max bounds
-    uchar min_50, max_50;   // min and max for 50% of the box
-    uchar min_bound, max_bound;  // threshold for growing the box
+    int min, max;         // min and max bounds
+    int min_50, max_50;   // min and max for inner 50% of the box
+    int min_bound, max_bound;  // threshold for growing the box
 
-    uchar orig_min, orig_max; // min and max when initialized. Stored so box doesnt move too far away.
-    static const uchar adjust_unit = 2;      // how much box bounds grow each time
-    static const uchar adjust_limit = 20;     // how much box bounds are allowed to grow
+    int orig_min, orig_max; // min and max when initialized. Stored so box doesnt move too far away.
+    static const int adjust_unit = 2;      // how much box bounds grow each time
+    static const int adjust_limit = 20;    // how much box bounds are allowed to grow
 
-    uchar box_count;         // how many falls within the box
-    uchar box_50_count;      // how many falls within inner 50% of the box
-    uchar box_min_bound_count, box_max_bound_count;  // how many falls inside the flaps
+    int box_count;         // how many falls within the box
+    int box_50_count;      // how many falls within inner 50% of the box
+    int box_min_bound_count, box_max_bound_count;  // how many falls inside the flaps
 
     public:
-    mvAdaptiveBox (uchar Min, uchar Max, uchar Min_Bound, uchar Max_Bound);
-    int accumulate (uchar Data);
+    mvAdaptiveBox (int Min, int Max, int flange, MODULO_ENUM mod = MOD_NONE);
+    int accumulate (int Data);
     void adjust_box ();
 };
 
+/** mvAdaptiveFilter
+ *  This class is a set of AdaptiveBox's to represent the water, the target, and 
+ *  possibly any other objects we might see.
+ */
 class mvAdaptiveFilter {
-    mvAdaptiveBox* box_bg[3];       // one for each channel of background
-    mvAdaptiveBox* box_target[3];
+    mvAdaptiveBox* box_bg;       // one for each channel of background
+    mvAdaptiveBox* box_target;
 
     public:
     mvAdaptiveFilter (const char* Settings_File);
