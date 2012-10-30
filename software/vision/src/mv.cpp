@@ -1,6 +1,4 @@
 #include "mv.h"
-#include "mgui.h"
-#include <cv.h>
 #include <stdlib.h>
 
 #define MV_DEBUG
@@ -224,8 +222,12 @@ void mvBinaryGradient (
         }
     }
 }
-// Takes in 3 numbers B,R,G, and modifies them to instead be in H,S,V format
+
+//#########################################################################
+//#### Functions for BGR2HSV. Not used.
+//#########################################################################
 typedef unsigned char uchar;
+// Takes in 3 numbers B,R,G, and modifies them to instead be in H,S,V format
 void tripletBRG2HSV (uchar Blue, uchar Green, uchar Red, uchar &Hue, uchar &Sat, uchar &Val) {
     /// find the max and min color component
     uchar M, m, Chroma;
