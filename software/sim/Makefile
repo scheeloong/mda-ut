@@ -4,15 +4,11 @@ MAIN= main.o
 EXE= sim
 A=libsim.a
 
-LIBS= -lm -lGL -lglut -lGLU -lvision
-AFLAGS=-L$(CVDIR) $(CVDIR)$(CVA)
+LIBS= -lm -lGL -lglut -lGLU
 
 CXXFLAGS = -O3 -Wall `pkg-config opencv --cflags --libs`
 
 INC=init.h sim.h physical_model.h planks.h types.h $(MOTORSDIR)/motors.h
-
-CVDIR=../vision/
-CVA=libvision.a
 
 parallel:
 	make -j4 all
@@ -20,10 +16,7 @@ parallel:
 all: $(EXE) $(A)
 
 $(EXE): $(MAIN) $(OBJS) $(CVDIR)$(CVA)
-	g++ -O3 -o $@ $(OBJS) $(MAIN) $(LIBS) $(AFLAGS) $(CXXFLAGS)
-
-$(CVDIR)$(CVA):
-	make -C $(CVDIR) $(CVA)
+	g++ -O3 -o $@ $(OBJS) $(MAIN) $(LIBS) $(CXXFLAGS)
 
 $(A): $(OBJS)
 	ar -cvq $@ $(OBJS)
