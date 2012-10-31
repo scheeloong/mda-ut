@@ -16,21 +16,19 @@ void JoystickOperation::work()
          "  q    - exit simulator\r\n"
          "  p    - save input image screenshots as image_[fwd/dwn].jpg\r\n"
          "\n"
-         "  wasd - accelerate forward/reverse/left/right\r\n"
-         "  rf   - accelerate up/down\r\n"
+         "  wasd - use controller to move forward/reverse/left/right\r\n"
+         "  rf   - use controller to move up/down\r\n"
+         "  ' '  - stop\r\n"
          "  kjhl - move forward/reverse/left/right\r\n"
          "  io   - move up/down\r\n"
          "  e    - nullify all acceleration\r\n"
-         "\n"
-         "  arrow keys - control submarine\r\n"
-         "  <space>    - stop submarine\r\n"
          "\n");
   fflush(stdout);
 
   // Take keyboard commands
   bool loop = true;
   while (loop) {
-    int c = get_next_char();
+    char c = get_next_char();
     message("");
     switch(c) {
       case 'q':
@@ -38,24 +36,6 @@ void JoystickOperation::work()
          break;
       case 'p':
          dump_images();
-         break;
-      case 'w':
-         actuator_output->special_cmd(SIM_ACCEL_FWD);
-         break;
-      case 's':
-         actuator_output->special_cmd(SIM_ACCEL_REV);
-         break;
-      case 'a':
-         actuator_output->special_cmd(SIM_ACCEL_LEFT);
-         break;
-      case 'd':
-         actuator_output->special_cmd(SIM_ACCEL_RIGHT);
-         break;
-      case 'r':
-         actuator_output->special_cmd(SIM_ACCEL_RISE);
-         break;
-      case 'f':
-         actuator_output->special_cmd(SIM_ACCEL_SINK);
          break;
       case 'k':
          actuator_output->special_cmd(SIM_MOVE_FWD);
@@ -78,22 +58,22 @@ void JoystickOperation::work()
       case 'e':
          actuator_output->special_cmd(SIM_ACCEL_ZERO);
          break;
-      case KEY_UP:
+      case 'w':
          actuator_output->set_attitude_change(FORWARD);
          break;
-      case KEY_DOWN:
+      case 's':
          actuator_output->set_attitude_change(REVERSE);
          break;
-      case KEY_LEFT:
+      case 'a':
          actuator_output->set_attitude_change(LEFT);
          break;
-      case KEY_RIGHT:
+      case 'd':
          actuator_output->set_attitude_change(RIGHT);
          break;
-      case KEY_NPAGE:
+      case 'r':
          actuator_output->set_attitude_change(RISE);
          break;
-      case KEY_PPAGE:
+      case 'f':
          actuator_output->set_attitude_change(SINK);
          break;
       case ' ':
