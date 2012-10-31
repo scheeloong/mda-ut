@@ -25,7 +25,7 @@ class Operation {
     virtual void initialize(AttitudeInput *, ImageInput *, ActuatorOutput *) = 0;
     virtual void work() = 0;
 
-    char get_next_char()
+    int get_next_char()
     {
       fd_set readfds;
       struct timeval tv = {2, 0};
