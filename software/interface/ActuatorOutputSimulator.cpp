@@ -16,6 +16,7 @@ ActuatorOutputSimulator::~ActuatorOutputSimulator()
 void ActuatorOutputSimulator::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir, int delta)
 {
   // TODO: implement with a PID controller to simulate the real submarine
+  delta /= 15; // scale down for now since we're using acceleration and not degrees and cm
   switch(dir) {
     case FORWARD:
       SimulatorSingleton::get_instance().add_acceleration(delta, 0, 0);
