@@ -10,20 +10,20 @@ void JoystickOperation::work()
   initscr();
   cbreak();
 
-  // regular I/O
-  printf(
-         "Commands: \r\n"
-         "  q    - exit simulator\r\n"
-         "  p    - save input image screenshots as image_[fwd/dwn].jpg\r\n"
+  // info message
+  printw(
+         "Commands:\n"
+         "  q    - exit simulator\n"
+         "  p    - save input image screenshots as image_[fwd/dwn].jpg\n"
          "\n"
-         "  wasd - use controller to move forward/reverse/left/right\r\n"
-         "  rf   - use controller to move up/down\r\n"
-         "  ' '  - stop\r\n"
-         "  kjhl - move forward/reverse/left/right\r\n"
-         "  io   - move up/down\r\n"
-         "  e    - nullify all acceleration\r\n"
+         "  wasd - use controller to move forward/reverse/left/right\n"
+         "  rf   - use controller to move up/down\n"
+         "  ' '  - stop\n"
+         "  kjhl - move forward/reverse/left/right\n"
+         "  io   - move up/down\n"
+         "  e    - nullify all acceleration\n"
          "\n");
-  fflush(stdout);
+  refresh();
 
   // Take keyboard commands
   bool loop = true;
