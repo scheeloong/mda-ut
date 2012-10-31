@@ -23,6 +23,8 @@ void ActuatorOutputSimulator::set_attitude_absolute(ATTITUDE_DIRECTION dir, int 
   // TODO: implement
 }
 
+#define DELTA_MOVE 0.15
+
 void ActuatorOutputSimulator::special_cmd(SPECIAL_COMMAND cmd)
 {
   world_vector p = {};
@@ -53,27 +55,35 @@ void ActuatorOutputSimulator::special_cmd(SPECIAL_COMMAND cmd)
       SimulatorSingleton::get_instance().add_acceleration(-model.accel, -model.angular_accel, -model.depth_accel);
       break;
     case SIM_MOVE_FWD:
-      p.z = -0.15;
+      model = SimulatorSingleton::get_instance().attitude();
+      o = model.angle;
+      p.z -= DELTA_MOVE*cos((o.yaw*PI)/180)*cos((o.pitch*PI)/180);
+      p.x += DELTA_MOVE*sin((o.yaw*PI)/180)*cos((o.pitch*PI)/180);
+      p.y -= DELTA_MOVE*sin((o.pitch*PI)/180);
       SimulatorSingleton::get_instance().add_position(p);
       break;
     case SIM_MOVE_REV:
-      p.z = 0.15;
+      model = SimulatorSingleton::get_instance().attitude();
+      o = model.angle;
+      p.z += DELTA_MOVE*cos((o.yaw*PI)/180)*cos((o.pitch*PI)/180);
+      p.x -= DELTA_MOVE*sin((o.yaw*PI)/180)*cos((o.pitch*PI)/180);
+      p.y += DELTA_MOVE*sin((o.pitch*PI)/180);
       SimulatorSingleton::get_instance().add_position(p);
       break;
     case SIM_MOVE_LEFT:
-      p.x = -0.15;
-      SimulatorSingleton::get_instance().add_position(p);
+      o.yaw = -DELTA_MOVE;
+      SimulatorSingleton::get_instance().add_orientation(o);
       break;
     case SIM_MOVE_RIGHT:
-      p.x = 0.15;
-      SimulatorSingleton::get_instance().add_position(p);
+      o.yaw = DELTA_MOVE;
+      SimulatorSingleton::get_instance().add_orientation(o);
       break;
     case SIM_MOVE_RISE:
-      p.y = 0.15;
+      p.y = DELTA_MOVE;
       SimulatorSingleton::get_instance().add_position(p);
       break;
     case SIM_MOVE_SINK:
-      p.y = -0.15;
+      p.y = -DELTA_MOVE;
       SimulatorSingleton::get_instance().add_position(p);
       break;
     default:

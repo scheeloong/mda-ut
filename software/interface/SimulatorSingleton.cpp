@@ -88,7 +88,7 @@ void SimulatorSingleton::add_position(world_vector p)
   model.position.z += p.z;
 }
 
-void add_orientation(orientation a)
+void SimulatorSingleton::add_orientation(orientation a)
 {
   model.angle.yaw += a.yaw;
   model.angle.pitch += a.pitch;
