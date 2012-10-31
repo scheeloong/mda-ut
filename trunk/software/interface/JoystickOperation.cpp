@@ -31,6 +31,7 @@ void JoystickOperation::work()
   bool loop = true;
   while (loop) {
     int c = get_next_char();
+    message("");
     switch(c) {
       case 'q':
          loop = false;
@@ -97,9 +98,6 @@ void JoystickOperation::work()
          break;
       case ' ':
          actuator_output->stop();
-         break;
-      case '\0': // no character received
-         message("");
          break;
     }
   }
