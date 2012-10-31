@@ -67,18 +67,6 @@ void Motors::translate(MOVE_DIR dir)
 
 void Motors::key_command (char key) {
     switch (key) {
-        case '0': // set speed from 0-9
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-            move (FORWARD, (int)(key - '0'));
-            break;
         case 'w':
             move (FORWARD);
             break;
@@ -116,7 +104,6 @@ void Motors::key_command (char key) {
         case ';':
             translate(SINK);
             break;
-        case '.':
         case ' ':
             move(STOP);
             break;

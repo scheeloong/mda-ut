@@ -55,8 +55,6 @@ int main(int argc, char** argv)
     "      <space>  -  active stop\n"
     "      ijkl     -  translate fowards/back and turn on vertical axis\n"
     "      o;       -  translate rise/sink\n"
-    "      x        -  reset angle\n"
-    "      z        -  reset position\n"
     "      p        -  save screenshot as cvSimImg.jpg\n\n"
     ); 
     

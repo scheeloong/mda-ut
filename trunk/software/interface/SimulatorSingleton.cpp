@@ -79,7 +79,6 @@ physical_model SimulatorSingleton::attitude()
   return m;
 }
 
-
 /* Mutators */
 
 void SimulatorSingleton::add_position(world_vector p)
@@ -94,6 +93,13 @@ void add_orientation(orientation a)
   model.angle.yaw += a.yaw;
   model.angle.pitch += a.pitch;
   model.angle.roll += a.roll;
+}
+
+void SimulatorSingleton::add_acceleration(float accel, float angular_accel, float depth_accel)
+{
+  model.accel += accel;
+  model.angular_accel += angular_accel;
+  model.depth_accel += depth_accel;
 }
 
 void *run_sim(void *args)
