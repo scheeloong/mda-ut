@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "mda_vision.h"
-#include "mda_control.h"
+#include "mda_tasks.h"
 #include "vci.h"
 
 // This is just a program to test proper linking of code in task
@@ -37,6 +37,13 @@ int main (int argc, char** argv) {
     delete buoy_module;
     delete frame_module;
 
+/*
+    MDA_TASK_BASE* task_test = NULL;
+    MDA_TASK_BASE* task_gate = NULL;
+    MDA_TASK_BASE* task_path = NULL;
+    MDA_TASK_BASE* task_buoy = NULL;
+    MDA_TASK_BASE* task_frame = NULL;
+*/
     printf ("VCI_UNDEFINED_VALUE=%d\n", VCI::VCI_UNDEFINED_VALUE);
     printf ("\nTest PASSED.\n");
     return 0;

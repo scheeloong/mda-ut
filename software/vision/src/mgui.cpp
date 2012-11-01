@@ -31,8 +31,27 @@ mvWindow:: ~mvWindow () {
     WINDOWS_ARRAY[_window_number] = false;
 }
 
+/** mvVideoWriter methods */
+mvVideoWriter:: mvVideoWriter (const char* filename, unsigned framerate) {
+    unsigned width, height;
+    read_common_mv_setting ("IMG_WIDTH_COMMON", width);
+    read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
+
+    _writer = cvCreateVideoWriter (
+        filename,               // video file name
+        CV_FOURCC('P','I','M','1'), // codec
+        framerate,                  // framerate
+        cvSize(width,height),       // size
+        1
+    );
+}
+
+mvVideoWriter:: ~mvVideoWriter () {
+    cvReleaseVideoWriter (&_writer);
+}
+
 /** mvCamera methods **/
-mvCamera:: mvCamera (unsigned cam_number, unsigned write) :
+mvCamera:: mvCamera (unsigned cam_number) :
     bin_resize ("mvCamera - resize"),
     bin_getFrame ("mvCamera - getFrame")
 {
@@ -41,18 +60,6 @@ mvCamera:: mvCamera (unsigned cam_number, unsigned write) :
     read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
 
     _capture = cvCreateCameraCapture (cam_number);
-    if (write) {
-        _writer = cvCreateVideoWriter (
-            "webcam.avi",               // video file name
-            CV_FOURCC('P','I','M','1'), // codec
-            FRAMERATE,                  // framerate
-            cvSize(width,height),       // size
-            1
-        );
-    }
-    else
-        _writer = NULL;
-
     _imgResized = mvCreateImage_Color (width, height);
 }
 
@@ -66,12 +73,10 @@ mvCamera:: mvCamera (const char* video_file) :
     
     _capture = cvCreateFileCapture (video_file);   
     _imgResized = mvCreateImage_Color (width, height);
-    _writer = NULL;
 }
 
 mvCamera:: ~mvCamera () {
     cvReleaseCapture (&_capture);
     cvReleaseImage (&_imgResized);
-    if (_writer != NULL) cvReleaseVideoWriter (&_writer);
 }
 
