@@ -52,20 +52,32 @@ class mvWindow {
     void move (unsigned x, unsigned y) { cvMoveWindow(_name, x, y); }
 };
 
+/** mvVideoWriter - class for writing to disk **/
+class mvVideoWriter {
+  CvVideoWriter* _writer;
+
+public:
+    mvVideoWriter (const char* filename, unsigned framerate = 30);
+    ~mvVideoWriter ();
+
+    void writeFrame (IplImage* frame) {
+        cvWriteFrame (_writer, frame);
+  }
+};
+
 /** mvCamera - class for managing webcams and video writers **/
 // This class lets you open a camera and write video to disk 
 // Usage is simple. 
 class mvCamera {
     static const unsigned FRAMERATE = 30;
     CvCapture* _capture;
-    CvVideoWriter* _writer;
     IplImage* _imgResized;
 
     PROFILE_BIN bin_resize;
     PROFILE_BIN bin_getFrame;
 
     public:
-    mvCamera (unsigned cam_number, unsigned write=0);
+    mvCamera (unsigned cam_number);
     mvCamera (const char* video_file);
     ~mvCamera ();
 
@@ -99,11 +111,6 @@ class mvCamera {
 
         return _imgResized;
     } 
-
-    void writeFrame (IplImage* frame) {
-        assert (_writer != NULL); // If fails you have not created the video writer
-        cvWriteFrame(_writer,frame);
-   }
 };
 
 #endif

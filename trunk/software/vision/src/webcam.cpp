@@ -37,9 +37,9 @@ int main( int argc, char** argv ) {
         else if (!strcmp (argv[i], "--help")) {
             printf ("OpenCV based webcam program. Hit 'q' to exit. Defaults to cam0, writes to \"webcam.avi\"\n");
             printf ("Put any integer as an argument (without --) to use that as camera number\n\n");
-            printf ("  --no_write\n    Does not write captured video to file.\n\n");
-            printf ("  --no_display\n    Does not display captured video.\n\n");
-            printf ("  Example: `./webcam 1 --no_write` will use cam1, and will not write to disk\n\n");
+            printf ("  --write\n    Write captured video to file.\n\n");
+            printf ("  --line\n    Run line finding code.\n\n");
+            printf ("  Example: `./webcam 1 --write` will use cam1, and will write to disk\n\n");
             return 0;
         }
     }
@@ -48,9 +48,13 @@ int main( int argc, char** argv ) {
     // init camera
     mvCamera* camera = NULL;
     if (LOAD == 0)
-        camera = new mvCamera (CAM_NUMBER, WRITE);
+        camera = new mvCamera (CAM_NUMBER);
     else
         camera = new mvCamera (argv[LOAD]);
+
+    mvVideoWriter* writer = NULL;
+    if (WRITE)
+        writer = new mvVideoWriter ("webcam.avi");
     
     // init windows
     mvWindow* win1 = new mvWindow ("webcam");
@@ -206,7 +210,7 @@ int main( int argc, char** argv ) {
         }
         
         if (WRITE)
-            camera->writeFrame (frame);
+            writer->writeFrame (frame);
     
         circles.clearData();
 
@@ -239,6 +243,8 @@ int main( int argc, char** argv ) {
     cvReleaseImage (&filter_img);
     cvReleaseImage (&grad_img);
     delete camera;
+    if (writer)
+        delete writer;
     delete win1;
     delete win2;
     delete win3;
