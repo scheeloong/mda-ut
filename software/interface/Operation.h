@@ -88,10 +88,6 @@ class OperationNull : public Operation {
         // close ncurses
         endwin();
     }
-  private:
-    AttitudeInput *attitude_input;
-    ImageInput *image_input;
-    ActuatorOutput *actuator_output;
 };
 
 /* Joystick implementation */
@@ -103,10 +99,6 @@ class JoystickOperation: public Operation {
   private:
     void dump_images();
     void message(const char *);
-
-    AttitudeInput *attitude_input;
-    ImageInput *image_input;
-    ActuatorOutput *actuator_output;
 };
 
 /* Command Line implementation */
@@ -115,22 +107,6 @@ class CommandLineOperation: public Operation {
     virtual ~CommandLineOperation() {}
 
     virtual void work();
-  private:
-    AttitudeInput *attitude_input;
-    ImageInput *image_input;
-    ActuatorOutput *actuator_output;
-};
-
-/* The real submarine implementation */
-class Mission : public Operation {
-  public:
-    virtual ~Mission();
-
-    virtual void work();
-  private:
-    AttitudeInput *attitude_input;
-    ImageInput *image_input;
-    ActuatorOutput *actuator_output;
 };
 
 #endif

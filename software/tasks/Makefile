@@ -1,4 +1,4 @@
-CC=g++ -O3 -Wall
+CC=g++ -O3 -Wall -I ../sim
 CVFLAGS=`pkg-config --cflags --libs opencv`
 LIBDIR=lib/
 VLIBDIR=../vision/lib/
@@ -11,9 +11,9 @@ CVDIR=../vision/
 CVA=libvision.a
 AFLAGS=-L$(CVDIR) $(CVDIR)$(CVA)
 
-INC=$(LIBDIR)mda_vision.h $(LIBDIR)mda_tasks.h $(LIBDIR)vci.h
+INC=$(LIBDIR)mda_vision.h $(LIBDIR)mda_tasks.h $(LIBDIR)vci.h $(LIBDIR)mission.h
 VOBJ=$(OBJDIR)test_vision.o $(OBJDIR)gate_vision.o $(OBJDIR)path_vision.o $(OBJDIR)buoy_vision.o $(OBJDIR)frame_vision.o
-COBJ=
+COBJ=$(OBJDIR)Mission.o
 MAIN=$(OBJDIR)main.o
 
 parallel:
@@ -32,8 +32,8 @@ main: $(VOBJ) $(COBJ) $(MAIN)
 	$(CC) $(VOBJ) $(COBJ) $(MAIN) -o $@ $(AFLAGS) $(CVFLAGS)
 
 # archive file
-$(A): $(OBJ)
-	ar -cvq $@ $(OBJ)
+$(A): $(VOBJ) $(COBJ)
+	ar -cvq $@ $(VOBJ) $(COBJ)
 
 clean:
 	rm -f main ./obj/* $(A) ./*~
