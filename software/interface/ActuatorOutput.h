@@ -55,6 +55,12 @@ class ActuatorOutput {
       set_attitude_change(LEFT, 0);
       set_attitude_change(SINK, 0);
     }
+
+    // accessors to current target attitude
+    virtual int target_yaw() {return 0;}
+    virtual int target_pitch() {return 0;}
+    virtual int target_roll() {return 0;}
+    virtual int target_depth() {return 0;}
 };
 
 /* A don't care implementation */
