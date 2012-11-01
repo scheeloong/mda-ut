@@ -18,11 +18,6 @@ class AttitudeInput {
     virtual int pitch() {return 0;}
     virtual int roll() {return 0;}
     virtual int depth() = 0;
-
-    virtual int target_yaw() {return 0;}
-    virtual int target_pitch() {return 0;}
-    virtual int target_roll() {return 0;}
-    virtual int target_depth() {return 0;}
 };
 
 /* A don't care implementation */

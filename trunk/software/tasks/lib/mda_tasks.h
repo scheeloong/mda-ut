@@ -38,6 +38,7 @@ public:
 		frame (NULL)
 	{
 	}
+	virtual ~MDA_TASK_BASE() {}
 
 	// the following function loops until it completes the task and returns
 	virtual MDA_TASK_RETURN_CODE run_task () = 0; 
