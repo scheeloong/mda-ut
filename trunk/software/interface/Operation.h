@@ -22,7 +22,14 @@ class Operation {
   public:
     virtual ~Operation() {}
 
-    virtual void initialize(AttitudeInput *, ImageInput *, ActuatorOutput *) = 0;
+    virtual void initialize(AttitudeInput *a, ImageInput *i, ActuatorOutput *o)
+    {
+      attitude_input = a;
+      image_input = i;
+      actuator_output = o;
+    }
+
+    // to be implemented by the derived class!
     virtual void work() = 0;
 
     char get_next_char()
@@ -52,6 +59,11 @@ class Operation {
 
       return '\0';
     }
+
+  protected:
+    AttitudeInput *attitude_input;
+    ImageInput *image_input;
+    ActuatorOutput *actuator_output;
 };
 
 /* A don't care implementation */
@@ -59,12 +71,6 @@ class OperationNull : public Operation {
   public:
     virtual ~OperationNull() {}
 
-    virtual void initialize(AttitudeInput *a, ImageInput *i, ActuatorOutput *o)
-    {
-      attitude_input = a;
-      image_input = i;
-      actuator_output = o;
-    }
     virtual void work()
     {
         // ncurses stuff
@@ -93,12 +99,6 @@ class JoystickOperation: public Operation {
   public:
     virtual ~JoystickOperation() {}
 
-    virtual void initialize(AttitudeInput *a, ImageInput *i, ActuatorOutput *o)
-    {
-      attitude_input = a;
-      image_input = i;
-      actuator_output = o;
-    }
     virtual void work();
   private:
     void dump_images();
@@ -114,12 +114,6 @@ class CommandLineOperation: public Operation {
   public:
     virtual ~CommandLineOperation() {}
 
-    virtual void initialize(AttitudeInput *a, ImageInput *i, ActuatorOutput *o)
-    {
-      attitude_input = a;
-      image_input = i;
-      actuator_output = o;
-    }
     virtual void work();
   private:
     AttitudeInput *attitude_input;
@@ -132,7 +126,6 @@ class Mission : public Operation {
   public:
     virtual ~Mission();
 
-    virtual void initialize(AttitudeInput *a, ImageInput *i, ActuatorOutput *o);
     virtual void work();
   private:
     AttitudeInput *attitude_input;
