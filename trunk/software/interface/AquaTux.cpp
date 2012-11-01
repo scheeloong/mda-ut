@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "AquaTux.h"
+#include "Mission.h"
 #include "SimulatorSingleton.h"
 #include "SubmarineSingleton.h"
 #include "mgui.h"
