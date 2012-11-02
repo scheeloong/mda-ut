@@ -4,6 +4,7 @@
 #include "mda_vision.h"
 #include "mda_tasks.h"
 #include "vci.h"
+#include "ImageInput.h"
 
 // This is just a program to test proper linking of code in task
 
@@ -44,6 +45,21 @@ int main (int argc, char** argv) {
     MDA_TASK_BASE* task_buoy = NULL;
     MDA_TASK_BASE* task_frame = NULL;
 */
+    ImageInputVideo imageinput ("../vision/webcam.avi", "../vision/runtime_sample1.avi");
+
+    mvWindow win ("window");
+
+    for (;;) {
+        const IplImage* frame = imageinput.get_image (DWN_IMG);
+        if (frame == NULL)
+            break;
+
+        win.showImage (frame);
+        char c = cvWaitKey(30);
+        if (c == 'q')
+            break;
+    }
+
     printf ("VCI_UNDEFINED_VALUE=%d\n", VCI::VCI_UNDEFINED_VALUE);
     printf ("\nTest PASSED.\n");
     return 0;

@@ -40,7 +40,7 @@ mvAdaptiveBox:: mvAdaptiveBox (int Min, int Max, int Flange, MODULO_ENUM mod) {
 }
 
 int mvAdaptiveBox:: accumulate (int Data) {
-	if (within_bounds (Data, min_50, max_50)) { 
+	/*if (within_bounds (Data, min_50, max_50)) { 
 		box_50_count++;
 		box_count++;
 		return 1;
@@ -57,8 +57,8 @@ int mvAdaptiveBox:: accumulate (int Data) {
 		box_max_bound_count++;
 		return 1;
 	}
-
-    
+    */
+    return 0;   
 }
 
 void mvAdaptiveBox:: adjust_box () {

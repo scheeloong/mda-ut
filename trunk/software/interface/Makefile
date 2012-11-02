@@ -5,6 +5,7 @@ CXXFLAGS=$(CVFLAGS) $(GLFLAGS) $(CFLAGS) -lui -L../../fpga/ui/
 
 SRCS:=$(wildcard *.cpp)
 OBJ:=$(patsubst %.cpp,%.o,$(SRCS))
+A=libinterface.a
 LIBVISION=../vision/libvision.a
 LIBTASKS=../tasks/libtasks.a
 LIBSIM=../sim/libsim.a
@@ -16,7 +17,10 @@ AQUATUX=aquatux
 parallel:
 	make -j4 all
 
-all: $(AQUATUX)
+all: $(AQUATUX) $(A)
+
+$(A): $(OBJ)
+	ar -cvq $@ $(OBJ)
 
 $(AQUATUX): $(OBJ) $(LIB)
 	$(CC) -o $@ $(OBJ) $(LIB) $(CXXFLAGS)

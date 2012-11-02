@@ -89,18 +89,25 @@ class mvCamera {
      * called the image will be overwritten. This img also must not be freed/
      * modified by the user.
      */ 
-    IplImage* getFrame () {
+    int grabFrame () { // readies latest frame
+        if (!_capture) return -1;
           bin_getFrame.start();
-        IplImage* ret = cvQueryFrame(_capture); 
-          bin_getFrame.stop();
+        return cvGrabFrame (_capture);
+          bin_getFrame.stop();        
+    }
 
-        return ret;
-    } 
-    IplImage* getFrameResized () {
+    IplImage* retrieveFrame () {
+        if (!_capture) return NULL;
           bin_getFrame.start();
-        IplImage* frame = cvQueryFrame (_capture);
-          bin_getFrame.stop();
-        
+        return cvRetrieveFrame (_capture);
+          bin_getFrame.stop();        
+    }
+    IplImage* retrieveFrameResized () {
+        if (!_capture) return NULL;
+          bin_getFrame.start();
+        IplImage* frame = cvRetrieveFrame (_capture);
+          bin_getFrame.stop(); 
+
         if (!frame) {
             return NULL;
         }
@@ -110,6 +117,15 @@ class mvCamera {
           bin_resize.stop();
 
         return _imgResized;
+    }
+
+    IplImage* getFrame () {
+        grabFrame();
+        return retrieveFrame();
+    } 
+    IplImage* getFrameResized () {
+        grabFrame();
+        return retrieveFrameResized();
     } 
 };
 
