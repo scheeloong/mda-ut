@@ -19,14 +19,14 @@ $(OBJDIR)%.o: $(SRCDIR)%.cpp $(INC)
 	$(CC) -I$(LIBDIR) -c $< -o $@ $(CVFLAGS)
 
 # test is the main executable and depends on each object
-main: $(OBJ) $(VOBJ) $(MAIN)
-	$(CC) $(OBJ) $(VOBJ) $(MAIN) -o $@ $(CVFLAGS)
+main: $(OBJ) $(MAIN)
+	$(CC) $(OBJ) $(MAIN) -o $@ $(CVFLAGS)
 # webcam is another executable
-webcam: $(OBJ) $(VOBJ) $(WEBCAM)
-	$(CC) $(OBJ) $(VOBJ) $(WEBCAM) -o $@ $(CVFLAGS)
+webcam: $(OBJ) $(WEBCAM)
+	$(CC) $(OBJ) $(WEBCAM) -o $@ $(CVFLAGS)
 # archive file
-$(A): $(OBJ) $(VOBJ)
-	ar -cvq $@ $(OBJ) $(VOBJ)
+$(A): $(OBJ)
+	ar -cvq $@ $(OBJ)
 
 clean:
 	rm -f main webcam ./obj/* $(A) ./*~
