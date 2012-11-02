@@ -71,23 +71,7 @@ class OperationNull : public Operation {
   public:
     virtual ~OperationNull() {}
 
-    virtual void work()
-    {
-        // ncurses stuff
-        initscr();
-        cbreak();
-
-        // regular IO
-        printf("Press 'q' to quit...");
-        fflush(stdout);
-
-        // wait on glut window and terminal for quit character
-        while (get_next_char() != 'q')
-          ;
-
-        // close ncurses
-        endwin();
-    }
+    virtual void work();
 };
 
 /* Joystick implementation */
