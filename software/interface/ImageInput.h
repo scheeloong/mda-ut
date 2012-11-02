@@ -10,6 +10,7 @@
 #include <cv.h>
 #include <highgui.h>
 #include <sstream>
+#include "mgui.h"
 
 enum ImageDirection {
   FWD_IMG,
@@ -63,8 +64,10 @@ class ImageInputSimulator : public ImageInput {
 
 /* Read from video file */
 class ImageInputVideo : public ImageInput {
+  mvCamera cam_fwd, cam_dwn;
+
   public:
-    ImageInputVideo();
+    ImageInputVideo(const char* video_fwd="", const char* video_dwn="");
     virtual ~ImageInputVideo();
 
     virtual const IplImage* get_image(ImageDirection dir = FWD_IMG);
