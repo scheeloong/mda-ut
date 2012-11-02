@@ -30,8 +30,10 @@ AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
 
   if (image_input == "SIMULATOR") {
     m_image_input = new ImageInputSimulator();
-  } else if (attitude_input == "SUBMARINE") {
+  } else if (image_input == "SUBMARINE") {
     m_image_input = new ImageInputSubmarine();
+  } else if (image_input == "VIDEO") {
+    m_image_input = new ImageInputVideo("../vision/webcam.avi", "../vision/runtime_sample1.avi");
   } else {
     if (image_input != "NULL") {
       cout << "Warning: unrecognized image input " << image_input << ", defaulting to no image input\n";
@@ -46,7 +48,7 @@ AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
   } else if (operation == "MISSION") {
     m_operation = new Mission();
   } else {
-    if (image_input != "NULL") {
+    if (operation != "NULL") {
       cout << "Warning: unrecognized operation algorithm " << operation << ", defaulting to no operation algorithm\n";
     }
     m_operation = new OperationNull();
