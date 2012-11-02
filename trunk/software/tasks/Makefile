@@ -11,7 +11,7 @@ CVDIR=../vision/
 CVA=libvision.a
 AFLAGS=-L$(CVDIR) $(CVDIR)$(CVA)
 
-INC=$(LIBDIR)mda_vision.h $(LIBDIR)mda_tasks.h $(LIBDIR)vci.h $(LIBDIR)mission.h
+INC=$(LIBDIR)mda_vision.h $(LIBDIR)mda_tasks.h $(LIBDIR)vci.h $(LIBDIR)Mission.h
 VOBJ=$(OBJDIR)test_vision.o $(OBJDIR)gate_vision.o $(OBJDIR)path_vision.o $(OBJDIR)buoy_vision.o $(OBJDIR)frame_vision.o
 COBJ=$(OBJDIR)Mission.o
 MAIN=$(OBJDIR)main.o
