@@ -8,11 +8,13 @@ Mission::~Mission()
 void Mission::work()
 {
   // TODO: implement
-  SingleTaskMission task_mission = SingleTaskMission(TASK_TEST);
+  SingleTaskMission task_mission = SingleTaskMission(attitude_input, image_input, actuator_output, TASK_TEST);
   task_mission.work();
 }
 
-SingleTaskMission:: SingleTaskMission(MDA_TASK task_enum) {
+SingleTaskMission:: SingleTaskMission(AttitudeInput *a, ImageInput *i, ActuatorOutput *o, MDA_TASK task_enum) :
+  Operation(a, i, o)
+{
   switch (task_enum) {
     case TASK_TEST:
       task = new MDA_TASK_TEST (attitude_input, image_input, actuator_output);

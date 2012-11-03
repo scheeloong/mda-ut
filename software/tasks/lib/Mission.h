@@ -7,6 +7,7 @@
 /* The real submarine implementation */
 class Mission : public Operation {
   public:
+    Mission(AttitudeInput *a, ImageInput *i, ActuatorOutput *o) : Operation(a, i, o) {}
     virtual ~Mission();
 
     virtual void work();
@@ -17,6 +18,7 @@ class SingleTaskMission: public Operation {
 
   public:
     SingleTaskMission (MDA_TASK task_enum);
+    SingleTaskMission(AttitudeInput *, ImageInput *, ActuatorOutput *, MDA_TASK);
     ~SingleTaskMission();
     void work();  
 };
