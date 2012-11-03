@@ -19,6 +19,7 @@ $(EXE): $(MAIN) $(OBJS) $(CVDIR)$(CVA)
 	g++ -O3 -o $@ $(OBJS) $(MAIN) $(LIBS) $(CXXFLAGS)
 
 $(A): $(OBJS)
+	rm -f $@
 	ar -cvq $@ $(OBJS)
 
 deps:

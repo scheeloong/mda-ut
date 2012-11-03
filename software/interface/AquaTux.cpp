@@ -82,4 +82,7 @@ void AquaTux::work()
 AquaTux::~AquaTux()
 {
   delete m_attitude_input;
+  delete m_image_input;
+  delete m_actuator_output;
+  delete m_operation;
 }

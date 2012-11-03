@@ -8,6 +8,8 @@ Mission::~Mission()
 void Mission::work()
 {
   // TODO: implement
+  SingleTaskMission task_mission = SingleTaskMission(TASK_TEST);
+  task_mission.work();
 }
 
 SingleTaskMission:: SingleTaskMission(MDA_TASK task_enum) {
