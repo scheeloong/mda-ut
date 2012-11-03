@@ -7,7 +7,7 @@ SRCS:=$(wildcard *.cpp)
 OBJ:=$(patsubst %.cpp,%.o,$(SRCS))
 LIBVISION=../vision/libvision.a
 LIBTASKS=../tasks/libtasks.a
-#LIBSIM=../sim/libsim.a
+LIBSIM=../sim/libsim.a
 LIBUI=../../fpga/ui/libui.a
 LIB=$(LIBVISION) $(LIBTASKS) $(LIBSIM) $(LIBUI)
 
@@ -27,8 +27,8 @@ $(LIBVISION):
 $(LIBTASKS):
 	+make -C `dirname $@` `basename $@`
 
-#$(LIBSIM):
-#	+make -C `dirname $@` `basename $@`
+$(LIBSIM):
+	+make -C `dirname $@` `basename $@`
 
 $(LIBUI):
 	+make -C `dirname $@` `basename $@`

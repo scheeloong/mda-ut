@@ -21,8 +21,8 @@ $(EXE): $(MAIN) $(OBJS) $(CVDIR)$(CVA)
 $(A): $(OBJS)
 	ar -cvq $@ $(OBJS)
 
-#deps:
-#	$(CC) -MM $(CXXFLAGS) $(SRCS) > Makefile.deps
+deps:
+	$(CC) -MM $(SRCS) > Makefile.deps
 
 include Makefile.deps
 
