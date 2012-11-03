@@ -22,9 +22,6 @@
 // debug flags
 unsigned DEBUG_MODEL = 0;
 
-// opencv variables
-CV_TASK_ENUM cv_task_enum;
-
 unsigned int randNum;   // global to determine fog thickness and site positions
 
 /* physical model*/
@@ -38,16 +35,11 @@ physical_model model;
 int main(int argc, char** argv)
 {   
     printf (
-    "\n   Welcome to the Mechatronics Design Association Simulator!\n"
+    "\n   Welcome to the **OLD** Mechatronics Design Association Simulator!\n"
+    "     This program is no longer supported... We thank you for your patronage.\n"
     "       --help:         print this message and exit\n"
     "       --rand:         randomize the fog density and obstacle positions\n"
     "       --debug-model:  print speed and accel of model\n"
-    "\n   Run Vision Module without Control\n"
-    "       --vtest\n"
-    "       --vgate\n"
-    "       --vpath\n"
-    "       --vbuoy\n"
-    "       --vframe\n"
     "\n   Commands: \n"
     "      wasd     -  accelerate fowards/back and turn on vertical axis\n"
     "      rf       -  accelerate rise/sink\n"
@@ -59,7 +51,6 @@ int main(int argc, char** argv)
     ); 
     
     randNum = 0;
-    cv_task_enum = NO_TASK; // no task
     
     for (int i = 0; i < argc; i++) {
         if (!strcmp(argv[i], "--help"))
@@ -70,16 +61,6 @@ int main(int argc, char** argv)
         }
         else if (!strcmp(argv[i], "--debug-model"))
             DEBUG_MODEL = 1;
-        else if (!strcmp(argv[i], "--vtest") || !strcmp(argv[i], "--test"))
-            cv_task_enum = CV_VISION_TEST;
-        else if (!strcmp(argv[i], "--vgate") || !strcmp(argv[i], "--gate"))
-            cv_task_enum = CV_VISION_GATE;
-        else if (!strcmp(argv[i], "--vpath") || !strcmp(argv[i], "--path"))
-            cv_task_enum = CV_VISION_PATH;
-        else if (!strcmp(argv[i], "--vbuoy") || !strcmp(argv[i], "--buoy"))
-            cv_task_enum = CV_VISION_BUOY;
-        else if (!strcmp(argv[i], "--vframe") || !strcmp(argv[i], "--frame"))
-            cv_task_enum = CV_VISION_FRAME;
     }
    
    /*glut inits*/

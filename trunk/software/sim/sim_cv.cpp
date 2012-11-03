@@ -22,7 +22,6 @@ IplImage* cv_img_result;
 bool FLAG_USE_IMG_DOWN; // make this true if you want to use img_down instead of img_fwd
 
 extern unsigned DEBUG_MODEL;
-extern CV_TASK_ENUM cv_task_enum;
 extern physical_model model;
 
 // variables for vision and control
@@ -35,20 +34,6 @@ void cv_init () {
     
     //vision_module = NULL;
     FLAG_USE_IMG_DOWN = false;
-/*  
-    if (cv_task_enum == CV_VISION_TEST)
-        vision_module = new MDA_VISION_MODULE_TEST;
-    else if (cv_task_enum == CV_VISION_GATE)
-        vision_module = new MDA_VISION_MODULE_GATE;
-    else if (cv_task_enum == CV_VISION_PATH) {
-        vision_module = new MDA_VISION_MODULE_PATH;
-        FLAG_USE_IMG_DOWN = true;
-    }
-    else if (cv_task_enum == CV_VISION_BUOY)
-        vision_module = new MDA_VISION_MODULE_BUOY;
-    else if (cv_task_enum == CV_VISION_FRAME)
-        vision_module = new MDA_VISION_MODULE_FRAME;
-*/
     cv_img_fwd = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
     cv_img_fwd->origin = 1;
     cv_img_down = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
@@ -70,7 +55,7 @@ void cv_display () {
 // this function is called by glutMainLoop every time the window needs to be redrawn 
 // the redraw flag is raised by the function glutPostRedisplay();
 // with CV_VISION_FLAG the cv code will run every time the window is updated.
-    if (cv_task_enum != NO_TASK) {
+    if (true) {
         // first grab both front and bottom cam images       
         model.angle.pitch += 90;      // grab downwards first
         glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
@@ -159,7 +144,7 @@ void cv_reshape(int w, int h)
    glLoadIdentity();
    
    // resize the opencv structure too eh
-   if (cv_task_enum) {
+   if (true) {
        cvReleaseImage (&cv_img_fwd);
        cv_img_fwd = cvCreateImage (cvSize(w,h), IPL_DEPTH_8U, 3);
        cv_img_fwd->origin=1;
