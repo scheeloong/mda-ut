@@ -19,7 +19,7 @@ parallel:
 all: $(AQUATUX)
 
 $(AQUATUX): $(OBJ) $(LIB)
-	$(CC) -o $@ $(OBJ) $(LIB) $(CXXFLAGS)
+	$(CXX) -o $@ $(OBJ) $(LIB) $(CXXFLAGS)
 
 $(LIBVISION):
 	+make -C `dirname $@` `basename $@`
