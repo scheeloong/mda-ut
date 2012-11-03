@@ -1,7 +1,7 @@
-CVFLAGS=`pkg-config --cflags --libs opencv` -lvision -L../vision/ -ltasks -L../tasks/
-GLFLAGS=-lm -lGL -lglut -lGLU -lsim -L../sim
-CFLAGS=-O3 -Wall -I ../sim -I ../vision/lib -I ../tasks/lib -pthread -lncurses
-CXXFLAGS=$(CVFLAGS) $(GLFLAGS) $(CFLAGS) -lui -L../../fpga/ui/
+CVFLAGS=`pkg-config --cflags --libs opencv`
+LFLAGS=-lm -lGL -lglut -lGLU -lsim -L../sim -lncurses -lui -L../../fpga/ui/ -lvision -L../vision/ -ltasks -L../tasks/
+CFLAGS=-O3 -Wall -I ../sim -I ../vision/lib -I ../tasks/lib -pthread
+CXXFLAGS=$(CFLAGS) $(LFLAGS) $(CVFLAGS)
 
 SRCS:=$(wildcard *.cpp)
 OBJ:=$(patsubst %.cpp,%.o,$(SRCS))
