@@ -26,6 +26,7 @@ webcam: $(OBJ) $(WEBCAM)
 	$(CC) $(OBJ) $(WEBCAM) -o $@ $(CVFLAGS)
 # archive file
 $(A): $(OBJ)
+	rm -f $@
 	ar -cvq $@ $(OBJ)
 
 clean:

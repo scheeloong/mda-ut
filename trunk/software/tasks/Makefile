@@ -33,6 +33,7 @@ main: $(VOBJ) $(COBJ) $(MAIN) $(LIB)
 
 # archive file
 $(A): $(VOBJ) $(COBJ)
+	rm -f $@
 	ar -cvq $@ $(VOBJ) $(COBJ)
 
 clean:
