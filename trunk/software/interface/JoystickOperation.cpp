@@ -3,6 +3,56 @@
 
 #include "ImageInput.h"
 #include "Operation.h"
+#include "mda_vision.h"
+#include "mda_tasks.h"
+#include "vci.h"
+
+enum MDA_VISION_OR_TASK_ENUM {
+  NONE,
+  TEST_VISION,
+  TEST_TASK,
+  GATE_VISION,
+  GATE_TASK
+};
+
+MDA_VISION_OR_TASK_ENUM vision_task_enum = NONE;
+MDA_VISION_MODULE_BASE* vision_module = NULL;
+MDA_TASK_BASE* task_module = NULL;
+VCI vci; // remove this
+
+void create_vision_or_task (char c) {
+  // destroy the current module if we have one
+  if (((c >= '0') && (c <= '9')) || (c == 'v')) {
+    if (vision_module != NULL) {
+      delete vision_module;
+    }
+    if (task_module != NULL) {
+      delete task_module;
+    }
+  }
+
+  // make new module
+  switch (c) {
+    case '1':
+      vision_task_enum = TEST_VISION;
+      vision_module = new MDA_VISION_MODULE_TEST();
+      printw ("Selected TEST_VISION\n");
+      refresh ();
+      break;
+    case '2':
+      vision_task_enum = GATE_VISION;
+      vision_module = new MDA_VISION_MODULE_GATE();
+      printw ("Selected GATE_VISION\n");
+      refresh ();
+      break;
+    case 'v':
+      vision_task_enum = NONE;
+      break;
+    default:
+      printw ("Unknown Selection %c\n", c);
+      refresh ();
+  }
+}
 
 void JoystickOperation::work()
 {
@@ -79,8 +129,52 @@ void JoystickOperation::work()
       case ' ':
          actuator_output->stop();
          break;
+      case 'v':
+         printw(
+           "Entering Vision Mode:\n"
+           "  1    - test vision\n"
+           "  2    - gate vision"
+           "  3    - path vision\n"
+           "  4    - frame vision\n"
+           "  5    - \n"
+           "  6    - test controller\n"
+           "  7    - gate contoller"
+           "  8    - path controller\n"
+           "  9    - frame controller\n"
+           "  0    - \n"
+           "  q    - exit vision mode\n"
+           "  v    - turn off all vision\n"
+           "\n"
+         );
+         refresh();
+
+         char task = 0;
+         while (task == 0) {
+            task = get_next_char();
+         };
+
+         printw ("task = %c\n",task);
+         refresh();
+        
+         create_vision_or_task (task);
+    }
+
+    const IplImage* frame = image_input->get_image(FWD_IMG);
+
+    switch (vision_task_enum) {
+      case TEST_VISION:
+      case GATE_VISION:
+        vision_module->filter (frame, &vci);
+        break;
+      default:
+        break;
     }
   }
+
+  if (vision_module != NULL)
+    delete vision_module;
+  if (task_module != NULL)
+    delete task_module;
 
   // close ncurses
   endwin();
