@@ -9,7 +9,7 @@ ImageInputVideo::ImageInputVideo(const char* settings_file)
     cam_fwd = new mvCamera (video_fwd.c_str());
     cam_dwn = new mvCamera (video_dwn.c_str());
 
-    printf ("Foward Video File: %s\n", video_fwd.c_str());
+    printf ("Forward Video File: %s\n", video_fwd.c_str());
     printf ("Down Video File: %s\n", video_dwn.c_str());
 }
 

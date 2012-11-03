@@ -13,7 +13,7 @@ LIB=$(LIBVISION)
 
 INC=$(LIBDIR)mda_vision.h $(LIBDIR)mda_tasks.h $(LIBDIR)vci.h $(LIBDIR)Mission.h
 VOBJ=$(OBJDIR)test_vision.o $(OBJDIR)gate_vision.o $(OBJDIR)path_vision.o $(OBJDIR)buoy_vision.o $(OBJDIR)frame_vision.o
-COBJ=$(OBJDIR)Mission.o
+COBJ=$(OBJDIR)Mission.o $(OBJDIR)test_task.o
 MAIN=$(OBJDIR)main.o
 
 parallel:
@@ -33,7 +33,7 @@ main: $(VOBJ) $(COBJ) $(MAIN) $(LIB)
 
 # archive file
 $(A): $(VOBJ) $(COBJ)
-	ar -cvq $@ $(COBJ)
+	ar -cvq $@ $(VOBJ) $(COBJ)
 
 clean:
 	rm -f main ./obj/* $(A) ./*~

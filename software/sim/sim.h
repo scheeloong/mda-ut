@@ -19,15 +19,6 @@ void destroy();
 
 #include <highgui.h>
 
-enum CV_TASK_ENUM {
-    NO_TASK,
-    CV_VISION_TEST,
-    CV_VISION_GATE,
-    CV_VISION_PATH,
-    CV_VISION_BUOY,
-    CV_VISION_FRAME
-};
-
 #define CAMERA_FIELD_OF_VIEW 52 //37
 
 /** OpenCV integration section starts here.
