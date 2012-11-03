@@ -33,7 +33,7 @@ AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
   } else if (image_input == "SUBMARINE") {
     m_image_input = new ImageInputSubmarine();
   } else if (image_input == "VIDEO") {
-    m_image_input = new ImageInputVideo("../vision/webcam.avi", "../vision/runtime_sample1.avi");
+    m_image_input = new ImageInputVideo(settings_file);
   } else {
     if (image_input != "NULL") {
       cout << "Warning: unrecognized image input " << image_input << ", defaulting to no image input\n";

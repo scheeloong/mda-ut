@@ -64,10 +64,11 @@ class ImageInputSimulator : public ImageInput {
 
 /* Read from video file */
 class ImageInputVideo : public ImageInput {
-  mvCamera cam_fwd, cam_dwn;
+  mvCamera* cam_fwd;
+  mvCamera* cam_dwn;
 
   public:
-    ImageInputVideo(const char* video_fwd="", const char* video_dwn="");
+    ImageInputVideo(const char* settings_file);
     virtual ~ImageInputVideo();
 
     virtual const IplImage* get_image(ImageDirection dir = FWD_IMG);

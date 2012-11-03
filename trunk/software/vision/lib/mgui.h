@@ -90,7 +90,7 @@ class mvCamera {
      * modified by the user.
      */ 
     int grabFrame () { // readies latest frame
-        if (!_capture) return -1;
+        if (!_capture) return 0;
           bin_getFrame.start();
         return cvGrabFrame (_capture);
           bin_getFrame.stop();        
@@ -120,11 +120,11 @@ class mvCamera {
     }
 
     IplImage* getFrame () {
-        grabFrame();
+        if (!grabFrame()) return NULL;
         return retrieveFrame();
     } 
     IplImage* getFrameResized () {
-        grabFrame();
+        if (!grabFrame()) return NULL;
         return retrieveFrameResized();
     } 
 };

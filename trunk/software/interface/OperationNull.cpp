@@ -11,7 +11,9 @@ void OperationNull::work()
     }
 
     win.showImage(frame);
-    if (cvWaitKey(30) == 'q') {
+    
+    char c = cvWaitKey(30);
+    if (c == 'q') {
       break;
     }
   }
