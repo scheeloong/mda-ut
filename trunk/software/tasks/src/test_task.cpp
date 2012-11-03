@@ -16,6 +16,9 @@ MDA_TASK_TEST:: ~MDA_TASK_TEST ()
 MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
     while (1) {
         const IplImage* frame = image_input->get_image(FWD_IMG);
+        if (!frame) {
+            break;
+        }
         window.showImage (frame);
 
         char c = cvWaitKey (10);

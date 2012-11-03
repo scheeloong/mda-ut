@@ -20,14 +20,13 @@
 /* Operation interface */
 class Operation {
   public:
-    virtual ~Operation() {}
-
-    virtual void initialize(AttitudeInput *a, ImageInput *i, ActuatorOutput *o)
+    Operation(AttitudeInput *a, ImageInput *i, ActuatorOutput *o)
     {
       attitude_input = a;
       image_input = i;
       actuator_output = o;
     }
+    virtual ~Operation() {}
 
     // to be implemented by the derived class!
     virtual void work() = 0;
@@ -69,6 +68,7 @@ class Operation {
 /* A don't care implementation */
 class OperationNull : public Operation {
   public:
+    OperationNull(AttitudeInput *a, ImageInput *i, ActuatorOutput *o) : Operation(a, i, o) {}
     virtual ~OperationNull() {}
 
     virtual void work();
@@ -77,6 +77,7 @@ class OperationNull : public Operation {
 /* Joystick implementation */
 class JoystickOperation: public Operation {
   public:
+    JoystickOperation(AttitudeInput *a, ImageInput *i, ActuatorOutput *o) : Operation(a, i, o) {}
     virtual ~JoystickOperation() {}
 
     virtual void work();
@@ -88,6 +89,7 @@ class JoystickOperation: public Operation {
 /* Command Line implementation */
 class CommandLineOperation: public Operation {
   public:
+    CommandLineOperation(AttitudeInput *a, ImageInput *i, ActuatorOutput *o) : Operation(a, i, o) {}
     virtual ~CommandLineOperation() {}
 
     virtual void work();

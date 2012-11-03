@@ -41,19 +41,6 @@ AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
     m_image_input = new ImageInputNull();
   }
 
-  if (operation == "JOYSTICK") {
-    m_operation = new JoystickOperation();
-  } else if (operation == "COMMAND_LINE") {
-    m_operation = new CommandLineOperation();
-  } else if (operation == "MISSION") {
-    m_operation = new Mission();
-  } else {
-    if (operation != "NULL") {
-      cout << "Warning: unrecognized operation algorithm " << operation << ", defaulting to no operation algorithm\n";
-    }
-    m_operation = new OperationNull();
-  }
-
   if (actuator_output == "SIMULATOR") {
     m_actuator_output = new ActuatorOutputSimulator();
   } else if (actuator_output == "SUBMARINE") {
@@ -65,8 +52,18 @@ AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
     m_actuator_output = new ActuatorOutputNull();
   }
 
-  // Pass the inputs and outputs to the control algorithm
-  m_operation->initialize(m_attitude_input, m_image_input, m_actuator_output);
+  if (operation == "JOYSTICK") {
+    m_operation = new JoystickOperation(m_attitude_input, m_image_input, m_actuator_output);
+  } else if (operation == "COMMAND_LINE") {
+    m_operation = new CommandLineOperation(m_attitude_input, m_image_input, m_actuator_output);
+  } else if (operation == "MISSION") {
+    m_operation = new Mission(m_attitude_input, m_image_input, m_actuator_output);
+  } else {
+    if (operation != "NULL") {
+      cout << "Warning: unrecognized operation algorithm " << operation << ", defaulting to no operation algorithm\n";
+    }
+    m_operation = new OperationNull(m_attitude_input, m_image_input, m_actuator_output);
+  }
 }
 
 void AquaTux::work()
