@@ -1,63 +1,13 @@
 #include <assert.h>
 #include <cv.h>
 
-#include "ImageInput.h"
 #include "Operation.h"
-#include "mda_vision.h"
-#include "mda_tasks.h"
-#include "vci.h"
 
-enum MDA_VISION_OR_TASK_ENUM {
-  NONE,
-  TEST_VISION,
-  TEST_TASK,
-  GATE_VISION,
-  GATE_TASK
-};
-
-MDA_VISION_OR_TASK_ENUM vision_task_enum = NONE;
-MDA_VISION_MODULE_BASE* vision_module = NULL;
-MDA_TASK_BASE* task_module = NULL;
-VCI vci; // remove this
-
-void JoystickOperation::create_vision_or_task (char c) {
-  // destroy the current module if we have one
-  if (((c >= '0') && (c <= '9')) || (c == 'v')) {
-    if (vision_module != NULL) {
-      delete vision_module;
-    }
-    if (task_module != NULL) {
-      delete task_module;
-    }
-  }
-
-  // make new module
-  switch (c) {
-    case '1':
-      vision_task_enum = TEST_VISION;
-      vision_module = new MDA_VISION_MODULE_TEST();
-      printw ("Selected TEST_VISION\n");
-      refresh ();
-      break;
-    case '2':
-      vision_task_enum = GATE_VISION;
-      vision_module = new MDA_VISION_MODULE_GATE();
-      printw ("Selected GATE_VISION\n");
-      refresh ();
-      break;
-    case 'v':
-      vision_task_enum = NONE;
-      break;
-    default:
-      printw ("Unknown Selection %c\n", c);
-      refresh ();
-  }
-}
-
-void JoystickOperation::work()
+void JoystickOperation::display_start_message()
 {
   // ncurses stuff
   initscr();
+  clear();
   cbreak();
 
   // info message
@@ -74,6 +24,11 @@ void JoystickOperation::work()
          "  e    - nullify all acceleration\n"
          "\n");
   refresh();
+}
+
+void JoystickOperation::work()
+{
+  display_start_message();
 
   // Take keyboard commands
   bool loop = true;
@@ -129,59 +84,72 @@ void JoystickOperation::work()
       case ' ':
          actuator_output->stop();
          break;
+      case '1':
+         if (mode != VISION) {
+           break;
+         }
+         puts("Selected test vision module");
+         vision_module = new MDA_VISION_MODULE_TEST();
+         break;
+      case '2':
+         if (mode != VISION) {
+           break;
+         }
+         puts("Selected test vision module");
+         vision_module = new MDA_VISION_MODULE_GATE();
+         break;
+      case 'x':
+         if (mode == NORMAL) {
+           break;
+         }
+         delete vision_module;
+         vision_module = NULL;
+         mode = NORMAL;
+         display_start_message();
+         break;
       case 'v':
-         printw(
+         endwin();
+         mode = VISION;
+         message(
            "Entering Vision Mode:\n"
            "  1    - test vision\n"
            "  2    - gate vision"
-           "  3    - path vision\n"
-           "  4    - frame vision\n"
-           "  5    - \n"
-           "  6    - test controller\n"
-           "  7    - gate contoller"
-           "  8    - path controller\n"
-           "  9    - frame controller\n"
-           "  0    - \n"
-           "  q    - exit vision mode\n"
-           "  v    - turn off all vision\n"
            "\n"
+           "  x    - exit vision mode\n"
          );
-         refresh();
-
-         char task = 0;
-         while (task == 0) {
-            task = get_next_char();
-         };
-
-         printw ("task = %c\n",task);
-         refresh();
-        
-         create_vision_or_task (task);
-    }
-
-    const IplImage* frame = image_input->get_image(FWD_IMG);
-
-    switch (vision_task_enum) {
-      case TEST_VISION:
-      case GATE_VISION:
-        vision_module->filter (frame, &vci);
-        break;
-      default:
+         break;
+      case '\0': // timeout
+        process_image();
         break;
     }
   }
 
-  if (vision_module != NULL)
-    delete vision_module;
-  if (task_module != NULL)
-    delete task_module;
+  delete vision_module;
 
   // close ncurses
   endwin();
 }
 
+void JoystickOperation::process_image()
+{
+  if (vision_module) {
+    const IplImage* frame = image_input->get_image(FWD_IMG);
+    vision_module->filter(frame, &vci);
+    message("Done processing image\n");
+  }
+}
+
 void JoystickOperation::message(const char *msg)
 {
+  if (mode == VISION) {
+    if (strlen(msg) == 0) {
+      return;
+    }
+    printf("%s\n", msg);
+    fflush(stdout);
+    return;
+  }
+
   int x, y;
   getmaxyx(stdscr, y, x);
   assert(y > 0);

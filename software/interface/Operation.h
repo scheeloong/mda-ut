@@ -16,6 +16,9 @@
 #include "ImageInput.h"
 #include "ActuatorOutput.h"
 #include "SimulatorSingleton.h"
+#include "mda_vision.h"
+#include "mda_tasks.h"
+#include "vci.h"
 
 /* Operation interface */
 class Operation {
@@ -77,14 +80,26 @@ class OperationNull : public Operation {
 /* Joystick implementation */
 class JoystickOperation: public Operation {
   public:
-    JoystickOperation(AttitudeInput *a, ImageInput *i, ActuatorOutput *o) : Operation(a, i, o) {}
+    JoystickOperation(AttitudeInput *a, ImageInput *i, ActuatorOutput *o) : Operation(a, i, o),
+      mode(NORMAL), vision_module(NULL) {}
     virtual ~JoystickOperation() {}
 
     virtual void work();
   private:
     void dump_images();
     void message(const char *);
-    void create_vision_or_task(char);
+    void display_start_message();
+    void process_image();
+
+    enum MDA_JOYSTICK_MODE {
+      NORMAL,
+      TASK,
+      VISION
+    };
+
+    MDA_JOYSTICK_MODE mode;
+    MDA_VISION_MODULE_BASE* vision_module;
+    VCI vci; // remove this
 };
 
 /* Command Line implementation */
