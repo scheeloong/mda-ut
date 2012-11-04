@@ -39,5 +39,24 @@ void MDA_VISION_MODULE_FRAME:: primary_filter (const IplImage* src) {
 }
 
 int MDA_VISION_MODULE_FRAME:: calc_vci (VCI* interface) {
+    if(_KMeans.nClusters() == 1){
+        int x1 = _KMeans[0][0].x, x2 = _KMeans[0][1].x;
+        int y1 = _KMeans[0][0].y, y2 = _KMeans[0][1].y;    
+
+        float denom = (x1==x2) ? 1 : abs(x2-x1);
+        double slope = ((double)y1-y2)/denom;
+
+        if(abs(slope)<0.2){
+            printf("(%lf,%lf)\n", ((float)x1-x2)/2, ((float)y1-y2)/2 );
+            double range = ((float)(FRAME_REAL_WIDTH) * _filtered_img->width) / ((x2 - x1) * TAN_FOV_X);
+            printf("Range: %lf\n", range);
+        }
+        else if(abs(slope)>6){
+            printf("(%lf,%lf)\n", ((float)x1-x2)/2, ((float)y1-y2)/2 );
+        }
+    }
+    else{
+        printf("not running\n");
+    }
     return 0;
 }
