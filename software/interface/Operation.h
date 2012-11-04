@@ -84,6 +84,7 @@ class JoystickOperation: public Operation {
   private:
     void dump_images();
     void message(const char *);
+    void create_vision_or_task(char);
 };
 
 /* Command Line implementation */
