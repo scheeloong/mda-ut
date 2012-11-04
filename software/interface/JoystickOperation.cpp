@@ -114,6 +114,7 @@ void JoystickOperation::work()
          delete vision_module;
          vision_module = NULL;
          mode = NORMAL;
+         fflush(stdout);
          display_start_message();
          break;
       case 'v':
@@ -133,10 +134,10 @@ void JoystickOperation::work()
     }
   }
 
-  delete vision_module;
-
   // close ncurses
   endwin();
+
+  delete vision_module;
 }
 
 void JoystickOperation::process_image()
