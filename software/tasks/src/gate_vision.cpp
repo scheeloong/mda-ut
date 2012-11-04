@@ -34,6 +34,7 @@ void MDA_VISION_MODULE_GATE:: primary_filter (const IplImage* src) {
     _KMeans.drawOntoImage (_filtered_img);
 
     _window.showImage (_filtered_img);
+    cvWaitKey(10);
 }
 
 int MDA_VISION_MODULE_GATE:: calc_vci (VCI* interface) {

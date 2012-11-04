@@ -29,12 +29,19 @@ void JoystickOperation::display_start_message()
 void JoystickOperation::work()
 {
   display_start_message();
+  int count = 0;
 
   // Take keyboard commands
   bool loop = true;
   while (loop) {
     char c = get_next_char();
-    message("");
+
+    // Clear input every 2 seconds
+    count++;
+    if (c == '\0' && count % 128 == 0) {
+      message("");
+    }
+
     switch(c) {
       case 'q':
          loop = false;
@@ -88,14 +95,16 @@ void JoystickOperation::work()
          if (mode != VISION) {
            break;
          }
-         puts("Selected test vision module");
+         delete vision_module;
+         message("Selected test vision module\n");
          vision_module = new MDA_VISION_MODULE_TEST();
          break;
       case '2':
          if (mode != VISION) {
            break;
          }
-         puts("Selected test vision module");
+         delete vision_module;
+         message("Selected test vision module\n");
          vision_module = new MDA_VISION_MODULE_GATE();
          break;
       case 'x':
@@ -135,7 +144,7 @@ void JoystickOperation::process_image()
   if (vision_module) {
     const IplImage* frame = image_input->get_image(FWD_IMG);
     vision_module->filter(frame, &vci);
-    message("Done processing image\n");
+    fflush(stdout);
   }
 }
 

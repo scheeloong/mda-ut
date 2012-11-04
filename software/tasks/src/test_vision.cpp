@@ -42,6 +42,7 @@ void MDA_VISION_MODULE_TEST:: primary_filter (const IplImage* src) {
 
     // this line displays the img in a window
     _window.showImage (img);
+    cvWaitKey(10);
 }
 
 int MDA_VISION_MODULE_TEST:: calc_vci (VCI* interface) {

@@ -37,7 +37,7 @@ class Operation {
     char get_next_char()
     {
       fd_set readfds;
-      struct timeval tv = {2, 0};
+      struct timeval tv = {0, 16667}; // 60 Hertz
 
       // May use ncurses
       FILE *sim_fd = SimulatorSingleton::get_instance().read_fp();
