@@ -20,7 +20,7 @@ MDA_VISION_MODULE_BASE* vision_module = NULL;
 MDA_TASK_BASE* task_module = NULL;
 VCI vci; // remove this
 
-void create_vision_or_task (char c) {
+void JoystickOperation::create_vision_or_task (char c) {
   // destroy the current module if we have one
   if (((c >= '0') && (c <= '9')) || (c == 'v')) {
     if (vision_module != NULL) {

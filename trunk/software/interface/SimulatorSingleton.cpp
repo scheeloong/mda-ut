@@ -1,5 +1,7 @@
 #include <GL/glut.h>
+#include <GL/freeglut_ext.h>
 
+#include <signal.h>
 #include <unistd.h>
 
 #include "sim.h"
@@ -17,6 +19,7 @@ void sim_init();
 void sim_keyboard(unsigned char, int, int);
 void sim_display();
 void sim_reshape(int, int);
+void sim_close_window();
 
 /* Constructor and destructor for sim resource */
 
@@ -110,6 +113,7 @@ void *run_sim(void *args)
   glutInitWindowSize (WINDOW_SIZE_X, WINDOW_SIZE_Y);
   glutInitWindowPosition(10, 0);
   glutCreateWindow ("Forwards Cam");
+  glutCloseFunc(sim_close_window);
 
   glutReshapeFunc  (sim_reshape);
   glutDisplayFunc  (sim_display);
@@ -136,9 +140,6 @@ void SimulatorSingleton::sim_init()
   img_fwd->origin = 1;
   img_dwn = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
   img_dwn->origin = 1;
-    
-  cvNamedWindow("Downwards Cam", 1);
-  cvMoveWindow ("Downwards Cam", 380, 0);
 }
 
 void sim_keyboard(unsigned char key, int x, int y)
@@ -148,7 +149,6 @@ void sim_keyboard(unsigned char key, int x, int y)
 
 void SimulatorSingleton::sim_keyboard(unsigned char key)
 {
-  putchar(key);
   fputc(key, write);
   fflush(write);
 }
@@ -211,4 +211,9 @@ void SimulatorSingleton::sim_reshape(int w, int h)
   cvReleaseImage (&img_dwn);
   img_dwn = cvCreateImage (cvSize(w,h), IPL_DEPTH_8U, 3);
   img_dwn->origin = 1;
+}
+
+void sim_close_window()
+{
+  raise(SIGINT);
 }
