@@ -161,7 +161,7 @@ wire select_i2c_clk;
 wire i2c_clk;
 wire spi_clk;
 
-wire [33:0] gpio_0_wire;
+wire [32:0] gpio_0_wire;
 wire [33:0] gpio_1_wire;
 wire [12:0] gpio_2_wire;
 wire [3:0]  led_wire;
@@ -176,7 +176,7 @@ wire [2:0] voltage_mux;
 assign reset_n = 1'b1;
 assign GPIO_1[33] = power;
 assign {GPIO_1[29], GPIO_1[31], GPIO_1[25]} = voltage_mux;
-assign LED[3:0] = {2'b10, GPIO_1[24], gpio_2_wire[5]};
+assign LED[3:0] = {2'b10, GPIO_0[33], gpio_2_wire[5]};
 
 global_disable #(
   .NUM_IN(2+1),
@@ -185,8 +185,8 @@ global_disable #(
   .clk(CLOCK_50),
   .shutdown(~{KEY, power}),
   .gpio_in({gpio_0_wire, gpio_2_wire, led_wire}),
-  .gpio_out_default({{34{1'b0}}, {7{1'b0}}, {1'b1}, {5{1'b0}}, {4{1'b0}}}), // GPIO_2[5] defaults to 1
-  .gpio_out({GPIO_0, GPIO_2, LED[7:4]})
+  .gpio_out_default({{33{1'b0}}, {7{1'b0}}, {1'b1}, {5{1'b0}}, {4{1'b0}}}), // GPIO_2[5] defaults to 1
+  .gpio_out({GPIO_0[32:0], GPIO_2, LED[7:4]})
 );
 
 // assign IMU reset to low
@@ -212,7 +212,7 @@ DE0_Nano_SOPC DE0_Nano_SOPC_inst(
                       .ADC_SDAT_to_the_imu_controller_0(ADC_SDAT),
 
                       // RS232 Signals (add signals later)
-                      .UART_RXD_to_the_RS232_0(!power | GPIO_1[24]), // 1 if power is off
+                      .UART_RXD_to_the_RS232_0(!power | GPIO_0[33]), // 1 if power is off
                       .UART_TXD_from_the_RS232_0(gpio_2_wire[5]),
 
                       // Power Management

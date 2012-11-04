@@ -45,7 +45,7 @@ parameter BAUD_TICK_INCREMENT	= 9'd1;
 parameter BAUD_TICK_COUNT		= 9'd433;
 parameter HALF_BAUD_TICK_COUNT	= 9'd216;
 
-parameter TOTAL_DATA_WIDTH		= 11;
+parameter TOTAL_DATA_WIDTH		= 10;
 parameter DATA_WIDTH			= 8;
 parameter ODD_PARITY			= 1'b0;
 
