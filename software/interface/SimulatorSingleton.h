@@ -28,7 +28,7 @@ class SimulatorSingleton {
       }
     }
     void create();
-    void sim_init();
+    void run_sim();
     void sim_keyboard(unsigned char);
     void sim_display();
     void sim_reshape(int, int);
@@ -54,6 +54,7 @@ class SimulatorSingleton {
     IplImage *img_fwd, *img_dwn;
     volatile bool img_copy_start, img_copy_done;
     volatile ImageDirection img_dir;
+    int fwd_window, dwn_window;
 };
 
 #endif
