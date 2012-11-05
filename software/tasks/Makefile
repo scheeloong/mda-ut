@@ -11,9 +11,9 @@ A=libtasks.a
 LIBVISION=../vision/libvision.a
 LIB=$(LIBVISION)
 
-INC=$(LIBDIR)mda_vision.h $(LIBDIR)mda_tasks.h $(LIBDIR)vci.h $(LIBDIR)Mission.h
-VOBJ=$(OBJDIR)test_vision.o $(OBJDIR)gate_vision.o $(OBJDIR)path_vision.o $(OBJDIR)buoy_vision.o $(OBJDIR)frame_vision.o
-COBJ=$(OBJDIR)Mission.o $(OBJDIR)test_task.o
+INC=$(LIBDIR)mda_vision.h $(LIBDIR)mda_tasks.h $(LIBDIR)Mission.h
+VOBJ=$(OBJDIR)vision_test.o $(OBJDIR)vision_gate.o $(OBJDIR)vision_path.o $(OBJDIR)vision_buoy.o $(OBJDIR)vision_frame.o
+COBJ=$(OBJDIR)Mission.o $(OBJDIR)task_test.o
 MAIN=$(OBJDIR)main.o
 
 parallel:

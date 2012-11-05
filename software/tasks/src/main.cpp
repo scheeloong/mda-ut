@@ -3,7 +3,6 @@
 
 #include "mda_vision.h"
 #include "mda_tasks.h"
-#include "vci.h"
 
 // This is just a program to test proper linking of code in task
 
@@ -11,7 +10,6 @@
 
 int main (int argc, char** argv) {
     IplImage * img = cvLoadImage(IMAGE_NAME);
-    VCI vci;
 
     MDA_VISION_MODULE_BASE* test_module = NULL;
     MDA_VISION_MODULE_BASE* gate_module = NULL;
@@ -25,11 +23,16 @@ int main (int argc, char** argv) {
     buoy_module = new MDA_VISION_MODULE_BUOY;
     frame_module = new MDA_VISION_MODULE_FRAME;
 
-    test_module->filter (img, &vci);
-    gate_module->filter (img, &vci);
-    path_module->filter (img, &vci);
-    buoy_module->filter (img, &vci);
-    frame_module->filter (img, &vci);
+    test_module->filter (img);
+    printf ("test module passed\n");
+    gate_module->filter (img);
+    printf ("gate module passed\n");
+    path_module->filter (img);
+    printf ("path module passed\n");
+    buoy_module->filter (img);
+    printf ("buoy module passed\n");
+    frame_module->filter (img);
+    printf ("frame module passed\n");
 
     delete test_module;
     delete gate_module;
@@ -45,7 +48,7 @@ int main (int argc, char** argv) {
     MDA_TASK_BASE* task_frame = NULL;
 */
 
-    printf ("VCI_UNDEFINED_VALUE=%d\n", VCI::VCI_UNDEFINED_VALUE);
+    printf ("VISION_UNDEFINED_VALUE=%d\n", MDA_VISION_MODULE_BASE::VISION_UNDEFINED_VALUE);
     printf ("\nTest PASSED.\n");
     return 0;
 }

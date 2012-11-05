@@ -18,7 +18,6 @@
 #include "SimulatorSingleton.h"
 #include "mda_vision.h"
 #include "mda_tasks.h"
-#include "vci.h"
 
 /* Operation interface */
 class Operation {
@@ -99,7 +98,6 @@ class JoystickOperation: public Operation {
 
     MDA_JOYSTICK_MODE mode;
     MDA_VISION_MODULE_BASE* vision_module;
-    VCI vci; // remove this
 };
 
 /* Command Line implementation */

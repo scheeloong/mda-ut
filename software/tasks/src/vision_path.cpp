@@ -41,39 +41,41 @@ void MDA_VISION_MODULE_PATH:: primary_filter (const IplImage* src) {
     _window.showImage (_filtered_img);
 }
 
-int MDA_VISION_MODULE_PATH:: calc_vci (VCI* interface) {
-    int retval = 0;
-    int pixel_x = 0, pixel_y = 0;
+MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
+    MDA_VISION_RETURN_CODE retval = FATAL_ERROR;
+    unsigned nClusters = _KMeans.nClusters();
 
-    if (_KMeans.nClusters() == 0) {
-        /// NO CLUSTERS
+    if (nClusters == 0) {
         printf ("Path: No clusters =(\n");
-        return -1;
+        return NO_TARGET;
     }
-    else if (_KMeans.nClusters() == 1) {
+    else if (nClusters == 1) {
         /// single line, not much we can do but return its center and estimate range
         DEBUG_PRINT ("Path: 1 cluster =|\n");
-        pixel_x = (_KMeans[0][0].x + _KMeans[0][1].x - _filtered_img->width)*0.5;       // centroid of line
-        pixel_y = (_KMeans[0][0].y + _KMeans[0][1].y - _filtered_img->height)*0.5;
+        m_pixel_x = (_KMeans[0][0].x + _KMeans[0][1].x - _filtered_img->width)*0.5;       // centroid of line
+        m_pixel_y = (_KMeans[0][0].y + _KMeans[0][1].y - _filtered_img->height)*0.5;
         unsigned length = line_sqr_length(_KMeans[0]);
 
         /// check that the line is near center of image
         
+        /// calculate the angle
+
         /// calculate range if we pass sanity check
-        interface->range = (PATH_REAL_LENGTH * _filtered_img->width) / (length * TAN_FOV_X);
-        interface->angle = RAD_TO_DEG * line_angle_to_vertical(_KMeans[0]);
-        DEBUG_PRINT ("Path Range = %d, Angle = %5.2f\n", interface->range, interface->angle);
-        retval = 0;       
+        m_range = (PATH_REAL_LENGTH * _filtered_img->width) / (length * TAN_FOV_X);
+        m_angle = RAD_TO_DEG * line_angle_to_vertical(_KMeans[0]);
+        DEBUG_PRINT ("Path Range = %d, PAngle = %5.2f\n", m_range, m_angle);
+
+        retval = ONE_SEGMENT;       
         goto RETURN_CENTROID;
     }
-    else if (_KMeans.nClusters() == 2) {
+    else if (nClusters == 2) {
         DEBUG_PRINT ("Path: 2 clusters =)\n");
         int x00 = _KMeans[0][0].x,   y00 = _KMeans[0][0].y;
         int x01 = _KMeans[0][1].x,   y01 = _KMeans[0][1].y;
         int x10 = _KMeans[1][0].x,   y10 = _KMeans[1][0].y;
         int x11 = _KMeans[1][1].x,   y11 = _KMeans[1][1].y;
-        pixel_x = (int)((x00+x01+x10+x11)*0.25 - _filtered_img->width*0.5);
-        pixel_y = (int)((y00+y01+y10+y11)*0.25 - _filtered_img->height*0.5);
+        m_pixel_x = (int)((x00+x01+x10+x11)*0.25 - _filtered_img->width*0.5);
+        m_pixel_y = (int)((y00+y01+y10+y11)*0.25 - _filtered_img->height*0.5);
 
         float position_angle_0 = RAD_TO_DEG * line_angle_to_vertical(_KMeans[0]); 
         float position_angle_1 = RAD_TO_DEG * line_angle_to_vertical(_KMeans[1]);
@@ -84,31 +86,33 @@ int MDA_VISION_MODULE_PATH:: calc_vci (VCI* interface) {
         
         if (length_0 > 1.3*length_1 || 1.3*length_0 < length_1) {
             DEBUG_PRINT ("Path Sanity Failure: Lines too dissimilar\n");
-            retval = 2;
+            retval = UNKNOWN_TARGET;
             goto RETURN_CENTROID;
         }
         if (position_angle_0 > 1.2*position_angle_1 || 1.2*position_angle_0 < position_angle_1) {
             DEBUG_PRINT ("Path Sanity Failure: Line angles do not match\n");
-            retval = 2;
+            retval = UNKNOWN_TARGET;
             goto RETURN_CENTROID;
         }
 
         // calculate values
-        interface->range = (PATH_REAL_LENGTH * _filtered_img->width) / ((length_0+length_1)*0.5 * TAN_FOV_X);
-        interface->angle = (position_angle_0 + position_angle_1) * 0.5;
-        DEBUG_PRINT ("Path Range = %d, Angle = %5.2f\n", interface->range, interface->angle);
-        retval = 0;
+        m_range = (PATH_REAL_LENGTH * _filtered_img->width) / ((length_0+length_1)*0.5 * TAN_FOV_X);
+        m_angle = (position_angle_0 + position_angle_1) * 0.5;
+        DEBUG_PRINT ("Path Range = %d, PAngle = %5.2f\n", m_range, m_angle);
+
+        retval = FULL_DETECT;
         goto RETURN_CENTROID;
     }
     else {
-    	printf ("nClusters > 2 in Path! This is not implemented yet!");
+    	printf ("nClusters > 2 in Path! This is not implemented yet!\n");
+        return NO_TARGET;
     }
 
     /// if we encounter any sort of sanity error, we will return only the centroid
     RETURN_CENTROID:
-        interface->angle_x = RAD_TO_DEG * atan(TAN_FOV_X * pixel_x / _filtered_img->width);
-        interface->angle_y = RAD_TO_DEG * atan(TAN_FOV_Y * pixel_y / _filtered_img->height);
-        DEBUG_PRINT ("Path (pixels, degrees): <%d,%d> <%5.2f,%5.2f>\n", pixel_x, pixel_y, 
-            interface->angle_x, interface->angle_y); 
+        m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / _filtered_img->width);
+        m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / _filtered_img->height);
+        DEBUG_PRINT ("Path (pixels, degrees): <%d,%d> <%5.2f,%5.2f>\n", m_pixel_x, m_pixel_y, 
+            m_angular_x, m_angular_y); 
         return retval;
 }

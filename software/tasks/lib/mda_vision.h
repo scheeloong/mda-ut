@@ -7,12 +7,20 @@
 #include "mgui.h"
 #include "mv.h"
 #include "mvLines.h"
-#include "vci.h"
+
+enum MDA_VISION_RETURN_CODE  {
+    FATAL_ERROR,        // defaults to this if you dont change the value
+    NO_TARGET,          // cant find anything, no defined data 
+    UNKNOWN_TARGET,     // cant recognize target, returns centroid
+    ONE_SEGMENT,
+    TWO_SEGMENT,
+    FULL_DETECT
+};
 
 /// ########################################################################
 /** This is the base class for a vision module. Every vision module needs to implement
  *      - void filter (const IplImage* src)
- *      - void calc_vci (VCI *interface)
+ *      - void calc_vci ()
  *  
  *  The first function filters the source image into _filtered_img
  *  The second calculates relevant information using the _filtered_img
@@ -25,32 +33,53 @@ class MDA_VISION_MODULE_BASE {
 protected:
     /// definitions related to camera and vision
     static const float TAN_FOV_X = 1.2;     // tangent of camera FOV, equal to real width/range
-    static const float TAN_FOV_Y = 1.0;
+    static const float TAN_FOV_Y = 1.2;
     static const float RAD_TO_DEG = 57.2958;
 
     // stores resized image
     IplImage* _resized_; 
 
+    // stores numerical data that can be queried. The goal of the modules is to calculate this
+    int m_pixel_x, m_pixel_y, m_range;
+    float m_angular_x, m_angular_y;
+    float m_angle;
+
+    void clear_data () {
+        m_pixel_x = m_pixel_y = m_range = VISION_UNDEFINED_VALUE;
+        m_angular_x = m_angular_y = m_angle = VISION_UNDEFINED_VALUE;
+    }
+
     /// you must implement these yourself!
     virtual void primary_filter (const IplImage* src) = 0;
-    virtual int calc_vci (VCI* interface) = 0;
+    virtual MDA_VISION_RETURN_CODE calc_vci () = 0;
     
 public:
     MDA_VISION_MODULE_BASE () { _resized_ = mvCreateImage_Color(); }
     virtual ~MDA_VISION_MODULE_BASE () { cvReleaseImage (&_resized_); } 
 
-    int filter (const IplImage* src, VCI* interface) {
+    MDA_VISION_RETURN_CODE filter (const IplImage* src) {
         assert (src != NULL);
         assert (src->nChannels == 3);
         
         cvResize (src, _resized_);
         _resized_->origin = src->origin;
-
-        interface->clear();
         
+        clear_data();
         primary_filter (_resized_);
-        return calc_vci (interface);
+        MDA_VISION_RETURN_CODE retval = calc_vci ();
+
+        assert (retval != FATAL_ERROR);
+        return retval;
     };
+
+    static const int VISION_UNDEFINED_VALUE = -88888888;
+
+    virtual int get_pixel_x() {return m_pixel_x;}
+    virtual int get_pixel_y() {return m_pixel_y;}
+    virtual int get_angular_x() {return m_angular_x;}
+    virtual int get_angular_y() {return m_angular_y;}
+    virtual int get_range() {return m_range;}
+    virtual int get_angle() {return m_angle;}
 
 };
 /// ########################################################################
@@ -59,7 +88,7 @@ public:
 /// You probably dont want to touch anything above this line
 
 /// ########################################################################
-/// this class is to test vision/sim/control interfaces. write whatever you want
+/// this class is to test stuff. write whatever you want
 /// ########################################################################
 class MDA_VISION_MODULE_TEST : public MDA_VISION_MODULE_BASE {
 #define MDA_VISION_MODULE_TEST_SETTINGS "vision_test_settings.csv"
@@ -76,7 +105,11 @@ public:
     ~MDA_VISION_MODULE_TEST ();
     
     void primary_filter (const IplImage* src);
-    int calc_vci (VCI* interface);
+    MDA_VISION_RETURN_CODE calc_vci ();
+
+    // prevent users from accessing range/angle
+    virtual int get_range() {printf ("VISION_MODULE_TEST - get_range not allowed\n"); exit(1); return 0;}
+    virtual int get_angle() {printf ("VISION_MODULE_TEST - get_angle not allowed\n"); exit(1); return 0;}
 };
 
 
@@ -104,7 +137,9 @@ public:
     ~MDA_VISION_MODULE_GATE ();
     
     void primary_filter (const IplImage* src);
-    int calc_vci (VCI* interface);
+    MDA_VISION_RETURN_CODE calc_vci ();
+
+    virtual int get_angle() {printf ("VISION_MODULE_GATE - get_angle not allowed\n"); exit(1); return 0;}
 };
 
 
@@ -131,7 +166,7 @@ public:
     ~MDA_VISION_MODULE_PATH ();
     
     void primary_filter (const IplImage* src);
-    int calc_vci (VCI* interface);
+    MDA_VISION_RETURN_CODE calc_vci ();
 };
 
 /// ########################################################################
@@ -145,7 +180,9 @@ public:
     ~MDA_VISION_MODULE_BUOY ();
     
     void primary_filter (const IplImage* src);
-    int calc_vci (VCI* interface);
+    MDA_VISION_RETURN_CODE calc_vci ();
+
+    virtual int get_angle() {printf ("VISION_MODULE_BUOY- get_angle not allowed\n"); exit(1); return 0;}
 };
 
 /// ########################################################################
@@ -171,7 +208,9 @@ public:
     ~MDA_VISION_MODULE_FRAME ();
     
     void primary_filter (const IplImage* src);
-    int calc_vci (VCI* interface);
+    MDA_VISION_RETURN_CODE calc_vci ();
+
+    virtual int get_angle() {printf ("VISION_MODULE_FRAME - get_angle not allowed\n"); exit(1); return 0;}
 };
 
 #endif

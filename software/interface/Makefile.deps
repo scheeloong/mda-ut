@@ -9,7 +9,7 @@ AquaTux.o: AquaTux.cpp AquaTux.h AttitudeInput.h ImageInput.h \
  ActuatorOutput.h SimulatorSingleton.h ../sim/physical_model.h \
  ../sim/types.h ../tasks/lib/Mission.h ../sim/../interface/Operation.h \
  ../tasks/lib/mda_tasks.h ../tasks/lib/mda_vision.h ../vision/lib/mv.h \
- ../vision/lib/mgui.h ../vision/lib/mvLines.h ../tasks/lib/vci.h \
+ ../vision/lib/mgui.h ../vision/lib/mvLines.h \
  ../sim/../interface/AttitudeInput.h ../sim/../interface/ImageInput.h \
  ../sim/../interface/ActuatorOutput.h SubmarineSingleton.h
 AttitudeInputSimulator.o: AttitudeInputSimulator.cpp AttitudeInput.h \
