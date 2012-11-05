@@ -182,6 +182,8 @@ void JoystickOperation::process_image()
     if (frame) {
       vision_module->filter(frame);
       fflush(stdout);
+    } else {
+      message("Image stream over");
     }
   }
 }
