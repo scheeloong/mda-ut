@@ -22,6 +22,8 @@ void JoystickOperation::display_start_message()
          "  kjhl - move forward/reverse/left/right\n"
          "  io   - move up/down\n"
          "  e    - nullify all acceleration\n"
+         "\n"
+         "  v    - enter vision mode\n"
          "\n");
   refresh();
 }
