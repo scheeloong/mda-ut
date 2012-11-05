@@ -69,7 +69,9 @@ void mvLines:: drawOntoImage (IplImage* img) {
 }
 
 /** mvHoughLines methods */
-mvHoughLines:: mvHoughLines (const char* settings_file) {
+mvHoughLines:: mvHoughLines (const char* settings_file) :
+    bin_findLines ("mvHoughLines - findLines")
+{
     read_mv_setting (settings_file, "_ACCUMULATOR_THRESHOLD_", _ACCUMULATOR_THRESHOLD_);
     read_mv_setting (settings_file, "_MIN_LINE_LENGTH_", _MIN_LINE_LENGTH_);
     read_mv_setting (settings_file, "_MIN_COLINEAR_LINE_DIST_", _MIN_COLINEAR_LINE_DIST_);
@@ -85,6 +87,7 @@ void mvHoughLines:: findLines (IplImage *img, mvLines* lines) {
     
     unsigned imgwidth = img->width;
     
+      bin_findLines.start();
     lines->_data = cvHoughLines2 (
         img, 
         lines->_storage,
@@ -95,4 +98,5 @@ void mvHoughLines:: findLines (IplImage *img, mvLines* lines) {
         _MIN_LINE_LENGTH_ * imgwidth,
         _MIN_COLINEAR_LINE_DIST_ * imgwidth
     );
+      bin_findLines.stop();
 }

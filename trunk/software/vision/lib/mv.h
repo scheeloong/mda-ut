@@ -57,35 +57,6 @@ void mvBRG2HSV(const IplImage* src, IplImage* dst);
 inline void mvGaussian (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h) {
     cvSmooth (src, dst, CV_GAUSSIAN, kern_w, kern_h);
 }
-inline void mvDilate (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
-    IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
-    cvDilate (src, dst, kernel, iterations);
-    cvReleaseStructuringElement (&kernel);
-}
-inline void mvErode (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
-    IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
-    cvErode (src, dst, kernel, iterations);
-    cvReleaseStructuringElement (&kernel);
-}
-inline void mvOpen (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
-    IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
-    cvMorphologyEx (src, dst, NULL, kernel, CV_MOP_OPEN, iterations);
-    cvReleaseStructuringElement (&kernel);
-}
-inline void mvClose (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
-    IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
-    cvMorphologyEx (src, dst, NULL, kernel, CV_MOP_CLOSE, iterations);
-    cvReleaseStructuringElement (&kernel);
-}
-inline void mvGradient (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
-    IplImage* temp = cvCreateImage (cvGetSize(src), IPL_DEPTH_8U, 1);
-    IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
-
-    cvMorphologyEx (src, dst, temp, kernel, CV_MOP_GRADIENT, iterations);
-    
-    cvReleaseImage (&temp);
-    cvReleaseStructuringElement (&kernel);
-}
 
 /** Binary Filters */
 // These are fast filters designed specifically for binary images with very
@@ -99,6 +70,9 @@ class mvBinaryMorphology {
 	unsigned kernel_area;
 	int* kernel_point_array;
 
+    PROFILE_BIN bin_morph;
+    PROFILE_BIN bin_gradient;
+
 	void mvBinaryMorphologyMain (MV_MORPHOLOGY_TYPE morphology_type, const IplImage* src, IplImage* dst);
 
 	public:
@@ -106,19 +80,29 @@ class mvBinaryMorphology {
 	~mvBinaryMorphology ();
 
 	void dilate (const IplImage* src, IplImage* dst) {
+          bin_morph.start();
 		mvBinaryMorphologyMain (MV_DILATE, src, dst);
+          bin_morph.stop();
 	}
 	void erode (const IplImage* src, IplImage* dst) {
+          bin_morph.start();
 		mvBinaryMorphologyMain (MV_ERODE, src, dst);
+          bin_morph.stop();
 	}
 	void close (const IplImage* src, IplImage* dst) {
+          bin_morph.start();
 		mvBinaryMorphologyMain (MV_CLOSE, src, dst);
+          bin_morph.stop();
 	}
 	void open (const IplImage* src, IplImage* dst) {
+          bin_morph.start();
 		mvBinaryMorphologyMain (MV_OPEN, src, dst);
+          bin_morph.stop();
 	}
 	void gradient (const IplImage* src, IplImage* dst) {
+          bin_gradient.start();
 		mvBinaryMorphologyMain (MV_GRADIENT, src, dst);
+          bin_gradient.stop();
 	}
 };
 

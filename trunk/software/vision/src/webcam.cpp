@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <cv.h>
-#include <time.h>
 #include <string.h>
+#include <time.h>
 
 #include "mgui.h"
 #include "mv.h"
@@ -77,27 +77,12 @@ int main( int argc, char** argv ) {
  
     /// execution
     char c;
-    IplImage* frame;
-    t_start = clock();    
-    
-    float t_reset;
-    float t_getFrame = 0;
-    float t_HSV = 0;
-    float t_morph = 0;
-    float t_grad = 0;
-    float t_line = 0;
-    float t_cluster = 0;
-    float t_draw = 0;
-    float t_display = 0;
-        
-    PROFILE_BIN cv_bin("CV");
-    PROFILE_BIN mv_bin("MV");
-    
-    
+    IplImage* frame;   
+
+    t_start = clock();
+
     for (;;) {
-          t_reset = clock();
         frame = camera->getFrameResized(); // read frame from cam
-          t_getFrame += clock() - t_reset;        
 
         if (!frame) {
             printf ("Video Finished.\n");
@@ -109,35 +94,22 @@ int main( int argc, char** argv ) {
             continue;
         }
 
-          t_reset = clock();
         HSVFilter.filter (frame, filter_img); // process it
-          t_HSV += clock() - t_reset;        
            
-          t_reset = clock();
         Morphology.open (filter_img, filter_img);
-          t_morph += clock() - t_reset;
-
-          t_reset = clock();
         Morphology.gradient (filter_img, grad_img);
-          t_grad += clock() - t_reset;
         
         if (TEST) {
-	  IplImage* cvImage, *mvImage;
-	  cvImage = mvCreateImage_Color();
-	  mvImage = mvCreateImage_Color();
-	  
-	  cv_bin.start();
-	  cvCvtColor(frame ,cvImage, CV_BGR2HSV);
-	  cv_bin.stop();
-	  
-	  mv_bin.start();
-	  mvBRG2HSV(frame, mvImage);
-	  mv_bin.stop();
-	  
-	  win1->showImage(frame);
-	  win2 ->showImage(cvImage);
-	  win3 ->showImage(mvImage);
-	  
+            IplImage* cvImage, *mvImage;
+            cvImage = mvCreateImage_Color();
+            mvImage = mvCreateImage_Color();
+
+            cvCvtColor(frame ,cvImage, CV_BGR2HSV);
+            mvBRG2HSV(frame, mvImage);
+
+            win1->showImage(frame);
+            win2 ->showImage(cvImage);
+            win3 ->showImage(mvImage);
         }
 	
         if (CARTOON) {
@@ -156,8 +128,8 @@ int main( int argc, char** argv ) {
             }
 
             cvCvtColor (myframe, filter_img, CV_RGB2GRAY);
-            mvGradient (filter_img, grad_img, 5, 5);
-            mvErode (grad_img, grad_img, 3, 3);
+            Morphology.gradient (filter_img, grad_img);
+            Morphology.erode (grad_img, grad_img);
 
             for (int i = 0; i < myframe->height; i++) {
                 for (int j = 0; j < myframe->width; j++) {
@@ -174,25 +146,17 @@ int main( int argc, char** argv ) {
             win3->showImage (grad_img);
         }
         else if (LINE) {
-              t_reset = clock();
             HoughLines.findLines (grad_img, &lines);
-              t_line += clock() - t_reset;
-              t_reset = clock();
             kmeans.cluster_auto (1, 8, &lines, 1);
-              t_cluster += clock() - t_reset;
         
-              t_reset = clock();
             //lines.drawOntoImage (grad_img);
             kmeans.drawOntoImage (grad_img);
-              t_draw += clock() - t_reset;
             lines.clearData(); // erase line data and reuse allocated mem
             //kmeans.clearData();
             
-              t_reset = clock();
             win1->showImage (frame);
             win2->showImage (filter_img);
             win3->showImage (grad_img);
-              t_display += clock() - t_reset;
         }
         else if (CIRCLE) {
             HoughCircles.findCircles (grad_img, &circles);
@@ -223,23 +187,6 @@ int main( int argc, char** argv ) {
     t_end = clock ();
     printf ("\nAverage Framerate = %f\n", (float)nframes/(t_end - t_start)*CLOCKS_PER_SEC);
     
-    t_getFrame /= CLOCKS_PER_SEC;
-    t_HSV /= CLOCKS_PER_SEC;
-    t_morph /= CLOCKS_PER_SEC;
-    t_grad /= CLOCKS_PER_SEC;
-    t_line /= CLOCKS_PER_SEC;
-    t_cluster /= CLOCKS_PER_SEC;
-    t_draw /= CLOCKS_PER_SEC;
-    t_display /= CLOCKS_PER_SEC;
-    printf ("getFrame:   %6.3f secs\n", t_getFrame);
-    printf ("HSV:        %6.3f secs\n", t_HSV);
-    printf ("Morphology: %6.3f secs\n", t_morph);
-    printf ("Gradient:   %6.3f secs\n", t_grad);
-    printf ("Line Find:  %6.3f secs\n", t_line);
-    printf ("Clustering: %6.3f secs\n", t_cluster);
-    printf ("Drawing:    %6.3f secs\n", t_draw);
-    printf ("Display:    %6.3f secs\n", t_display);
-
     cvReleaseImage (&filter_img);
     cvReleaseImage (&grad_img);
     delete camera;
