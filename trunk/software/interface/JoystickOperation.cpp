@@ -179,8 +179,10 @@ void JoystickOperation::process_image()
 {
   if (vision_module) {
     const IplImage* frame = image_input->get_image(use_fwd_img?FWD_IMG:DWN_IMG);
-    vision_module->filter(frame);
-    fflush(stdout);
+    if (frame) {
+      vision_module->filter(frame);
+      fflush(stdout);
+    }
   }
 }
 
