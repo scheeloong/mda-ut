@@ -12,9 +12,9 @@
 /// ########################################################################
 MDA_VISION_MODULE_PATH:: MDA_VISION_MODULE_PATH () :
 	_window (mvWindow("Path Vision Module")),
-	_HSVFilter (mvHSVFilter(MDA_VISION_MODULE_TEST_SETTINGS)),
+	_HSVFilter (mvHSVFilter(MDA_VISION_PATH_SETTINGS)),
 	_Morphology (mvBinaryMorphology(5, 5, MV_KERN_RECT)),
-	_HoughLines (mvHoughLines(MDA_VISION_MODULE_TEST_SETTINGS)),
+	_HoughLines (mvHoughLines(MDA_VISION_PATH_SETTINGS)),
 	_lines (mvLines())
 {
     _filtered_img = mvCreateImage (); // common size
@@ -31,14 +31,13 @@ void MDA_VISION_MODULE_PATH:: primary_filter (const IplImage* src) {
     _KMeans.clearData ();
     
     _Morphology.gradient(_filtered_img, _filtered_img);
-    mvGradient (_filtered_img, _filtered_img, 5, 5);
     _HoughLines.findLines (_filtered_img, &_lines);
     _KMeans.cluster_auto (1, 4, &_lines, 1);
 
-    _lines.drawOntoImage (_filtered_img);
     _KMeans.drawOntoImage (_filtered_img);
 
     _window.showImage (_filtered_img);
+    cvWaitKey(3);
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {

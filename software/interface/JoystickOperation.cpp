@@ -93,21 +93,51 @@ void JoystickOperation::work()
       case ' ':
          actuator_output->stop();
          break;
-      case '1':
+
+      case '0':
          if (mode != VISION) {
            break;
          }
          delete vision_module;
          message("Selected test vision module\n");
          vision_module = new MDA_VISION_MODULE_TEST();
+         use_fwd_img = true;
+         break;
+      case '1':
+         if (mode != VISION) {
+           break;
+         }
+         delete vision_module;
+         message("Selected gate vision module\n");
+         vision_module = new MDA_VISION_MODULE_GATE();
+         use_fwd_img = true;
          break;
       case '2':
          if (mode != VISION) {
            break;
          }
          delete vision_module;
-         message("Selected test vision module\n");
-         vision_module = new MDA_VISION_MODULE_GATE();
+         message("Selected path vision module\n");
+         vision_module = new MDA_VISION_MODULE_PATH();
+         use_fwd_img = false;
+         break;
+      case '3':
+         if (mode != VISION) {
+           break;
+         }
+         delete vision_module;
+         message("Selected buoy vision module\n");
+         vision_module = new MDA_VISION_MODULE_BUOY();
+         use_fwd_img = true;
+         break;
+      case '4':
+         if (mode != VISION) {
+           break;
+         }
+         delete vision_module;
+         message("Selected frame vision module\n");
+         vision_module = new MDA_VISION_MODULE_FRAME();
+         use_fwd_img = true;
          break;
       case 'x':
          if (mode == NORMAL) {
@@ -124,8 +154,11 @@ void JoystickOperation::work()
          mode = VISION;
          message(
            "Entering Vision Mode:\n"
-           "  1    - test vision\n"
-           "  2    - gate vision"
+           "  0    - test vision\n"
+           "  1    - gate vision\n"
+           "  2    - path vision\n"
+           "  3    - buoy vision\n"
+           "  4    - frame vision\n"
            "\n"
            "  x    - exit vision mode\n"
          );
@@ -145,7 +178,7 @@ void JoystickOperation::work()
 void JoystickOperation::process_image()
 {
   if (vision_module) {
-    const IplImage* frame = image_input->get_image(FWD_IMG);
+    const IplImage* frame = image_input->get_image(use_fwd_img?FWD_IMG:DWN_IMG);
     vision_module->filter(frame);
     fflush(stdout);
   }

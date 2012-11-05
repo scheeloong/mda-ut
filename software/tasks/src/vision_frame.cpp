@@ -12,8 +12,8 @@
 /// ########################################################################
 MDA_VISION_MODULE_FRAME:: MDA_VISION_MODULE_FRAME () :
     _window (mvWindow("Frame Vision Module")),
-    _HSVFilter (mvHSVFilter(MDA_VISION_MODULE_TEST_SETTINGS)),
-    _HoughLines (mvHoughLines(MDA_VISION_MODULE_TEST_SETTINGS)),
+    _HSVFilter (mvHSVFilter(MDA_VISION_FRAME_SETTINGS)),
+    _HoughLines (mvHoughLines(MDA_VISION_FRAME_SETTINGS)),
     _lines (mvLines())
 {
     _filtered_img = mvCreateImage (); // common size

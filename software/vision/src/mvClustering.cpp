@@ -8,7 +8,7 @@
 
 #define ABS(X) (((X) > 0) ? (X) : (-(X)))
 #define SQR(X) ((X)*(X))
-//#define CLUSTERING_DEBUG
+#define CLUSTERING_DEBUG
 #ifdef CLUSTERING_DEBUG
     #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
 #else
@@ -228,7 +228,8 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
     }
     
     float avg_intra_cluster_diff = 0.0;
-    float avg_inter_cluster_diff = 0.0;
+    //float avg_inter_cluster_diff = 0.0;
+    float minimum_inter_cluster_diff = 1E12;
 
     /// calculate avg_intra_cluster_diff
     if (nClusters == _nLines) {
@@ -248,23 +249,22 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
     if (nClusters == 1) {
         // this equation basically says "when comparing 1 cluster vs 2 clusters, the 2 clusters have to be a ratio
         // of perpendicular dist over length of less than 0.2 to be better than the 1 cluster configuration
-        //minimum_inter_cluster_diff = GLOBAL_INT_FACTOR * SINGLE_CLUSTER__INTER_DIFF; // * line_sqr_length(_Clusters_Seed[0]);
-        avg_inter_cluster_diff = GLOBAL_INT_FACTOR * SINGLE_CLUSTER__INTER_DIFF; // * line_sqr_length(_Clusters_Seed[0]);
+        minimum_inter_cluster_diff = GLOBAL_INT_FACTOR * SINGLE_CLUSTER__INTER_DIFF; // * line_sqr_length(_Clusters_Seed[0]);
+        //avg_inter_cluster_diff = GLOBAL_INT_FACTOR * SINGLE_CLUSTER__INTER_DIFF; // * line_sqr_length(_Clusters_Seed[0]);
     }
     else {
         for (unsigned i = 0; i < nClusters; i++) { // loop over all combinations of clusters, find min_inter_cluster_diff
             for (unsigned j = i+1; j < nClusters; j++) {
                 float temp_diff = Line_Difference_Metric (_Clusters_Seed[i], _Clusters_Seed[j]);
-                //if (temp_diff < minimum_inter_cluster_diff)
-                  //  minimum_inter_cluster_diff = temp_diff;
-                avg_inter_cluster_diff += temp_diff;
+                if (temp_diff < minimum_inter_cluster_diff)
+                    minimum_inter_cluster_diff = temp_diff;
+                //avg_inter_cluster_diff += temp_diff;
             }
         }
     }
-    avg_inter_cluster_diff /= nClusters;
 
-    DEBUG_PRINT ("  nClusters = %d.  intra = %f,  inter = %f\n", nClusters, avg_intra_cluster_diff, avg_inter_cluster_diff);
-    return avg_intra_cluster_diff / avg_inter_cluster_diff; 
+    DEBUG_PRINT ("  nClusters = %d.  intra = %f,  inter = %f, %f\n", nClusters, avg_intra_cluster_diff, minimum_inter_cluster_diff);
+    return avg_intra_cluster_diff / minimum_inter_cluster_diff; 
 }
 
 int mvKMeans:: cluster_auto (unsigned nclusters_min, unsigned nclusters_max, mvLines* lines, unsigned iterations) {
