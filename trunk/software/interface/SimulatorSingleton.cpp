@@ -42,7 +42,7 @@ void SimulatorSingleton::create()
   write = fdopen(wh, "w");
 
   // Start simulation (may need to use passed in data)
-  pthread_create(&sim_thread, NULL, run_sim, NULL);
+  pthread_create(&sim_thread, NULL, ::run_sim, NULL);
 }
 
 void SimulatorSingleton::destroy()
@@ -106,40 +106,43 @@ void SimulatorSingleton::add_acceleration(float accel, float angular_accel, floa
 
 void *run_sim(void *args)
 {
+  SimulatorSingleton::get_instance().run_sim();
+  return NULL;
+}
+
+void SimulatorSingleton::run_sim()
+{
   int argc = 0;
   char *argv[1];
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_SINGLE | GLUT_DEPTH | GLUT_RGB | GLUT_DOUBLE);
   glutInitWindowSize (WINDOW_SIZE_X, WINDOW_SIZE_Y);
   glutInitWindowPosition(10, 0);
-  glutCreateWindow ("Forwards Cam");
+
+  dwn_window = glutCreateWindow ("Down Cam");
+  glutPositionWindow(0, 400);
+  glutReshapeFunc  (::sim_reshape);
+  glutDisplayFunc  (::sim_display);
+  glutIdleFunc     (::anim_scene);
+  glutKeyboardFunc (::sim_keyboard);
   glutCloseFunc(sim_close_window);
-
-  glutReshapeFunc  (sim_reshape);
-  glutDisplayFunc  (sim_display);
-  glutIdleFunc     (anim_scene);
-  glutKeyboardFunc (sim_keyboard);
-
   init_sim();
-  sim_init(); 
 
-  glutMainLoop();
-  return NULL;
-}
+  fwd_window = glutCreateWindow ("Forwards Cam");
+  glutReshapeFunc  (::sim_reshape);
+  glutDisplayFunc  (::sim_display);
+  glutIdleFunc     (::anim_scene);
+  glutKeyboardFunc (::sim_keyboard);
+  glutCloseFunc(sim_close_window);
+  init_sim();
 
-void sim_init()
-{
-  SimulatorSingleton::get_instance().sim_init();
-}
-
-void SimulatorSingleton::sim_init()
-{
   unsigned width = 600, height = 400; // temporary
-
   img_fwd = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
   img_fwd->origin = 1;
   img_dwn = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
   img_dwn->origin = 1;
+
+  glutMainLoop();
 }
 
 void sim_keyboard(unsigned char key, int x, int y)
@@ -179,11 +182,23 @@ void SimulatorSingleton::sim_display()
     }
     img_copy_done = true;
   } else {
+    // front camera
+    glutSetWindow(fwd_window);
     glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
     set_camera();
-    draw(); // front camera
+    draw();
+    glutSwapBuffers();
+
+    // down camera
+    model.angle.pitch += 90;
+    glutSetWindow(dwn_window);
+    glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity();
+    set_camera();
+    draw();
     glutSwapBuffers();   
+    model.angle.pitch -= 90;
   }
 
   glFlush();
