@@ -23,6 +23,7 @@ int main (int argc, char** argv) {
     buoy_module = new MDA_VISION_MODULE_BUOY;
     frame_module = new MDA_VISION_MODULE_FRAME;
 
+
     test_module->filter (img);
     printf ("test module passed\n");
     gate_module->filter (img);
@@ -34,12 +35,17 @@ int main (int argc, char** argv) {
     frame_module->filter (img);
     printf ("frame module passed\n");
 
+    cvWaitKey(500);
     delete test_module;
+    cvWaitKey(500);
     delete gate_module;
+    cvWaitKey(500);
     delete path_module;
+    cvWaitKey(500);
     delete buoy_module;
+    cvWaitKey(500);
     delete frame_module;
-
+    cvWaitKey(500);
 /*
     MDA_TASK_BASE* task_test = NULL;
     MDA_TASK_BASE* task_gate = NULL;

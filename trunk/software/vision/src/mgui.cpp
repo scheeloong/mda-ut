@@ -19,10 +19,10 @@ mvWindow:: mvWindow (const char name[]) { // this has to be the h file
     _window_number = i;
     
     switch (_window_number) {
-        case 0: cvMoveWindow (_name, 500,10); break;
-        case 1: cvMoveWindow (_name, 850,10); break;
-        case 2: cvMoveWindow (_name, 500,310); break;
-        case 3: cvMoveWindow (_name, 850,310); break;
+        case 0: cvMoveWindow (_name, 400,10); break;
+        case 1: cvMoveWindow (_name, 810,10); break;
+        case 2: cvMoveWindow (_name, 400,360); break;
+        case 3: cvMoveWindow (_name, 810,360); break;
     }
 }
 

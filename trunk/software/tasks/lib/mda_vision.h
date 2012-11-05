@@ -67,7 +67,7 @@ public:
         clear_data();
         primary_filter (_resized_);
         MDA_VISION_RETURN_CODE retval = calc_vci ();
-
+ 
         assert (retval != FATAL_ERROR);
         return retval;
     };
@@ -91,7 +91,7 @@ public:
 /// this class is to test stuff. write whatever you want
 /// ########################################################################
 class MDA_VISION_MODULE_TEST : public MDA_VISION_MODULE_BASE {
-#define MDA_VISION_MODULE_TEST_SETTINGS "vision_test_settings.csv"
+#define MDA_VISION_TEST_SETTINGS "vision_test_settings.csv"
     mvWindow _window;
     mvHSVFilter _HSVFilter;
     mvHoughLines _HoughLines;

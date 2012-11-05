@@ -1,4 +1,4 @@
-CC=g++ -O3 -Wall
+CC=g++ -O3 -Wall -g
 CVFLAGS=`pkg-config --cflags --libs opencv`
 LIBDIR=lib/
 VLIBDIR=../vision/lib/

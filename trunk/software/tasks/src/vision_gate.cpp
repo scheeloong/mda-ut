@@ -12,8 +12,8 @@
 /// ########################################################################
 MDA_VISION_MODULE_GATE:: MDA_VISION_MODULE_GATE () :
 	_window (mvWindow("Gate Vision Module")),
-	_HSVFilter (mvHSVFilter(MDA_VISION_MODULE_TEST_SETTINGS)),
-	_HoughLines (mvHoughLines(MDA_VISION_MODULE_TEST_SETTINGS)),
+	_HSVFilter (mvHSVFilter(MDA_VISION_GATE_SETTINGS)),
+	_HoughLines (mvHoughLines(MDA_VISION_GATE_SETTINGS)),
 	_lines (mvLines())
 {
     _filtered_img = mvCreateImage (); // common size
