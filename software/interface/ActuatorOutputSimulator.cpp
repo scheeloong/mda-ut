@@ -16,25 +16,25 @@ ActuatorOutputSimulator::~ActuatorOutputSimulator()
 void ActuatorOutputSimulator::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir, int delta)
 {
   // TODO: implement with a PID controller to simulate the real submarine
-  delta /= 15; // scale down for now since we're using acceleration and not degrees and cm
+  delta /= 5; // scale down for now since we're using acceleration and not degrees and cm
   switch(dir) {
     case FORWARD:
-      SimulatorSingleton::get_instance().add_acceleration(delta, 0, 0);
+      SimulatorSingleton::get_instance().set_acceleration(delta, 0, 0);
       break;
     case REVERSE:
-      SimulatorSingleton::get_instance().add_acceleration(-delta, 0, 0);
+      SimulatorSingleton::get_instance().set_acceleration(-delta, 0, 0);
       break;
     case LEFT:
-      SimulatorSingleton::get_instance().add_acceleration(0, -delta, 0);
+      SimulatorSingleton::get_instance().set_acceleration(0, -delta, 0);
       break;
     case RIGHT:
-      SimulatorSingleton::get_instance().add_acceleration(0, delta, 0);
+      SimulatorSingleton::get_instance().set_acceleration(0, delta, 0);
       break;
     case RISE:
-      SimulatorSingleton::get_instance().add_acceleration(0, 0, delta);
+      SimulatorSingleton::get_instance().set_acceleration(0, 0, delta);
       break;
     case SINK:
-      SimulatorSingleton::get_instance().add_acceleration(0, 0, -delta);
+      SimulatorSingleton::get_instance().set_acceleration(0, 0, -delta);
       break;
   }
 }
@@ -55,7 +55,7 @@ void ActuatorOutputSimulator::special_cmd(SPECIAL_COMMAND cmd)
   switch(cmd) {
     case SIM_ACCEL_ZERO:
       model = SimulatorSingleton::get_instance().attitude();
-      SimulatorSingleton::get_instance().add_acceleration(-model.accel, -model.angular_accel, -model.depth_accel);
+      SimulatorSingleton::get_instance().set_acceleration(0, 0, 0);
       break;
     case SIM_MOVE_FWD:
       model = SimulatorSingleton::get_instance().attitude();
