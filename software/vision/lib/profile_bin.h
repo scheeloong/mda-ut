@@ -2,6 +2,7 @@
 #define __PROFILE_BIN__
 #include <time.h>
 #include <string.h>
+#include <stdio.h>
 
 #define PROFILE_ON
 
