@@ -4,7 +4,9 @@
 /** mvWindow methods **/
 static bool WINDOWS_ARRAY[NUM_SUPPORTED_WINDOWS] = {false,false,false,false};
 
-mvWindow:: mvWindow (const char name[]) { // this has to be the h file
+mvWindow:: mvWindow (const char name[]) :
+    bin_showImage ("mvWindow - showImage")
+{ // this has to be the h file
     assert (strlen(name) < WINDOW_NAME_LEN);
     sprintf (_name, "%s", name);
 
@@ -32,7 +34,9 @@ mvWindow:: ~mvWindow () {
 }
 
 /** mvVideoWriter methods */
-mvVideoWriter:: mvVideoWriter (const char* filename, unsigned framerate) {
+mvVideoWriter:: mvVideoWriter (const char* filename, unsigned framerate) :
+    bin_writeFrame ("mvVideoWriter - writeFrame")
+{
     unsigned width, height;
     read_common_mv_setting ("IMG_WIDTH_COMMON", width);
     read_common_mv_setting ("IMG_HEIGHT_COMMON", height);

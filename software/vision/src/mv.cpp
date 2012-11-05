@@ -17,7 +17,10 @@ void mvBinaryErode (const IplImage* src, IplImage* dst, int kernel_point_array[]
 void mvBinaryGradient (const IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_area);
 
 
-mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV_KERNEL_SHAPE Shape) {
+mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV_KERNEL_SHAPE Shape) :
+    bin_morph ("mvMorphology - morph"),
+    bin_gradient ("mvMorphology - gradient")
+{
     assert (Kernel_Width % 2 == 1); // odd number
     assert (Kernel_Height % 2 == 1);
 

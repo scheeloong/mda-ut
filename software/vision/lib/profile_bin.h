@@ -30,7 +30,7 @@ class PROFILE_BIN {
             printf ("%-30s: ", binName);
             printf ("%6d calls; ", nCalls);
             printf ("%7.3f secs total time; ", totalTime);
-            printf ("%5.3f secs average time;\n", totalTime/nCalls);
+            printf ("%8.6f secs average time;\n", totalTime/nCalls);
         }
     }
     

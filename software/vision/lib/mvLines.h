@@ -6,6 +6,7 @@
 #define __MDA_VISION_MVLINES__ 
 
 #include <cv.h>
+#include "profile_bin.h"
 
 #define LINE_THICKNESS 1
     
@@ -58,6 +59,8 @@ class mvHoughLines {
     float ANG_RESOLUTION; // ang_resolution is in radians
     float _ACCUMULATOR_THRESHOLD_;
     float _MIN_LINE_LENGTH_, _MIN_COLINEAR_LINE_DIST_;
+
+    PROFILE_BIN bin_findLines;
     
     public:
     mvHoughLines (const char* settings_file);

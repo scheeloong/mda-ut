@@ -8,7 +8,7 @@
 
 #define ABS(X) (((X) > 0) ? (X) : (-(X)))
 #define SQR(X) ((X)*(X))
-#define CLUSTERING_DEBUG
+//#define CLUSTERING_DEBUG
 #ifdef CLUSTERING_DEBUG
     #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
 #else
@@ -263,7 +263,7 @@ float mvKMeans:: KMeans_Cluster (unsigned nClusters, unsigned iterations) {
         }
     }
 
-    DEBUG_PRINT ("  nClusters = %d.  intra = %f,  inter = %f, %f\n", nClusters, avg_intra_cluster_diff, minimum_inter_cluster_diff);
+    DEBUG_PRINT ("  nClusters = %d.  intra = %f,  inter = %f\n", nClusters, avg_intra_cluster_diff, minimum_inter_cluster_diff);
     return avg_intra_cluster_diff / minimum_inter_cluster_diff; 
 }
 

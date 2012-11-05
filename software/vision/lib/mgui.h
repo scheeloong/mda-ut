@@ -44,11 +44,17 @@ inline void read_common_mv_setting (const char setting_name[], std::string &valu
 class mvWindow {
     char _name[WINDOW_NAME_LEN];
     int _window_number;
+
+    PROFILE_BIN bin_showImage;
     
     public:
     mvWindow (const char name[]);
     ~mvWindow (); 
-    void showImage (const CvArr* image) { cvShowImage(_name, image); }
+    void showImage (const CvArr* image) {
+        bin_showImage.start();
+      cvShowImage(_name, image);
+        bin_showImage.stop();
+    }
     void move (unsigned x, unsigned y) { cvMoveWindow(_name, x, y); }
 };
 
@@ -56,13 +62,17 @@ class mvWindow {
 class mvVideoWriter {
   CvVideoWriter* _writer;
 
+  PROFILE_BIN bin_writeFrame;
+
 public:
     mvVideoWriter (const char* filename, unsigned framerate = 30);
     ~mvVideoWriter ();
 
     void writeFrame (IplImage* frame) {
+          bin_writeFrame.start();
         cvWriteFrame (_writer, frame);
-  }
+          bin_writeFrame.stop();
+    }
 };
 
 /** mvCamera - class for managing webcams and video writers **/
