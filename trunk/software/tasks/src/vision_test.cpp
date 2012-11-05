@@ -45,6 +45,7 @@ void MDA_VISION_MODULE_TEST:: primary_filter (const IplImage* src) {
     cvWaitKey(10);
 }
 
-int MDA_VISION_MODULE_TEST:: calc_vci (VCI* interface) {
-    return 0;
+MDA_VISION_RETURN_CODE MDA_VISION_MODULE_TEST:: calc_vci () {
+    MDA_VISION_RETURN_CODE retval = NO_TARGET;
+    return retval;
 }

@@ -19,6 +19,9 @@ MDA_VISION_MODULE_BUOY:: ~MDA_VISION_MODULE_BUOY () {
 void MDA_VISION_MODULE_BUOY:: primary_filter (const IplImage* src) {
 }
 
-int MDA_VISION_MODULE_BUOY:: calc_vci (VCI* interface) {
-    return 0;
+MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
+    MDA_VISION_RETURN_CODE retval = FATAL_ERROR;
+    
+    retval = NO_TARGET;
+    return retval;
 }

@@ -12,6 +12,10 @@ void Mission::work()
   task_mission.work();
 }
 
+
+// ###################################################################################
+// #### SingleTaskMission Methods
+// ###################################################################################
 SingleTaskMission:: SingleTaskMission(AttitudeInput *a, ImageInput *i, ActuatorOutput *o, MDA_TASK task_enum) :
   Operation(a, i, o)
 {
