@@ -1,48 +1,61 @@
 ActuatorOutputSimulator.o: ActuatorOutputSimulator.cpp ActuatorOutput.h \
  SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h ImageInput.h \
- ../vision/lib/mgui.h ../vision/lib/profile_bin.h
+ ../vision/mgui.h ../vision/profile_bin.h
 ActuatorOutputSubmarine.o: ActuatorOutputSubmarine.cpp ActuatorOutput.h \
  SubmarineSingleton.h ../scripts/scripts.h \
  ../scripts/../../fpga/ui/utils.h
 AquaTux.o: AquaTux.cpp AquaTux.h AttitudeInput.h ImageInput.h \
- ../vision/lib/mgui.h ../vision/lib/profile_bin.h Operation.h \
- ActuatorOutput.h SimulatorSingleton.h ../sim/physical_model.h \
- ../sim/types.h ../tasks/lib/Mission.h ../sim/../interface/Operation.h \
- ../tasks/lib/mda_tasks.h ../tasks/lib/mda_vision.h ../vision/lib/mv.h \
- ../vision/lib/mgui.h ../vision/lib/mvLines.h \
- ../sim/../interface/AttitudeInput.h ../sim/../interface/ImageInput.h \
- ../sim/../interface/ActuatorOutput.h SubmarineSingleton.h
+ ../vision/mgui.h ../vision/profile_bin.h Operation.h ActuatorOutput.h \
+ SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h \
+ ../tasks/mda_vision.h ../vision/mv.h ../vision/mgui.h \
+ ../vision/mvLines.h ../tasks/mda_tasks.h ../tasks/mda_vision.h \
+ ../tasks/../interface/AttitudeInput.h ../tasks/../interface/ImageInput.h \
+ ../tasks/../interface/ActuatorOutput.h ../tasks/Mission.h \
+ ../tasks/../interface/Operation.h ../tasks/mda_tasks.h \
+ SubmarineSingleton.h
 AttitudeInputSimulator.o: AttitudeInputSimulator.cpp AttitudeInput.h \
  SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h ImageInput.h \
- ../vision/lib/mgui.h ../vision/lib/profile_bin.h
+ ../vision/mgui.h ../vision/profile_bin.h
 AttitudeInputSubmarine.o: AttitudeInputSubmarine.cpp AttitudeInput.h \
  SubmarineSingleton.h ../scripts/scripts.h \
  ../scripts/../../fpga/ui/utils.h
 CommandLineOperation.o: CommandLineOperation.cpp Operation.h \
- AttitudeInput.h ImageInput.h ../vision/lib/mgui.h \
- ../vision/lib/profile_bin.h ActuatorOutput.h SimulatorSingleton.h \
- ../sim/physical_model.h ../sim/types.h
+ AttitudeInput.h ImageInput.h ../vision/mgui.h ../vision/profile_bin.h \
+ ActuatorOutput.h SimulatorSingleton.h ../sim/physical_model.h \
+ ../sim/types.h ../tasks/mda_vision.h ../vision/mv.h ../vision/mgui.h \
+ ../vision/mvLines.h ../tasks/mda_tasks.h ../tasks/mda_vision.h \
+ ../tasks/../interface/AttitudeInput.h ../tasks/../interface/ImageInput.h \
+ ../tasks/../interface/ActuatorOutput.h
 ImageInputSimulator.o: ImageInputSimulator.cpp ImageInput.h \
- ../vision/lib/mgui.h ../vision/lib/profile_bin.h SimulatorSingleton.h \
+ ../vision/mgui.h ../vision/profile_bin.h SimulatorSingleton.h \
  ../sim/physical_model.h ../sim/types.h
 ImageInputSubmarine.o: ImageInputSubmarine.cpp ImageInput.h \
- ../vision/lib/mgui.h ../vision/lib/profile_bin.h SubmarineSingleton.h
-ImageInputVideo.o: ImageInputVideo.cpp ImageInput.h ../vision/lib/mgui.h \
- ../vision/lib/profile_bin.h
-JoystickOperation.o: JoystickOperation.cpp ImageInput.h \
- ../vision/lib/mgui.h ../vision/lib/profile_bin.h Operation.h \
- AttitudeInput.h ActuatorOutput.h SimulatorSingleton.h \
- ../sim/physical_model.h ../sim/types.h
-main.o: main.cpp AquaTux.h AttitudeInput.h ImageInput.h \
- ../vision/lib/mgui.h ../vision/lib/profile_bin.h Operation.h \
- ActuatorOutput.h SimulatorSingleton.h ../sim/physical_model.h \
- ../sim/types.h
+ ../vision/mgui.h ../vision/profile_bin.h SubmarineSingleton.h
+ImageInputVideo.o: ImageInputVideo.cpp ImageInput.h ../vision/mgui.h \
+ ../vision/profile_bin.h
+JoystickOperation.o: JoystickOperation.cpp Operation.h AttitudeInput.h \
+ ImageInput.h ../vision/mgui.h ../vision/profile_bin.h ActuatorOutput.h \
+ SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h \
+ ../tasks/mda_vision.h ../vision/mv.h ../vision/mgui.h \
+ ../vision/mvLines.h ../tasks/mda_tasks.h ../tasks/mda_vision.h \
+ ../tasks/../interface/AttitudeInput.h ../tasks/../interface/ImageInput.h \
+ ../tasks/../interface/ActuatorOutput.h
+main.o: main.cpp AquaTux.h AttitudeInput.h ImageInput.h ../vision/mgui.h \
+ ../vision/profile_bin.h Operation.h ActuatorOutput.h \
+ SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h \
+ ../tasks/mda_vision.h ../vision/mv.h ../vision/mgui.h \
+ ../vision/mvLines.h ../tasks/mda_tasks.h ../tasks/mda_vision.h \
+ ../tasks/../interface/AttitudeInput.h ../tasks/../interface/ImageInput.h \
+ ../tasks/../interface/ActuatorOutput.h
 OperationNull.o: OperationNull.cpp Operation.h AttitudeInput.h \
- ImageInput.h ../vision/lib/mgui.h ../vision/lib/profile_bin.h \
- ActuatorOutput.h SimulatorSingleton.h ../sim/physical_model.h \
- ../sim/types.h
+ ImageInput.h ../vision/mgui.h ../vision/profile_bin.h ActuatorOutput.h \
+ SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h \
+ ../tasks/mda_vision.h ../vision/mv.h ../vision/mgui.h \
+ ../vision/mvLines.h ../tasks/mda_tasks.h ../tasks/mda_vision.h \
+ ../tasks/../interface/AttitudeInput.h ../tasks/../interface/ImageInput.h \
+ ../tasks/../interface/ActuatorOutput.h
 SimulatorSingleton.o: SimulatorSingleton.cpp ../sim/sim.h \
  SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h ImageInput.h \
- ../vision/lib/mgui.h ../vision/lib/profile_bin.h
+ ../vision/mgui.h ../vision/profile_bin.h
 SubmarineSingleton.o: SubmarineSingleton.cpp SubmarineSingleton.h \
  ../scripts/scripts.h ../scripts/../../fpga/ui/utils.h
