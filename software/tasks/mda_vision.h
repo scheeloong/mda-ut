@@ -7,6 +7,7 @@
 #include "mgui.h"
 #include "mv.h"
 #include "mvLines.h"
+#include "mvCircles.h"
 
 enum MDA_VISION_RETURN_CODE  {
     FATAL_ERROR,        // defaults to this if you dont change the value
@@ -91,7 +92,7 @@ public:
 /// this class is to test stuff. write whatever you want
 /// ########################################################################
 class MDA_VISION_MODULE_TEST : public MDA_VISION_MODULE_BASE {
-#define MDA_VISION_TEST_SETTINGS "vision_test_settings.csv"
+    static const char MDA_VISION_TEST_SETTINGS[];
     mvWindow _window;
     mvHSVFilter _HSVFilter;
     mvHoughLines _HoughLines;
@@ -117,7 +118,7 @@ public:
 /// this class is for the gate
 /// ########################################################################
 class MDA_VISION_MODULE_GATE : public MDA_VISION_MODULE_BASE {
-#define MDA_VISION_GATE_SETTINGS "vision_gate_settings.csv"
+    static const char MDA_VISION_GATE_SETTINGS[];
     static const float GATE_REAL_WIDTH = 300.0;
     static const float GATE_REAL_HEIGHT = 120.0;
     static const float GATE_REAL_SLENDERNESS = 0.017;
@@ -147,7 +148,7 @@ public:
 /// this class is for the path
 /// ########################################################################
 class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
-#define MDA_VISION_PATH_SETTINGS "vision_path_settings.csv"
+    static const char MDA_VISION_PATH_SETTINGS[];
     static const float PATH_REAL_LENGTH = 120.0;
     static const float PATH_REAL_WIDTH = 15.0;
 
@@ -173,7 +174,18 @@ public:
 /// this class is for the buoy
 /// ########################################################################
 class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
+    static const char MDA_VISION_BUOY_SETTINGS[];
     static const float BUOY_REAL_DIAMTER = 23;
+
+    mvWindow _window;
+    mvHSVFilter _HSVFilter;
+    mvBinaryMorphology _Morphology5;
+    mvBinaryMorphology _Morphology3;
+    mvHoughCircles _HoughCircles;
+
+    mvCircles _circles;
+    
+    IplImage* _filtered_img;
 
 public:
     MDA_VISION_MODULE_BUOY ();
@@ -189,7 +201,7 @@ public:
 /// this class is for the frame
 /// ########################################################################
 class MDA_VISION_MODULE_FRAME : public MDA_VISION_MODULE_BASE {
-#define MDA_VISION_FRAME_SETTINGS "vision_frame_settings.csv"
+    static const char MDA_VISION_FRAME_SETTINGS[];
     static const float FRAME_REAL_WIDTH = 180.0;
     static const float FRAME_REAL_HEIGHT = 120.0;
     static const float FRAME_REAL_VERTICAL_SEGMENT_LENGTH = 40.0;
