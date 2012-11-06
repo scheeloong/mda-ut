@@ -21,7 +21,9 @@ void mvCircles:: drawOntoImage (IplImage* img) {
 
 
 /** mvHoughCircles methods */
-mvHoughCircles:: mvHoughCircles (const char* settings_file) {
+mvHoughCircles:: mvHoughCircles (const char* settings_file) :
+    bin_findcircles ("mvHoughCircles - findCircles")
+{
     read_mv_setting (settings_file, "_ACCUMULATOR_THRESHOLD_", _ACCUMULATOR_THRESHOLD_);
     read_mv_setting (settings_file, "_MIN_CENTER_DIST_", _MIN_CENTER_DIST_);
     read_mv_setting (settings_file, "CANNY_HIGH_THRESHOLD", CANNY_HIGH_THRESHOLD);
@@ -34,8 +36,8 @@ void mvHoughCircles:: findCircles (IplImage *img, mvCircles* circles) {
     assert (circles != NULL);
     assert (circles->_data == NULL); // make sure there isnt already data
     
+    bin_findcircles.start();
     unsigned imgwidth = img->width;
-    
     circles->_data = cvHoughCircles(
         img, 
         circles->_storage, 
@@ -45,4 +47,5 @@ void mvHoughCircles:: findCircles (IplImage *img, mvCircles* circles) {
         CANNY_HIGH_THRESHOLD,
         _ACCUMULATOR_THRESHOLD_ * imgwidth
     );
+    bin_findcircles.stop();
 }

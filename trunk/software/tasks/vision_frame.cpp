@@ -7,9 +7,11 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
-/// ########################################################################
+const char MDA_VISION_MODULE_FRAME::MDA_VISION_FRAME_SETTINGS[] = "vision_frame_settings.csv";
+
+/// #########################################################################
 /// MODULE_FRAME methods
-/// ########################################################################
+/// #########################################################################
 MDA_VISION_MODULE_FRAME:: MDA_VISION_MODULE_FRAME () :
     _window (mvWindow("Frame Vision Module")),
     _HSVFilter (mvHSVFilter(MDA_VISION_FRAME_SETTINGS)),

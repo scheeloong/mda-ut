@@ -14,13 +14,13 @@ void JoystickOperation::display_start_message()
   printw(
          "Commands:\n"
          "  q    - exit simulator\n"
-         "  p    - save input image screenshots as image_[fwd/dwn].jpg\n"
+         "  z    - save input image screenshots as image_[fwd/dwn].jpg\n"
          "\n"
          "  wasd - use controller to move forward/reverse/left/right\n"
          "  rf   - use controller to move up/down\n"
          "  ' '  - stop\n"
-         "  kjhl - move forward/reverse/left/right\n"
-         "  io   - move up/down\n"
+         "  ijkl - move forward/reverse/left/right\n"
+         "  p;   - move up/down\n"
          "  e    - nullify all acceleration\n"
          "\n"
          "  v    - enter vision mode\n"
@@ -48,25 +48,25 @@ void JoystickOperation::work()
       case 'q':
          loop = false;
          break;
-      case 'p':
+      case 'z':
          dump_images();
          break;
-      case 'k':
+      case 'i':
          actuator_output->special_cmd(SIM_MOVE_FWD);
          break;
-      case 'j':
+      case 'k':
          actuator_output->special_cmd(SIM_MOVE_REV);
          break;
-      case 'h':
+      case 'j':
          actuator_output->special_cmd(SIM_MOVE_LEFT);
          break;
       case 'l':
          actuator_output->special_cmd(SIM_MOVE_RIGHT);
          break;
-      case 'i':
+      case 'p':
          actuator_output->special_cmd(SIM_MOVE_RISE);
          break;
-      case 'o':
+      case ';':
          actuator_output->special_cmd(SIM_MOVE_SINK);
          break;
       case 'e':

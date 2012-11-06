@@ -6,6 +6,7 @@
 #define __MDA_VISION_MVCIRCLES__ 
 
 #include <cv.h>
+#include "profile_bin.h"
 
 #define CIRCLE_THICKNESS 2
 
@@ -60,6 +61,8 @@ class mvHoughCircles {
     float _MIN_CENTER_DIST_; // ang_resolution is in radians
     unsigned CANNY_HIGH_THRESHOLD;
     float _ACCUMULATOR_THRESHOLD_;
+
+    PROFILE_BIN bin_findcircles;
     
     public:
     mvHoughCircles (const char* settings_file);

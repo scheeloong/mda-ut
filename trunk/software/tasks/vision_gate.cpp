@@ -7,6 +7,8 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
+const char MDA_VISION_MODULE_GATE::MDA_VISION_GATE_SETTINGS[] = "vision_gate_settings.csv";
+
 /// ########################################################################
 /// MODULE_GATE methods
 /// ########################################################################

@@ -3,6 +3,13 @@
 #include <stdio.h>
 #include <unistd.h>
 
+//#define FILE_DEBUG
+#ifdef FILE_DEBUG
+    #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
+#else
+    #define DEBUG_PRINT(format, ...)
+#endif
+
 bool str_isdigit (const char str[])
 // Helper function for read_mv_setting. Returns true if string is a float 
 {
@@ -42,7 +49,8 @@ void read_mv_setting (const char filename[], const char setting_name[], TYPE &da
         fprintf (stderr, "**** Error: read_mv_setting failed to open %s\n", settings_file.c_str()); 
         exit (1);
     }
-    
+
+    DEBUG_PRINT ("Reading Settings File: %s\n", filename);    
     char line[LINE_LEN+1];
     char* token;
     
@@ -86,6 +94,7 @@ void read_mv_setting(const char filename[], const char setting_name[], std::stri
         exit (1);
     }
     
+    DEBUG_PRINT ("Reading Settings File: %s\n", filename);
     char line[LINE_LEN+1];
     char* token;
     

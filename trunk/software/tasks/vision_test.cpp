@@ -7,6 +7,8 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
+const char MDA_VISION_MODULE_TEST::MDA_VISION_TEST_SETTINGS[] = "vision_test_settings.csv";
+
 /// ########################################################################
 /// MODULE_TEST methods
 /// ########################################################################

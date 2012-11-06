@@ -7,6 +7,8 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
+const char MDA_VISION_MODULE_PATH::MDA_VISION_PATH_SETTINGS[] = "vision_path_settings.csv";
+
 /// ########################################################################
 /// MODULE_PATH methods
 /// ########################################################################
@@ -82,13 +84,14 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         /// sanity checks
         unsigned length_0 = line_sqr_length(_KMeans[0]);
         unsigned length_1 = line_sqr_length(_KMeans[1]);
+        DEBUG_PRINT ("angles = %f, %f\n",position_angle_0,position_angle_1);
         
         if (length_0 > 1.3*length_1 || 1.3*length_0 < length_1) {
             DEBUG_PRINT ("Path Sanity Failure: Lines too dissimilar\n");
             retval = UNKNOWN_TARGET;
             goto RETURN_CENTROID;
         }
-        if (position_angle_0 > 1.2*position_angle_1 || 1.2*position_angle_0 < position_angle_1) {
+        if (abs(position_angle_0) > 1.2*abs(position_angle_1) || 1.2*abs(position_angle_0) < abs(position_angle_1)) {
             DEBUG_PRINT ("Path Sanity Failure: Line angles do not match\n");
             retval = UNKNOWN_TARGET;
             goto RETURN_CENTROID;
@@ -111,7 +114,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
     RETURN_CENTROID:
         m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / _filtered_img->width);
         m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / _filtered_img->height);
-        DEBUG_PRINT ("Path (pixels, degrees): <%d,%d> <%5.2f,%5.2f>\n", m_pixel_x, m_pixel_y, 
+        DEBUG_PRINT ("Path: (%d,%d) (%5.2f,%5.2f)\n", m_pixel_x, m_pixel_y, 
             m_angular_x, m_angular_y); 
         return retval;
 }
