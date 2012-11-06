@@ -1,6 +1,5 @@
 bmp_io.o: bmp_io.cpp bmp_io.h
 glQuaternion.o: glQuaternion.cpp glQuaternion.h
-main.o: main.cpp bmp_io.h types.h physical_model.h sim.h motors.h
 motors.o: motors.cpp motors.h physical_model.h types.h
 physical_model.o: physical_model.cpp physical_model.h types.h init.h
 sim.o: sim.cpp bmp_io.h types.h physical_model.h sim.h

@@ -1,38 +1,37 @@
-CC=g++ -O3 -Wall
 CVFLAGS=`pkg-config --cflags --libs opencv`
-LIBDIR=lib/
-SRCDIR=src/
-OBJDIR=obj/
+CXXFLAGS=-O3 -Wall $(CVFLAGS)
 A=libvision.a
 
-INC=$(LIBDIR)mgui.h $(LIBDIR)mv.h $(LIBDIR)mvLines.h $(LIBDIR)mvCircles.h $(LIBDIR)profile_bin.h
-OBJ=$(OBJDIR)mgui.o $(OBJDIR)mv.o $(OBJDIR)mvHSVFilter.o $(OBJDIR)mvAdaptiveFilter.o $(OBJDIR)mfile.o $(OBJDIR)mvLines.o $(OBJDIR)mvClustering.o $(OBJDIR)mvCircles.o
-MAIN=$(OBJDIR)main.o
-WEBCAM=$(OBJDIR)webcam.o
+SRCS:=$(wildcard *.cpp)
+OBJ:=$(patsubst %.cpp,%.o,$(SRCS))
+MAIN_DIR=main_src/
+MAIN_SRC=$(MAIN_DIR)main.cpp
+WEBCAM_SRC=$(MAIN_DIR)webcam.cpp
 
 parallel:
 	make -j4 all
 
 all: main webcam $(A)
 
-$(OBJDIR)%.o: $(SRCDIR)%.cpp $(INC)
-	$(CC) -I$(LIBDIR) -c $< -o $@ $(CVFLAGS)
+# this is the main executable and depends on each object
+main: $(OBJ) $(MAIN_SRC)
+	$(CXX) $(OBJ) $(MAIN_SRC) -o $@ $(CXXFLAGS) -I .
 
-# test is the main executable and depends on each object
-main: $(OBJ) $(MAIN)
-	$(CC) $(OBJ) $(MAIN) -o $@ $(CVFLAGS)
 # webcam is another executable
-webcam: $(OBJ) $(WEBCAM)
-	$(CC) $(OBJ) $(WEBCAM) -o $@ $(CVFLAGS)
+webcam: $(OBJ) $(WEBCAM_SRC)
+	$(CXX) $(OBJ) $(WEBCAM_SRC) -o $@ $(CXXFLAGS) -I .
+
 # archive file
 $(A): $(OBJ)
 	rm -f $@
 	ar -cvq $@ $(OBJ)
 
-clean:
-	rm -f main webcam ./obj/* $(A) ./*~
-	rm -f $(LIBDIR)*~
-	rm -f $(SRCDIR)*~
-	rm -f ./settings/*~
+deps:
+	$(CC) -MM $(SRCS) > Makefile.deps
 
-.PHONY: parallel all clean
+include Makefile.deps
+
+clean:
+	rm -f main webcam $(A) ./*~ $(OBJ)
+
+.PHONY: parallel all deps clean

@@ -1,26 +1,23 @@
-SRCS:=$(wildcard *.cpp)
-OBJS= bmp_io.o site.o glQuaternion.o motors.o physical_model.o sim.o sim_cv.o
-MAIN= main.o
-EXE= sim
+LFLAGS= -lm -lGL -lglut -lGLU
+CXXFLAGS = -O3 -Wall $(LFLAGS) `pkg-config opencv --cflags --libs`
 A=libsim.a
 
-LIBS= -lm -lGL -lglut -lGLU
-
-CXXFLAGS = -O3 -Wall `pkg-config opencv --cflags --libs`
-
-INC=init.h sim.h physical_model.h planks.h types.h $(MOTORSDIR)/motors.h
+SRCS:=$(wildcard *.cpp)
+OBJ:=$(patsubst %.cpp,%.o,$(SRCS))
+SIM_SRC=main_src/main.cpp
+EXE=sim
 
 parallel:
 	make -j4 all
 
 all: $(EXE) $(A)
 
-$(EXE): $(MAIN) $(OBJS) $(CVDIR)$(CVA)
-	g++ -O3 -o $@ $(OBJS) $(MAIN) $(LIBS) $(CXXFLAGS)
+$(EXE): $(SIM_SRC) $(OBJ) $(CVDIR)$(CVA)
+	g++ -o $@ $(OBJ) $(SIM_SRC) $(CXXFLAGS) -I .
 
-$(A): $(OBJS)
+$(A): $(OBJ)
 	rm -f $@
-	ar -cvq $@ $(OBJS)
+	ar -cvq $@ $(OBJ)
 
 deps:
 	$(CC) -MM $(SRCS) > Makefile.deps
@@ -28,6 +25,6 @@ deps:
 include Makefile.deps
 
 clean:
-	rm -f $(OBJS) $(EXE) $(A) *.bmp *~
+	rm -f $(OBJ) $(EXE) $(A) *.bmp *~
 
 .PHONY: parallel all deps clean

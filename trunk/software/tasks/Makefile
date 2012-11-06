@@ -1,20 +1,14 @@
-CC=g++ -O3 -Wall -g
 CVFLAGS=`pkg-config --cflags --libs opencv`
-LIBDIR=lib/
-VLIBDIR=../vision/lib/
-INTERDIR=../interface/
-SIMDIR=../sim/
-SRCDIR=src/
-OBJDIR=obj/
+CFLAGS=-O3 -Wall -I ../vision/ -I ../sim/ -I ../tasks/
+CXXFLAGS=$(CFLAGS) $(CVFLAGS)
 A=libtasks.a
 
 LIBVISION=../vision/libvision.a
 LIB=$(LIBVISION)
 
-INC=$(LIBDIR)mda_vision.h $(LIBDIR)mda_tasks.h $(LIBDIR)Mission.h
-VOBJ=$(OBJDIR)vision_test.o $(OBJDIR)vision_gate.o $(OBJDIR)vision_path.o $(OBJDIR)vision_buoy.o $(OBJDIR)vision_frame.o
-COBJ=$(OBJDIR)Mission.o $(OBJDIR)task_test.o
-MAIN=$(OBJDIR)main.o
+SRCS:=$(wildcard *.cpp)
+OBJ:=$(patsubst %.cpp,%.o,$(SRCS))
+MAIN_SRC=main_src/main.cpp
 
 parallel:
 	make -j4 all
@@ -24,22 +18,22 @@ all: main $(A)
 $(LIBVISION):
 	+make -C `dirname $@` `basename $@`
 
-$(OBJDIR)%.o: $(SRCDIR)%.cpp $(INC)
-	$(CC) -I$(LIBDIR) -I$(VLIBDIR) -I$(INTERDIR) -I$(SIMDIR) -c $< -o $@ $(CVFLAGS)
-
 # the main executable
-main: $(VOBJ) $(COBJ) $(MAIN) $(LIB)
-	$(CC) $(VOBJ) $(COBJ) $(MAIN) -o $@ $(LIB) $(CVFLAGS)
+main: $(OBJ) $(MAIN_SRC) $(LIB)
+	$(CXX) $(OBJ) $(MAIN_SRC) $(LIB) -o $@ $(CXXFLAGS) -I .
 
 # archive file
-$(A): $(VOBJ) $(COBJ)
+$(A): $(OBJ)
 	rm -f $@
-	ar -cvq $@ $(VOBJ) $(COBJ)
+	ar -cvq $@ $(OBJ)
+
+deps:
+	$(CC) -MM $(CFLAGS) $(SRCS) > Makefile.deps
+
+include Makefile.deps
 
 clean:
-	rm -f main ./obj/* $(A) ./*~
-	rm -f $(LIBDIR)*~
-	rm -f $(SRCDIR)*~
+	rm -f main $(A) ./*~ $(OBJ)
 
-.PHONY: parallel all clean
+.PHONY: parallel all deps clean
 
