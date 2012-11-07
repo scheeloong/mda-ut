@@ -19,6 +19,13 @@ class CharacterStreamSingleton {
       pthread_mutex_init(&lock, NULL);
     }
 
+    ~CharacterStreamSingleton()
+    {
+       fclose(read);
+       fclose(write);
+       pthread_mutex_destroy(&lock);
+    }
+
     static CharacterStreamSingleton& get_instance()
     {
       static CharacterStreamSingleton instance;
@@ -39,7 +46,7 @@ class CharacterStreamSingleton {
     }
   private:
     CharacterStreamSingleton(CharacterStreamSingleton const&); // Don't implement
-    void operator=(CharacterStreamSingleton const&);     // Don't implement
+    void operator=(CharacterStreamSingleton const&); // Don't implement
 
     int p[2];
     FILE *read, *write;
