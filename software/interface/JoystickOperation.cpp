@@ -2,6 +2,7 @@
 #include <cv.h>
 
 #include "Operation.h"
+#include "CharacterStreamSingleton.h"
 
 void JoystickOperation::display_start_message()
 {
@@ -181,6 +182,8 @@ void JoystickOperation::process_image()
     const IplImage* frame = image_input->get_image(use_fwd_img?FWD_IMG:DWN_IMG);
     if (frame) {
       vision_module->filter(frame);
+      char ch = cvWaitKey(3);
+      CharacterStreamSingleton::get_instance().write_char(ch);
       fflush(stdout);
     } else {
       message("Image stream over");

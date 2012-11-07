@@ -15,7 +15,7 @@
 #include "AttitudeInput.h"
 #include "ImageInput.h"
 #include "ActuatorOutput.h"
-#include "SimulatorSingleton.h"
+#include "CharacterStreamSingleton.h"
 #include "mda_vision.h"
 #include "mda_tasks.h"
 
@@ -39,22 +39,22 @@ class Operation {
       struct timeval tv = {0, 16667}; // 60 Hertz
 
       // May use ncurses
-      FILE *sim_fd = SimulatorSingleton::get_instance().read_fp();
-      int sim_fileno = 0;
+      FILE *cs_fd = CharacterStreamSingleton::get_instance().read_file();
+      int cs_fileno = 0;
 
       FD_ZERO(&readfds);
       FD_SET(STDIN_FILENO, &readfds);
-      if (sim_fd) {
-        sim_fileno = fileno(sim_fd);
-        FD_SET(sim_fileno, &readfds);
+      if (cs_fd) {
+        cs_fileno = fileno(cs_fd);
+        FD_SET(cs_fileno, &readfds);
       }
         
       if (select(FD_SETSIZE, &readfds, NULL, NULL, &tv) > 0) {
         if (FD_ISSET(STDIN_FILENO, &readfds)) {
           return fgetc(stdin);
         }
-        if (sim_fd && FD_ISSET(sim_fileno, &readfds)) {
-          return fgetc(sim_fd);
+        if (cs_fd && FD_ISSET(cs_fileno, &readfds)) {
+          return fgetc(cs_fd);
         }
       }
 

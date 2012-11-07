@@ -44,7 +44,6 @@ void MDA_VISION_MODULE_TEST:: primary_filter (const IplImage* src) {
 
     // this line displays the img in a window
     _window.showImage (img);
-    cvWaitKey(3);
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_TEST:: calc_vci () {

@@ -6,6 +6,7 @@
 
 #include "sim.h"
 
+#include "CharacterStreamSingleton.h"
 #include "SimulatorSingleton.h"
 
 // Global variables needed by sim
@@ -29,17 +30,6 @@ void SimulatorSingleton::create()
     return;
   }
   created = true;
-
-  int p[2];
-  if (pipe(p)) {
-    puts("pipe failed");
-    exit(1);
-  }
-
-  rh = p[0];
-  wh = p[1];
-  read = fdopen(rh, "r");
-  write = fdopen(wh, "w");
 
   // Start simulation (may need to use passed in data)
   pthread_create(&sim_thread, NULL, ::run_sim, NULL);
@@ -152,8 +142,7 @@ void sim_keyboard(unsigned char key, int x, int y)
 
 void SimulatorSingleton::sim_keyboard(unsigned char key)
 {
-  fputc(key, write);
-  fflush(write);
+  CharacterStreamSingleton::get_instance().write_char(key);
 }
 
 void sim_display()
@@ -191,8 +180,8 @@ void SimulatorSingleton::sim_display()
     glutSwapBuffers();
 
     // down camera
-    model.angle.pitch += 90;
     glutSetWindow(dwn_window);
+    model.angle.pitch += 90;
     glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
     set_camera();
