@@ -81,7 +81,7 @@ class JoystickOperation: public Operation {
   public:
     JoystickOperation(AttitudeInput *a, ImageInput *i, ActuatorOutput *o) : Operation(a, i, o),
       mode(NORMAL), vision_module(NULL), use_fwd_img(true) {}
-    virtual ~JoystickOperation() {}
+    virtual ~JoystickOperation() { delete vision_module; }
 
     virtual void work();
   private:

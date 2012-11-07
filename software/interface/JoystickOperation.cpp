@@ -151,6 +151,9 @@ void JoystickOperation::work()
          display_start_message();
          break;
       case 'v':
+         if (mode == VISION) {
+           break;
+         }
          endwin();
          mode = VISION;
          message(
@@ -172,8 +175,6 @@ void JoystickOperation::work()
 
   // close ncurses
   endwin();
-
-  delete vision_module;
 }
 
 void JoystickOperation::process_image()
