@@ -30,6 +30,9 @@ void set_controller(int status)
    if (enable_controller) {
      rs232_init_async_imu_output();
      set_target_depth(get_depth());
+     // Wait until IMU has received data
+     while (!imu_ready()) {
+     }
      struct orientation o;
      get_imu_orientation(&o);
      set_target_heading(o.yaw);
