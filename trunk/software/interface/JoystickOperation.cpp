@@ -145,6 +145,12 @@ void JoystickOperation::work()
            break;
          }
          delete vision_module;
+
+         // waiting key 3 times clears the window...
+         cvWaitKey(1);
+         cvWaitKey(1);
+         cvWaitKey(1);
+
          vision_module = NULL;
          mode = NORMAL;
          fflush(stdout);
