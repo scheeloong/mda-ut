@@ -11,8 +11,8 @@
 
 class SimulatorSingleton {
   public:
-    SimulatorSingleton() : instances(0), created(false), read(NULL), write(NULL),
-        img_fwd(NULL), img_dwn(NULL), img_copy_start(false), img_copy_done(false) {}
+    SimulatorSingleton() : instances(0), created(false), img_fwd(NULL), img_dwn(NULL),
+        img_copy_start(false), img_copy_done(false) {}
     static SimulatorSingleton& get_instance()
     {
       static SimulatorSingleton instance;
@@ -39,7 +39,6 @@ class SimulatorSingleton {
     void add_orientation(orientation);
     void set_acceleration(float, float, float);
     void zero_acceleration();
-    FILE *read_fp() {return read;}
   private:
     SimulatorSingleton(SimulatorSingleton const&); // Don't implement
     void operator=(SimulatorSingleton const&);     // Don't implement
@@ -49,8 +48,6 @@ class SimulatorSingleton {
     int instances;
     bool created;
     pthread_t sim_thread;
-    FILE *read, *write;
-    int rh, wh;
     IplImage *img_fwd, *img_dwn;
     volatile bool img_copy_start, img_copy_done;
     volatile ImageDirection img_dir;

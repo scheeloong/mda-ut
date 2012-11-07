@@ -40,7 +40,6 @@ void MDA_VISION_MODULE_BUOY:: primary_filter (const IplImage* src) {
     printf ("ncircles = %d\n", _circles.ncircles());
 
     _window.showImage (_filtered_img);
-    cvWaitKey(3);
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
