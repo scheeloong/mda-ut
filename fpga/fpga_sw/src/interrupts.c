@@ -30,6 +30,9 @@ void set_controller(int status)
    if (enable_controller) {
      rs232_init_async_imu_output();
      set_target_depth(get_depth());
+     struct orientation o;
+     get_imu_orientation(&o);
+     set_target_heading(o.yaw);
      IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 7); // Start timer interrupt
    } else {
       // Turn off all motors

@@ -47,6 +47,12 @@ void get_imu_orientation(struct orientation *o)
 // Enable read interrupts for RS232
 void rs232_init()
 {
+  static bool initialized = false;
+  if (initialized) {
+    return;
+  }
+  initialized = true;
+
   IOWR(RS232_0_BASE, RS232_CONTROL_OFFSET, RS232_READ_INTERRUPT);
 
   // Register read interrupt handler
