@@ -23,6 +23,7 @@
 
 // Global variables
 int yaw = 0, pitch = 0, roll = 0;
+bool data_ready = false;
 
 // Forward function declarations
 static void read_interrupt(void *, alt_u32);
@@ -36,6 +37,11 @@ int write_str(const char *); // Write string (checksum already included)
 enum CHECKSUM_MODE {NO_CHECKSUM, BYTE_CHECKSUM, SHORT_CHECKSUM} checksum_mode = BYTE_CHECKSUM;
 
 // Function definitions
+
+bool imu_ready()
+{
+  return data_ready;
+}
 
 void get_imu_orientation(struct orientation *o)
 {
@@ -119,6 +125,7 @@ static void read_interrupt(void *context, alt_u32 id)
     yaw = (int)yaw_f;
     pitch = (int)pitch_f;
     roll = (int)roll_f;
+    data_ready = true;
   }
 }
 
