@@ -146,11 +146,6 @@ void JoystickOperation::work()
          }
          delete vision_module;
 
-         // waiting key 3 times clears the window...
-         cvWaitKey(1);
-         cvWaitKey(1);
-         cvWaitKey(1);
-
          vision_module = NULL;
          mode = NORMAL;
          fflush(stdout);
@@ -197,6 +192,9 @@ void JoystickOperation::process_image()
     } else {
       message("Image stream over");
     }
+  } else {
+    // needs to be called periodically for highgui event-processing
+    cvWaitKey(1);
   }
 }
 
