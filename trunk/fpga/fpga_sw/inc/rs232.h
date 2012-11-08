@@ -8,7 +8,6 @@
 #include "controller.h"
 
 void rs232_init();
-void rs232_init_async_imu_output();
 void rs232_shell();
 
 bool imu_ready();
