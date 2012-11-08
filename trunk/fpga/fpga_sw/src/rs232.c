@@ -68,11 +68,9 @@ void rs232_init()
 void rs232_init_async_imu_output()
 {
   const char *YPR_CMD = "VNWRG,06,1";
-  const char *ASYNC_200HZ_RATE_CMD = "VNWRG,07,200";
 
-  // Only output yaw, pitch and roll asynchronously at 200 Hz
+  // Only output yaw, pitch and roll asynchronously
   write_cmd(YPR_CMD);
-  write_cmd(ASYNC_200HZ_RATE_CMD);
 }
 
 void rs232_shell()
@@ -101,6 +99,11 @@ static void read_interrupt(void *context, alt_u32 id)
     int data = IORD(RS232_0_BASE, RS232_DATA_OFFSET);
     int read_avail = data >> 16;
 
+    // End of data, return
+    if (read_avail == 0) {
+      return;
+    }
+
     char ch = (char)data;
     buffer[index++] = ch;
 
@@ -108,17 +111,27 @@ static void read_interrupt(void *context, alt_u32 id)
     if (ch == '\0' || ch == '\n' || index == READ_BUF_LEN) {
       break;
     }
-
-    // End of data, return
-    if (read_avail == 0) {
-      return;
-    }
   }
 
   buffer[index] = '\0';
+  int str_len = index;
   index = 0;
 
   if (!strncmp(ATTITUDE_STRING, buffer, strlen(ATTITUDE_STRING))) {
+    // ensurethe stop character is where it is expected
+    if (buffer[str_len-5] != '*') {
+      return;
+    }
+
+    // ensure checksum is correct
+    int chksum;
+    sscanf(buffer+(str_len-4), "%x", &chksum);
+    buffer[str_len-5] = '\0';
+    unsigned char computed_chksum = checksum_byte(buffer+1);
+    if (computed_chksum != (unsigned char)chksum) {
+      return;
+    }
+
     float yaw_f, pitch_f, roll_f;
     sscanf(buffer, ATTITUDE_STRING ",%f,%f,%f", &yaw_f, &pitch_f, &roll_f);
 
