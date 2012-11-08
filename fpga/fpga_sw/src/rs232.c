@@ -16,7 +16,7 @@
 #define RS232_READ_INTERRUPT 1
 
 #define BUF_LEN 250
-#define READ_BUF_LEN 33
+#define READ_BUF_LEN 34
 #define WRITE_ATTEMPTS 16
 
 #define ATTITUDE_STRING "$VNYMR"
@@ -112,6 +112,10 @@ static void read_interrupt(void *context, alt_u32 id)
   index = 0;
 
   if (!strncmp(ATTITUDE_STRING, buffer, strlen(ATTITUDE_STRING))) {
+    // error check
+    if (buffer[33] != ',' || buffer[24] != ',' || buffer[15] != ',' || buffer[6] != ',') {
+      return;
+    }
     float yaw_f, pitch_f, roll_f;
     sscanf(buffer, ATTITUDE_STRING ",%f,%f,%f", &yaw_f, &pitch_f, &roll_f);
 
