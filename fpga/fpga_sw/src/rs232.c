@@ -16,10 +16,10 @@
 #define RS232_READ_INTERRUPT 1
 
 #define BUF_LEN 250
-#define READ_BUF_LEN 128
+#define READ_BUF_LEN 33
 #define WRITE_ATTEMPTS 16
 
-#define ATTITUDE_STRING "$VNYPR"
+#define ATTITUDE_STRING "$VNYMR"
 
 // Global variables
 int yaw = 0, pitch = 0, roll = 0;
@@ -59,18 +59,10 @@ void rs232_init()
   }
   initialized = true;
 
-  IOWR(RS232_0_BASE, RS232_CONTROL_OFFSET, RS232_READ_INTERRUPT);
-
   // Register read interrupt handler
   alt_ic_isr_register(RS232_0_IRQ_INTERRUPT_CONTROLLER_ID, RS232_0_IRQ, (void *)read_interrupt, 0, 0);
-}
 
-void rs232_init_async_imu_output()
-{
-  const char *YPR_CMD = "VNWRG,06,1";
-
-  // Only output yaw, pitch and roll asynchronously
-  write_cmd(YPR_CMD);
+  IOWR(RS232_0_BASE, RS232_CONTROL_OFFSET, RS232_READ_INTERRUPT);
 }
 
 void rs232_shell()
@@ -105,33 +97,21 @@ static void read_interrupt(void *context, alt_u32 id)
     }
 
     char ch = (char)data;
-    buffer[index++] = ch;
+    if (ch == '$' || index > 0) {
+      buffer[index++] = ch;
+    }
 
     // End of command, break
-    if (ch == '\0' || ch == '\n' || index == READ_BUF_LEN) {
+    if (index == READ_BUF_LEN) {
       break;
     }
+    return;
   }
 
   buffer[index] = '\0';
-  int str_len = index;
   index = 0;
 
   if (!strncmp(ATTITUDE_STRING, buffer, strlen(ATTITUDE_STRING))) {
-    // ensurethe stop character is where it is expected
-    if (buffer[str_len-5] != '*') {
-      return;
-    }
-
-    // ensure checksum is correct
-    int chksum;
-    sscanf(buffer+(str_len-4), "%x", &chksum);
-    buffer[str_len-5] = '\0';
-    unsigned char computed_chksum = checksum_byte(buffer+1);
-    if (computed_chksum != (unsigned char)chksum) {
-      return;
-    }
-
     float yaw_f, pitch_f, roll_f;
     sscanf(buffer, ATTITUDE_STRING ",%f,%f,%f", &yaw_f, &pitch_f, &roll_f);
 
