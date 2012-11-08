@@ -176,7 +176,7 @@ begin
 	else if (read_interrupt_en == 1'b0)
 		read_interrupt <= 1'b0;
 	else
-		read_interrupt <= (|read_available);
+		read_interrupt <= (|read_available[7:5]);
 end
 
 always @(posedge clk)
