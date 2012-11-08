@@ -10,7 +10,6 @@
 void rs232_init();
 void rs232_shell();
 
-bool imu_ready();
 void get_imu_orientation(struct orientation *);
 
 #endif

@@ -28,13 +28,11 @@ void set_controller(int status)
 {
    enable_controller = status;
    if (enable_controller) {
-     set_target_depth(get_depth());
-
-     // Wait until IMU has received data
-     while (!imu_ready()) {}
      struct orientation o;
      get_imu_orientation(&o);
      set_target_heading(o.yaw);
+     set_target_depth(get_depth());
+
      IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE, 7); // Start timer interrupt
    } else {
       // Turn off all motors
