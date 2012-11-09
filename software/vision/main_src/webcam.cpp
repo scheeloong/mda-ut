@@ -70,6 +70,8 @@ int main( int argc, char** argv ) {
     mvCircles circles; // data struct to store circles
     mvKMeans kmeans;
 
+    mvAdaptiveFilter2 adaptive ("Adaptive");
+
     // declare images we need
     IplImage* myframe = mvCreateImage_Color();
     IplImage* filter_img = mvCreateImage ();
@@ -98,21 +100,21 @@ int main( int argc, char** argv ) {
            
         Morphology.open (filter_img, filter_img);
         Morphology.gradient (filter_img, grad_img);
-        
+      
         if (TEST) {
-            IplImage* cvImage, *mvImage;
-            cvImage = mvCreateImage_Color();
-            mvImage = mvCreateImage_Color();
-
-            cvCvtColor(frame ,cvImage, CV_BGR2HSV);
-            mvBRG2HSV(frame, mvImage);
-
+            /*
+            cvSplit (frame, filter_img, NULL, NULL, NULL);
             win1->showImage(frame);
-            win2 ->showImage(cvImage);
-            win3 ->showImage(mvImage);
+            win2->showImage(filter_img);
+            mvGradient(filter_img, filter_img, 5, 5);
+            win3->showImage(filter_img);
+            */
+            
+            adaptive.filter (frame, filter_img);
+            win1->showImage (frame);
+            win2->showImage (filter_img);
         }
-	
-        if (CARTOON) {
+        else if (CARTOON) {
             cvZero (filter_img);
             cvCopy (frame, myframe);
 
@@ -161,6 +163,7 @@ int main( int argc, char** argv ) {
         else if (CIRCLE) {
             HoughCircles.findCircles (grad_img, &circles);
             printf ("ncircles = %d\n", circles.ncircles());
+            circles.clearData();
             circles.drawOntoImage (grad_img);
             //circles.clearData();
             win1->showImage (frame);
@@ -173,11 +176,10 @@ int main( int argc, char** argv ) {
             win3->showImage (grad_img);
         }
         
-        if (WRITE)
+        if (WRITE) {
             writer->writeFrame (frame);
-    
-        circles.clearData();
-
+        }
+        
         nframes++;
         c = cvWaitKey(20);
         if (c == 'q') 

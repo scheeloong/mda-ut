@@ -1,6 +1,6 @@
 CVFLAGS=`pkg-config --cflags --libs opencv`
 LFLAGS=-lm -lGL -lglut -lGLU -lsim -L../sim -lncurses -lui -L../../fpga/ui/ -lvision -L../vision/ -ltasks -L../tasks/ -pthread
-CFLAGS=-O3 -Wall -I ../sim -I ../vision -I ../tasks
+CFLAGS=-O3 -Wall -g -I ../sim -I ../vision -I ../tasks
 CXXFLAGS=$(CFLAGS) $(LFLAGS) $(CVFLAGS)
 
 SRCS:=$(wildcard *.cpp)

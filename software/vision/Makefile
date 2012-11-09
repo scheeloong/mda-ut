@@ -1,5 +1,5 @@
 CVFLAGS=`pkg-config --cflags --libs opencv`
-CXXFLAGS=-O3 -Wall $(CVFLAGS)
+CXXFLAGS=-O3 -Wall -g $(CVFLAGS)
 A=libvision.a
 
 SRCS:=$(wildcard *.cpp)
