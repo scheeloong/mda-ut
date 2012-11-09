@@ -7,6 +7,8 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
+#define ABS(X) (((X)>0) ? (X) : (-(X)))
+
 const char MDA_VISION_MODULE_TEST::MDA_VISION_TEST_SETTINGS[] = "vision_test_settings.csv";
 
 /// ########################################################################
@@ -16,9 +18,12 @@ MDA_VISION_MODULE_TEST:: MDA_VISION_MODULE_TEST () :
 	_window (mvWindow("Test Vision Module")),
 	_HSVFilter (mvHSVFilter(MDA_VISION_TEST_SETTINGS)),
 	_HoughLines (mvHoughLines(MDA_VISION_TEST_SETTINGS)),
-	_lines (mvLines())
+	_lines (mvLines()),
+    _adaptive (""),
+    bin_test ("Test Module")
 {
-    _filtered_img = mvCreateImage_Color ();
+    _filtered_img = mvCreateImage();
+    _filtered_img->origin = 1;
 }
 
 MDA_VISION_MODULE_TEST:: ~MDA_VISION_MODULE_TEST () {
@@ -33,17 +38,16 @@ void MDA_VISION_MODULE_TEST:: primary_filter (const IplImage* src) {
      *  to your own IplImage first before you can modify it.
      *  I've done this with the variable img
      */
-    IplImage* img = mvCreateImage_Color();
-    cvCopy (src, img);
-    img->origin = src->origin;
 
     /** YOUR CODE HERE. DO STUFF TO img */
+    bin_test.start();
 
+    _adaptive.filter (src, _filtered_img);
 
-
+    bin_test.stop();
 
     // this line displays the img in a window
-    _window.showImage (img);
+    _window.showImage (_filtered_img);
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_TEST:: calc_vci () {

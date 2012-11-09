@@ -1,9 +1,9 @@
 # Test video input
 
 IMAGE_INPUT VIDEO
-VIDEO_FWD, ../vision/runtime_sample1.avi
+VIDEO_FWD, ../vision/20121107_222711.mp4
 VIDEO_DWN, ../vision/webcam.avi
 
 ATTITUDE_INPUT NULL
-OPERATION NULL
+OPERATION JOYSTICK
 ACTUATOR_OUTPUT NULL

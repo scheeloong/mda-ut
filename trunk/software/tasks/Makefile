@@ -1,5 +1,5 @@
 CVFLAGS=`pkg-config --cflags --libs opencv`
-CFLAGS=-O3 -Wall -I ../vision/ -I ../sim/ -I ../tasks/
+CFLAGS=-O3 -Wall -g -I ../vision/ -I ../sim/ -I ../tasks/
 CXXFLAGS=$(CFLAGS) $(CVFLAGS)
 A=libtasks.a
 

@@ -68,7 +68,7 @@ void mvAdaptiveBox:: adjust_box () {
 // #############################################################
 // #### AdaptiveFilter methods 
 // #############################################################
-mvAdaptiveFilter:: mvAdaptiveFilter (const char* Settings_File) {
+/*mvAdaptiveFilter:: mvAdaptiveFilter (const char* Settings_File) {
 	int min, max, flange;
 
 	read_mv_setting (Settings_File, "BG_HUE_MIN", min);
@@ -95,3 +95,4 @@ mvAdaptiveFilter:: mvAdaptiveFilter (const char* Settings_File) {
     read_mv_setting (Settings_File, "TARGET_VAL_MAX", max);
     read_mv_setting (Settings_File, "TARGET_VAL_FLANGE", flange);
 }
+*/

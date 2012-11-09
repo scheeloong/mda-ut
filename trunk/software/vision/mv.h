@@ -57,6 +57,35 @@ void mvBRG2HSV(const IplImage* src, IplImage* dst);
 inline void mvGaussian (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h) {
     cvSmooth (src, dst, CV_GAUSSIAN, kern_w, kern_h);
 }
+inline void mvDilate (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
+    IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
+    cvDilate (src, dst, kernel, iterations);
+    cvReleaseStructuringElement (&kernel);
+}
+inline void mvErode (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
+    IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
+    cvErode (src, dst, kernel, iterations);
+    cvReleaseStructuringElement (&kernel);
+}
+inline void mvOpen (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
+    IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
+    cvMorphologyEx (src, dst, NULL, kernel, CV_MOP_OPEN, iterations);
+    cvReleaseStructuringElement (&kernel);
+}
+inline void mvClose (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
+    IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
+    cvMorphologyEx (src, dst, NULL, kernel, CV_MOP_CLOSE, iterations);
+    cvReleaseStructuringElement (&kernel);
+}
+inline void mvGradient (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
+    IplImage* temp = cvCreateImage (cvGetSize(src), IPL_DEPTH_8U, 1);
+    IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
+
+    cvMorphologyEx (src, dst, temp, kernel, CV_MOP_GRADIENT, iterations);
+    
+    cvReleaseImage (&temp);
+    cvReleaseStructuringElement (&kernel);
+}
 
 /** Binary Filters */
 // These are fast filters designed specifically for binary images with very
@@ -172,11 +201,63 @@ class mvAdaptiveBox {
  *  possibly any other objects we might see.
  */
 class mvAdaptiveFilter {
-    mvAdaptiveBox* box_bg;       // one for each channel of background
-    mvAdaptiveBox* box_target;
+    static const unsigned nBoxes = 100;
+    struct BGR_box {
+        int B, G, R;
+        int count;
+    };
+
+    int guess[3];
+    IplImage* src_HSV;
+    BGR_box box_array[nBoxes];
+    PROFILE_BIN bin_adaptive;
 
     public:
     mvAdaptiveFilter (const char* Settings_File);
+    void filter (const IplImage* src, IplImage* dst);
+};
+
+class mvAdaptiveFilter2 {
+    struct BRG_box2 {
+        int c1,c2,c3; // color center value
+        int d1,d2,d3; // deltas
+        unsigned count;
+    };
+
+    void copy_box (BRG_box2* box1, BRG_box2* box2){
+        box2->c1 = box1->c1; box2->c2 = box1->c2; box2->c3 = box1->c3;
+        box2->d1 = box1->d1; box2->d2 = box1->d2; box2->d3 = box1->d3;
+        box2->count = box1->count;
+    }
+    bool in_box (BRG_box2* box, int C1, int C2, int C3) {
+        return ((C1 >= box->c1-box->d1) && (C1 <= box->c1+box->d1) && 
+                (C2 >= box->c2-box->d2) && (C2 <= box->c2+box->d2) &&
+                (C3 >= box->c3-box->d3) && (C3 <= box->c3+box->d3));
+    }
+    bool in_2box (BRG_box2* box, int C1, int C2, int C3) {
+        return ((C1 >= box->c1-2*box->d1) && (C1 <= box->c1+2*box->d1) && 
+                (C2 >= box->c2-2*box->d2) && (C2 <= box->c2+2*box->d2) &&
+                (C3 >= box->c3-2*box->d3) && (C3 <= box->c3+2*box->d3));
+    }
+    void accumulate_box (BRG_box2* box, int C1, int C2, int C3) {
+        box->c1 = ((box->c1)*box->count + C1) / (box->count+1);
+        box->c2 = ((box->c2)*box->count + C2) / (box->count+1);
+        box->c3 = ((box->c3)*box->count + C3) / (box->count+1);
+        box->count++;
+    }
+
+    BRG_box2 target;
+    BRG_box2 bg;
+    BRG_box2 next_target;
+    BRG_box2 next_bg;
+
+    IplImage* src_HSV;
+
+    PROFILE_BIN bin_adaptive;
+
+    public:
+    mvAdaptiveFilter2 (const char* Settings_File);
+    void filter (const IplImage* src, IplImage* dst);
 };
 
 #endif
