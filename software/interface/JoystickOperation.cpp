@@ -6,6 +6,9 @@
 
 void JoystickOperation::display_start_message()
 {
+  // clear regular I/O
+  fflush(stdout);
+
   // ncurses stuff
   initscr();
   clear();
@@ -25,6 +28,8 @@ void JoystickOperation::display_start_message()
          "  e    - nullify all acceleration\n"
          "\n"
          "  v    - enter vision mode\n"
+         "\n"
+         "  0    - run test task\n"
          "\n");
   refresh();
 }
@@ -97,6 +102,13 @@ void JoystickOperation::work()
 
       case '0':
          if (mode != VISION) {
+           endwin();
+           // Scope test task so that it is destructed before display_start_message
+           {
+             MDA_TASK_TEST test_task(attitude_input, image_input, actuator_output);
+             test_task.run_task();
+           }
+           display_start_message();
            break;
          }
          delete vision_module;
@@ -148,7 +160,6 @@ void JoystickOperation::work()
 
          vision_module = NULL;
          mode = NORMAL;
-         fflush(stdout);
          display_start_message();
          break;
       case 'v':
