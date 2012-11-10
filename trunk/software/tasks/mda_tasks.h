@@ -65,6 +65,16 @@ public:
 /// Gate
 /// ########################################################################
 
+class MDA_TASK_GATE : public MDA_TASK_BASE {
+	mvWindow window;
+
+public:
+	MDA_TASK_GATE (AttitudeInput* a, ImageInput* i, ActuatorOutput* o);
+	~MDA_TASK_GATE ();
+
+	MDA_TASK_RETURN_CODE run_task ();
+};
+
 /// ########################################################################
 /// Path
 /// ########################################################################

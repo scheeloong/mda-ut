@@ -186,9 +186,9 @@ void mvAdaptiveFilter2:: filter (const IplImage* src, IplImage* dst) {
 mvAdaptiveFilter3:: mvAdaptiveFilter3 (const char* settings_file) :
     bin_adaptive ("Adaptive Color Filter 3")
 {
-    hue_target          = 85;
-    sat_target          = 75;
-    val_target          = 100;
+    hue_target          = 0;
+    sat_target          = 80;
+    val_target          = 80;
     hue_target_delta    = 20;
     sat_target_delta    = 20;
     val_target_delta    = 30;
@@ -251,7 +251,7 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
         NULL    // possible boolean mask image
     ); 
 
-    cvNormalizeHist (hist1, 100); // normalize so total count is 100
+    cvNormalizeHist (hist1, 10000); // normalize so total count is 100
     for (int i = 0; i < nbins1; i++) {
         unsigned val = cvQueryHistValue_1D (hist1, i);
         DEBUG_PRINT ("Bin %2.1d (%3.1d-%3.1d): %d\n", i, 180/nbins1*i, 180/nbins1*(i+1)-1, val);    

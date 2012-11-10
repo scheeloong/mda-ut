@@ -1,8 +1,8 @@
-mfile.o: mfile.cpp mgui.h profile_bin.h
-mgui.o: mgui.cpp mgui.h profile_bin.h mv.h
-mvAdaptiveFilter.o: mvAdaptiveFilter.cpp mv.h mgui.h profile_bin.h
 mvCircles.o: mvCircles.cpp mvCircles.h profile_bin.h mgui.h
-mvClustering.o: mvClustering.cpp mvLines.h profile_bin.h mgui.h
+mfile.o: mfile.cpp mgui.h profile_bin.h
 mv.o: mv.cpp mv.h mgui.h profile_bin.h
-mvHSVFilter.o: mvHSVFilter.cpp mv.h mgui.h profile_bin.h
 mvLines.o: mvLines.cpp mvLines.h profile_bin.h mgui.h
+mvHSVFilter.o: mvHSVFilter.cpp mv.h mgui.h profile_bin.h
+mvAdaptiveFilter.o: mvAdaptiveFilter.cpp mv.h mgui.h profile_bin.h
+mgui.o: mgui.cpp mgui.h profile_bin.h mv.h
+mvClustering.o: mvClustering.cpp mvLines.h profile_bin.h mgui.h

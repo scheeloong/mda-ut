@@ -99,7 +99,7 @@ class MDA_VISION_MODULE_TEST : public MDA_VISION_MODULE_BASE {
     mvKMeans _KMeans;
     mvLines _lines;
     
-    mvAdaptiveFilter2 _adaptive;
+    mvAdaptiveFilter3 _adaptive;
 
     IplImage* _filtered_img;
 

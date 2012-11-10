@@ -30,6 +30,7 @@ void JoystickOperation::display_start_message()
          "  v    - enter vision mode\n"
          "\n"
          "  0    - run test task\n"
+         "  1    - run gate task\n"
          "\n");
   refresh();
 }
@@ -118,6 +119,13 @@ void JoystickOperation::work()
          break;
       case '1':
          if (mode != VISION) {
+           endwin();
+           // Scope test task so that it is destructed before display_start_message
+           {
+             MDA_TASK_GATE gate_task(attitude_input, image_input, actuator_output);
+             gate_task.run_task();
+           }
+           display_start_message();
            break;
          }
          delete vision_module;
