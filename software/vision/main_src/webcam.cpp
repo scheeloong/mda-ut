@@ -70,7 +70,8 @@ int main( int argc, char** argv ) {
     mvCircles circles; // data struct to store circles
     mvKMeans kmeans;
 
-    mvAdaptiveFilter2 adaptive ("Adaptive");
+    //mvAdaptiveFilter2 adaptive ("Adaptive");
+    mvAdaptiveFilter3 adaptive ("Adaptive");
 
     // declare images we need
     IplImage* myframe = mvCreateImage_Color();
