@@ -32,35 +32,6 @@ class Operation {
 
     // to be implemented by the derived class!
     virtual void work() = 0;
-
-    char get_next_char()
-    {
-      fd_set readfds;
-      struct timeval tv = {0, 16667}; // 60 Hertz
-
-      // May use ncurses
-      FILE *cs_fd = CharacterStreamSingleton::get_instance().read_file();
-      int cs_fileno = 0;
-
-      FD_ZERO(&readfds);
-      FD_SET(STDIN_FILENO, &readfds);
-      if (cs_fd) {
-        cs_fileno = fileno(cs_fd);
-        FD_SET(cs_fileno, &readfds);
-      }
-        
-      if (select(FD_SETSIZE, &readfds, NULL, NULL, &tv) > 0) {
-        if (FD_ISSET(STDIN_FILENO, &readfds)) {
-          return fgetc(stdin);
-        }
-        if (cs_fd && FD_ISSET(cs_fileno, &readfds)) {
-          return fgetc(cs_fd);
-        }
-      }
-
-      return '\0';
-    }
-
   protected:
     AttitudeInput *attitude_input;
     ImageInput *image_input;

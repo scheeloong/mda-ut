@@ -5,6 +5,7 @@
 #include "../interface/AttitudeInput.h"
 #include "../interface/ImageInput.h"
 #include "../interface/ActuatorOutput.h"
+#include "../interface/CharacterStreamSingleton.h"
 
 enum MDA_TASK {
 	TASK_TEST,

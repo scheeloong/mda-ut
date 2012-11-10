@@ -5,11 +5,13 @@ Mission.o: Mission.cpp Mission.h ../interface/Operation.h \
  ../vision/mv.h ../vision/mgui.h ../vision/mvLines.h \
  ../vision/mvCircles.h ../tasks/mda_tasks.h ../tasks/mda_vision.h \
  ../tasks/../interface/AttitudeInput.h ../tasks/../interface/ImageInput.h \
- ../tasks/../interface/ActuatorOutput.h mda_tasks.h
+ ../tasks/../interface/ActuatorOutput.h \
+ ../tasks/../interface/CharacterStreamSingleton.h mda_tasks.h
 task_test.o: task_test.cpp mda_tasks.h mda_vision.h ../vision/mgui.h \
  ../vision/profile_bin.h ../vision/mv.h ../vision/mgui.h \
  ../vision/mvLines.h ../vision/mvCircles.h ../interface/AttitudeInput.h \
- ../interface/ImageInput.h ../interface/ActuatorOutput.h
+ ../interface/ImageInput.h ../interface/ActuatorOutput.h \
+ ../interface/CharacterStreamSingleton.h
 vision_buoy.o: vision_buoy.cpp mda_vision.h ../vision/mgui.h \
  ../vision/profile_bin.h ../vision/mv.h ../vision/mgui.h \
  ../vision/mvLines.h ../vision/mvCircles.h
