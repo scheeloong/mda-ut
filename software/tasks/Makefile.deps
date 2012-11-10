@@ -1,27 +1,27 @@
 Mission.o: Mission.cpp Mission.h ../interface/Operation.h \
  ../interface/AttitudeInput.h ../interface/ImageInput.h ../vision/mgui.h \
  ../vision/profile_bin.h ../interface/ActuatorOutput.h \
- ../interface/SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h \
- ../tasks/mda_vision.h ../vision/mv.h ../vision/mgui.h \
- ../vision/mvLines.h ../tasks/mda_tasks.h ../tasks/mda_vision.h \
+ ../interface/CharacterStreamSingleton.h ../tasks/mda_vision.h \
+ ../vision/mv.h ../vision/mgui.h ../vision/mvLines.h \
+ ../vision/mvCircles.h ../tasks/mda_tasks.h ../tasks/mda_vision.h \
  ../tasks/../interface/AttitudeInput.h ../tasks/../interface/ImageInput.h \
  ../tasks/../interface/ActuatorOutput.h mda_tasks.h
 task_test.o: task_test.cpp mda_tasks.h mda_vision.h ../vision/mgui.h \
  ../vision/profile_bin.h ../vision/mv.h ../vision/mgui.h \
- ../vision/mvLines.h ../interface/AttitudeInput.h \
+ ../vision/mvLines.h ../vision/mvCircles.h ../interface/AttitudeInput.h \
  ../interface/ImageInput.h ../interface/ActuatorOutput.h
 vision_buoy.o: vision_buoy.cpp mda_vision.h ../vision/mgui.h \
  ../vision/profile_bin.h ../vision/mv.h ../vision/mgui.h \
- ../vision/mvLines.h
+ ../vision/mvLines.h ../vision/mvCircles.h
 vision_frame.o: vision_frame.cpp mda_vision.h ../vision/mgui.h \
  ../vision/profile_bin.h ../vision/mv.h ../vision/mgui.h \
- ../vision/mvLines.h
+ ../vision/mvLines.h ../vision/mvCircles.h
 vision_gate.o: vision_gate.cpp mda_vision.h ../vision/mgui.h \
  ../vision/profile_bin.h ../vision/mv.h ../vision/mgui.h \
- ../vision/mvLines.h
+ ../vision/mvLines.h ../vision/mvCircles.h
 vision_path.o: vision_path.cpp mda_vision.h ../vision/mgui.h \
  ../vision/profile_bin.h ../vision/mv.h ../vision/mgui.h \
- ../vision/mvLines.h
+ ../vision/mvLines.h ../vision/mvCircles.h
 vision_test.o: vision_test.cpp mda_vision.h ../vision/mgui.h \
  ../vision/profile_bin.h ../vision/mv.h ../vision/mgui.h \
- ../vision/mvLines.h
+ ../vision/mvLines.h ../vision/mvCircles.h
