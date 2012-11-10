@@ -42,7 +42,7 @@ void JoystickOperation::work()
   // Take keyboard commands
   bool loop = true;
   while (loop) {
-    char c = CharacterStreamSingleton::get_instance().get_next_char();
+    char c = CharacterStreamSingleton::get_instance().wait_key(1000/60);
 
     // Clear input every 2 seconds
     count++;

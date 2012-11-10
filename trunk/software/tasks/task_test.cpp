@@ -25,10 +25,11 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
         // Ensure debug messages are printed
         fflush(stdout);
         // Exit if instructed to
-        if (CharacterStreamSingleton::get_instance().get_next_char() == 'q')
-            break;
-        char c = cvWaitKey (10);
-        if (c == 'q')
+        char c = cvWaitKey(1);
+        if (c != -1) {
+            CharacterStreamSingleton::get_instance().write_char(c);
+        }
+        if (CharacterStreamSingleton::get_instance().wait_key(1) == 'q')
             break;
     }
 

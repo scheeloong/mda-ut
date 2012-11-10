@@ -45,10 +45,10 @@ class CharacterStreamSingleton {
       return read;
     }
 
-    char get_next_char()
+    char wait_key(int milliseconds)
     {
       fd_set readfds;
-      struct timeval tv = {0, 16667}; // 60 Hertz
+      struct timeval tv = {milliseconds / 1000, 1000 * (milliseconds % 1000)};
 
       // May use ncurses
       FILE *cs_fd = read_file();

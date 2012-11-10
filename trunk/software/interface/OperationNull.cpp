@@ -8,7 +8,7 @@ void OperationNull::work()
   cbreak();
   printw("Type q to quit\n");
   refresh();
-  while (CharacterStreamSingleton::get_instance().get_next_char() != 'q') {}
+  while (CharacterStreamSingleton::get_instance().wait_key(1000) != 'q') {}
 
   // close ncurses
   endwin();
