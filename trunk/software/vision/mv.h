@@ -135,14 +135,17 @@ class mvBinaryMorphology {
 	}
 };
 
-/*
-void mvBinaryMorphology (
-        MV_MORPHOLOGY_TYPE morphology_type,
-        const IplImage* src, IplImage* dst, IplImage* temp=NULL, 
-        int kernel_width=3, int kernel_height=3,
-        MV_KERNEL_SHAPE shape=MV_KERN_RECT
-        );
-*/
+///#################################################################################
+///#################################################################################
+///#################################################################################
+
+inline bool hue_in_range (unsigned char hue, int HMIN, int HMAX) { // helper function for the filter
+    if (HMAX >= HMIN) 
+        return (hue >= HMIN && hue <= HMAX);
+    else
+        return ((hue <= HMIN && hue <= HMAX) || (hue >= HMIN && hue >= HMAX)); 
+}
+
 /** HSV color limit filter */
 // Currently support for changing the HSV values on the fly are limited
 class mvHSVFilter {
@@ -155,9 +158,6 @@ class mvHSVFilter {
     
     PROFILE_BIN bin_WorkingLoop;
     PROFILE_BIN bin_CvtColor;
-
-    private:
-    int hueInRange (unsigned char hue);
     
     public:
     mvHSVFilter (const char* settings_file);
@@ -169,32 +169,6 @@ class mvHSVFilter {
                 );    
 };
 
-
-/** mvAdaptiveBox
- *  This class represents a learning filter. Values between _min and _max are
- *  accepted. However, values between _min-_min_bound and _max+_max_bound
- *  will "stretch" the bounds (_min,_max). Over time the box will grow adapt
- *  to new data
- */
-enum MODULO_ENUM {MOD_NONE, MOD_180};
-class mvAdaptiveBox {
-    int min, max;         // min and max bounds
-    int min_50, max_50;   // min and max for inner 50% of the box
-    int min_bound, max_bound;  // threshold for growing the box
-
-    int orig_min, orig_max; // min and max when initialized. Stored so box doesnt move too far away.
-    static const int adjust_unit = 2;      // how much box bounds grow each time
-    static const int adjust_limit = 20;    // how much box bounds are allowed to grow
-
-    int box_count;         // how many falls within the box
-    int box_50_count;      // how many falls within inner 50% of the box
-    int box_min_bound_count, box_max_bound_count;  // how many falls inside the flaps
-
-    public:
-    mvAdaptiveBox (int Min, int Max, int flange, MODULO_ENUM mod = MOD_NONE);
-    int accumulate (int Data);
-    void adjust_box ();
-};
 
 /** mvAdaptiveFilter
  *  This class is a set of AdaptiveBox's to represent the water, the target, and 
@@ -224,20 +198,41 @@ class mvAdaptiveFilter2 {
         unsigned count;
     };
 
+    int min1, max1;
+    int min2, max2;
+    int min3, max3;
+    int dmin1, dmax1; // double 
+    int dmin2, dmax2;
+    int dmin3, dmax3;
+
+    void calc_limits (BRG_box2* box) {
+        min1 = box->c1-box->d1; 
+        max1 = box->c1+box->d1;
+        min2 = box->c2-box->d2; 
+        max2 = box->c2+box->d2;
+        min3 = box->c3-box->d3; 
+        max3 = box->c3+box->d3;
+        dmin1 = box->c1-2*box->d1; 
+        dmax1 = box->c1+2*box->d1;
+        dmin2 = box->c2-2*box->d2; 
+        dmax2 = box->c2+2*box->d2;
+        dmin3 = box->c3-2*box->d3; 
+        dmax3 = box->c3+2*box->d3;
+        if (min1 < 0) min1 += 180;
+        if (max1 > 179) max1 -= 180;
+        if (dmin1 < 0) dmin1 += 180;
+        if (dmax1 > 179) dmax1 -= 180;
+    }
     void copy_box (BRG_box2* box1, BRG_box2* box2){
         box2->c1 = box1->c1; box2->c2 = box1->c2; box2->c3 = box1->c3;
         box2->d1 = box1->d1; box2->d2 = box1->d2; box2->d3 = box1->d3;
         box2->count = box1->count;
     }
-    bool in_box (BRG_box2* box, int C1, int C2, int C3) {
-        return ((C1 >= box->c1-box->d1) && (C1 <= box->c1+box->d1) && 
-                (C2 >= box->c2-box->d2) && (C2 <= box->c2+box->d2) &&
-                (C3 >= box->c3-box->d3) && (C3 <= box->c3+box->d3));
+    bool in_box (int C1, int C2, int C3) {
+        return ((C2 >= min2) && (C2 <= max2) && (C3 >= min3) && (C3 <= max3) && hue_in_range(C1, min1, min2));
     }
-    bool in_2box (BRG_box2* box, int C1, int C2, int C3) {
-        return ((C1 >= box->c1-2*box->d1) && (C1 <= box->c1+2*box->d1) && 
-                (C2 >= box->c2-2*box->d2) && (C2 <= box->c2+2*box->d2) &&
-                (C3 >= box->c3-2*box->d3) && (C3 <= box->c3+2*box->d3));
+    bool in_2box (int C1, int C2, int C3) {
+        return ((C2 >= dmin2) && (C2 <= dmax2) && (C3 >= dmin3) && (C3 <= dmax3) && hue_in_range(C1, dmin1, dmin2));
     }
     void accumulate_box (BRG_box2* box, int C1, int C2, int C3) {
         box->c1 = ((box->c1)*box->count + C1) / (box->count+1);
@@ -259,5 +254,28 @@ class mvAdaptiveFilter2 {
     mvAdaptiveFilter2 (const char* Settings_File);
     void filter (const IplImage* src, IplImage* dst);
 };
+
+class mvAdaptiveFilter3 {
+    static const int nbins1 = 18;
+
+    int hue_target;
+    int hue_target_delta;
+    int sat_target;
+    int sat_target_delta;
+    int val_target;
+    int val_target_delta;
+
+    IplImage* src_HSV;
+    IplImage* hue_img;
+
+    CvHistogram* hist1; 
+
+    PROFILE_BIN bin_adaptive;
+
+    public:
+    mvAdaptiveFilter3 (const char* Settings_File);
+    void filter (const IplImage* src, IplImage* dst);
+};
+
 
 #endif
