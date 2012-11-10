@@ -19,7 +19,8 @@ enum MDA_TASK_RETURN_CODE {
 	TASK_ERROR, 
 	TASK_DONE,
 	TASK_REDO,
-	TASK_MISSING
+	TASK_MISSING,
+	TASK_QUIT
 };
 
 class MDA_TASK_BASE {
@@ -27,8 +28,6 @@ protected:
 	AttitudeInput* attitude_input;
 	ImageInput* image_input;
 	ActuatorOutput* actuator_output;
-
-	MDA_VISION_MODULE_BASE* vision_module;
 
 	void move (ATTITUDE_CHANGE_DIRECTION direction, int delta_accel) {
 		actuator_output->set_attitude_change(direction, delta_accel);	
@@ -38,8 +37,7 @@ public:
 	MDA_TASK_BASE (AttitudeInput* a, ImageInput* i, ActuatorOutput * o) :
 		attitude_input (a),
 		image_input (i),
-		actuator_output (o),
-		vision_module (NULL)
+		actuator_output (o)
 	{
 	}
 	virtual ~MDA_TASK_BASE() {}
