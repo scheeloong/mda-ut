@@ -60,17 +60,15 @@ void ActuatorOutputSimulator::special_cmd(SPECIAL_COMMAND cmd)
     case SIM_MOVE_FWD:
       model = SimulatorSingleton::get_instance().attitude();
       o = model.angle;
-      p.z -= DELTA_MOVE*cos((o.yaw*PI)/180)*cos((o.pitch*PI)/180);
-      p.x += DELTA_MOVE*sin((o.yaw*PI)/180)*cos((o.pitch*PI)/180);
-      p.y -= DELTA_MOVE*sin((o.pitch*PI)/180);
+      p.z -= DELTA_MOVE*cos((o.yaw*PI)/180);
+      p.x += DELTA_MOVE*sin((o.yaw*PI)/180);
       SimulatorSingleton::get_instance().add_position(p);
       break;
     case SIM_MOVE_REV:
       model = SimulatorSingleton::get_instance().attitude();
       o = model.angle;
-      p.z += DELTA_MOVE*cos((o.yaw*PI)/180)*cos((o.pitch*PI)/180);
-      p.x -= DELTA_MOVE*sin((o.yaw*PI)/180)*cos((o.pitch*PI)/180);
-      p.y += DELTA_MOVE*sin((o.pitch*PI)/180);
+      p.z += DELTA_MOVE*cos((o.yaw*PI)/180);
+      p.x -= DELTA_MOVE*sin((o.yaw*PI)/180);
       SimulatorSingleton::get_instance().add_position(p);
       break;
     case SIM_MOVE_LEFT:
