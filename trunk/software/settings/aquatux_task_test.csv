@@ -1,9 +1,0 @@
-# Test task
-
-IMAGE_INPUT VIDEO
-VIDEO_FWD, ../vision/runtime_sample1.avi
-VIDEO_DWN, ../vision/webcam.avi
-
-ATTITUDE_INPUT NULL
-OPERATION MISSION
-ACTUATOR_OUTPUT NULL
