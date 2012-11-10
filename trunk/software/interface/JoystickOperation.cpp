@@ -33,12 +33,14 @@ void JoystickOperation::display_start_message()
          "  1    - run gate task\n"
          "\n");
   refresh();
+
+  // reset counter
+  count = 0;
 }
 
 void JoystickOperation::work()
 {
   display_start_message();
-  int count = 0;
 
   // Take keyboard commands
   bool loop = true;
@@ -104,12 +106,27 @@ void JoystickOperation::work()
       case '0':
          if (mode != VISION) {
            endwin();
-           // Scope test task so that it is destructed before display_start_message
+
+           MDA_TASK_RETURN_CODE ret_code;
+           // Scope task so that it is destructed before display_start_message
            {
              MDA_TASK_TEST test_task(attitude_input, image_input, actuator_output);
-             test_task.run_task();
+             ret_code = test_task.run_task();
            }
+
            display_start_message();
+
+           switch(ret_code) {
+             case TASK_DONE:
+                message("Test task completed successfully");
+                break;
+             case TASK_QUIT:
+                message("Test task quit by user");
+                break;
+             default:
+                message("Test task errored out");
+                break;
+           }
            break;
          }
          delete vision_module;
@@ -120,12 +137,27 @@ void JoystickOperation::work()
       case '1':
          if (mode != VISION) {
            endwin();
-           // Scope test task so that it is destructed before display_start_message
+
+           MDA_TASK_RETURN_CODE ret_code;
+           // Scope task so that it is destructed before display_start_message
            {
              MDA_TASK_GATE gate_task(attitude_input, image_input, actuator_output);
-             gate_task.run_task();
+             ret_code = gate_task.run_task();
            }
+
            display_start_message();
+
+           switch(ret_code) {
+             case TASK_DONE:
+                message("Gate task completed successfully");
+                break;
+             case TASK_QUIT:
+                message("Gate task quit by user");
+                break;
+             default:
+                message("Gate task errored out");
+                break;
+           }
            break;
          }
          delete vision_module;

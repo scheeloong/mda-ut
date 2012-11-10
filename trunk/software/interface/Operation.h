@@ -51,7 +51,7 @@ class OperationNull : public Operation {
 class JoystickOperation: public Operation {
   public:
     JoystickOperation(AttitudeInput *a, ImageInput *i, ActuatorOutput *o) : Operation(a, i, o),
-      mode(NORMAL), vision_module(NULL), use_fwd_img(true) {}
+      mode(NORMAL), vision_module(NULL), use_fwd_img(true), count(0) {}
     virtual ~JoystickOperation() { delete vision_module; }
 
     virtual void work();
@@ -70,6 +70,7 @@ class JoystickOperation: public Operation {
     MDA_JOYSTICK_MODE mode;
     MDA_VISION_MODULE_BASE* vision_module;
     bool use_fwd_img;
+    int count;
 };
 
 /* Command Line implementation */
