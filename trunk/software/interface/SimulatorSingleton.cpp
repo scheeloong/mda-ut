@@ -8,6 +8,7 @@
 
 #include "CharacterStreamSingleton.h"
 #include "SimulatorSingleton.h"
+#include "mgui.h"
 
 // Global variables needed by sim
 volatile physical_model model;
@@ -104,9 +105,13 @@ void SimulatorSingleton::run_sim()
 {
   int argc = 0;
   char *argv[1];
+  unsigned width, height;
+  read_common_mv_setting ("IMG_WIDTH_COMMON", width);
+  read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
+  
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_SINGLE | GLUT_DEPTH | GLUT_RGB | GLUT_DOUBLE);
-  glutInitWindowSize (WINDOW_SIZE_X, WINDOW_SIZE_Y);
+  glutInitWindowSize (width, height);
   glutInitWindowPosition(10, 0);
 
   dwn_window = glutCreateWindow ("Down Cam");
@@ -126,7 +131,6 @@ void SimulatorSingleton::run_sim()
   glutCloseFunc(sim_close_window);
   init_sim();
 
-  unsigned width = 600, height = 400; // temporary
   img_fwd = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
   img_fwd->origin = 1;
   img_dwn = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
