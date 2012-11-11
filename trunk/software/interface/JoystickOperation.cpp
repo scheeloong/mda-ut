@@ -245,7 +245,7 @@ void JoystickOperation::process_image()
     }
   } else {
     // needs to be called periodically for highgui event-processing
-    cvWaitKey(1);
+    cvWaitKey(3);
   }
 }
 
