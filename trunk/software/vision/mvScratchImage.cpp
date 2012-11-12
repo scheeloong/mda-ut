@@ -20,7 +20,7 @@ IplImage* mvGetScratchImage() {
 
 void mvReleaseScratchImage() {
     if (instances_1channel == 1) {
-        printf ("Released 1channel Scratch Image\n");
+        //printf ("Released 1channel Scratch Image\n");
         cvReleaseImage (&scratch_img_1channel);
         instances_1channel = 0;
     }
@@ -48,7 +48,7 @@ IplImage* mvGetScratchImage_Color() {
 
 void mvReleaseScratchImage_Color() {
     if (instances_3channel == 1) {
-        printf ("Released 3channel Scratch Image\n");
+        //printf ("Released 3channel Scratch Image\n");
         cvReleaseImage (&scratch_img_3channel);
         instances_3channel = 0;
     }

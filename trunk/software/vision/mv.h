@@ -265,13 +265,15 @@ class mvAdaptiveFilter2 {
 
 class mvAdaptiveFilter3 {
     static const int nbins1 = 18;
+    static const int MAX_BINS_MARKED_1 = 6;
+    static const int HISTOGRAM_NORM_FACTOR = 10000;
 
-    int hue_target;
-    int hue_target_delta;
-    int sat_target;
-    int sat_target_delta;
-    int val_target;
-    int val_target_delta;
+    int hue_min;
+    int hue_max;
+    int sat_min;
+    int sat_max;
+    int val_min;
+    int val_max;
 
     IplImage* src_HSV;
     IplImage* hue_img;
@@ -279,9 +281,10 @@ class mvAdaptiveFilter3 {
     CvHistogram* hist1; 
 
     PROFILE_BIN bin_adaptive;
+    PROFILE_BIN bin_hist;
 
     public:
-    mvAdaptiveFilter3 (const char* Settings_File);
+    mvAdaptiveFilter3 (const char* settings_file);
     ~mvAdaptiveFilter3 ();
     void filter (const IplImage* src, IplImage* dst);
 };
