@@ -31,6 +31,9 @@ void JoystickOperation::display_start_message()
          "\n"
          "  0    - run test task\n"
          "  1    - run gate task\n"
+         "  2    - run path task\n"
+         "  3    - run buoy task\n"
+         "  4    - run frame task\n"
          "\n");
   refresh();
 
@@ -167,6 +170,28 @@ void JoystickOperation::work()
          break;
       case '2':
          if (mode != VISION) {
+           endwin();
+
+           MDA_TASK_RETURN_CODE ret_code;
+           // Scope task so that it is destructed before display_start_message
+           {
+             MDA_TASK_PATH path_task(attitude_input, image_input, actuator_output);
+             ret_code = path_task.run_task();
+           }
+
+           display_start_message();
+
+           switch(ret_code) {
+             case TASK_DONE:
+                message("Path task completed successfully");
+                break;
+             case TASK_QUIT:
+                message("Path task quit by user");
+                break;
+             default:
+                message("Path task errored out");
+                break;
+           }
            break;
          }
          delete vision_module;
@@ -176,6 +201,28 @@ void JoystickOperation::work()
          break;
       case '3':
          if (mode != VISION) {
+           endwin();
+
+           MDA_TASK_RETURN_CODE ret_code;
+           // Scope task so that it is destructed before display_start_message
+           {
+             MDA_TASK_BUOY buoy_task(attitude_input, image_input, actuator_output);
+             ret_code = buoy_task.run_task();
+           }
+
+           display_start_message();
+
+           switch(ret_code) {
+             case TASK_DONE:
+                message("Buoy task completed successfully");
+                break;
+             case TASK_QUIT:
+                message("Buoy task quit by user");
+                break;
+             default:
+                message("Buoy task errored out");
+                break;
+           }
            break;
          }
          delete vision_module;
@@ -185,6 +232,28 @@ void JoystickOperation::work()
          break;
       case '4':
          if (mode != VISION) {
+           endwin();
+
+           MDA_TASK_RETURN_CODE ret_code;
+           // Scope task so that it is destructed before display_start_message
+           {
+             MDA_TASK_FRAME frame_task(attitude_input, image_input, actuator_output);
+             ret_code = frame_task.run_task();
+           }
+
+           display_start_message();
+
+           switch(ret_code) {
+             case TASK_DONE:
+                message("Frame task completed successfully");
+                break;
+             case TASK_QUIT:
+                message("Frame task quit by user");
+                break;
+             default:
+                message("Frame task errored out");
+                break;
+           }
            break;
          }
          delete vision_module;

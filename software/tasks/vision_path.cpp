@@ -90,7 +90,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
             retval = UNKNOWN_TARGET;
             goto RETURN_CENTROID;
         }
-        if (abs(position_angle_0) > 1.2*abs(position_angle_1) || 1.2*abs(position_angle_0) < abs(position_angle_1)) {
+        if (abs(position_angle_0) > 1.3*abs(position_angle_1) || 1.3*abs(position_angle_0) < abs(position_angle_1)) {
             DEBUG_PRINT ("Path Sanity Failure: Line angles do not match\n");
             retval = UNKNOWN_TARGET;
             goto RETURN_CENTROID;

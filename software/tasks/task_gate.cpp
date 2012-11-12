@@ -2,8 +2,7 @@
 #include "mda_vision.h"
 
 MDA_TASK_GATE:: MDA_TASK_GATE (AttitudeInput* a, ImageInput* i, ActuatorOutput* o) :
-    MDA_TASK_BASE (a, i, o),
-    window ("task_gate")
+    MDA_TASK_BASE (a, i, o)
 {
 }
 
@@ -27,7 +26,6 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
             ret_code = TASK_ERROR;
             break;
         }
-        window.showImage (frame);
 
         if (!done_gate) {
             MDA_VISION_RETURN_CODE vision_code = gate_vision.filter(frame);

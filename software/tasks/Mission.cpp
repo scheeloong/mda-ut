@@ -40,5 +40,6 @@ SingleTaskMission:: ~SingleTaskMission()
 
 void SingleTaskMission::work()
 {
-  MDA_TASK_RETURN_CODE return_code = task->run_task();  
+  MDA_TASK_RETURN_CODE return_code = task->run_task();
+  (void) return_code;
 }

@@ -62,9 +62,7 @@ public:
 /// ########################################################################
 /// Gate
 /// ########################################################################
-
 class MDA_TASK_GATE : public MDA_TASK_BASE {
-	mvWindow window;
 
 public:
 	MDA_TASK_GATE (AttitudeInput* a, ImageInput* i, ActuatorOutput* o);
@@ -76,13 +74,37 @@ public:
 /// ########################################################################
 /// Path
 /// ########################################################################
+class MDA_TASK_PATH : public MDA_TASK_BASE {
+
+public:
+	MDA_TASK_PATH (AttitudeInput* a, ImageInput* i, ActuatorOutput* o);
+	~MDA_TASK_PATH ();
+
+	MDA_TASK_RETURN_CODE run_task ();
+};
 
 /// ########################################################################
 /// Buoy
 /// ########################################################################
+class MDA_TASK_BUOY : public MDA_TASK_BASE {
+
+public:
+	MDA_TASK_BUOY (AttitudeInput* a, ImageInput* i, ActuatorOutput* o);
+	~MDA_TASK_BUOY ();
+
+	MDA_TASK_RETURN_CODE run_task ();
+};
 
 /// ########################################################################
 /// U shaped Frame
 /// ########################################################################
+class MDA_TASK_FRAME : public MDA_TASK_BASE {
+
+public:
+	MDA_TASK_FRAME (AttitudeInput* a, ImageInput* i, ActuatorOutput* o);
+	~MDA_TASK_FRAME ();
+
+	MDA_TASK_RETURN_CODE run_task ();
+};
 
 #endif
