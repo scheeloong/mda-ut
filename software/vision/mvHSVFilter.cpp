@@ -23,11 +23,11 @@ mvHSVFilter:: mvHSVFilter (const char* settings_file) :
     HMIN = (HMIN>=0) ? HMIN : HMIN+180; 
     HMAX = (HMAX<180) ? HMAX : HMAX-180; 
     
-    HSVImg = mvCreateImage_Color (); // common size, 3 channel 
+    HSVImg = mvGetScratchImage_Color();
 }
 
 mvHSVFilter:: ~mvHSVFilter () {
-    cvReleaseImage (&HSVImg);
+    mvReleaseScratchImage_Color();
 }
 
 inline

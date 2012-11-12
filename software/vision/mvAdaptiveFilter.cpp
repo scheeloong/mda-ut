@@ -20,11 +20,15 @@ mvAdaptiveFilter:: mvAdaptiveFilter (const char* settings_file) :
         // possible location thingies?
     }
 
-    src_HSV = mvCreateImage_Color();
+    src_HSV = mvGetScratchImage_Color();
 
     guess[0] = 110;
     guess[1] = 120;
     guess[2] = 100;
+}
+
+mvAdaptiveFilter:: ~mvAdaptiveFilter () {
+    mvReleaseScratchImage_Color();
 }
 
 void mvAdaptiveFilter:: filter (const IplImage* src, IplImage* dst) {
@@ -123,7 +127,11 @@ mvAdaptiveFilter2:: mvAdaptiveFilter2 (const char* settings_file) :
     copy_box (&target, &next_target);
     copy_box (&bg, &next_bg);
 
-    src_HSV = mvCreateImage_Color();
+    src_HSV = mvGetScratchImage_Color();
+}
+
+mvAdaptiveFilter2:: ~mvAdaptiveFilter2 () {
+    mvReleaseScratchImage_Color();
 }
 
 void mvAdaptiveFilter2:: filter (const IplImage* src, IplImage* dst) {
@@ -193,7 +201,7 @@ mvAdaptiveFilter3:: mvAdaptiveFilter3 (const char* settings_file) :
     sat_target_delta    = 20;
     val_target_delta    = 30;
 
-    src_HSV = mvCreateImage_Color();
+    src_HSV = mvGetScratchImage_Color();
 
     int size[] = {nbins1};
     float h_range[] = {0, 180};  float* ranges[] = {h_range};
@@ -205,6 +213,10 @@ mvAdaptiveFilter3:: mvAdaptiveFilter3 (const char* settings_file) :
         ranges,         // upper & lower bound for bins
         1               // uniform
     );
+}
+
+mvAdaptiveFilter3:: ~mvAdaptiveFilter3 () {
+    mvReleaseScratchImage_Color();
 }
 
 void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {

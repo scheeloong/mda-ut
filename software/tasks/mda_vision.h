@@ -37,9 +37,6 @@ protected:
     static const float TAN_FOV_Y = 1.2;
     static const float RAD_TO_DEG = 57.2958;
 
-    // stores resized image
-    IplImage* _resized_; 
-
     // stores numerical data that can be queried. The goal of the modules is to calculate this
     int m_pixel_x, m_pixel_y, m_range;
     float m_angular_x, m_angular_y;
@@ -55,18 +52,16 @@ protected:
     virtual MDA_VISION_RETURN_CODE calc_vci () = 0;
     
 public:
-    MDA_VISION_MODULE_BASE () { _resized_ = mvCreateImage_Color(); }
-    virtual ~MDA_VISION_MODULE_BASE () { cvReleaseImage (&_resized_); } 
+    MDA_VISION_MODULE_BASE () {}
+    virtual ~MDA_VISION_MODULE_BASE () {} 
 
     MDA_VISION_RETURN_CODE filter (const IplImage* src) {
         assert (src != NULL);
         assert (src->nChannels == 3);
         
-        cvResize (src, _resized_);
-        _resized_->origin = src->origin;
         
         clear_data();
-        primary_filter (_resized_);
+        primary_filter (src);
         MDA_VISION_RETURN_CODE retval = calc_vci ();
  
         assert (retval != FATAL_ERROR);

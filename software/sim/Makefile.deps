@@ -1,7 +1,7 @@
-physical_model.o: physical_model.cpp physical_model.h types.h init.h
+bmp_io.o: bmp_io.cpp bmp_io.h
+glQuaternion.o: glQuaternion.cpp glQuaternion.h
 motors.o: motors.cpp motors.h physical_model.h types.h
+physical_model.o: physical_model.cpp physical_model.h types.h init.h
+sim.o: sim.cpp bmp_io.h types.h physical_model.h sim.h
 sim_cv.o: sim_cv.cpp types.h physical_model.h motors.h sim.h
 site.o: site.cpp types.h planks.h
-glQuaternion.o: glQuaternion.cpp glQuaternion.h
-sim.o: sim.cpp bmp_io.h types.h physical_model.h sim.h
-bmp_io.o: bmp_io.cpp bmp_io.h

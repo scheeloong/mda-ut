@@ -76,7 +76,6 @@ int main( int argc, char** argv ) {
     // declare images we need
     IplImage* myframe = mvCreateImage_Color();
     IplImage* filter_img = mvCreateImage ();
-    IplImage* grad_img = mvCreateImage ();
  
     /// execution
     char c;
@@ -100,17 +99,9 @@ int main( int argc, char** argv ) {
         HSVFilter.filter (frame, filter_img); // process it
            
         Morphology.open (filter_img, filter_img);
-        Morphology.gradient (filter_img, grad_img);
+        Morphology.gradient (filter_img, filter_img);
       
-        if (TEST) {
-            /*
-            cvSplit (frame, filter_img, NULL, NULL, NULL);
-            win1->showImage(frame);
-            win2->showImage(filter_img);
-            mvGradient(filter_img, filter_img, 5, 5);
-            win3->showImage(filter_img);
-            */
-            
+        if (TEST) {           
             adaptive.filter (frame, filter_img);
             win1->showImage (frame);
             win2->showImage (filter_img);
@@ -130,51 +121,33 @@ int main( int argc, char** argv ) {
                 }    
             }
 
-            cvCvtColor (myframe, filter_img, CV_RGB2GRAY);
-            Morphology.gradient (filter_img, grad_img);
-            Morphology.erode (grad_img, grad_img);
-
-            for (int i = 0; i < myframe->height; i++) {
-                for (int j = 0; j < myframe->width; j++) {
-                    unsigned char* pixel = (unsigned char*) (myframe->imageData + i*myframe->widthStep + j*3);
-                    unsigned char* gpixel = (unsigned char*) (grad_img->imageData + i*grad_img->widthStep + j);
-
-                    if (*gpixel > 40) {
-                        *pixel = *(pixel+1) = *(pixel+2) = 0;
-                    }
-                }    
-            }
-
             win2->showImage (myframe);
-            win3->showImage (grad_img);
         }
         else if (LINE) {
-            HoughLines.findLines (grad_img, &lines);
+            HoughLines.findLines (filter_img, &lines);
             kmeans.cluster_auto (1, 8, &lines, 1);
         
-            //lines.drawOntoImage (grad_img);
-            kmeans.drawOntoImage (grad_img);
+            //lines.drawOntoImage (filter_img);
+            kmeans.drawOntoImage (filter_img);
             lines.clearData(); // erase line data and reuse allocated mem
             //kmeans.clearData();
             
             win1->showImage (frame);
             win2->showImage (filter_img);
-            win3->showImage (grad_img);
+            win3->showImage (filter_img);
         }
         else if (CIRCLE) {
-            HoughCircles.findCircles (grad_img, &circles);
+            HoughCircles.findCircles (filter_img, &circles);
             printf ("ncircles = %d\n", circles.ncircles());
             circles.clearData();
-            circles.drawOntoImage (grad_img);
+            circles.drawOntoImage (filter_img);
             //circles.clearData();
             win1->showImage (frame);
             win2->showImage (filter_img);
-            win3->showImage (grad_img);
         }
         else {
             win1->showImage (frame);
             win2->showImage (filter_img);
-            win3->showImage (grad_img);
         }
         
         if (WRITE) {
@@ -191,7 +164,6 @@ int main( int argc, char** argv ) {
     printf ("\nAverage Framerate = %f\n", (float)nframes/(t_end - t_start)*CLOCKS_PER_SEC);
     
     cvReleaseImage (&filter_img);
-    cvReleaseImage (&grad_img);
     delete camera;
     if (writer)
         delete writer;

@@ -50,6 +50,12 @@ inline IplImage* mvCreateImage_Color (IplImage *img) {
     return temp;
 }
 
+/* These allow you access to static scratch images */
+IplImage* mvGetScratchImage();
+void mvReleaseScratchImage();
+IplImage* mvGetScratchImage_Color();
+void mvReleaseScratchImage_Color();
+
 /*BRG2HSV -- faster implementation to convert BRG images into HSV format */
 
 void mvBRG2HSV(const IplImage* src, IplImage* dst);
@@ -188,6 +194,7 @@ class mvAdaptiveFilter {
 
     public:
     mvAdaptiveFilter (const char* Settings_File);
+    ~mvAdaptiveFilter ();
     void filter (const IplImage* src, IplImage* dst);
 };
 
@@ -252,6 +259,7 @@ class mvAdaptiveFilter2 {
 
     public:
     mvAdaptiveFilter2 (const char* Settings_File);
+    ~mvAdaptiveFilter2 ();
     void filter (const IplImage* src, IplImage* dst);
 };
 
@@ -274,6 +282,7 @@ class mvAdaptiveFilter3 {
 
     public:
     mvAdaptiveFilter3 (const char* Settings_File);
+    ~mvAdaptiveFilter3 ();
     void filter (const IplImage* src, IplImage* dst);
 };
 
