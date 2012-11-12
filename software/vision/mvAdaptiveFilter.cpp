@@ -192,14 +192,15 @@ void mvAdaptiveFilter2:: filter (const IplImage* src, IplImage* dst) {
 //####################################################################################
 
 mvAdaptiveFilter3:: mvAdaptiveFilter3 (const char* settings_file) :
-    bin_adaptive ("Adaptive Color Filter 3")
+    bin_adaptive ("Filter3 - heuristics"),
+    bin_hist ("Filter3 - color & hist")
 {
-    hue_target          = 0;
-    sat_target          = 80;
-    val_target          = 80;
-    hue_target_delta    = 20;
-    sat_target_delta    = 20;
-    val_target_delta    = 30;
+    read_mv_setting (settings_file, "HUE_MIN", hue_min);
+    read_mv_setting (settings_file, "HUE_MAX", hue_max);
+    read_mv_setting (settings_file, "SAT_MIN", sat_min);
+    read_mv_setting (settings_file, "SAT_MAX", sat_max);
+    read_mv_setting (settings_file, "VAL_MIN", val_min);
+    read_mv_setting (settings_file, "VAL_MAX", val_max);
 
     src_HSV = mvGetScratchImage_Color();
 
@@ -225,18 +226,13 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
     assert (src->nChannels == 3);
     assert (dst->nChannels == 1);
 
-    bin_adaptive.start();
+    bin_hist.start();
 
     hue_img = dst;
 
     /** extract hue plane. Mark all invalid pixels as Hue=255, which is outside histogram range */
     // convert to HSV       
     cvCvtColor (src, src_HSV, CV_BGR2HSV); // convert to Hue,Saturation,Value 
-    
-    int sat_max = sat_target + sat_target_delta;
-    int sat_min = sat_target - sat_target_delta;
-    int val_max = val_target + val_target_delta;
-    int val_min = val_target - val_target_delta;
 
     unsigned char *imgPtr, *huePtr;
     for (int i = 0; i < src_HSV->height; i++) {
@@ -263,20 +259,25 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
         NULL    // possible boolean mask image
     ); 
 
-    cvNormalizeHist (hist1, 10000); // normalize so total count is 100
+    cvNormalizeHist (hist1, HISTOGRAM_NORM_FACTOR); // normalize so total count is 100
     for (int i = 0; i < nbins1; i++) {
         unsigned val = cvQueryHistValue_1D (hist1, i);
         DEBUG_PRINT ("Bin %2.1d (%3.1d-%3.1d): %d\n", i, 180/nbins1*i, 180/nbins1*(i+1)-1, val);    
     }
 
+    bin_hist.stop();
+    bin_adaptive.start();
+
     /** find nearby local max, exit if fail to find */
-    int srch_min = hue_target - hue_target_delta;
-    int srch_max = hue_target + hue_target_delta;
+    int srch_min = hue_min;
+    int srch_max = hue_max;
     if (srch_min < 0) srch_min += 180;
     if (srch_max > 179) srch_max -= 180;
     // the min and max bins to search
     int bin_min_i = srch_min*nbins1 / 180;
     int bin_max_i = srch_max*nbins1 / 180; 
+
+    DEBUG_PRINT ("bin_min_i, bin_max_i = (%d, %d)\n", bin_min_i, bin_max_i);
     
     // now find the local maximum within bin_min_i and bin_max_i
     unsigned local_max_bin_index = 0;
@@ -293,16 +294,24 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
         if (i == bin_max_i) break; // loop from bin_min_i to bin_max_i inclusive
     }
 
+    if (local_max_bin_value == 0) { // no non-zero bins in range
+        printf ("All bins in search range are zero!\n");
+        bin_adaptive.stop();
+        return;
+    }
+
+    DEBUG_PRINT ("Local Max at bin %d\n", local_max_bin_index);
+
     /** mark bins neighbouring the max until integral of marked bins >> those of nearby unmarked bins */
     // bin_min_i and bin_max_i now refer to the range of "marked" bins
     // a marked bin means the hue values inside is part of the target
     bin_min_i = bin_max_i = local_max_bin_index;
     unsigned marked = 1;
     bool success = false;
-    for (; marked <= nbins1/6-1; marked++) { // nbins1 / 6  =  30 / (180/nbins1)
+    for (; marked <= MAX_BINS_MARKED_1-1; marked++) {
         unsigned integral_marked = 0;
         unsigned integral_unmarked = 0;
-printf ("hi1\n");
+
         // calculate integral of marked bins 
         for (int i = bin_min_i; ; i++) {
             if (i >= nbins1) i = 0;
@@ -311,7 +320,7 @@ printf ("hi1\n");
             if (i == bin_max_i) break; // loop from bin_min_i to bin_max_i inclusive
         }
         integral_marked /= marked; // average integral of a marked bin.
-printf ("hi2\n");
+
         // caculate integral of neighbouring unmakred bins (those +- 1 from marked bins)
         int temp;
         unsigned min_1, max_1;
@@ -323,13 +332,13 @@ printf ("hi2\n");
         max_1 = cvQueryHistValue_1D (hist1, temp);  integral_unmarked += max_1;
          
         integral_unmarked /= 2;
-printf ("hi3\n");
+
         // if integral of marked bins >> integral of unmarked
-        if ((integral_marked > integral_unmarked*5) && (integral_marked > integral_unmarked + 10)) {
+        if ((integral_marked > integral_unmarked*5) && (integral_marked > integral_unmarked + HISTOGRAM_NORM_FACTOR/20)) {
             success = true;
             break;
         }
-printf ("hi4\n");
+
         // else mark one more bin
         if (min_1 > max_1)
             bin_min_i = (bin_min_i-1 >= 0) ? (bin_min_i-1) : 179;
@@ -337,18 +346,22 @@ printf ("hi4\n");
             bin_max_i = (bin_max_i+1 < 180) ? (bin_max_i+1) : 0;
     }
 
-    DEBUG_PRINT ("Bin Range: %d-%d\n", bin_min_i, bin_max_i);
+    if (success)
+        DEBUG_PRINT ("Bins Succesfully Marked: %d-%d\n", bin_min_i, bin_max_i);
+    else
+        DEBUG_PRINT ("Unable to meet bin thresholds. Bins not marked\n");
+    
     /** if successful, generate dst image */
-    unsigned hue_min;
-    unsigned hue_max;
+    unsigned hue_min_hist;
+    unsigned hue_max_hist;
     if (success) {// successful
-        hue_min = bin_min_i * 180 / nbins1;
-        hue_max = (bin_max_i+1) * 180 / nbins1;
+        hue_min_hist = bin_min_i * 180 / nbins1;
+        hue_max_hist = (bin_max_i+1) * 180 / nbins1;
     
         for (int i = 0; i < hue_img->height; i++) {
             huePtr = (unsigned char*) hue_img->imageData + i*hue_img->widthStep;
             for (int j = 0; j < hue_img->width; j++) {
-                if ((*huePtr != 255) && hue_in_range (*huePtr, hue_min, hue_max)) {
+                if ((*huePtr != 255) && hue_in_range (*huePtr, hue_min_hist, hue_max_hist)) {
                     *huePtr = 255;
                 }
                 else {                    
@@ -359,9 +372,11 @@ printf ("hi4\n");
         }
     }
     else {
+        cvZero (dst);
+        bin_adaptive.stop();
         return;
     }
 
-    DEBUG_PRINT ("Hue Range: %d-%d\n", hue_min, hue_max);
+    DEBUG_PRINT ("Hue Range: %d-%d\n", hue_min_hist, hue_max_hist);
     bin_adaptive.stop();
 }

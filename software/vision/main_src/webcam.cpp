@@ -71,7 +71,7 @@ int main( int argc, char** argv ) {
     mvKMeans kmeans;
 
     //mvAdaptiveFilter2 adaptive ("Adaptive");
-    mvAdaptiveFilter3 adaptive ("Adaptive");
+    mvAdaptiveFilter3 adaptive ("test_settings.csv");
 
     // declare images we need
     IplImage* myframe = mvCreateImage_Color();

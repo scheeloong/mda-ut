@@ -19,7 +19,7 @@ MDA_VISION_MODULE_TEST:: MDA_VISION_MODULE_TEST () :
 	_HSVFilter (mvHSVFilter(MDA_VISION_TEST_SETTINGS)),
 	_HoughLines (mvHoughLines(MDA_VISION_TEST_SETTINGS)),
 	_lines (mvLines()),
-    _adaptive (""),
+    _adaptive ("AdaptiveFilter3_settings.csv"),
     bin_test ("Test Module")
 {
     _filtered_img = mvGetScratchImage();
