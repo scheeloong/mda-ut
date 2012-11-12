@@ -20,11 +20,11 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY () :
     _HoughCircles (mvHoughCircles(MDA_VISION_BUOY_SETTINGS)),
     _circles (mvCircles())
 {
-    _filtered_img = mvCreateImage (); // common size
+    _filtered_img = mvGetScratchImage (); // common size
 }
 
 MDA_VISION_MODULE_BUOY:: ~MDA_VISION_MODULE_BUOY () {
-    cvReleaseImage (&_filtered_img);
+    mvReleaseScratchImage();
 }
 
 void MDA_VISION_MODULE_BUOY:: primary_filter (const IplImage* src) {

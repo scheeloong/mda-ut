@@ -22,12 +22,12 @@ MDA_VISION_MODULE_TEST:: MDA_VISION_MODULE_TEST () :
     _adaptive (""),
     bin_test ("Test Module")
 {
-    _filtered_img = mvCreateImage();
-    _filtered_img->origin = 1;
+    _filtered_img = mvGetScratchImage();
+    //_filtered_img->origin = 1;
 }
 
 MDA_VISION_MODULE_TEST:: ~MDA_VISION_MODULE_TEST () {
-    cvReleaseImage (&_filtered_img);
+    mvReleaseScratchImage();
 }
 
 void MDA_VISION_MODULE_TEST:: primary_filter (const IplImage* src) {   

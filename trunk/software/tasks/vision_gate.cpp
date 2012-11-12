@@ -18,11 +18,11 @@ MDA_VISION_MODULE_GATE:: MDA_VISION_MODULE_GATE () :
 	_HoughLines (mvHoughLines(MDA_VISION_GATE_SETTINGS)),
 	_lines (mvLines())
 {
-    _filtered_img = mvCreateImage (); // common size
+    _filtered_img = mvGetScratchImage (); // common size
 }
 
 MDA_VISION_MODULE_GATE:: ~MDA_VISION_MODULE_GATE () {
-    cvReleaseImage (&_filtered_img);
+    mvReleaseScratchImage();
 }
 
 void MDA_VISION_MODULE_GATE:: primary_filter (const IplImage* src) {

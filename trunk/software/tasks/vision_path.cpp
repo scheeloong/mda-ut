@@ -19,11 +19,11 @@ MDA_VISION_MODULE_PATH:: MDA_VISION_MODULE_PATH () :
 	_HoughLines (mvHoughLines(MDA_VISION_PATH_SETTINGS)),
 	_lines (mvLines())
 {
-    _filtered_img = mvCreateImage (); // common size
+    _filtered_img = mvGetScratchImage (); // common size
 }
 
 MDA_VISION_MODULE_PATH:: ~MDA_VISION_MODULE_PATH () {
-    cvReleaseImage (&_filtered_img);
+    mvReleaseScratchImage();
 }
 
 void MDA_VISION_MODULE_PATH:: primary_filter (const IplImage* src) {

@@ -18,11 +18,11 @@ MDA_VISION_MODULE_FRAME:: MDA_VISION_MODULE_FRAME () :
     _HoughLines (mvHoughLines(MDA_VISION_FRAME_SETTINGS)),
     _lines (mvLines())
 {
-    _filtered_img = mvCreateImage (); // common size
+    _filtered_img = mvGetScratchImage (); // common size
 }
 
 MDA_VISION_MODULE_FRAME:: ~MDA_VISION_MODULE_FRAME () {
-    cvReleaseImage (&_filtered_img);
+    mvReleaseScratchImage();
 }
 
 void MDA_VISION_MODULE_FRAME:: primary_filter (const IplImage* src) {
