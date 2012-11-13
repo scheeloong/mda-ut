@@ -35,11 +35,17 @@ parallel:
 
 all: $(LIB) $(EXES)
 
+ifdef A
+$(A): $(OBJ)
+	rm -f $@
+	ar -cvq $@ $(OBJ)
+endif
+
 deps:
 	$(CXX) -MM $(I_FLAGS) $(SRCS) > Makefile.deps
 
 clean:
-	rm -rf $(OBJ) $(EXES) *.a ./*~
+	rm -rf $(OBJ) $(EXES) $(A) ./*~
 
 $(LIBVISION):
 	+make -C `dirname $@` `basename $@`
