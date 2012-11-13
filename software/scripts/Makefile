@@ -1,29 +1,17 @@
-CC=gcc
-CFLAGS = -Wall -lm
+USE_C_SRC=1
+include ../Makefile.in
+include Makefile.deps
 
-INC=scripts.h
-UIDIR=../../fpga/ui/
-UIA=libui.a
-AFLAGS=-L$(UIDIR) $(UIDIR)$(UIA)
-
-SRCS:=$(wildcard *.c)
+LIB=$(LIBUI)
 EXES:=$(patsubst %.c,%.out,$(SRCS))
 
-parallel:
-	make -j4 all
+all: $(OBJ) $(EXES)
+	echo $(EXES)
 
-all: $(EXES)
-
-%.out: %.c $(INC) $(UIDIR)$(UIA)
-	$(CC) $< $(AFLAGS) $(CFLAGS) -o $@
-
-$(UIDIR)$(UIA):
-	make -C $(UIDIR)
-
-deps:
-	# no deps needed
+%.out: %.o $(LIB)
+	$(CC) -o $@ $< $(CXXFLAGS)
 
 clean:
-	rm -f log.txt $(EXES)
+	rm -f $(OBJ) $(EXES)
 
 .PHONY: parallel all deps clean
