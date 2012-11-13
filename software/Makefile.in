@@ -15,12 +15,11 @@ CXXFLAGS=$(I_FLAGS) $(C_FLAGS) $(L_FLAGS) $(GL_LIBS) $(CV_LIBS)
 # End compile flags
 
 # Begin files
-ifndef USE_C_SRC
+ifndef SRCS
 	SRCS:=$(wildcard *.cpp)
+endif
+ifndef OBJ
 	OBJ:=$(patsubst %.cpp,%.o,$(SRCS))
-else
-	SRCS:=$(wildcard *.c)
-	OBJ:=$(patsubst %.c,%.o,$(SRCS))
 endif
 
 LIBVISION=../vision/libvision.a
@@ -34,8 +33,13 @@ LIB=$(LIBVISION) $(LIBTASKS) $(LIBSIM) $(LIBUI)
 parallel:
 	make -j4 all
 
+all: $(LIB) $(EXES)
+
 deps:
 	$(CXX) -MM $(I_FLAGS) $(SRCS) > Makefile.deps
+
+clean:
+	rm -rf $(OBJ) $(EXES) *.a ./*~
 
 $(LIBVISION):
 	+make -C `dirname $@` `basename $@`
