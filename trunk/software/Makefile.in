@@ -1,0 +1,51 @@
+# Begin compile flags
+ifeq ($(OS),APPLE)
+	GL_LIBS=-framework OpenGL -framework GLUT -framework Cocoa
+else
+	GL_LIBS=-lGL -lglut -lGLU
+endif
+
+CV_LIBS=`pkg-config --cflags --libs opencv`
+
+I_FLAGS=-I ../sim -I ../vision -I ../tasks -I ../interface
+L_FLAGS=-lsim -L../sim -lvision -L../vision -ltasks -L../tasks -lui -L../../fpga/ui -lncurses -lm -pthread
+C_FLAGS=-O3 -Wall -g
+
+CXXFLAGS=$(I_FLAGS) $(C_FLAGS) $(L_FLAGS) $(GL_LIBS) $(CV_LIBS)
+# End compile flags
+
+# Begin files
+ifndef USE_C_SRC
+	SRCS:=$(wildcard *.cpp)
+	OBJ:=$(patsubst %.cpp,%.o,$(SRCS))
+else
+	SRCS:=$(wildcard *.c)
+	OBJ:=$(patsubst %.c,%.o,$(SRCS))
+endif
+
+LIBVISION=../vision/libvision.a
+LIBTASKS=../tasks/libtasks.a
+LIBSIM=../sim/libsim.a
+LIBUI=../../fpga/ui/libui.a
+LIB=$(LIBVISION) $(LIBTASKS) $(LIBSIM) $(LIBUI)
+# End files
+
+# Begin targets
+parallel:
+	make -j4 all
+
+deps:
+	$(CXX) -MM $(I_FLAGS) $(SRCS) > Makefile.deps
+
+$(LIBVISION):
+	+make -C `dirname $@` `basename $@`
+
+$(LIBTASKS):
+	+make -C `dirname $@` `basename $@`
+
+$(LIBSIM):
+	+make -C `dirname $@` `basename $@`
+
+$(LIBUI):
+	+make -C `dirname $@` `basename $@`
+# End targets

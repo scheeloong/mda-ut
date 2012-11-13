@@ -1,37 +1,26 @@
-CVFLAGS=`pkg-config --cflags --libs opencv`
-CXXFLAGS=-O3 -Wall -g $(CVFLAGS)
-A=libvision.a
+include ../Makefile.in
+include Makefile.deps
 
-SRCS:=$(wildcard *.cpp)
-OBJ:=$(patsubst %.cpp,%.o,$(SRCS))
+A=libvision.a
 MAIN_DIR=main_src/
 MAIN_SRC=$(MAIN_DIR)main.cpp
 WEBCAM_SRC=$(MAIN_DIR)webcam.cpp
+EXE=main
+WEBCAM=webcam
 
-parallel:
-	make -j4 all
+all: $(EXE) $(WEBCAM) $(A)
 
-all: main webcam $(A)
+$(EXE): $(OBJ) $(MAIN_SRC) $(LIB)
+	$(CXX) -o $@ $(OBJ) $(MAIN_SRC) $(CXXFLAGS) -I .
 
-# this is the main executable and depends on each object
-main: $(OBJ) $(MAIN_SRC)
-	$(CXX) $(OBJ) $(MAIN_SRC) -o $@ $(CXXFLAGS) -I .
+$(WEBCAM): $(OBJ) $(WEBCAM_SRC) $(LIB)
+	$(CXX) -o $@ $(OBJ) $(WEBCAM_SRC) $(CXXFLAGS) -I .
 
-# webcam is another executable
-webcam: $(OBJ) $(WEBCAM_SRC)
-	$(CXX) $(OBJ) $(WEBCAM_SRC) -o $@ $(CXXFLAGS) -I .
-
-# archive file
 $(A): $(OBJ)
 	rm -f $@
 	ar -cvq $@ $(OBJ)
 
-deps:
-	$(CC) -MM $(SRCS) > Makefile.deps
-
-include Makefile.deps
-
 clean:
-	rm -f main webcam $(A) ./*~ $(OBJ)
+	rm -f $(OBJ) $(MAIN) $(WEBCAM) $(A) ./*~
 
 .PHONY: parallel all deps clean
