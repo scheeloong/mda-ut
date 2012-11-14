@@ -8,7 +8,7 @@ endif
 CV_LIBS=`pkg-config --cflags --libs opencv`
 
 I_FLAGS=-I ../sim -I ../vision -I ../tasks -I ../interface
-L_FLAGS=-lsim -L../sim -lvision -L../vision -ltasks -L../tasks -lui -L../../fpga/ui -lncurses -lm -pthread
+L_FLAGS=-lsim -L../sim -lvision -L../vision -ltasks -L../tasks -lui -L../ui -lncurses -lm -pthread
 C_FLAGS=-O3 -Wall -g
 
 CXXFLAGS=$(I_FLAGS) $(C_FLAGS) $(L_FLAGS) $(GL_LIBS) $(CV_LIBS)
@@ -25,7 +25,7 @@ endif
 LIBVISION=../vision/libvision.a
 LIBTASKS=../tasks/libtasks.a
 LIBSIM=../sim/libsim.a
-LIBUI=../../fpga/ui/libui.a
+LIBUI=../ui/libui.a
 LIB=$(LIBVISION) $(LIBTASKS) $(LIBSIM) $(LIBUI)
 # End files
 
