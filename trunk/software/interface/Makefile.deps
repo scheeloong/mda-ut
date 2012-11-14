@@ -2,8 +2,7 @@ ActuatorOutputSimulator.o: ActuatorOutputSimulator.cpp ActuatorOutput.h \
  SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h ImageInput.h \
  ../vision/mgui.h ../vision/profile_bin.h
 ActuatorOutputSubmarine.o: ActuatorOutputSubmarine.cpp ActuatorOutput.h \
- SubmarineSingleton.h ../scripts/scripts.h \
- ../scripts/../../fpga/ui/utils.h
+ SubmarineSingleton.h ../scripts/scripts.h ../scripts/../ui/utils.h
 AquaTux.o: AquaTux.cpp AquaTux.h AttitudeInput.h ImageInput.h \
  ../vision/mgui.h ../vision/profile_bin.h Operation.h ActuatorOutput.h \
  CharacterStreamSingleton.h ../tasks/mda_vision.h ../vision/mv.h \
@@ -19,8 +18,7 @@ AttitudeInputSimulator.o: AttitudeInputSimulator.cpp AttitudeInput.h \
  SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h ImageInput.h \
  ../vision/mgui.h ../vision/profile_bin.h
 AttitudeInputSubmarine.o: AttitudeInputSubmarine.cpp AttitudeInput.h \
- SubmarineSingleton.h ../scripts/scripts.h \
- ../scripts/../../fpga/ui/utils.h
+ SubmarineSingleton.h ../scripts/scripts.h ../scripts/../ui/utils.h
 CommandLineOperation.o: CommandLineOperation.cpp Operation.h \
  AttitudeInput.h ImageInput.h ../vision/mgui.h ../vision/profile_bin.h \
  ActuatorOutput.h CharacterStreamSingleton.h ../tasks/mda_vision.h \
@@ -64,4 +62,4 @@ SimulatorSingleton.o: SimulatorSingleton.cpp ../sim/sim.h \
  CharacterStreamSingleton.h SimulatorSingleton.h ../sim/physical_model.h \
  ../sim/types.h ImageInput.h ../vision/mgui.h ../vision/profile_bin.h
 SubmarineSingleton.o: SubmarineSingleton.cpp SubmarineSingleton.h \
- ../scripts/scripts.h ../scripts/../../fpga/ui/utils.h
+ ../scripts/scripts.h ../scripts/../ui/utils.h

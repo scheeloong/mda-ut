@@ -1,4 +1,4 @@
-DIRS = vision sim tasks scripts interface
+DIRS = vision sim tasks ui scripts interface
 TARGETS = parallel all deps clean
 
 $(TARGETS):
