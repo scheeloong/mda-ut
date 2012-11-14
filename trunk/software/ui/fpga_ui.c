@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "fpga_ui.h"
 
 #include <math.h>
 #include <signal.h>
@@ -97,7 +97,7 @@ void spawn_term (char *proc)
         proc = nios2_shell_path;
     }
 
-    int inh, outh;
+    int inh = 0, outh = 0;
     child_pid = popen2(proc, &inh, &outh);
     infp = fdopen(inh, "w");
     outfp = fdopen(outh, "r");

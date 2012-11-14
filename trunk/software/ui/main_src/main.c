@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "utils.h"
+#include "fpga_ui.h"
 
 #define MAX_TOKENS 3
 #define LINE_START "fpga> "
