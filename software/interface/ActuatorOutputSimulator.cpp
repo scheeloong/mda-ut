@@ -15,33 +15,44 @@ ActuatorOutputSimulator::~ActuatorOutputSimulator()
 
 void ActuatorOutputSimulator::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir, int delta)
 {
-  // TODO: implement with a PID controller to simulate the real submarine
-  delta /= 5; // scale down for now since we're using acceleration and not degrees and cm
+  switch(dir) {
+    case REVERSE:
+    case LEFT:
+    case SINK:
+      delta *= -1;
+      break;
+    default:
+      break;
+  }
   switch(dir) {
     case FORWARD:
-      SimulatorSingleton::get_instance().set_acceleration(delta, 0, 0);
-      break;
     case REVERSE:
-      SimulatorSingleton::get_instance().set_acceleration(-delta, 0, 0);
-      break;
-    case LEFT:
-      SimulatorSingleton::get_instance().set_acceleration(0, -delta, 0);
+      set_attitude_absolute(SPEED, delta); // doesn't make sense to change the speed, set absolute
       break;
     case RIGHT:
-      SimulatorSingleton::get_instance().set_acceleration(0, delta, 0);
+    case LEFT:
+      SimulatorSingleton::get_instance().set_target_attitude_change(delta, 0);
       break;
     case RISE:
-      SimulatorSingleton::get_instance().set_acceleration(0, 0, delta);
-      break;
     case SINK:
-      SimulatorSingleton::get_instance().set_acceleration(0, 0, -delta);
+      SimulatorSingleton::get_instance().set_target_attitude_change(0, delta);
       break;
   }
 }
 
 void ActuatorOutputSimulator::set_attitude_absolute(ATTITUDE_DIRECTION dir, int val)
 {
-  // TODO: implement
+  switch(dir) {
+    case SPEED:
+      SimulatorSingleton::get_instance().set_target_accel(val);
+      break;
+    case YAW:
+      SimulatorSingleton::get_instance().set_target_yaw(val);
+      break;
+    case DEPTH:
+      SimulatorSingleton::get_instance().set_target_depth(val);
+      break;
+  }
 }
 
 #define DELTA_MOVE 0.15
@@ -55,7 +66,7 @@ void ActuatorOutputSimulator::special_cmd(SPECIAL_COMMAND cmd)
   switch(cmd) {
     case SIM_ACCEL_ZERO:
       model = SimulatorSingleton::get_instance().attitude();
-      SimulatorSingleton::get_instance().set_acceleration(0, 0, 0);
+      SimulatorSingleton::get_instance().zero_speed();
       break;
     case SIM_MOVE_FWD:
       model = SimulatorSingleton::get_instance().attitude();
