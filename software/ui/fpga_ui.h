@@ -1,5 +1,5 @@
-#ifndef __MDA_UI_UTILS__
-#define __MDA_UI_UTILS__
+#ifndef FPGA_UI_H
+#define FPGA_UI_H
 
 #define PWM_MAX 100
 

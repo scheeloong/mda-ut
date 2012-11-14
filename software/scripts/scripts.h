@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../ui/utils.h"
+#include "fpga_ui.h"
 
 #ifdef __cplusplus
 extern "C" {
