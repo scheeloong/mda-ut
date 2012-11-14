@@ -34,7 +34,7 @@ LIB=$(LIBVISION) $(LIBTASKS) $(LIBSIM) $(LIBUI)
 parallel:
 	make -j4 all
 
-all: $(LIB) $(EXES)
+all: $(LIB) $(A) $(EXES)
 
 ifdef A
 $(A): $(OBJ)

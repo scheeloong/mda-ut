@@ -21,6 +21,7 @@ void sim_init();
 void sim_keyboard(unsigned char, int, int);
 void sim_display();
 void sim_reshape(int, int);
+void sim_idle();
 void sim_close_window();
 
 /* Constructor and destructor for sim resource */
@@ -31,6 +32,9 @@ void SimulatorSingleton::create()
     return;
   }
   created = true;
+
+  // initialize target to the model
+  target_model = *const_cast<physical_model *>(&model);
 
   // Start simulation (may need to use passed in data)
   pthread_create(&sim_thread, NULL, ::run_sim, NULL);
@@ -79,6 +83,8 @@ void SimulatorSingleton::add_position(world_vector p)
   model.position.x += p.x;
   model.position.y += p.y;
   model.position.z += p.z;
+
+  set_target_depth(model.position.y);
 }
 
 void SimulatorSingleton::add_orientation(orientation a)
@@ -86,13 +92,44 @@ void SimulatorSingleton::add_orientation(orientation a)
   model.angle.yaw += a.yaw;
   model.angle.pitch += a.pitch;
   model.angle.roll += a.roll;
+
+  set_target_yaw(model.angle.yaw);
 }
 
-void SimulatorSingleton::set_acceleration(float accel, float angular_accel, float depth_accel)
+void SimulatorSingleton::set_target_accel(float accel)
 {
+  // No need to use target, set directly on the model
   model.accel = accel;
-  model.angular_accel = angular_accel;
-  model.depth_accel = depth_accel;
+}
+
+void SimulatorSingleton::set_target_yaw(float yaw)
+{
+  target_model.angle.yaw = yaw;
+}
+
+void SimulatorSingleton::set_target_depth(float depth)
+{
+  target_model.position.y = depth;
+}
+
+void SimulatorSingleton::set_target_attitude_change(float yaw, float depth)
+{
+  target_model.angle.yaw += yaw;
+  target_model.position.y += depth / 10;
+}
+
+void SimulatorSingleton::zero_speed()
+{
+  model.speed = 0;
+  model.depth_speed = 0;
+  model.angular_speed = 0;
+
+  model.accel = 0;
+  model.angular_accel = 0;
+  model.depth_accel = 0;
+
+  set_target_yaw(model.angle.yaw);
+  set_target_depth(model.position.y);
 }
 
 void *run_sim(void *args)
@@ -118,7 +155,7 @@ void SimulatorSingleton::run_sim()
   glutPositionWindow(0, 400);
   glutReshapeFunc  (::sim_reshape);
   glutDisplayFunc  (::sim_display);
-  glutIdleFunc     (::anim_scene);
+  glutIdleFunc     (::sim_idle);
   glutKeyboardFunc (::sim_keyboard);
   glutCloseFunc(sim_close_window);
   init_sim();
@@ -126,7 +163,7 @@ void SimulatorSingleton::run_sim()
   fwd_window = glutCreateWindow ("Forwards Cam");
   glutReshapeFunc  (::sim_reshape);
   glutDisplayFunc  (::sim_display);
-  glutIdleFunc     (::anim_scene);
+  glutIdleFunc     (::sim_idle);
   glutKeyboardFunc (::sim_keyboard);
   glutCloseFunc(sim_close_window);
   init_sim();
@@ -219,6 +256,34 @@ void SimulatorSingleton::sim_reshape(int w, int h)
   cvReleaseImage (&img_dwn);
   img_dwn = cvCreateImage (cvSize(w,h), IPL_DEPTH_8U, 3);
   img_dwn->origin = 1;
+}
+
+void sim_idle()
+{
+  SimulatorSingleton::get_instance().sim_idle();
+}
+
+#define MAX_ACCEL 6.0f
+
+void SimulatorSingleton::sim_idle()
+{
+  // P controller for target attitude
+  model.angular_accel = (target_model.angle.yaw - model.angle.yaw) / 10;
+  model.depth_accel = (target_model.position.y - model.position.y) / 0.5;
+
+  // cast away volatile model
+  physical_model temp_model = *const_cast<physical_model *>(&model);
+
+  model.angular_accel = std::min(temp_model.angular_accel, MAX_ACCEL);
+  model.depth_accel = std::min(temp_model.depth_accel, MAX_ACCEL);
+
+  // cast away volatile model
+  temp_model = *const_cast<physical_model *>(&model);
+
+  model.angular_accel = std::max(temp_model.angular_accel, -MAX_ACCEL);
+  model.depth_accel = std::max(temp_model.depth_accel, -MAX_ACCEL);
+
+  ::anim_scene();
 }
 
 void sim_close_window()

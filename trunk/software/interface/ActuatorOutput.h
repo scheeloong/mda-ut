@@ -36,7 +36,7 @@ enum SPECIAL_COMMAND {
   SIM_RESET_ALL
 };
 
-#define DEFAULT_ATTITUDE_CHANGE 15
+#define DEFAULT_ATTITUDE_CHANGE 1
 
 /* Actuator Output interface */
 class ActuatorOutput {

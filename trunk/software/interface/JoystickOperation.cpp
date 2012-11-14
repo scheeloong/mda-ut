@@ -22,10 +22,10 @@ void JoystickOperation::display_start_message()
          "\n"
          "  wasd - use controller to move forward/reverse/left/right\n"
          "  rf   - use controller to move up/down\n"
-         "  ' '  - stop\n"
+         "  'e'  - stop\n"
          "  ijkl - move forward/reverse/left/right\n"
          "  p;   - move up/down\n"
-         "  e    - nullify all acceleration\n"
+         "  ' '  - nullify all speed and acceleration\n"
          "\n"
          "  v    - enter vision mode\n"
          "\n"
@@ -82,28 +82,28 @@ void JoystickOperation::work()
          actuator_output->special_cmd(SIM_MOVE_SINK);
          break;
       case 'e':
-         actuator_output->special_cmd(SIM_ACCEL_ZERO);
+         actuator_output->stop();
          break;
       case 'w':
-         actuator_output->set_attitude_change(FORWARD);
+         actuator_output->set_attitude_change(FORWARD, 5);
          break;
       case 's':
-         actuator_output->set_attitude_change(REVERSE);
+         actuator_output->set_attitude_change(REVERSE, 5);
          break;
       case 'a':
-         actuator_output->set_attitude_change(LEFT);
+         actuator_output->set_attitude_change(LEFT, 5);
          break;
       case 'd':
-         actuator_output->set_attitude_change(RIGHT);
+         actuator_output->set_attitude_change(RIGHT, 5);
          break;
       case 'r':
-         actuator_output->set_attitude_change(RISE);
+         actuator_output->set_attitude_change(RISE, 5);
          break;
       case 'f':
-         actuator_output->set_attitude_change(SINK);
+         actuator_output->set_attitude_change(SINK, 5);
          break;
       case ' ':
-         actuator_output->stop();
+         actuator_output->special_cmd(SIM_ACCEL_ZERO);
          break;
 
       case '0':
