@@ -41,6 +41,10 @@ void JoystickOperation::display_start_message()
   count = 0;
 }
 
+#define SPEED_CHG 5
+#define YAW_CHG_IN_DEG 5
+#define DEPTH_CHG_IN_CM 20
+
 void JoystickOperation::work()
 {
   display_start_message();
@@ -85,22 +89,22 @@ void JoystickOperation::work()
          actuator_output->stop();
          break;
       case 'w':
-         actuator_output->set_attitude_change(FORWARD, 5);
+         actuator_output->set_attitude_change(FORWARD, SPEED_CHG);
          break;
       case 's':
-         actuator_output->set_attitude_change(REVERSE, 5);
+         actuator_output->set_attitude_change(REVERSE, SPEED_CHG);
          break;
       case 'a':
-         actuator_output->set_attitude_change(LEFT, 5);
+         actuator_output->set_attitude_change(LEFT, YAW_CHG_IN_DEG);
          break;
       case 'd':
-         actuator_output->set_attitude_change(RIGHT, 5);
+         actuator_output->set_attitude_change(RIGHT, YAW_CHG_IN_DEG);
          break;
       case 'r':
-         actuator_output->set_attitude_change(RISE, 5);
+         actuator_output->set_attitude_change(RISE, DEPTH_CHG_IN_CM);
          break;
       case 'f':
-         actuator_output->set_attitude_change(SINK, 5);
+         actuator_output->set_attitude_change(SINK, DEPTH_CHG_IN_CM);
          break;
       case ' ':
          actuator_output->special_cmd(SIM_ACCEL_ZERO);

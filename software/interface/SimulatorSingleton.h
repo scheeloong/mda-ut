@@ -43,6 +43,8 @@ class SimulatorSingleton {
     void set_target_depth(float);
     void set_target_attitude_change(float, float);
     void zero_speed();
+    int target_yaw();
+    int target_depth();
   private:
     SimulatorSingleton(SimulatorSingleton const&); // Don't implement
     void operator=(SimulatorSingleton const&);     // Don't implement

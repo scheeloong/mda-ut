@@ -50,9 +50,20 @@ void ActuatorOutputSimulator::set_attitude_absolute(ATTITUDE_DIRECTION dir, int 
       SimulatorSingleton::get_instance().set_target_yaw(val);
       break;
     case DEPTH:
-      SimulatorSingleton::get_instance().set_target_depth(val);
+      SimulatorSingleton::get_instance().set_target_depth(val/(float)100);
       break;
   }
+}
+
+void ActuatorOutputSimulator::stop()
+{
+  set_attitude_absolute(SPEED, 0);
+
+  physical_model m = SimulatorSingleton::get_instance().attitude();
+  float yaw = m.angle.yaw, depth = m.position.y * 100;
+
+  set_attitude_absolute(YAW, yaw);
+  set_attitude_absolute(DEPTH, depth);
 }
 
 #define DELTA_MOVE 0.15
