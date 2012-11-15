@@ -18,6 +18,10 @@ class AttitudeInput {
     virtual int pitch() {return 0;}
     virtual int roll() {return 0;}
     virtual int depth() = 0;
+
+    // accessors to current target attitude
+    virtual int target_yaw() {return 0;}
+    virtual int target_depth() {return 0;}
 };
 
 /* A don't care implementation */
@@ -38,6 +42,9 @@ class AttitudeInputSimulator : public AttitudeInput {
     virtual int pitch();
     virtual int roll();
     virtual int depth();
+
+    virtual int target_yaw();
+    virtual int target_depth();
 };
 
 /* The real submarine implementation */

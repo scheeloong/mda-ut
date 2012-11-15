@@ -23,6 +23,11 @@ void ActuatorOutputSubmarine::set_attitude_absolute(ATTITUDE_DIRECTION dir, int 
   // TODO: implement
 }
 
+void ActuatorOutputSubmarine::stop()
+{
+  // TODO: implement
+}
+
 void ActuatorOutputSubmarine::special_cmd(SPECIAL_COMMAND cmd)
 {
   // TODO: implement

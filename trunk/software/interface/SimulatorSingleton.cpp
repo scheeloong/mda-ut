@@ -112,6 +112,7 @@ void SimulatorSingleton::set_target_depth(float depth)
   target_model.position.y = depth;
 }
 
+// yaw in degrees, depth in cm
 void SimulatorSingleton::set_target_attitude_change(float yaw, float depth)
 {
   target_model.angle.yaw += yaw;
@@ -120,7 +121,7 @@ void SimulatorSingleton::set_target_attitude_change(float yaw, float depth)
   } else if (target_model.angle.yaw <= -180) {
     target_model.angle.yaw += 360;
   }
-  target_model.position.y += depth / 10;
+  target_model.position.y += depth / 100;
 }
 
 void SimulatorSingleton::zero_speed()
@@ -135,6 +136,17 @@ void SimulatorSingleton::zero_speed()
 
   set_target_yaw(model.angle.yaw);
   set_target_depth(model.position.y);
+}
+
+int SimulatorSingleton::target_yaw()
+{
+  return target_model.angle.yaw;
+}
+
+// On the order of cm
+int SimulatorSingleton::target_depth()
+{
+  return target_model.position.y * 100;
 }
 
 void *run_sim(void *args)

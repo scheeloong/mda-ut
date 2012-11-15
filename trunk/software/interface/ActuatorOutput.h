@@ -46,21 +46,9 @@ class ActuatorOutput {
     // some methods to actuate the output
     virtual void set_attitude_change(ATTITUDE_CHANGE_DIRECTION, int) = 0;
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION, int) = 0;
-    virtual void special_cmd(SPECIAL_COMMAND) = 0;
-
     virtual void set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir) {set_attitude_change(dir, DEFAULT_ATTITUDE_CHANGE);}
-    virtual void stop()
-    {
-      set_attitude_change(FORWARD, 0);
-      set_attitude_change(LEFT, 0);
-      set_attitude_change(SINK, 0);
-    }
-
-    // accessors to current target attitude
-    virtual int target_yaw() {return 0;}
-    virtual int target_pitch() {return 0;}
-    virtual int target_roll() {return 0;}
-    virtual int target_depth() {return 0;}
+    virtual void stop() = 0;
+    virtual void special_cmd(SPECIAL_COMMAND) = 0;
 };
 
 /* A don't care implementation */
@@ -70,6 +58,7 @@ class ActuatorOutputNull : public ActuatorOutput {
 
     virtual void set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir, int delta) {}
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION dir, int val) {}
+    virtual void stop() {}
     virtual void special_cmd(SPECIAL_COMMAND cmd) {}
 };
 
@@ -81,6 +70,7 @@ class ActuatorOutputSimulator : public ActuatorOutput {
 
     virtual void set_attitude_change(ATTITUDE_CHANGE_DIRECTION, int);
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION, int);
+    virtual void stop();
     virtual void special_cmd(SPECIAL_COMMAND);
 };
 
@@ -92,6 +82,7 @@ class ActuatorOutputSubmarine : public ActuatorOutput {
 
     virtual void set_attitude_change(ATTITUDE_CHANGE_DIRECTION, int);
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION, int);
+    virtual void stop();
     virtual void special_cmd(SPECIAL_COMMAND);
 };
 
