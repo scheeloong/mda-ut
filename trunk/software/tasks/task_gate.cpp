@@ -44,13 +44,18 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                     actuator_output->set_attitude_change(LEFT);
                 else if (x > frame->width/10)
                     actuator_output->set_attitude_change(RIGHT);
-                else 
+                else  {
+                    // set target yaw to current yaw and go forward
+                    actuator_output->set_attitude_absolute(YAW, attitude_input->yaw());
                     actuator_output->set_attitude_change(FORWARD);
+                }
 
             } 
             else if (vision_code == FULL_DETECT) {
                 // if we can see full gate and range is less than 400 we are done the gate part
                 if (gate_vision.get_range() < 400) {
+                    // set target yaw to current yaw and go forward
+                    actuator_output->set_attitude_absolute(YAW, attitude_input->yaw());
                     actuator_output->set_attitude_change(FORWARD);
                     done_gate = true;
                     continue;
@@ -62,8 +67,11 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                     actuator_output->set_attitude_change(LEFT);
                 else if (x > frame->width/6)
                     actuator_output->set_attitude_change(RIGHT);
-                else 
+                else { 
+                    // set target yaw to current yaw and go forward
+                    actuator_output->set_attitude_absolute(YAW, attitude_input->yaw());
                     actuator_output->set_attitude_change(FORWARD);
+                }
             }
         }
         else {
