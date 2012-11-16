@@ -96,10 +96,11 @@ void SimulatorSingleton::add_orientation(orientation a)
   set_target_yaw(model.angle.yaw);
 }
 
+#define ACCEL_FACTOR 1.5
 void SimulatorSingleton::set_target_accel(float accel)
 {
   // No need to use target, set directly on the model
-  model.accel = accel;
+  model.accel = ACCEL_FACTOR * accel;
 }
 
 void SimulatorSingleton::set_target_yaw(float yaw)

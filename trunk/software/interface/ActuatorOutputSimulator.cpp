@@ -46,8 +46,7 @@ void ActuatorOutputSimulator::set_attitude_absolute(ATTITUDE_DIRECTION dir, int 
 {
   switch(dir) {
     case SPEED:
-      // double value, so that when val = 1, we get some forward action
-      SimulatorSingleton::get_instance().set_target_accel(2*val);
+      SimulatorSingleton::get_instance().set_target_accel(val);
       break;
     case YAW:
       SimulatorSingleton::get_instance().set_target_yaw(val);
