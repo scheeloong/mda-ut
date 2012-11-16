@@ -32,9 +32,10 @@ LIB=$(LIBVISION) $(LIBTASKS) $(LIBSIM) $(LIBUI)
 
 # Begin targets
 parallel:
-	make -j4 all
+	$(MAKE) -j4 all
 
-all: $(LIB) $(A) $(EXES)
+all: $(LIB) $(A)
+	$(MAKE) $(EXES)
 
 ifdef A
 $(A): $(OBJ)
@@ -49,14 +50,14 @@ clean:
 	rm -rf $(OBJ) $(EXES) $(A) ./*~
 
 $(LIBVISION):
-	+make -C `dirname $@` `basename $@`
+	+$(MAKE) -C `dirname $@` `basename $@`
 
 $(LIBTASKS):
-	+make -C `dirname $@` `basename $@`
+	+$(MAKE) -C `dirname $@` `basename $@`
 
 $(LIBSIM):
-	+make -C `dirname $@` `basename $@`
+	+$(MAKE) -C `dirname $@` `basename $@`
 
 $(LIBUI):
-	+make -C `dirname $@` `basename $@`
+	+$(MAKE) -C `dirname $@` `basename $@`
 # End targets
