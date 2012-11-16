@@ -32,10 +32,12 @@ void ActuatorOutputSimulator::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir,
     case RIGHT:
     case LEFT:
       SimulatorSingleton::get_instance().set_target_attitude_change(delta, 0);
+      set_attitude_absolute(SPEED, 0); // stop forward speed
       break;
     case RISE:
     case SINK:
       SimulatorSingleton::get_instance().set_target_attitude_change(0, delta);
+      set_attitude_absolute(SPEED, 0); // stop forward speed
       break;
   }
 }
@@ -44,7 +46,8 @@ void ActuatorOutputSimulator::set_attitude_absolute(ATTITUDE_DIRECTION dir, int 
 {
   switch(dir) {
     case SPEED:
-      SimulatorSingleton::get_instance().set_target_accel(val);
+      // double value, so that when val = 1, we get some forward action
+      SimulatorSingleton::get_instance().set_target_accel(2*val);
       break;
     case YAW:
       SimulatorSingleton::get_instance().set_target_yaw(val);
