@@ -212,6 +212,7 @@ class mvAdaptiveFilter3 {
     CvHistogram* hist; 
 
     PROFILE_BIN bin_adaptive;
+    PROFILE_BIN bin_CvtColor;
     mvWindow* win;
 
     public:
