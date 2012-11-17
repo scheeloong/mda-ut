@@ -23,7 +23,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
         }
         window.showImage (frame);
         
-        /* INSERT YOUR CODE HERE */  
+        actuator_output->set_attitude_change(RIGHT, 10);
 
         // Ensure debug messages are printed
         fflush(stdout);

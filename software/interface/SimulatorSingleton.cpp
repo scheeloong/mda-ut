@@ -116,13 +116,13 @@ void SimulatorSingleton::set_target_depth(float depth)
 // yaw in degrees, depth in cm
 void SimulatorSingleton::set_target_attitude_change(float yaw, float depth)
 {
-  target_model.angle.yaw += yaw;
+  target_model.angle.yaw = model.angle.yaw + yaw;
   if (target_model.angle.yaw >= 180) {
     target_model.angle.yaw -= 360;
-  } else if (target_model.angle.yaw <= -180) {
+  } else if (target_model.angle.yaw < -180) {
     target_model.angle.yaw += 360;
   }
-  target_model.position.y += depth / 100;
+  target_model.position.y = model.position.y + depth / 100;
 }
 
 void SimulatorSingleton::zero_speed()
