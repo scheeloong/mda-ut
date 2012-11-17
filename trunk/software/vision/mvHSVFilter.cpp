@@ -22,7 +22,7 @@ mvHSVFilter:: mvHSVFilter (const char* settings_file) :
     
     HMIN = (HMIN>=0) ? HMIN : HMIN+180; 
     HMAX = (HMAX<180) ? HMAX : HMAX-180; 
-    
+
     HSVImg = mvGetScratchImage_Color();
 }
 

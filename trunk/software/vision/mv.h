@@ -53,6 +53,8 @@ inline IplImage* mvCreateImage_Color (IplImage *img) {
 /* These allow you access to static scratch images */
 IplImage* mvGetScratchImage();
 void mvReleaseScratchImage();
+IplImage* mvGetScratchImage2();
+void mvReleaseScratchImage2();
 IplImage* mvGetScratchImage_Color();
 void mvReleaseScratchImage_Color();
 
@@ -92,6 +94,9 @@ inline void mvGradient (const IplImage* src, IplImage* dst, unsigned kern_w, uns
     cvReleaseImage (&temp);
     cvReleaseStructuringElement (&kernel);
 }
+
+/// split the image into any of its 2 planes in place
+void mvSplitImage (const IplImage* src, IplImage** plane1=NULL, IplImage** plane2=NULL);
 
 /** Binary Filters */
 // These are fast filters designed specifically for binary images with very
@@ -156,12 +161,13 @@ inline bool hue_in_range (unsigned char hue, int HMIN, int HMAX) { // helper fun
 // Currently support for changing the HSV values on the fly are limited
 class mvHSVFilter {
     static const unsigned UNCHANGED = 9999;  // value passed in to keep a value unchanged  
-    IplImage* HSVImg;
     
     unsigned IMG_WIDTH, IMG_HEIGHT;
     int HMIN,HMAX;
     unsigned SMIN,SMAX, VMIN, VMAX;
     
+    IplImage* HSVImg;
+
     PROFILE_BIN bin_WorkingLoop;
     PROFILE_BIN bin_CvtColor;
     
@@ -264,9 +270,15 @@ class mvAdaptiveFilter2 {
 };
 
 class mvAdaptiveFilter3 {
-    static const int nbins1 = 18;
-    static const int MAX_BINS_MARKED_1 = 6;
-    static const int HISTOGRAM_NORM_FACTOR = 10000;
+    static const int nbins_hue = 30;
+    static const int nbins_sat = 25;
+    static const int hue_range_min = 0;
+    static const int hue_range_max = 179;
+    static const int sat_range_min = 6;
+    static const int sat_range_max = 255;
+    static const int MAX_BINS_MARKED = 9;
+    static const int HISTOGRAM_NORM_FACTOR = 100000;
+    static const bool DISPLAY_HIST = true;
 
     int hue_min;
     int hue_max;
@@ -277,16 +289,19 @@ class mvAdaptiveFilter3 {
 
     IplImage* src_HSV;
     IplImage* hue_img;
+    IplImage* sat_img;
+    IplImage* hist_img;
 
-    CvHistogram* hist1; 
+    CvHistogram* hist; 
 
     PROFILE_BIN bin_adaptive;
-    PROFILE_BIN bin_hist;
+    mvWindow* win;
 
     public:
     mvAdaptiveFilter3 (const char* settings_file);
     ~mvAdaptiveFilter3 ();
     void filter (const IplImage* src, IplImage* dst);
+    void show_histogram ();
 };
 
 

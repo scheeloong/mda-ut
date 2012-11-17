@@ -107,6 +107,8 @@ class mvCamera {
     }
 
     IplImage* retrieveFrame () {
+        assert (0); /// RetrieveFrame is no longer safe to use with current algorithms;
+
         if (!_capture) return NULL;
           bin_getFrame.start();
         return cvRetrieveFrame (_capture);

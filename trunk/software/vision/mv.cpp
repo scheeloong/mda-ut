@@ -8,6 +8,62 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
+/// in place splitting of image into its first 2 planes
+void mvSplitImage (const IplImage* src, IplImage** plane1, IplImage** plane2) {
+    assert (src != NULL);
+    assert (src ->nChannels == 3);
+
+    int Area3 = src->height * src->width;//src->widthStep / 3;
+    unsigned char* ptr = (unsigned char*) src->imageData;
+    unsigned char* ptrW = (unsigned char*) (src->imageData + Area3);
+    unsigned char* ptr2W = (unsigned char*) (src->imageData + 2*Area3);
+    unsigned char* p1 = ptr;    // first plane
+    unsigned char* p2 = ptrW;   // 2nd plane
+    unsigned char* swap = ptr2W;    // swap plane
+    unsigned char* endswap = swap + Area3;
+    unsigned char* swapPtr;
+
+    if (plane1 != NULL)
+        (*plane1)->imageData = (char*)p1;
+    if (plane2 != NULL)
+        (*plane2)->imageData = (char*)p2;
+
+    for (int i = 0; i < src->height*src->width; i++) {
+        std::swap (ptr[1],ptrW[0]);
+        std::swap (ptr[2],ptr2W[0]);
+        std::swap (ptrW[2],ptr2W[1]);
+
+        ptr += 3;
+        ptrW += 3;
+        ptr2W += 3;
+    }
+/*
+    memcpy (swap, p1, Area3);
+    swapPtr = swap;
+    for (int i = 0; i < Area3; i++) {
+        std::swap (*p1, *swapPtr);
+        p1++;
+        swapPtr += 3;
+        if (swapPtr >= endswap) {
+            swapPtr -= Area3;
+            swapPtr++;
+        }
+    }
+
+    memcpy (swap, p2, Area3);
+    swapPtr = swap;
+    for (int i = 0; i < Area3; i++) {
+        std::swap (*p2, *swapPtr);
+        p2++;
+        swapPtr += 3;
+        if (swapPtr >= endswap) {
+            swapPtr -= Area3;
+            swapPtr++;
+        }
+    }*/
+}
+
+
 /// TERRIBLE TERRIBLE CODING
 #define IN_SRC(x) (((x)>=src_addr_first) && ((x)<src_addr_last))
 #define IN_DST(x) (((x)> dst_addr_first) && ((x)<dst_addr_last))
@@ -16,7 +72,6 @@ void mvBinaryDilate (const IplImage* src, IplImage* dst, int kernel_point_array[
 void mvBinaryErode (const IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_area);
 void mvBinaryGradient (const IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_area);
 
-
 mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV_KERNEL_SHAPE Shape) :
     bin_morph ("mvMorphology - morph"),
     bin_gradient ("mvMorphology - gradient")
@@ -24,7 +79,7 @@ mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV
     assert (Kernel_Width % 2 == 1); // odd number
     assert (Kernel_Height % 2 == 1);
 
-    temp = mvCreateImage ();
+    temp = mvGetScratchImage2();
     kernel_width = Kernel_Width;
     kernel_height = Kernel_Height;   
     kernel_area = Kernel_Width * Kernel_Height;
@@ -45,7 +100,7 @@ mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV
 }
 
 mvBinaryMorphology:: ~mvBinaryMorphology () {
-	cvReleaseImage (&temp);
+	mvReleaseScratchImage2();
 }
 
 void mvBinaryMorphology:: mvBinaryMorphologyMain (

@@ -74,8 +74,8 @@ int main( int argc, char** argv ) {
     mvAdaptiveFilter3 adaptive ("test_settings.csv");
 
     // declare images we need
-    IplImage* myframe = mvCreateImage_Color();
     IplImage* filter_img = mvCreateImage ();
+    IplImage* filter_img2 = mvCreateImage ();
  
     /// execution
     char c;
@@ -96,32 +96,42 @@ int main( int argc, char** argv ) {
             continue;
         }
 
-        HSVFilter.filter (frame, filter_img); // process it
-           
-        Morphology.open (filter_img, filter_img);
-        Morphology.gradient (filter_img, filter_img);
-      
-        if (TEST) {           
-            adaptive.filter (frame, filter_img);
+        if (CARTOON) {
             win1->showImage (frame);
-            win2->showImage (filter_img);
-        }
-        else if (CARTOON) {
-            cvZero (filter_img);
-            cvCopy (frame, myframe);
 
-            win1->showImage (myframe);
-
-            for (int i = 0; i < myframe->height; i+=40) {
-                for (int j = 0; j < myframe->width; j+=40) {
-                    unsigned char* pixel = (unsigned char*) (myframe->imageData + i*myframe->widthStep + j*3);
+            for (int i = 0; i < frame->height; i+=40) {
+                for (int j = 0; j < frame->width; j+=40) {
+                    unsigned char* pixel = (unsigned char*) (frame->imageData + i*frame->widthStep + j*3);
                     CvScalar mycolor = cvScalar(*(pixel+0), *(pixel+1), *(pixel+2));
                     
-                    cvFloodFill(myframe, cvPoint(j,i), mycolor, cvScalar(20,20,20), cvScalar(20,20,20), NULL, CV_FLOODFILL_FIXED_RANGE);
+                    cvFloodFill(frame, cvPoint(j,i), mycolor, cvScalar(20,20,20), cvScalar(20,20,20), NULL, CV_FLOODFILL_FIXED_RANGE);
                 }    
             }
 
-            win2->showImage (myframe);
+            win2->showImage (frame);
+            goto LOOP_BOTTOM;
+        }
+
+        win1->showImage (frame);
+        //HSVFilter.filter (frame, filter_img); // process it
+        //win2->showImage (filter_img);
+           
+        //Morphology.open (filter_img, filter_img);
+        //Morphology.gradient (filter_img, filter_img);
+        //win3->showImage (filter_img);
+      
+        if (TEST) {        
+            win1->showImage (frame);
+  
+            adaptive.filter (frame, filter_img);
+/*            cvSplit (frame, filter_img, filter_img2, NULL, NULL);
+            win1->showImage (frame);
+            win2->showImage (filter_img);
+            win3->showImage (filter_img2);
+*/
+            //mvSplitImage (frame, &filter_img, &filter_img2);
+            win2->showImage (filter_img);
+            win3->showImage (filter_img2);
         }
         else if (LINE) {
             HoughLines.findLines (filter_img, &lines);
@@ -132,8 +142,6 @@ int main( int argc, char** argv ) {
             lines.clearData(); // erase line data and reuse allocated mem
             //kmeans.clearData();
             
-            win1->showImage (frame);
-            win2->showImage (filter_img);
             win3->showImage (filter_img);
         }
         else if (CIRCLE) {
@@ -141,21 +149,17 @@ int main( int argc, char** argv ) {
             printf ("ncircles = %d\n", circles.ncircles());
             circles.clearData();
             circles.drawOntoImage (filter_img);
-            //circles.clearData();
-            win1->showImage (frame);
-            win2->showImage (filter_img);
-        }
-        else {
-            win1->showImage (frame);
-            win2->showImage (filter_img);
+
+            win3->showImage (filter_img);
         }
         
         if (WRITE) {
             writer->writeFrame (frame);
         }
         
+    LOOP_BOTTOM:
         nframes++;
-        c = cvWaitKey(20);
+        c = cvWaitKey(5);
         if (c == 'q') 
             break;
     }
