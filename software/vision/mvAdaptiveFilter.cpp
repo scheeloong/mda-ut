@@ -113,7 +113,7 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
     cvNormalizeHist (hist, HISTOGRAM_NORM_FACTOR);
     
     #ifdef FILTER_DEBUG
-        //show_histogram();
+        show_histogram();
     #endif
 
     /// Attempt to find a local maximum within the user-defined hue-sat bounds
@@ -130,17 +130,13 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
     for (int h = bin_min_index_hue; ; h++) {
         if (h >= nbins_hue) h = 0;  // allows looping of hue from bin16 to bin2, ect
 
-        for (int s = bin_min_index_sat; ; s++) {
-            if (s >= nbins_sat) s = 0;
-
+        for (int s = bin_min_index_sat; s <= bin_max_index_sat; s++) {
             unsigned bin_value = cvQueryHistValue_2D (hist, h, s);
             if (bin_value > local_max_bin_value) {
                 local_max_bin_value = bin_value;
                 local_max_bin_index[0] = h;
                 local_max_bin_index[1] = s;
             }
-
-            if(s == bin_max_index_sat) break;
         }
 
         if(h == bin_max_index_hue) break;
@@ -153,6 +149,21 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
     }
 
     DEBUG_PRINT ("Local Max at bin (%d, %d)\n", local_max_bin_index[0], local_max_bin_index[1]);
+
+    Quad rect;
+    setQuad (rect, local_max_bin_index[0], local_max_bin_index[1], local_max_bin_index[0], local_max_bin_index[1]);
+    Quad sides[4];
+
+    printf("rectvalue: %d   ", getQuadValue (rect));
+    printf("(%d,%d,%d,%d)\n", rect.h0, rect.s0, rect.h1, rect.s1);
+    getRectangleNeighbours (rect, sides);
+
+    for (int i = 0; i < 4; i++){
+        printf("sidevalue: %d   ", getQuadValue (sides[i]));
+        printf("(%d,%d,%d,%d)\n", sides[i].h0, sides[i].s0, sides[i].h1, sides[i].s1);
+    }
+
+
 /*
     /// mark bins neighbouring the max until integral of marked bins >> those of nearby unmarked bins 
     // bin_min_i and bin_max_i now refer to the range of "marked" bins
@@ -260,4 +271,18 @@ void mvAdaptiveFilter3:: show_histogram () {
     }
 
     win->showImage(hist_img);
+}
+
+void mvAdaptiveFilter3:: getRectangleNeighbours(Quad rect, Quad sides[]){
+    int h0 = rect.h0;
+    int s0 = rect.s0;
+    int h1 = rect.h1;
+    int s1 = rect.s1;
+
+    setQuad(sides[0], (h0>0) ? h0-1: nbins_hue-1, s0, (h0>0) ? h0-1: nbins_hue-1, s1);
+    setQuad(sides[1], h0, (s1<nbins_sat-1) ? s1+1 : -1, h1, (s1<nbins_sat-1) ? s1+1: -1);
+    setQuad(sides[2], (h1<nbins_hue-1) ? h1+1: 0, s0, (h1<nbins_hue-1) ? h1+1: 0, s1);
+    setQuad(sides[3], h0, (s0>0)? s0-1: -1, h1, (s0>0)? s0-1: -1);
+
+
 }

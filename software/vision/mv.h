@@ -197,6 +197,26 @@ class mvAdaptiveFilter3 {
     static const int HISTOGRAM_NORM_FACTOR = 100000;
     static const bool DISPLAY_HIST = true;
 
+    struct Quad{
+        int h0, s0, h1, s1;
+    };
+    void setQuad (Quad &Q, int h0, int s0, int h1, int s1) {
+        Q.h0 = h0; Q.s0 = s0;
+        Q.h1 = h1; Q.s1 = s1;
+    }
+    int getQuadValue (Quad Q) {
+        int count = 0;
+        for (int h = Q.h0; ; h++) {
+            if (h >= nbins_hue) h = 0;  // allows looping of hue from bin16 to bin2, ect
+            for (int s = Q.s0; s <= Q.s1; s++) {
+                count += cvQueryHistValue_2D (hist, h, s);
+                   
+            }
+            if(h == Q.h1) break;
+        }
+        return count;
+    }
+
     int hue_min;
     int hue_max;
     int sat_min;
@@ -214,6 +234,9 @@ class mvAdaptiveFilter3 {
     PROFILE_BIN bin_adaptive;
     PROFILE_BIN bin_CvtColor;
     mvWindow* win;
+
+    private:
+    void getRectangleNeighbours(Quad rect, Quad sides[]);
 
     public:
     mvAdaptiveFilter3 (const char* settings_file);
