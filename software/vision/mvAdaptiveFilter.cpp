@@ -152,85 +152,88 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
 
     Quad rect;
     setQuad (rect, local_max_bin_index[0], local_max_bin_index[1], local_max_bin_index[0], local_max_bin_index[1]);
-    Quad sides[4];
+    Quad sides[NUM_SIDES_RECTANGLE];
 
-    printf("rectvalue: %d   ", getQuadValue (rect));
-    printf("(%d,%d,%d,%d)\n", rect.h0, rect.s0, rect.h1, rect.s1);
-    getRectangleNeighbours (rect, sides);
+    DEBUG_PRINT ("Beginning to Accumulate Bins\n");
 
-    for (int i = 0; i < 4; i++){
-        printf("sidevalue: %d   ", getQuadValue (sides[i]));
-        printf("(%d,%d,%d,%d)\n", sides[i].h0, sides[i].s0, sides[i].h1, sides[i].s1);
-    }
+    for(int i = 0; i < NUM_SIDES_RECTANGLE; i++){
+        DEBUG_PRINT ("Iteration %d\n", i);
+        getRectangleNeighbours (rect, sides);
+        int rect_val = getQuadValue(rect);
 
-
-/*
-    /// mark bins neighbouring the max until integral of marked bins >> those of nearby unmarked bins 
-    // bin_min_i and bin_max_i now refer to the range of "marked" bins
-    // a marked bin means the hue values inside is part of the target
-    bin_min_i = bin_max_i = local_max_bin_index;
-    unsigned marked = 1;
-    bool success = false;
-    for (; marked <= MAX_BINS_MARKED_1-1; marked++) {
-        unsigned integral_marked = 0;
-        unsigned integral_unmarked = 0;
-
-        // calculate integral of marked bins 
-        for (int i = bin_min_i; ; i++) {
-            if (i >= nbins1) i = 0;
-            integral_marked += cvQueryHistValue_1D (hist1, i);
-             
-            if (i == bin_max_i) break; // loop from bin_min_i to bin_max_i inclusive
+        int side_val[NUM_SIDES_RECTANGLE];
+        int side_val_avg = 0;
+        int num_valid_sides = 0;
+        for (int j = 0; j < NUM_SIDES_RECTANGLE; j++) {
+            side_val[j] = getQuadValue(sides[j]);
+            if (side_val[j] >= 0) {
+                num_valid_sides++;
+                side_val_avg += side_val[j];
+            }
         }
-        integral_marked /= marked; // average integral of a marked bin.
 
-        // caculate integral of neighbouring unmakred bins (those +- 1 from marked bins)
-        int temp;
-        unsigned min_1, max_1;
-        temp = bin_min_i-1;
-        if (temp < 0) temp += nbins1;
-        min_1 = cvQueryHistValue_1D (hist1, temp);  integral_unmarked += min_1;
-        temp = bin_max_i+1;
-        if (temp >= nbins1) temp -= nbins1;
-        max_1 = cvQueryHistValue_1D (hist1, temp);  integral_unmarked += max_1;
-         
-        integral_unmarked /= 2;
+        side_val_avg /= num_valid_sides;
+   
+        DEBUG_PRINT ("\trect: (%d,%d,%d,%d) - %d\n", rect.h0, rect.s0, rect.h1, rect.s1, rect_val);
+        for (int j = 0; j < NUM_SIDES_RECTANGLE; j++){
+            DEBUG_PRINT("\tside: (%d,%d,%d,%d) - %d\n", sides[j].h0, sides[j].s0, sides[j].h1, sides[j].s1, side_val[j]);
+        }        
+        DEBUG_PRINT ("\tside_avg: %d\n", side_val_avg);
 
-        // if integral of marked bins >> integral of unmarked
-        if ((integral_marked > integral_unmarked*5) && (integral_marked > integral_unmarked + HISTOGRAM_NORM_FACTOR/20)) {
-            success = true;
+        // check if the algorithm is done (if rect_val >> avg of side_vals)
+        if (rect_val > 5*side_val_avg) {
+            DEBUG_PRINT ("Break on iteration %d\n", i);
             break;
         }
 
-        // else mark one more bin
-        if (min_1 > max_1)
-            bin_min_i = (bin_min_i-1 >= 0) ? (bin_min_i-1) : 179;
-        else
-            bin_max_i = (bin_max_i+1 < 180) ? (bin_max_i+1) : 0;
+        int best_side = -1;
+        int best_side_val = -1;
+        for (int j = 0; j < NUM_SIDES_RECTANGLE; j++) {
+            if (side_val[j] >= 0 && side_val[j] > best_side_val) {
+                best_side = j;
+                best_side_val = side_val[j];
+            }
+        }
+
+        if (best_side == 0 || best_side == 3) {
+            rect.h0 = sides[best_side].h0; 
+            rect.s0 = sides[best_side].s0;
+        }
+        else {
+            rect.h1 = sides[best_side].h1;
+            rect.s1 = sides[best_side].s1;
+        }
     }
 
-    if (success)
-        DEBUG_PRINT ("Bins Succesfully Marked: %d-%d\n", bin_min_i, bin_max_i);
-    else
-        DEBUG_PRINT ("Unable to meet bin thresholds. Bins not marked\n");
-    
+    unsigned hue_min_hist = (unsigned)rect.h0 * hue_range_max / nbins_hue;
+    unsigned hue_max_hist = (unsigned)(rect.h1+1) * hue_range_max / nbins_hue;
+    unsigned sat_min_hist = (unsigned)rect.s0 * sat_range_max / nbins_sat;
+    unsigned sat_max_hist = (unsigned)(rect.s1+1) * sat_range_max / nbins_sat;
+    DEBUG_PRINT ("Hue Range: %d-%d\n", hue_min_hist, hue_max_hist);
+    DEBUG_PRINT ("Sat Range: %d-%d\n", sat_min_hist, sat_max_hist);
+        
+
     /// if successful, generate dst image
-    unsigned hue_min_hist;
-    unsigned hue_max_hist;
-    if (success) {// successful
-        hue_min_hist = bin_min_i * 179 / nbins1;
-        hue_max_hist = (bin_max_i+1) * 179 / nbins1;
-    
-        for (int i = 0; i < hue_img->height; i++) {
+    if (1) {
+        unsigned char *dstPtr, *huePtr, *satPtr;
+        for (int i = 0; i < dst->height; i++) {
+            dstPtr = (unsigned char*) dst->imageData + i*dst->widthStep;
             huePtr = (unsigned char*) hue_img->imageData + i*hue_img->widthStep;
-            for (int j = 0; j < hue_img->width; j++) {
-                if ((*huePtr != 255) && hue_in_range (*huePtr, hue_min_hist, hue_max_hist)) {
-                    *huePtr = 255;
+            satPtr = (unsigned char*) sat_img->imageData + i*sat_img->widthStep;
+
+            for (int j = 0; j < dst->width; j++) {
+                if ((*huePtr != 255) && hue_in_range (*huePtr, hue_min_hist, hue_max_hist) && 
+                    (*satPtr >= sat_min_hist && *satPtr <= sat_max_hist))
+                {
+                    *dstPtr = 255;
                 }
                 else {                    
-                    *huePtr = 0;
+                    *dstPtr = 0;
                 }
-                huePtr++; 
+                
+                dstPtr++; 
+                huePtr++;
+                satPtr++;
             }
         }
     }
@@ -240,8 +243,6 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
         return;
     }
 
-    DEBUG_PRINT ("Hue Range: %d-%d\n", hue_min_hist, hue_max_hist);
-    */
     bin_adaptive.stop();
 }
 
