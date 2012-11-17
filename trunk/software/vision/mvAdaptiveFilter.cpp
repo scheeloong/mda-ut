@@ -1,4 +1,5 @@
 #include "mv.h"
+#include <math.h>
 
 #define FILTER_DEBUG
 #ifdef FILTER_DEBUG
@@ -15,7 +16,8 @@
 //####################################################################################
 
 mvAdaptiveFilter3:: mvAdaptiveFilter3 (const char* settings_file) :
-    bin_adaptive ("Adaptive Filter 3")
+    bin_adaptive ("Adaptive3 - Logic"),
+    bin_CvtColor ("Adaptive3 - CvtColor")
 {
     read_mv_setting (settings_file, "HUE_MIN", hue_min);
     read_mv_setting (settings_file, "HUE_MAX", hue_max);
@@ -69,11 +71,14 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
     assert (src->nChannels == 3);
     assert (dst->nChannels == 1);
 
-    bin_adaptive.start();
+    bin_CvtColor.start();
 
     /** extract hue plane. Mark all invalid pixels as Hue=255, which is outside histogram range */
     // convert to HSV       
     cvCvtColor (src, src_HSV, CV_BGR2HSV); // convert to Hue,Saturation,Value 
+
+    bin_CvtColor.stop();
+    bin_adaptive.start();
 
     unsigned char *imgPtr, *huePtr, *satPtr;
     for (int i = 0; i < src_HSV->height; i++) {
@@ -108,16 +113,16 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
     cvNormalizeHist (hist, HISTOGRAM_NORM_FACTOR);
     
     #ifdef FILTER_DEBUG
-        show_histogram();
+        //show_histogram();
     #endif
-/*
+
     /// Attempt to find a local maximum within the user-defined hue-sat bounds
     int bin_min_index_hue = hue_min*nbins_hue / (hue_range_max - hue_range_min);
-    int bin_max_index_hue = hue_max*nbins_hue / (hue_range_max - hue_range_min);
+    int bin_max_index_hue = hue_max*nbins_hue / (hue_range_max - hue_range_min) - 1;
     int bin_min_index_sat = sat_min*nbins_sat / (sat_range_max - sat_range_min);
-    int bin_max_index_sat = sat_max*nbins_sat / (sat_range_max - sat_range_min);
+    int bin_max_index_sat = sat_max*nbins_sat / (sat_range_max - sat_range_min) - 1;
 
-    DEBUG_PRINT ("Bins Searched: Hue (%d, %d)  Sat (%d, %d)\n", bin_min_index_hue, bin_max_index_hue, bin_min_index_sat, bin_max_index_sat);
+    DEBUG_PRINT ("Bins Searched: Hue (%d-%d)  Sat (%d-%d)\n", bin_min_index_hue, bin_max_index_hue, bin_min_index_sat, bin_max_index_sat);
     
     // now find the local maximum within bin_min_i and bin_max_i
     unsigned local_max_bin_index[2] = {0,0};
@@ -125,7 +130,9 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
     for (int h = bin_min_index_hue; ; h++) {
         if (h >= nbins_hue) h = 0;  // allows looping of hue from bin16 to bin2, ect
 
-        for (int s = bin_min_index_sat; ; h++) {
+        for (int s = bin_min_index_sat; ; s++) {
+            if (s >= nbins_sat) s = 0;
+
             unsigned bin_value = cvQueryHistValue_2D (hist, h, s);
             if (bin_value > local_max_bin_value) {
                 local_max_bin_value = bin_value;
@@ -133,11 +140,11 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
                 local_max_bin_index[1] = s;
             }
 
-            if (h == bin_max_index_hue && s == bin_max_index_sat) // this statement is to break out of both loops!!
-                goto END_LOOPS;
+            if(s == bin_max_index_sat) break;
         }
+
+        if(h == bin_max_index_hue) break;
     }
-    END_LOOPS:
 
     if (local_max_bin_value == 0) { // no non-zero bins in range
         printf ("All bins in search range are zero!\n");
@@ -146,7 +153,7 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
     }
 
     DEBUG_PRINT ("Local Max at bin (%d, %d)\n", local_max_bin_index[0], local_max_bin_index[1]);
-
+/*
     /// mark bins neighbouring the max until integral of marked bins >> those of nearby unmarked bins 
     // bin_min_i and bin_max_i now refer to the range of "marked" bins
     // a marked bin means the hue values inside is part of the target
@@ -240,7 +247,7 @@ void mvAdaptiveFilter3:: show_histogram () {
     for (int i = 0; i < hist_height; i++) {
         for (int j = 0; j < hist_width; j++) {
             binval = cvQueryHistValue_2D(hist, i,j);
-            intensity = cvRound (binval/max*255);
+            intensity = cvRound (sqrt(binval/max) * 255);
 
             cvRectangle (
                 hist_img,

@@ -112,7 +112,7 @@ int main( int argc, char** argv ) {
             goto LOOP_BOTTOM;
         }
 
-        win1->showImage (frame);
+        //win1->showImage (frame);
         //HSVFilter.filter (frame, filter_img); // process it
         //win2->showImage (filter_img);
            
