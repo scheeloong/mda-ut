@@ -1,6 +1,6 @@
 ### color filter settings
-HUE_MIN, 70
-HUE_MAX, 95
+HUE_MIN, 60
+HUE_MAX, 110
 SAT_MIN, 60
 SAT_MAX, 255
 VAL_MIN, 50

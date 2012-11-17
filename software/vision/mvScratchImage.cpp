@@ -2,33 +2,84 @@
 
 static IplImage* scratch_img_1channel = NULL;
 static int instances_1channel = 0;
+static IplImage* scratch_img_1channel_2 = NULL;
+static int instances_1channel_2 = 0;
+
 static IplImage* scratch_img_3channel = NULL;
 static int instances_3channel = 0;
 
 IplImage* mvGetScratchImage() {
     if (instances_1channel == 0) {
-        assert (scratch_img_1channel == NULL);
         instances_1channel++;
-        scratch_img_1channel = mvCreateImage();
+
+        // For this one, we are going to use the first 1/3 of the 3 channel image's data array
+        mvGetScratchImage_Color();
+        scratch_img_1channel = cvCreateImageHeader(
+            cvGetSize(scratch_img_3channel),
+            IPL_DEPTH_8U,
+            1
+        );
+        scratch_img_1channel->imageData = scratch_img_3channel->imageData;
+
         return scratch_img_1channel;
     }
     else {
         instances_1channel++;
+        scratch_img_1channel->imageData = scratch_img_3channel->imageData;
         return scratch_img_1channel;
     }
 }
 
 void mvReleaseScratchImage() {
     if (instances_1channel == 1) {
-        //printf ("Released 1channel Scratch Image\n");
-        cvReleaseImage (&scratch_img_1channel);
+        mvReleaseScratchImage_Color();
+        cvReleaseImageHeader(&scratch_img_1channel);
         instances_1channel = 0;
     }
-    else if (instances_1channel > 1) {
+    else if (instances_1channel >= 1) {
         instances_1channel--;
     }
     else {
-        fprintf (stderr, "Tried to release 1 channel image without getting it first\n");
+        fprintf (stderr, "Tried to release 1 channel image #2 without getting it first\n");
+        exit (1);
+    }
+}
+
+IplImage* mvGetScratchImage2() {
+    if (instances_1channel_2 == 0) {
+        instances_1channel_2++;
+
+        // For this one, we are going to use the middle 1/3 of the 3 channel image's data array
+        mvGetScratchImage_Color();
+        scratch_img_1channel_2 = cvCreateImageHeader(
+            cvGetSize(scratch_img_3channel),
+            IPL_DEPTH_8U,
+            1
+        );
+        scratch_img_1channel_2->imageData = scratch_img_3channel->imageData + 
+                                            scratch_img_1channel_2->height * scratch_img_1channel_2->widthStep;
+
+        return scratch_img_1channel_2;
+    }
+    else {
+        instances_1channel_2++;
+        scratch_img_1channel_2->imageData = scratch_img_3channel->imageData + 
+                                            scratch_img_1channel_2->height * scratch_img_1channel_2->widthStep;
+        return scratch_img_1channel_2;
+    }
+}
+
+void mvReleaseScratchImage2() {
+    if (instances_1channel_2 == 1) {
+        mvReleaseScratchImage_Color();
+        cvReleaseImageHeader(&scratch_img_1channel_2);
+        instances_1channel_2 = 0;
+    }
+    else if (instances_1channel_2 >= 1) {
+        instances_1channel_2--;
+    }
+    else {
+        fprintf (stderr, "Tried to release 1 channel image #2 without getting it first\n");
         exit (1);
     }
 }

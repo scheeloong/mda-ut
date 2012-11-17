@@ -59,12 +59,12 @@ mvCamera:: mvCamera (unsigned cam_number) :
     bin_resize ("mvCamera - resize"),
     bin_getFrame ("mvCamera - getFrame")
 {
-    unsigned width, height;
-    read_common_mv_setting ("IMG_WIDTH_COMMON", width);
-    read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
+    //unsigned width, height;
+    //read_common_mv_setting ("IMG_WIDTH_COMMON", width);
+    //read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
 
     _capture = cvCreateCameraCapture (cam_number);
-    _imgResized = mvCreateImage_Color (width, height);
+    _imgResized = mvGetScratchImage_Color();
 }
 
 mvCamera:: mvCamera (const char* video_file) :
@@ -76,11 +76,11 @@ mvCamera:: mvCamera (const char* video_file) :
     read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
     
     _capture = cvCreateFileCapture (video_file);   
-    _imgResized = mvCreateImage_Color (width, height);
+    _imgResized = mvGetScratchImage_Color();
 }
 
 mvCamera:: ~mvCamera () {
     cvReleaseCapture (&_capture);
-    cvReleaseImage (&_imgResized);
+    mvReleaseScratchImage_Color();
 }
 
