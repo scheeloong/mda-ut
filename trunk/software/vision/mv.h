@@ -196,6 +196,7 @@ class mvAdaptiveFilter3 {
     static const int MAX_BINS_MARKED = 9;
     static const int HISTOGRAM_NORM_FACTOR = 100000;
     static const bool DISPLAY_HIST = true;
+    static const int NUM_SIDES_RECTANGLE = 4;
 
     struct Quad{
         int h0, s0, h1, s1;
@@ -205,16 +206,20 @@ class mvAdaptiveFilter3 {
         Q.h1 = h1; Q.s1 = s1;
     }
     int getQuadValue (Quad Q) {
+        if (Q.s0 == -1)
+            return -1;
+
         int count = 0;
+        int num_bins = 0;
         for (int h = Q.h0; ; h++) {
             if (h >= nbins_hue) h = 0;  // allows looping of hue from bin16 to bin2, ect
             for (int s = Q.s0; s <= Q.s1; s++) {
                 count += cvQueryHistValue_2D (hist, h, s);
-                   
+                num_bins++;   
             }
             if(h == Q.h1) break;
         }
-        return count;
+        return count/num_bins;
     }
 
     int hue_min;
