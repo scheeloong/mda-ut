@@ -8,7 +8,7 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
-/// in place splitting of image into its first 2 planes
+/// in place splitting of image into its first 2 planes. The 3rd plane has to be used for scratch space.
 void mvSplitImage (const IplImage* src, IplImage** plane1, IplImage** plane2) {
     assert (src != NULL);
     assert (src ->nChannels == 3);
@@ -28,7 +28,27 @@ void mvSplitImage (const IplImage* src, IplImage** plane1, IplImage** plane2) {
     if (plane2 != NULL)
         (*plane2)->imageData = (char*)p2;
 
-    for (int i = 0; i < src->height*src->width; i++) {
+    /** In this step we seperate all the H, S, V channels in the top 1/3, middle 1/3, and last 1/3
+     *  of the image, respectively.
+     * Let subscript x mean "1/3 of the way through the image". Originally we have:
+     *
+     *  H0  S0  V0    H1    S1    V1     ...
+     *  ...
+     *  Hx  Sx  Vx    Hx+1  Sx+1  Vx+1   ...
+     *  ...
+     *  H2x S2x V2x   H2x+1 S2x+1 V2x+1  ...
+     *  ...
+     *
+     * After the below loop we have the following via swaps:
+     *
+     * H0 Hx H2x   H1 Hx+1 Hx+2   ...
+     * ...
+     * S0 Sx S2x   S1 Sx+1 Sx+2   ...
+     * ...
+     * V0 Vx V2x   V1 Vx+1 Vx+2   ...
+     * ...
+     */
+    for (int i = 0; i < src->height*src->width/3; i++) {
         std::swap (ptr[1],ptrW[0]);
         std::swap (ptr[2],ptr2W[0]);
         std::swap (ptrW[2],ptr2W[1]);
@@ -37,7 +57,10 @@ void mvSplitImage (const IplImage* src, IplImage** plane1, IplImage** plane2) {
         ptrW += 3;
         ptr2W += 3;
     }
-/*
+
+    /** Now we copy the H plane to the V plane, and do some more swaps
+     *  to make the correct order for the H pixels
+     */
     memcpy (swap, p1, Area3);
     swapPtr = swap;
     for (int i = 0; i < Area3; i++) {
@@ -49,7 +72,8 @@ void mvSplitImage (const IplImage* src, IplImage** plane1, IplImage** plane2) {
             swapPtr++;
         }
     }
-
+ 
+    /** Same thing with V plane */
     memcpy (swap, p2, Area3);
     swapPtr = swap;
     for (int i = 0; i < Area3; i++) {
@@ -60,7 +84,7 @@ void mvSplitImage (const IplImage* src, IplImage** plane1, IplImage** plane2) {
             swapPtr -= Area3;
             swapPtr++;
         }
-    }*/
+    }
 }
 
 

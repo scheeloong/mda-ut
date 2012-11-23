@@ -27,8 +27,8 @@ mvAdaptiveFilter3:: mvAdaptiveFilter3 (const char* settings_file) :
     read_mv_setting (settings_file, "VAL_MAX", val_max);
 
     src_HSV = mvGetScratchImage_Color();
-    hue_img = mvCreateImage();
-    sat_img = mvCreateImage();
+    hue_img = mvCreateImageHeader();
+    sat_img = mvCreateImageHeader();
 
     if (DISPLAY_HIST) {
         hist_img = cvCreateImage(
@@ -60,9 +60,32 @@ mvAdaptiveFilter3:: ~mvAdaptiveFilter3 () {
     delete win;
     cvReleaseHist (&hist);
     mvReleaseScratchImage_Color();
-    cvReleaseImage(&hue_img);
-    cvReleaseImage(&sat_img);
-    cvReleaseImage(&hist_img);
+    cvReleaseImageHeader(&hue_img);
+    cvReleaseImageHeader(&sat_img);
+    if (DISPLAY_HIST)
+        cvReleaseImage(&hist_img);
+}
+
+void mvAdaptiveFilter3:: setQuad (Quad &Q, int h0, int s0, int h1, int s1) {
+    Q.h0 = h0; Q.s0 = s0;
+    Q.h1 = h1; Q.s1 = s1;
+}
+
+int mvAdaptiveFilter3:: getQuadValue (Quad Q) {
+    if (Q.s0 == -1)
+        return -1;
+
+    int count = 0;
+    int num_bins = 0;
+    for (int h = Q.h0; ; h++) {
+        if (h >= nbins_hue) h = 0;  // allows looping of hue from bin16 to bin2, ect
+        for (int s = Q.s0; s <= Q.s1; s++) {
+            count += cvQueryHistValue_2D (hist, h, s);
+            num_bins++;   
+        }
+        if(h == Q.h1) break;
+    }
+    return count/num_bins;
 }
 
 void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
@@ -71,38 +94,29 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
     assert (src->nChannels == 3);
     assert (dst->nChannels == 1);
 
+    /// convert imageto HSV  
     bin_CvtColor.start();
-
-    /** extract hue plane. Mark all invalid pixels as Hue=255, which is outside histogram range */
-    // convert to HSV       
     cvCvtColor (src, src_HSV, CV_BGR2HSV); // convert to Hue,Saturation,Value 
-
     bin_CvtColor.stop();
-    bin_adaptive.start();
 
-    unsigned char *imgPtr, *huePtr, *satPtr;
+    /// Mark all invalid (Value not within limits) pixels as Hue=255 and Sat = 0 which is outside histogram range
+    bin_adaptive.start();
+    unsigned char *imgPtr;
     for (int i = 0; i < src_HSV->height; i++) {
         imgPtr = (unsigned char*) src_HSV->imageData + i*src_HSV->widthStep;
-        huePtr = (unsigned char*) hue_img->imageData + i*hue_img->widthStep;
-        satPtr = (unsigned char*) sat_img->imageData + i*sat_img->widthStep;
-        
         for (int j = 0; j < src_HSV->width; j++) {
-            if ((*(imgPtr+2) >= val_min) && (*(imgPtr+2) <= val_max)) {
-                *huePtr = *imgPtr;
-                *satPtr = *(imgPtr+1);
+            if ((*(imgPtr+2) < val_min) || (*(imgPtr+2) > val_max)) {
+                *imgPtr = 255;
+                *(imgPtr+1) = 0;
             }
-            else {
-                *huePtr = 255;
-                *satPtr = 1;
-            }
-
-            huePtr++;
-            satPtr++; 
             imgPtr+=3;
         }
     }
 
-    /** genereate hue-sat histogram */ 
+    /// in place split of the image
+    mvSplitImage (src_HSV, &hue_img, &sat_img);
+
+    /// genereate the hue-sat histogram and normalize it 
     IplImage* planes[] = {hue_img, sat_img};
     cvCalcHist (
         planes, hist,
@@ -116,15 +130,15 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
         show_histogram();
     #endif
 
+    DEBUG_PRINT ("\nBeginning Histogram Filter Algorithm\n");
+
     /// Attempt to find a local maximum within the user-defined hue-sat bounds
     int bin_min_index_hue = hue_min*nbins_hue / (hue_range_max - hue_range_min);
     int bin_max_index_hue = hue_max*nbins_hue / (hue_range_max - hue_range_min) - 1;
     int bin_min_index_sat = sat_min*nbins_sat / (sat_range_max - sat_range_min);
     int bin_max_index_sat = sat_max*nbins_sat / (sat_range_max - sat_range_min) - 1;
-
     DEBUG_PRINT ("Bins Searched: Hue (%d-%d)  Sat (%d-%d)\n", bin_min_index_hue, bin_max_index_hue, bin_min_index_sat, bin_max_index_sat);
     
-    // now find the local maximum within bin_min_i and bin_max_i
     unsigned local_max_bin_index[2] = {0,0};
     unsigned local_max_bin_value = 0;
     for (int h = bin_min_index_hue; ; h++) {
@@ -150,17 +164,22 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
 
     DEBUG_PRINT ("Local Max at bin (%d, %d)\n", local_max_bin_index[0], local_max_bin_index[1]);
 
+    /// now define rect, which is the rectangle in BinIndex space representing the accepted H-S window
     Quad rect;
     setQuad (rect, local_max_bin_index[0], local_max_bin_index[1], local_max_bin_index[0], local_max_bin_index[1]);
     Quad sides[NUM_SIDES_RECTANGLE];
 
-    DEBUG_PRINT ("Beginning to Accumulate Bins\n");
+    DEBUG_PRINT ("Accumulating Bins\n");
+    bool successful = false;
 
-    for(int i = 0; i < NUM_SIDES_RECTANGLE; i++){
-        DEBUG_PRINT ("Iteration %d\n", i);
+    for(int i = 0; i < 4; i++){
+        DEBUG_PRINT ("  Iteration %d\n", i);
+        
+        /// Obtain the BinIndex space representation of the 4 sides of the rect
         getRectangleNeighbours (rect, sides);
         int rect_val = getQuadValue(rect);
 
+        /// find the avg value of the squares on the sides.
         int side_val[NUM_SIDES_RECTANGLE];
         int side_val_avg = 0;
         int num_valid_sides = 0;
@@ -174,18 +193,20 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
 
         side_val_avg /= num_valid_sides;
    
-        DEBUG_PRINT ("\trect: (%d,%d,%d,%d) - %d\n", rect.h0, rect.s0, rect.h1, rect.s1, rect_val);
+        DEBUG_PRINT ("    rect: (%d,%d,%d,%d) - %d\n", rect.h0, rect.s0, rect.h1, rect.s1, rect_val);
         for (int j = 0; j < NUM_SIDES_RECTANGLE; j++){
-            DEBUG_PRINT("\tside: (%d,%d,%d,%d) - %d\n", sides[j].h0, sides[j].s0, sides[j].h1, sides[j].s1, side_val[j]);
+            DEBUG_PRINT("    side: (%d,%d,%d,%d) - %d\n", sides[j].h0, sides[j].s0, sides[j].h1, sides[j].s1, side_val[j]);
         }        
-        DEBUG_PRINT ("\tside_avg: %d\n", side_val_avg);
+        DEBUG_PRINT ("    side_avg: %d\n", side_val_avg);
 
-        // check if the algorithm is done (if rect_val >> avg of side_vals)
-        if (rect_val > 5*side_val_avg) {
-            DEBUG_PRINT ("Break on iteration %d\n", i);
+        /// If the avg value of the sides >> value inside the rect, thenthe algorithm is done
+        if (rect_val > 8*side_val_avg) {
+            DEBUG_PRINT ("  Break on iteration %d\n", i);
+            successful = true;
             break;
         }
 
+        /// Otherwise add the best side to the rectangle
         int best_side = -1;
         int best_side_val = -1;
         for (int j = 0; j < NUM_SIDES_RECTANGLE; j++) {
@@ -194,7 +215,6 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
                 best_side_val = side_val[j];
             }
         }
-
         if (best_side == 0 || best_side == 3) {
             rect.h0 = sides[best_side].h0; 
             rect.s0 = sides[best_side].s0;
@@ -205,16 +225,17 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
         }
     }
 
+    /// Calculate the H-S space coordinates of the allowed window using the BinIndex values
     unsigned hue_min_hist = (unsigned)rect.h0 * hue_range_max / nbins_hue;
     unsigned hue_max_hist = (unsigned)(rect.h1+1) * hue_range_max / nbins_hue;
     unsigned sat_min_hist = (unsigned)rect.s0 * sat_range_max / nbins_sat;
     unsigned sat_max_hist = (unsigned)(rect.s1+1) * sat_range_max / nbins_sat;
     DEBUG_PRINT ("Hue Range: %d-%d\n", hue_min_hist, hue_max_hist);
     DEBUG_PRINT ("Sat Range: %d-%d\n", sat_min_hist, sat_max_hist);
-        
 
     /// if successful, generate dst image
-    if (1) {
+    unsigned count = 0;
+    if (successful) {
         unsigned char *dstPtr, *huePtr, *satPtr;
         for (int i = 0; i < dst->height; i++) {
             dstPtr = (unsigned char*) dst->imageData + i*dst->widthStep;
@@ -226,6 +247,7 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
                     (*satPtr >= sat_min_hist && *satPtr <= sat_max_hist))
                 {
                     *dstPtr = 255;
+                    count++;
                 }
                 else {                    
                     *dstPtr = 0;
@@ -239,10 +261,9 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
     }
     else {
         cvZero (dst);
-        bin_adaptive.stop();
-        return;
     }
 
+    DEBUG_PRINT ("Allowed %d pixels\n", count);
     bin_adaptive.stop();
 }
 

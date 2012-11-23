@@ -95,6 +95,10 @@ int main( int argc, char** argv ) {
             nframes++;
             continue;
         }
+ 
+        if (WRITE) {
+            writer->writeFrame (frame);
+        }
 
         if (CARTOON) {
             win1->showImage (frame);
@@ -121,15 +125,10 @@ int main( int argc, char** argv ) {
         //win3->showImage (filter_img);
       
         if (TEST) {        
-            win1->showImage (frame);
-  
             adaptive.filter (frame, filter_img);
-/*            cvSplit (frame, filter_img, filter_img2, NULL, NULL);
-            win1->showImage (frame);
-            win2->showImage (filter_img);
-            win3->showImage (filter_img2);
-*/
+
             //mvSplitImage (frame, &filter_img, &filter_img2);
+            win1->showImage (frame);
             win2->showImage (filter_img);
             win3->showImage (filter_img2);
         }
@@ -151,10 +150,6 @@ int main( int argc, char** argv ) {
             circles.drawOntoImage (filter_img);
 
             win3->showImage (filter_img);
-        }
-        
-        if (WRITE) {
-            writer->writeFrame (frame);
         }
         
     LOOP_BOTTOM:

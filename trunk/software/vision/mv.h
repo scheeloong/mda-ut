@@ -14,6 +14,12 @@ typedef unsigned char uchar;
  *  depth and nChannels. The default mvCreateImage always returns a greyscale image 
  *  while mvCreateImage_Color always returns a color image;
  */
+inline IplImage* mvCreateImageHeader () { // common size image
+    unsigned width, height;
+    read_common_mv_setting ("IMG_WIDTH_COMMON", width);
+    read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
+    return cvCreateImageHeader (cvSize(width,height), IPL_DEPTH_8U, 1);
+}
 inline IplImage* mvCreateImage () { // common size image
     unsigned width, height;
     read_common_mv_setting ("IMG_WIDTH_COMMON", width);
@@ -58,8 +64,7 @@ void mvReleaseScratchImage2();
 IplImage* mvGetScratchImage_Color();
 void mvReleaseScratchImage_Color();
 
-/*BRG2HSV -- faster implementation to convert BRG images into HSV format */
-
+/*BRG2HSV -- NOTfaster implementation to convert BRG images into HSV format */
 void mvBRG2HSV(const IplImage* src, IplImage* dst);
 
 inline void mvGaussian (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h) {
@@ -201,26 +206,6 @@ class mvAdaptiveFilter3 {
     struct Quad{
         int h0, s0, h1, s1;
     };
-    void setQuad (Quad &Q, int h0, int s0, int h1, int s1) {
-        Q.h0 = h0; Q.s0 = s0;
-        Q.h1 = h1; Q.s1 = s1;
-    }
-    int getQuadValue (Quad Q) {
-        if (Q.s0 == -1)
-            return -1;
-
-        int count = 0;
-        int num_bins = 0;
-        for (int h = Q.h0; ; h++) {
-            if (h >= nbins_hue) h = 0;  // allows looping of hue from bin16 to bin2, ect
-            for (int s = Q.s0; s <= Q.s1; s++) {
-                count += cvQueryHistValue_2D (hist, h, s);
-                num_bins++;   
-            }
-            if(h == Q.h1) break;
-        }
-        return count/num_bins;
-    }
 
     int hue_min;
     int hue_max;
@@ -241,6 +226,8 @@ class mvAdaptiveFilter3 {
     mvWindow* win;
 
     private:
+    void setQuad (Quad &Q, int h0, int s0, int h1, int s1);
+    int getQuadValue (Quad Q);
     void getRectangleNeighbours(Quad rect, Quad sides[]);
 
     public:
