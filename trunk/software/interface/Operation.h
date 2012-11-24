@@ -58,6 +58,7 @@ class JoystickOperation: public Operation {
   private:
     void dump_images();
     void message(const char *);
+    void message_hold(const char *, int delay_in_s = 2);
     void display_start_message();
     void process_image();
 
