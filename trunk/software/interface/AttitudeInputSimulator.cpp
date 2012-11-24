@@ -37,9 +37,7 @@ int AttitudeInputSimulator::depth()
 {
   physical_model model = SimulatorSingleton::get_instance().attitude();
  
-  // Should be taken from the simulator rather than hard-coded
-  static const float POOL_HEIGHT = 8;
-  return (int)(100*(POOL_HEIGHT - model.position.y));
+  return (int)(100*(model.position.y));
 }
 
 int AttitudeInputSimulator::target_yaw()
