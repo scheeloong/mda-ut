@@ -75,6 +75,7 @@ physical_model SimulatorSingleton::attitude()
 {
   physical_model m;
   memcpy(&m, (char *)&model, sizeof(physical_model));
+  m.position.y = POOL_HEIGHT - m.position.y;
   return m;
 }
 
@@ -138,7 +139,7 @@ void SimulatorSingleton::zero_speed()
   model.depth_accel = 0;
 
   set_target_yaw(model.angle.yaw);
-  set_target_depth(model.position.y);
+  set_target_depth(POOL_HEIGHT - model.position.y);
 }
 
 int SimulatorSingleton::target_yaw()
