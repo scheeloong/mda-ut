@@ -61,7 +61,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         /// calculate the angle
 
         /// calculate range if we pass sanity check
-        m_range = (PATH_REAL_LENGTH * _filtered_img->width) / (length * TAN_FOV_X);
+        m_range = (PATH_REAL_LENGTH * _filtered_img->width) / (sqrt(length) * TAN_FOV_X);
         m_angle = RAD_TO_DEG * line_angle_to_vertical(_KMeans[0]);
         DEBUG_PRINT ("Path Range = %d, PAngle = %5.2f\n", m_range, m_angle);
 
@@ -97,7 +97,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         }
 
         // calculate values
-        m_range = (PATH_REAL_LENGTH * _filtered_img->width) / ((length_0+length_1)*0.5 * TAN_FOV_X);
+        m_range = (PATH_REAL_LENGTH * _filtered_img->width) / ((sqrt(length_0)+sqrt(length_1))*0.5 * TAN_FOV_X);
         m_angle = (position_angle_0 + position_angle_1) * 0.5;
         DEBUG_PRINT ("Path Range = %d, PAngle = %5.2f\n", m_range, m_angle);
 
@@ -111,9 +111,15 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
 
     /// if we encounter any sort of sanity error, we will return only the centroid
     RETURN_CENTROID:
-        m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / _filtered_img->width);
-        m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / _filtered_img->height);
-        DEBUG_PRINT ("Path: (%d,%d) (%5.2f,%5.2f)\n", m_pixel_x, m_pixel_y, 
-            m_angular_x, m_angular_y); 
+        m_angular_x = RAD_TO_DEG * atan((float)m_pixel_x / m_pixel_y);
+        if (m_pixel_y < 0) {
+            if (m_pixel_x > 0)
+                m_angular_x += 180.0;
+            else 
+                m_angular_x -= 180.0;
+        }
+        //m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / _filtered_img->height);
+        DEBUG_PRINT ("Path: (%d,%d) (%5.2f,????)\n", m_pixel_x, m_pixel_y, 
+            m_angular_x); 
         return retval;
 }

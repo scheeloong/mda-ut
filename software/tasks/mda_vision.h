@@ -166,6 +166,10 @@ public:
     ~MDA_VISION_MODULE_PATH ();
     
     void primary_filter (const IplImage* src);
+    virtual int get_angular_y() {
+        printf ("MDA_VISION_MODULE_PATH does not support get_angular_y");
+        exit (1);
+    }
     MDA_VISION_RETURN_CODE calc_vci ();
 };
 
