@@ -59,8 +59,8 @@ void JoystickOperation::work()
         count++;
       } else {
         char buf[128];
-        sprintf(buf, "Yaw: %+04d degrees, Depth: %+04d cm",
-          attitude_input->yaw(), attitude_input->depth());
+        sprintf(buf, "Yaw: %+04d degrees, Depth: %+04d cm, Target Yaw: %+04d degrees, Target Depth: %+04d",
+          attitude_input->yaw(), attitude_input->depth(), attitude_input->target_yaw(), attitude_input->target_depth());
         message(buf);
       }
     }
