@@ -36,14 +36,13 @@ void JoystickOperation::display_start_message()
          "  4    - run frame task\n"
          "\n");
   refresh();
-
-  // reset counter
-  count = 0;
 }
 
 #define SPEED_CHG 2
 #define YAW_CHG_IN_DEG 20
 #define DEPTH_CHG_IN_CM 80
+
+#define REFRESH_RATE_IN_HZ 60
 
 void JoystickOperation::work()
 {
@@ -52,12 +51,18 @@ void JoystickOperation::work()
   // Take keyboard commands
   bool loop = true;
   while (loop) {
-    char c = CharacterStreamSingleton::get_instance().wait_key(1000/60);
+    char c = CharacterStreamSingleton::get_instance().wait_key(1000/REFRESH_RATE_IN_HZ);
 
-    // Clear input every 2 seconds
-    count++;
-    if (c == '\0' && count % 128 == 0) {
-      message("");
+    // Print yaw and depth unless delayed by another message
+    if (c == '\0') {
+      if (count < 0) {
+        count++;
+      } else {
+        char buf[128];
+        sprintf(buf, "Yaw: %+04d degrees, Depth: %+04d cm",
+          attitude_input->yaw(), attitude_input->depth());
+        message(buf);
+      }
     }
 
     switch(c) {
@@ -125,19 +130,19 @@ void JoystickOperation::work()
 
            switch(ret_code) {
              case TASK_DONE:
-                message("Test task completed successfully");
+                message_hold("Test task completed successfully");
                 break;
              case TASK_QUIT:
-                message("Test task quit by user");
+                message_hold("Test task quit by user");
                 break;
              default:
-                message("Test task errored out");
+                message_hold("Test task errored out");
                 break;
            }
            break;
          }
          delete vision_module;
-         message("Selected test vision module\n");
+         message_hold("Selected test vision module\n");
          vision_module = new MDA_VISION_MODULE_TEST();
          use_fwd_img = true;
          break;
@@ -156,19 +161,19 @@ void JoystickOperation::work()
 
            switch(ret_code) {
              case TASK_DONE:
-                message("Gate task completed successfully");
+                message_hold("Gate task completed successfully");
                 break;
              case TASK_QUIT:
-                message("Gate task quit by user");
+                message_hold("Gate task quit by user");
                 break;
              default:
-                message("Gate task errored out");
+                message_hold("Gate task errored out");
                 break;
            }
            break;
          }
          delete vision_module;
-         message("Selected gate vision module\n");
+         message_hold("Selected gate vision module\n");
          vision_module = new MDA_VISION_MODULE_GATE();
          use_fwd_img = true;
          break;
@@ -187,19 +192,19 @@ void JoystickOperation::work()
 
            switch(ret_code) {
              case TASK_DONE:
-                message("Path task completed successfully");
+                message_hold("Path task completed successfully");
                 break;
              case TASK_QUIT:
-                message("Path task quit by user");
+                message_hold("Path task quit by user");
                 break;
              default:
-                message("Path task errored out");
+                message_hold("Path task errored out");
                 break;
            }
            break;
          }
          delete vision_module;
-         message("Selected path vision module\n");
+         message_hold("Selected path vision module\n");
          vision_module = new MDA_VISION_MODULE_PATH();
          use_fwd_img = false;
          break;
@@ -218,19 +223,19 @@ void JoystickOperation::work()
 
            switch(ret_code) {
              case TASK_DONE:
-                message("Buoy task completed successfully");
+                message_hold("Buoy task completed successfully");
                 break;
              case TASK_QUIT:
-                message("Buoy task quit by user");
+                message_hold("Buoy task quit by user");
                 break;
              default:
-                message("Buoy task errored out");
+                message_hold("Buoy task errored out");
                 break;
            }
            break;
          }
          delete vision_module;
-         message("Selected buoy vision module\n");
+         message_hold("Selected buoy vision module\n");
          vision_module = new MDA_VISION_MODULE_BUOY();
          use_fwd_img = true;
          break;
@@ -249,19 +254,19 @@ void JoystickOperation::work()
 
            switch(ret_code) {
              case TASK_DONE:
-                message("Frame task completed successfully");
+                message_hold("Frame task completed successfully");
                 break;
              case TASK_QUIT:
-                message("Frame task quit by user");
+                message_hold("Frame task quit by user");
                 break;
              default:
-                message("Frame task errored out");
+                message_hold("Frame task errored out");
                 break;
            }
            break;
          }
          delete vision_module;
-         message("Selected frame vision module\n");
+         message_hold("Selected frame vision module\n");
          vision_module = new MDA_VISION_MODULE_FRAME();
          use_fwd_img = true;
          break;
@@ -314,7 +319,7 @@ void JoystickOperation::process_image()
       }
       fflush(stdout);
     } else {
-      message("Image stream over");
+      message_hold("Image stream over");
     }
   } else {
     // needs to be called periodically for highgui event-processing
@@ -346,8 +351,18 @@ void JoystickOperation::message(const char *msg)
   fflush(stdout);
 }
 
+void JoystickOperation::message_hold(const char *msg, int delay_in_s)
+{
+  if (mode == VISION) {
+    message(msg);
+  } else {
+    message(msg);
+    count = -delay_in_s * REFRESH_RATE_IN_HZ;
+  }
+}
+
 void JoystickOperation::dump_images()
 {
-  message("Saved images");
+  message_hold("Saved images");
   image_input->dump_images();
 }
