@@ -1,6 +1,6 @@
 # Begin compile flags
 ifeq ($(OS),APPLE)
-	GL_LIBS=-framework OpenGL -framework GLUT -framework Cocoa
+	GL_LIBS=-L/opt/local/lib -lGL -lglut -lGLU
 else
 	GL_LIBS=-lGL -lglut -lGLU
 endif
@@ -9,7 +9,7 @@ CV_LIBS=`pkg-config --cflags --libs opencv`
 
 I_FLAGS=-I ../sim -I ../vision -I ../tasks -I ../ui -I ../interface
 L_FLAGS=-lsim -L../sim -lvision -L../vision -ltasks -L../tasks -lui -L../ui -lncurses -lm -pthread
-COMPILE_FLAGS=-O3 -Wall -g
+COMPILE_FLAGS=-O3 -w -g
 
 CXXFLAGS=$(I_FLAGS) $(COMPILE_FLAGS) $(L_FLAGS) $(GL_LIBS) $(CV_LIBS)
 CFLAGS=$(CXXFLAGS)
