@@ -10,6 +10,8 @@
 #include "SimulatorSingleton.h"
 #include "mgui.h"
 
+#define POOL_HEIGHT 8
+
 // Global variables needed by sim
 volatile physical_model model;
 unsigned DEBUG_MODEL = 0;
@@ -110,7 +112,7 @@ void SimulatorSingleton::set_target_yaw(float yaw)
 
 void SimulatorSingleton::set_target_depth(float depth)
 {
-  target_model.position.y = depth;
+  target_model.position.y = POOL_HEIGHT - depth;
 }
 
 // yaw in degrees, depth in cm
@@ -147,7 +149,7 @@ int SimulatorSingleton::target_yaw()
 // On the order of cm
 int SimulatorSingleton::target_depth()
 {
-  return target_model.position.y * 100;
+  return (POOL_HEIGHT - target_model.position.y) * 100;
 }
 
 void *run_sim(void *args)
