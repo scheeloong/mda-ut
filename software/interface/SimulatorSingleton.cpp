@@ -87,7 +87,7 @@ void SimulatorSingleton::add_position(world_vector p)
   model.position.y += p.y;
   model.position.z += p.z;
 
-  set_target_depth(model.position.y);
+  set_target_depth(POOL_HEIGHT - model.position.y);
 }
 
 void SimulatorSingleton::add_orientation(orientation a)
