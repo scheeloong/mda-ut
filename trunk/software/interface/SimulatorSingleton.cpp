@@ -99,7 +99,7 @@ void SimulatorSingleton::add_orientation(orientation a)
   set_target_yaw(model.angle.yaw);
 }
 
-#define ACCEL_FACTOR 1.5
+#define ACCEL_FACTOR .5
 void SimulatorSingleton::set_target_accel(float accel)
 {
   // No need to use target, set directly on the model
@@ -284,9 +284,10 @@ void sim_idle()
   SimulatorSingleton::get_instance().sim_idle();
 }
 
-#define MAX_ACCEL 6.0f
-#define YAW_P_FACTOR 0.1
-#define DEPTH_P_FACTOR 2
+#define YAW_P_FACTOR 0.001
+#define DEPTH_P_FACTOR 10
+#define MAX_YAW_P 5.f
+#define MAX_DEPTH_P 20.f
 
 void SimulatorSingleton::sim_idle()
 {
@@ -297,17 +298,19 @@ void SimulatorSingleton::sim_idle()
   } else if (model.angular_accel < -180) {
     model.angular_accel += 360;
   }
-  model.angular_accel *= YAW_P_FACTOR;
-  model.depth_accel = (target_model.position.y - model.position.y) * DEPTH_P_FACTOR;
+  model.depth_accel = target_model.position.y - model.position.y;
 
   // cast away volatile model
   physical_model temp_model = *const_cast<physical_model *>(&model);
 
-  temp_model.angular_accel = std::min(temp_model.angular_accel, MAX_ACCEL);
-  temp_model.depth_accel = std::min(temp_model.depth_accel, MAX_ACCEL);
+  temp_model.angular_accel = std::min(temp_model.angular_accel, MAX_YAW_P);
+  temp_model.depth_accel = std::min(temp_model.depth_accel, MAX_DEPTH_P);
 
-  temp_model.angular_accel = std::max(temp_model.angular_accel, -MAX_ACCEL);
-  temp_model.depth_accel = std::max(temp_model.depth_accel, -MAX_ACCEL);
+  temp_model.angular_accel = std::max(temp_model.angular_accel, -MAX_YAW_P);
+  temp_model.depth_accel = std::max(temp_model.depth_accel, -MAX_DEPTH_P);
+
+  model.angular_accel *= YAW_P_FACTOR;
+  model.depth_accel *= DEPTH_P_FACTOR;
 
   // copy back to volatile model
   memcpy((void *)&model, &temp_model, sizeof(temp_model));

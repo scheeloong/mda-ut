@@ -38,7 +38,7 @@ void JoystickOperation::display_start_message()
   refresh();
 }
 
-#define SPEED_CHG 2
+#define SPEED_CHG 5
 #define YAW_CHG_IN_DEG 20
 #define DEPTH_CHG_IN_CM 80
 
