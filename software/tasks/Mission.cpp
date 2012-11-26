@@ -7,39 +7,19 @@ Mission::~Mission()
 
 void Mission::work()
 {
-  // TODO: implement
-  SingleTaskMission task_mission = SingleTaskMission(attitude_input, image_input, actuator_output, TASK_TEST);
-  task_mission.work();
-}
+  // Tasks
+  MDA_TASK_GATE gate(attitude_input, image_input, actuator_output);
+  MDA_TASK_PATH path(attitude_input, image_input, actuator_output);
 
+  // List of tasks to be performed in order (NULL-terminated)
+  MDA_TASK_BASE *tasks[] = {&gate, &path, NULL};
 
-// ###################################################################################
-// #### SingleTaskMission Methods
-// ###################################################################################
-SingleTaskMission:: SingleTaskMission(AttitudeInput *a, ImageInput *i, ActuatorOutput *o, MDA_TASK task_enum) :
-  Operation(a, i, o)
-{
-  switch (task_enum) {
-    case TASK_TEST:
-      task = new MDA_TASK_TEST (attitude_input, image_input, actuator_output);
-      break;
-    case TASK_GATE:
-    case TASK_PATH:
-    case TASK_BUOY:
-    case TASK_FRAME:
-    default:
-      printf ("You have selected a task that is not implemented yet.\n");
-      exit (1);
+  // Pointer to current task
+  MDA_TASK_BASE **task_ptr = tasks;
+
+  // Run each task until the list of tasks is complete
+  while (*task_ptr) {
+    (*task_ptr)->run_task();
+    task_ptr++;
   }
-}
-
-SingleTaskMission:: ~SingleTaskMission()
-{
-    delete task;
-}
-
-void SingleTaskMission::work()
-{
-  MDA_TASK_RETURN_CODE return_code = task->run_task();
-  (void) return_code;
 }
