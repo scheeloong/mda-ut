@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <cv.h>
 
+#include "Mission.h"
 #include "Operation.h"
 #include "CharacterStreamSingleton.h"
 
@@ -34,6 +35,7 @@ void JoystickOperation::display_start_message()
          "  2    - run path task\n"
          "  3    - run buoy task\n"
          "  4    - run frame task\n"
+         "  m    - run mission\n"
          "\n");
   refresh();
 }
@@ -113,6 +115,16 @@ void JoystickOperation::work()
          break;
       case ' ':
          actuator_output->special_cmd(SIM_ACCEL_ZERO);
+         break;
+      case 'm':
+         endwin();
+           // Scope mission so that it is destructed before display_start_message
+         {
+           Mission m(attitude_input, image_input, actuator_output);
+           m.work();
+         }
+         display_start_message();
+         message_hold("Mission complete!");
          break;
 
       case '0':
