@@ -48,7 +48,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
 
                 printf("distance = %d\n", distance);
 
-                if (distance < frame->height/4){
+                if (distance < frame->height/2){
                     actuator_output->set_attitude_absolute(DEPTH,475);
                     // actuator_output->set_attitude_change(SINK,20);
 
