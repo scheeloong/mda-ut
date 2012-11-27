@@ -51,7 +51,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
                     actuator_output->stop();
                     done_frame = true;
                     ret_code = TASK_DONE;
-                    continue;
+                    break;
                 }
 
                 int ang_x = frame_vision.get_angular_x();
