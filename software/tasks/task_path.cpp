@@ -34,7 +34,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
             else if (vision_code == UNKNOWN_TARGET){
                 int ang_x = path_vision.get_angular_x();
 
-                if (abs(ang_x) < 10){
+                if (abs(ang_x) < 5){
                     actuator_output->set_attitude_change(FORWARD);           
                 }else{
                     actuator_output->set_attitude_change(RIGHT, ang_x);
@@ -50,19 +50,18 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
 
                 if (distance < frame->height/2){
                     actuator_output->set_attitude_absolute(DEPTH,475);
-                    // actuator_output->set_attitude_change(SINK,20);
 
                     if(attitude_input->depth() > 450){
                         int pos_ang = path_vision.get_angle();
 
                         actuator_output->set_attitude_change(RIGHT,pos_ang);
-                        if(abs(pos_ang) < 10){
+                        if(abs(pos_ang) < 5){
                             done_path = true;
                             break;
                         }
                     }
                 }else{
-                    if (abs(ang_x) < 10){
+                    if (abs(ang_x) < 5){
                         actuator_output->set_attitude_change(FORWARD);
                     }else{
                         actuator_output->set_attitude_change(RIGHT, ang_x);
