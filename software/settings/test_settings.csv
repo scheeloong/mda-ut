@@ -1,9 +1,9 @@
 ### color filter settings
 HUE_MIN, 60
 HUE_MAX, 110
-SAT_MIN, 60
+SAT_MIN, 90
 SAT_MAX, 255
-VAL_MIN, 50
+VAL_MIN, 80
 VAL_MAX, 255
 
 ### HoughLines 

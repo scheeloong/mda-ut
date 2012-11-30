@@ -127,6 +127,7 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
     cvNormalizeHist (hist, HISTOGRAM_NORM_FACTOR);
     
     #ifdef FILTER_DEBUG
+        print_histogram();
         show_histogram();
     #endif
 
@@ -267,11 +268,29 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
     bin_adaptive.stop();
 }
 
+void mvAdaptiveFilter3:: print_histogram () {
+    int hist_height = hist->mat.dim[0].size;
+    int hist_width = hist->mat.dim[1].size;
+    printf ("\nprint_histogram():\n");
+
+    for (int i = 0; i < hist_height; i++) {
+        for (int j = 0; j < hist_width; j++) {
+            int binval = cvQueryHistValue_2D(hist, i,j);
+            unsigned hue_min = (unsigned)i * hue_range_max / nbins_hue;
+            unsigned hue_max = (unsigned)(i+1) * hue_range_max / nbins_hue;
+            unsigned sat_min = (unsigned)j * sat_range_max / nbins_sat;
+            unsigned sat_max = (unsigned)(j+1) * sat_range_max / nbins_sat;
+        
+            if (binval > 0)
+                printf ("Bin(%2d,%2d) HS(%d-%d,%d-%d) count=%d\n",i,j, hue_min,hue_max,sat_min,sat_max, binval);
+        }
+    }
+}
+
 void mvAdaptiveFilter3:: show_histogram () {
     cvZero (hist_img);
     
-    float max, binval;
-    int intensity;
+    float max;
     cvGetMinMaxHistValue (hist, 0, &max, 0, 0);
 
     int hist_height = hist->mat.dim[0].size;
@@ -279,8 +298,8 @@ void mvAdaptiveFilter3:: show_histogram () {
 
     for (int i = 0; i < hist_height; i++) {
         for (int j = 0; j < hist_width; j++) {
-            binval = cvQueryHistValue_2D(hist, i,j);
-            intensity = cvRound (sqrt(binval/max) * 255);
+            float binval = cvQueryHistValue_2D(hist, i,j);
+            int intensity = cvRound (sqrt(binval/max) * 255);
 
             cvRectangle (
                 hist_img,
