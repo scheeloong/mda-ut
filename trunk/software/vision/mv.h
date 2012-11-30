@@ -234,6 +234,7 @@ class mvAdaptiveFilter3 {
     mvAdaptiveFilter3 (const char* settings_file);
     ~mvAdaptiveFilter3 ();
     void filter (const IplImage* src, IplImage* dst);
+    void print_histogram ();
     void show_histogram ();
 };
 

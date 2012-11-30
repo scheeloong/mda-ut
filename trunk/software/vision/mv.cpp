@@ -117,6 +117,39 @@ mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV
             for (int i = -(kernel_width-1)/2; i <= (kernel_width-1)/2; i++)
                 kernel_point_array[array_index++] = i*widthStep + j;    
     }
+    else if (Shape == MV_KERN_ELLIPSE) {
+        /// calculate an elliptical kernel, then use the valid kernel points for the kernel point array
+        int* temp_array = new int[kernel_area];
+        unsigned array_index = 0;
+        unsigned valid_count = 0;
+        unsigned W2 = Kernel_Width*Kernel_Width/4;
+        unsigned H2 = Kernel_Height*Kernel_Height/4;
+        unsigned WH2 = W2*H2;
+
+        for (int j = -(kernel_height-1)/2; j <= (kernel_height-1)/2; j++) {
+            for (int i = -(kernel_width-1)/2; i <= (kernel_width-1)/2; i++) {
+                if (i*i*H2 + j*j*W2 <= WH2) { // check if i,j are in the ellipse
+                    temp_array[array_index++] = i*widthStep + j;
+                    valid_count++;   
+                }
+                else {
+                    temp_array[array_index++] = -88888888;
+                }                
+            }
+        }
+
+        /// copy the valid points to kernel_point_array
+        kernel_point_array = new int[valid_count];
+        array_index = 0;
+        for (unsigned i = 0; i < kernel_area; i++) {
+            if (temp_array[i] != -88888888) {
+                kernel_point_array[array_index++] = temp_array[i];
+            }
+        }
+        delete temp_array;
+        kernel_area = valid_count;
+   
+    }
     else {
         fprintf (stderr, "%s: %d: Unrecognized kernel shape.\n", __FILE__, __LINE__);
         exit (1);

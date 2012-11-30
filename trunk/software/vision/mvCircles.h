@@ -6,9 +6,12 @@
 #define __MDA_VISION_MVCIRCLES__ 
 
 #include <cv.h>
+#include "mgui.h"
 #include "profile_bin.h"
 
 #define CIRCLE_THICKNESS 2
+typedef std::pair<int,int> INT_PAIR;
+//typedef std::triple<int,int,int> INT_TRIPLE;
 
 /** Circle_Struct - simple structure to represent a circle */
 // note OpenCV stores its circle finding algorithm's output in a
@@ -68,6 +71,24 @@ class mvHoughCircles {
     mvHoughCircles (const char* settings_file);
     /* use default destructor */
     void findCircles (IplImage *img, mvCircles* circles);
+};
+
+class mvAdvancedCircles {
+    static const unsigned PIXELS_PER_GRID_POINT = 10;
+
+    PROFILE_BIN bin_findcircles;
+
+    IplImage* grid;
+
+    unsigned grid_width, grid_height;
+
+    private:
+    void get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, CvPoint &center, float &radius);
+
+    public:
+    mvAdvancedCircles ();
+    ~mvAdvancedCircles ();
+    void findCircles ( IplImage* img); 
 };
 
 #endif

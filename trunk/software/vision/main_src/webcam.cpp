@@ -63,15 +63,17 @@ int main( int argc, char** argv ) {
 
     // declare filters we need
     mvHSVFilter HSVFilter ("test_settings.csv"); // color filter
-    mvBinaryMorphology Morphology (5,5, MV_KERN_RECT);
+    mvBinaryMorphology Morphology7 (7,7, MV_KERN_ELLIPSE);
+    mvBinaryMorphology Morphology5 (5,5, MV_KERN_ELLIPSE);
     mvHoughLines HoughLines ("test_settings.csv");
     mvLines lines; // data struct to store lines
     mvHoughCircles HoughCircles ("test_settings.csv");
     mvCircles circles; // data struct to store circles
     mvKMeans kmeans;
 
-    //mvAdaptiveFilter2 adaptive ("Adaptive");
     mvAdaptiveFilter3 adaptive ("test_settings.csv");
+
+    mvAdvancedCircles AdvancedCircles;
 
     // declare images we need
     IplImage* filter_img = mvCreateImage ();
@@ -116,16 +118,17 @@ int main( int argc, char** argv ) {
             goto LOOP_BOTTOM;
         }
 
-        //win1->showImage (frame);
-        //HSVFilter.filter (frame, filter_img); // process it
-        //win2->showImage (filter_img);
+        win1->showImage (frame);
+        HSVFilter.filter (frame, filter_img); // process it
+        win2->showImage (filter_img);
            
-        //Morphology.open (filter_img, filter_img);
-        //Morphology.gradient (filter_img, filter_img);
-        //win3->showImage (filter_img);
+        Morphology7.open (filter_img, filter_img);
+        Morphology5.gradient (filter_img, filter_img);
+        win3->showImage (filter_img);
       
         if (TEST) {        
-            adaptive.filter (frame, filter_img);
+            AdvancedCircles.findCircles(filter_img);
+            //adaptive.filter (frame, filter_img);
 
             //mvSplitImage (frame, &filter_img, &filter_img2);
             win1->showImage (frame);
