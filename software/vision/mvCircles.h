@@ -74,7 +74,7 @@ class mvHoughCircles {
 };
 
 class mvAdvancedCircles {
-    static const unsigned PIXELS_PER_GRID_POINT = 10;
+    static const unsigned PIXELS_PER_GRID_POINT = 5;
     static const float MIN_RADIUS = 20;
     static const int MIN_CENTER_DIST = 100;
     static const int N_POINTS_TO_CHECK = 18;
