@@ -284,9 +284,9 @@ void sim_idle()
   SimulatorSingleton::get_instance().sim_idle();
 }
 
-#define YAW_P_FACTOR 0.001
+#define YAW_P_FACTOR 0.002
 #define DEPTH_P_FACTOR 10
-#define MAX_YAW_P 5.f
+#define MAX_YAW_P 2.f
 #define MAX_DEPTH_P 20.f
 
 void SimulatorSingleton::sim_idle()

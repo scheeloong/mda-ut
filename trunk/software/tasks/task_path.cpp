@@ -49,9 +49,9 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                 printf("distance = %d\n", distance);
 
                 if (distance < frame->height/2){
-                    actuator_output->set_attitude_absolute(DEPTH,535);
+                    actuator_output->set_attitude_absolute(DEPTH, 585);
 
-                    if(attitude_input->depth() > 510){
+                    if(attitude_input->depth() > 570){
                         int pos_ang = path_vision.get_angle();
 
                         actuator_output->set_attitude_change(RIGHT,pos_ang);
@@ -73,7 +73,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
         // Ensure debug messages are printed
         fflush(stdout);
         // Exit if instructed to
-        char c = cvWaitKey(3);
+        char c = cvWaitKey(50);
         if (c != -1) {
             CharacterStreamSingleton::get_instance().write_char(c);
         }
