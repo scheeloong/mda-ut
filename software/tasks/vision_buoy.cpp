@@ -18,6 +18,7 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY () :
     _Morphology5 (mvBinaryMorphology(5, 5, MV_KERN_RECT)),
     _Morphology3 (mvBinaryMorphology(3, 3, MV_KERN_RECT)),
     _HoughCircles (mvHoughCircles(MDA_VISION_BUOY_SETTINGS)),
+    _AdvancedCircles(),
     _circles (mvCircles())
 {
     _filtered_img = mvGetScratchImage (); // common size
@@ -34,10 +35,11 @@ void MDA_VISION_MODULE_BUOY:: primary_filter (const IplImage* src) {
     
     _Morphology5.gradient(_filtered_img, _filtered_img);
     _Morphology3.open(_filtered_img, _filtered_img);
-    _HoughCircles.findCircles (_filtered_img, &_circles);
+    _AdvancedCircles.findCircles (_filtered_img);
+    //_HoughCircles.findCircles (_filtered_img, &_circles);
 
-    _circles.drawOntoImage (_filtered_img);
-    printf ("ncircles = %d\n", _circles.ncircles());
+    //_circles.drawOntoImage (_filtered_img);
+    //printf ("ncircles = %d\n", _circles.ncircles());
 
     _window.showImage (_filtered_img);
 }
