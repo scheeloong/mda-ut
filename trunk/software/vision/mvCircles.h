@@ -10,8 +10,8 @@
 #include "profile_bin.h"
 
 #define CIRCLE_THICKNESS 2
-typedef std::pair<int,int> INT_PAIR;
-//typedef std::triple<int,int,int> INT_TRIPLE;
+typedef std::pair<CvPoint,unsigned> PR_CIRCLE;
+typedef std::pair<float,float> FLOAT_PAIR;
 
 /** Circle_Struct - simple structure to represent a circle */
 // note OpenCV stores its circle finding algorithm's output in a
@@ -75,15 +75,20 @@ class mvHoughCircles {
 
 class mvAdvancedCircles {
     static const unsigned PIXELS_PER_GRID_POINT = 10;
+    static const float MIN_RADIUS = 20;
+    static const int MIN_CENTER_DIST = 100;
+    static const int N_POINTS_TO_CHECK = 18;
+
+    IplImage* grid;                             // downsampled image
+    unsigned grid_width, grid_height;
+
+    std::vector<FLOAT_PAIR> cos_sin_vector;     // list of cos/sin values, precalculated
 
     PROFILE_BIN bin_findcircles;
 
-    IplImage* grid;
-
-    unsigned grid_width, grid_height;
-
     private:
-    void get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, CvPoint &center, float &radius);
+    int get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, CvPoint &center, float &radius);
+    int check_circle_validity (const IplImage* img, CvPoint center, float radius);
 
     public:
     mvAdvancedCircles ();

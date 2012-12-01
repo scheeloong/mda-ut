@@ -185,6 +185,7 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
     mvBinaryMorphology _Morphology5;
     mvBinaryMorphology _Morphology3;
     mvHoughCircles _HoughCircles;
+    mvAdvancedCircles _AdvancedCircles;
 
     mvCircles _circles;
     

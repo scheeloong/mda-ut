@@ -119,7 +119,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
                 m_angular_x -= 180.0;
         }
         //m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / _filtered_img->height);
-        DEBUG_PRINT ("Path: (%d,%d) (%5.2f,????)\n", m_pixel_x, m_pixel_y, 
+        DEBUG_PRINT ("Path: (%d,%d) (%5.2f,?)\n", m_pixel_x, m_pixel_y, 
             m_angular_x); 
         return retval;
 }
