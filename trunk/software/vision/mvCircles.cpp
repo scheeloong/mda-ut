@@ -74,7 +74,7 @@ mvAdvancedCircles::mvAdvancedCircles () :
     float angular_division = 2*CV_PI/N_POINTS_TO_CHECK;
     float angle = 0;
     for (int i = 0; i < N_POINTS_TO_CHECK; i++) {
-        cos_sin_vector.push_back( make_pair(cos(angle),sin(angle)));
+        cos_sin_vector.push_back(std::make_pair(cos(angle),sin(angle)));
         angle += angular_division;
     }
 
