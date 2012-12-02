@@ -4,7 +4,6 @@
 #include "mgui.h"
 #include "mv.h"
 #include "math.h"
-#include <list>
 #include <cv.h>
 
 //#define FLAG_DEBUG
