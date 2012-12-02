@@ -17,7 +17,6 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
     bool done_frame = false;
-    ATTITUDE_CHANGE_DIRECTION dir;
 
     while (1) {
         const IplImage* frame = image_input->get_image(FWD_IMG);

@@ -10,19 +10,20 @@
 #include "profile_bin.h"
 
 #define CIRCLE_THICKNESS 2
-typedef std::pair<CvPoint,unsigned> PR_CIRCLE;
-typedef std::pair<float,float> FLOAT_PAIR;
 
-/** Circle_Struct - simple structure to represent a circle */
+/** CIRCLE_STRUCT - simple structure to represent a circle */
 // note OpenCV stores its circle finding algorithm's output in a
 // float* array, where [0],[1] are x,y and [2] is radius
-// so you can easily typecast the float* into Circle_Struct*
+// so you can easily typecast the float* into CIRCLE_STRUCT*
 // and have easier, more readable code
 typedef struct _Circle_ {
-    float x;
-    float y;
+    int x;
+    int y;
     float rad;
-} Circle_Struct;
+} CIRCLE_STRUCT;
+
+typedef std::pair<CIRCLE_STRUCT, unsigned> M_CIRCLE;
+typedef std::pair<float,float> FLOAT_PAIR;
 
 /** mvCircles - class representing a set of circles */
 // The class automatically allocates memory needed for storage
@@ -43,7 +44,7 @@ class mvCircles {
     unsigned ncircles () { return (_data != NULL) ? unsigned(_data->total) : 0; }
     void drawOntoImage (IplImage* img); // defined in .cpp
     
-    Circle_Struct operator [] (unsigned index) { return  (*(Circle_Struct*)cvGetSeqElem(_data,index)); }
+    CIRCLE_STRUCT operator [] (unsigned index) { return  (*(CIRCLE_STRUCT*)cvGetSeqElem(_data,index)); }
     
     // note clearData does NOT deallocate memory, it only allows recycling of used memory. 
     void clearData () { 
@@ -78,22 +79,29 @@ class mvAdvancedCircles {
     static const float MIN_RADIUS = 20;
     static const int MIN_CENTER_DIST = 100;
     static const int N_POINTS_TO_CHECK = 18;
+    static const float POINTS_THRESHOLD = 0.5;
+    static const int N_CIRCLES_REQUIRED = 10;
+    static const int CIRCLE_SIMILARITY_CONSTANT = 48;
 
     IplImage* grid;                             // downsampled image
     unsigned grid_width, grid_height;
 
     std::vector<FLOAT_PAIR> cos_sin_vector;     // list of cos/sin values, precalculated
+    std::vector<M_CIRCLE> accepted_circles;    // list of circles found
 
     PROFILE_BIN bin_findcircles;
 
     private:
-    int get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, CvPoint &center, float &radius);
-    int check_circle_validity (const IplImage* img, CvPoint center, float radius);
+    int get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, CIRCLE_STRUCT &Circle);
+    int check_circle_validity (IplImage* img, CIRCLE_STRUCT Circle);
 
     public:
     mvAdvancedCircles ();
     ~mvAdvancedCircles ();
-    void findCircles ( IplImage* img); 
+    void findCircles (IplImage* img);
+    int ncircles ();
+    CIRCLE_STRUCT operator [] (unsigned index) { return accepted_circles[index].first; }
+    void drawOntoImage (IplImage* img);
 };
 
 #endif
