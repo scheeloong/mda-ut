@@ -14,6 +14,8 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
+bool m_circle_has_greater_count (M_CIRCLE c1, M_CIRCLE c2) { return (c1.second > c2.second); }
+
 void mvCircles::drawOntoImage (IplImage* img) {
     assert (img != NULL);
     assert (_data != NULL);
@@ -89,12 +91,13 @@ mvAdvancedCircles::~mvAdvancedCircles () {
     mvReleaseScratchImage2();
 }
 
-void mvAdvancedCircles::findCircles ( IplImage* img) {
+void mvAdvancedCircles::findCircles (IplImage* img) {
     assert (img != NULL);
     assert (img->nChannels == 1);
     assert (img->imageData != grid->imageData);
 
     bin_findcircles.start();
+    accepted_circles.clear();
 
     /// massively downsample the image
     cvResize (img, grid, CV_INTER_NN);
@@ -107,20 +110,17 @@ void mvAdvancedCircles::findCircles ( IplImage* img) {
         for (int j = 0; j < grid->width; j++) {
             if (*ptr != 0) {
                 point_vector.push_back(cvPoint(j,i));
-                DEBUG_PRINT ("#");
+                //DEBUG_PRINT ("#");
             }
-            else 
-                DEBUG_PRINT (".");
+            else {
+                //DEBUG_PRINT (".");
+            }
             ptr++;
         }
-        DEBUG_PRINT ("\n");
+        //DEBUG_PRINT ("\n");
     }
-    DEBUG_PRINT ("\n\n");
-
+    //DEBUG_PRINT ("\n\n");
     unsigned n_points = point_vector.size();
-    std::vector<PR_CIRCLE> accepted_circles;
-    //std::vector<PR_CIRCLE> rejected_circles; 
-    std::vector<unsigned> circle_counts; 
 
     if (n_points < 5) {
         printf ("Not enough points in resampled image\n");
@@ -128,80 +128,83 @@ void mvAdvancedCircles::findCircles ( IplImage* img) {
     }
 
     /// main working loop
-    unsigned valid_circles = 0;
-    for (int N = 0; N < 500; N++) {
+    int valid_circles = 0;
+    for (int N = 0; N < 200; N++) {
         // choose 3 points at random to form a circle
         int c1 = rand() % n_points;
         int c2 = rand() % n_points;
         int c3 = rand() % n_points;
         
         // get the circle center and radius
-        CvPoint Center;
-        float Radius;
-        if ( get_circle_from_3_points (point_vector[c1],point_vector[c2],point_vector[c3], Center,Radius) )
+        CIRCLE_STRUCT Circle;
+        if ( get_circle_from_3_points (point_vector[c1],point_vector[c2],point_vector[c3], Circle) )
             continue;
 
         // scale back to normal-sized image
-        Center.x *= PIXELS_PER_GRID_POINT;
-        Center.y *= PIXELS_PER_GRID_POINT;
-        Radius *= PIXELS_PER_GRID_POINT;
+        Circle.x *= PIXELS_PER_GRID_POINT;
+        Circle.y *= PIXELS_PER_GRID_POINT;
+        Circle.rad *= PIXELS_PER_GRID_POINT;
 
         // sanity roll
-        if (Center.x < 0 || Center.x > img->width || Center.y < 0 || Center.y > img->height)
+        if (Circle.x < 0 || Circle.x > img->width || Circle.y < 0 || Circle.y > img->height)
             continue;
-        if (Radius < MIN_RADIUS)
+        if (Circle.rad < MIN_RADIUS)
             continue;
 
-        int count = check_circle_validity(img, Center, Radius);
+        int count = check_circle_validity(img, Circle);
         DEBUG_PRINT("count: %d\n", count);
-        if(count < 0.5*N_POINTS_TO_CHECK)
+        if(count < POINTS_THRESHOLD*N_POINTS_TO_CHECK)
             continue;
 
         // check each existing circle. avg with an existing circle or push new circle
         bool success = false;
-        //std::vector<PR_CIRCLE>::iterator iter = accepted_circles.begin();
-        // std::vector<PR_CIRCLE>::iterator end_iter = accepted_circles.end();
-        // for (; iter != end_iter; ++iter) {
         for (unsigned i = 0; i < accepted_circles.size(); i++) {
             int x = accepted_circles[i].first.x;
             int y = accepted_circles[i].first.y;
-            int r = accepted_circles[i].second;
-            int c = circle_counts[i];
+            int r = accepted_circles[i].first.rad;
+            int c = accepted_circles[i].second;
 
-            int dx = Center.x - x;
-            int dy = Center.y - y;
-            int dr = Radius - r;
-            if (dx*dx + dy*dy + dr*dr < 48){
-                accepted_circles[i].first.x = (x*c + Center.x)/(c + 1);    
-                accepted_circles[i].first.y = (y*c + Center.y)/(c + 1);    
-                accepted_circles[i].second = (r*c + Radius)/(c + 1);    
-                circle_counts[i]++;
+            int dx = Circle.x - x;
+            int dy = Circle.y - y;
+            int dr = Circle.rad - r;
+            if (dx*dx + dy*dy + dr*dr < CIRCLE_SIMILARITY_CONSTANT){
+                accepted_circles[i].first.x = (x*c + Circle.x)/(c + 1);    
+                accepted_circles[i].first.y = (y*c + Circle.y)/(c + 1);    
+                accepted_circles[i].first.rad = (r*c + Circle.rad)/(c + 1);    
+                accepted_circles[i].second++;
 
                 success = true;
                 break;
             }
         }
         if (!success) {
-            accepted_circles.push_back( std::make_pair(Center, Radius) );
-            circle_counts.push_back(1);
+            accepted_circles.push_back( std::make_pair(Circle, 1) );
         }
 
         valid_circles++;
-        if (valid_circles > 10)
+        if (valid_circles > N_CIRCLES_REQUIRED)
             break;
     }
 
-    std::vector<PR_CIRCLE>::iterator iter = accepted_circles.begin();
-    std::vector<PR_CIRCLE>::iterator end_iter = accepted_circles.end();
-    for (; iter != end_iter; ++iter) {
-        cvCircle (img, iter->first, iter->second, CV_RGB(100,100,100));        
-    }
-    printf ("ncircles= %d, %ld\n", valid_circles, accepted_circles.size());
+    /// sort the circles by their counts
+    std::sort (accepted_circles.begin(), accepted_circles.end(), m_circle_has_greater_count);
 
     bin_findcircles.stop();
 }
 
-int mvAdvancedCircles::get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, CvPoint &center, float &radius) {
+void mvAdvancedCircles::drawOntoImage (IplImage* img) {
+    std::vector<M_CIRCLE>::iterator iter = accepted_circles.begin();
+    std::vector<M_CIRCLE>::iterator end_iter = accepted_circles.end();
+    for (; iter != end_iter; ++iter) {
+        cvCircle (img, cvPoint(iter->first.x,iter->first.y), iter->first.rad, CV_RGB(100,100,100), CIRCLE_THICKNESS);        
+    }
+}
+
+int mvAdvancedCircles::ncircles() {
+    return (int)(accepted_circles.size());
+}
+
+int mvAdvancedCircles::get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, CIRCLE_STRUCT &Circle) {
     /** Basically, if you have 3 points, you can solve for the point which is equidistant to all 3.
      *  You get a matrix equation Ax = B, where A is a 2x2 matrix, x is trans([X, Y]), and B is trans([B1 B2])
      *  Then you can solve for x = inv(A) * B. Which is what we do below.
@@ -224,18 +227,22 @@ int mvAdvancedCircles::get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint
     int X = ( (y1-y3)*B1 + (y2-y1)*B2 ) / 2 / DET;
     int Y = ( (x3-x1)*B1 + (x1-x2)*B2 ) / 2 / DET;
 
-    center = cvPoint(X,Y);
-    radius = sqrt((float)((x1-X)*(x1-X) + (y1-Y)*(y1-Y)));
+    Circle.x = X;
+    Circle.y = Y;
+    Circle.rad = sqrt((float)((x1-X)*(x1-X) + (y1-Y)*(y1-Y)));
     return 0;
 }
 
-int mvAdvancedCircles::check_circle_validity (const IplImage* img, CvPoint center, float radius) {
+int mvAdvancedCircles::check_circle_validity (IplImage* img, CIRCLE_STRUCT Circle) {
     int x, y, count = 0;
-    for(std::vector<FLOAT_PAIR>::iterator it = cos_sin_vector.begin(); it != cos_sin_vector.end(); ++it) {
+    std::vector<FLOAT_PAIR>::iterator it = cos_sin_vector.begin();
+    std::vector<FLOAT_PAIR>::iterator end_it = cos_sin_vector.end();
+
+    for(; it != end_it; ++it) {
         float cos_val = it->first;
         float sin_val = it->second;
-        x = center.x + radius*cos_val;
-        y = center.y + radius*sin_val;
+        x = Circle.x + Circle.rad*cos_val;
+        y = Circle.y + Circle.rad*sin_val;
 
          if (x < 0 || x > img->width || y < 0 || y > img->height)
             continue;
@@ -245,5 +252,6 @@ int mvAdvancedCircles::check_circle_validity (const IplImage* img, CvPoint cente
             count++;
         }
     }
+
     return count;
 }

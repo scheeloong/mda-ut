@@ -33,13 +33,16 @@ void MDA_VISION_MODULE_BUOY:: primary_filter (const IplImage* src) {
     _filtered_img->origin = src->origin;
     _circles.clearData ();
     
+    //_Morphology5.open(_filtered_img, _filtered_img);
     _Morphology5.gradient(_filtered_img, _filtered_img);
-    _Morphology3.open(_filtered_img, _filtered_img);
-    _AdvancedCircles.findCircles (_filtered_img);
-    //_HoughCircles.findCircles (_filtered_img, &_circles);
 
-    //_circles.drawOntoImage (_filtered_img);
-    //printf ("ncircles = %d\n", _circles.ncircles());
+    _AdvancedCircles.findCircles (_filtered_img);
+
+    _AdvancedCircles.drawOntoImage (_filtered_img);
+    printf ("ncircles = %d\n", _AdvancedCircles.ncircles());
+    for (int i = 0; i < _AdvancedCircles.ncircles(); i++) {
+        printf ("Circle #%d: (%d,%d, %f)\n", i+1, _AdvancedCircles[i].x, _AdvancedCircles[i].y, _AdvancedCircles[i].rad);
+    }
 
     _window.showImage (_filtered_img);
 }
