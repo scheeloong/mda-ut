@@ -21,8 +21,6 @@ int main (int argc, char** argv) {
     mvHSVFilter HSVFilter ("HSVFilter_settings.csv"); // color filter
     mvHoughLines HoughLines ("HoughLines_settings.csv");
     mvLines lines; // data struct to store lines
-    mvHoughCircles HoughCircles ("HoughCircles_settings.csv");
-    mvCircles circles;
 
     // windows to display stuff
     mvWindow win1("img");
@@ -44,16 +42,8 @@ int main (int argc, char** argv) {
     HSVFilter.filter (img, res);
     win2.showImage (res);
     
-    //HoughLines.findLines (res, &lines);
-    //lines.drawOntoImage (res);
-    
-    HoughCircles.findCircles (res, &circles);
-    //circles.drawOntoImage (res);
-    for (unsigned i = 0; i < circles.ncircles(); i++) { 
-        CvPoint center = cvPoint(circles[i].x, circles[i].y); // x and y coordinate of circle 
-        cvCircle (res, center, circles[i].rad, CV_RGB(50,50,50), 2);
-    }
-    
+    HoughLines.findLines (res, &lines);
+    lines.drawOntoImage (res);
     
     win3.showImage(res);
         

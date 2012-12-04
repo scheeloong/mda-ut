@@ -67,13 +67,10 @@ int main( int argc, char** argv ) {
     mvBinaryMorphology Morphology5 (5,5, MV_KERN_ELLIPSE);
     mvHoughLines HoughLines ("test_settings.csv");
     mvLines lines; // data struct to store lines
-    mvHoughCircles HoughCircles ("test_settings.csv");
-    mvCircles circles; // data struct to store circles
+    mvAdvancedCircles circles ("test_settings.csv");
     mvKMeans kmeans;
 
     mvAdaptiveFilter3 adaptive ("test_settings.csv");
-
-    mvAdvancedCircles AdvancedCircles;
 
     // declare images we need
     IplImage* filter_img = mvCreateImage ();
@@ -127,7 +124,6 @@ int main( int argc, char** argv ) {
         win3->showImage (filter_img);
       
         if (TEST) {        
-            AdvancedCircles.findCircles(filter_img);
             //adaptive.filter (frame, filter_img);
 
             //mvSplitImage (frame, &filter_img, &filter_img2);
@@ -147,9 +143,8 @@ int main( int argc, char** argv ) {
             win3->showImage (filter_img);
         }
         else if (CIRCLE) {
-            HoughCircles.findCircles (filter_img, &circles);
+            circles.findCircles (filter_img);
             printf ("ncircles = %d\n", circles.ncircles());
-            circles.clearData();
             circles.drawOntoImage (filter_img);
 
             win3->showImage (filter_img);
