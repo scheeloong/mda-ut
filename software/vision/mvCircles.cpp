@@ -15,64 +15,22 @@
 
 bool m_circle_has_greater_count (M_CIRCLE c1, M_CIRCLE c2) { return (c1.second > c2.second); }
 
-void mvCircles::drawOntoImage (IplImage* img) {
-    assert (img != NULL);
-    assert (_data != NULL);
-    assert (img->nChannels == 1);
-    
-    float* circleData;
-    for (int i = 0; i < _data->total; i++) {
-        circleData = (float*)cvGetSeqElem(_data, i); 
-        CvPoint center = cvPoint(circleData[0],circleData[1]); // [0],[1] are x and y of center
-        // [2] is radius
-        
-        cvCircle(img, center, cvRound(circleData[2]), CV_RGB(50,50,50), CIRCLE_THICKNESS);
-    }
-}
-
-
-/** mvHoughCircles methods */
-mvHoughCircles::mvHoughCircles (const char* settings_file) :
-    bin_findcircles ("mvHoughCircles - findCircles")
-{
-    read_mv_setting (settings_file, "_ACCUMULATOR_THRESHOLD_", _ACCUMULATOR_THRESHOLD_);
-    read_mv_setting (settings_file, "_MIN_CENTER_DIST_", _MIN_CENTER_DIST_);
-    read_mv_setting (settings_file, "CANNY_HIGH_THRESHOLD", CANNY_HIGH_THRESHOLD);
-    read_mv_setting (settings_file, "PIXEL_RESOLUTION", PIX_RESOLUTION);
-}
-
-void mvHoughCircles::findCircles (IplImage *img, mvCircles* circles) {
-    assert (img != NULL);
-    assert (img->nChannels == 1);
-    assert (circles != NULL);
-    assert (circles->_data == NULL); // make sure there isnt already data
-    
-    bin_findcircles.start();
-    unsigned imgwidth = img->width;
-    circles->_data = cvHoughCircles(
-        img, 
-        circles->_storage, 
-        CV_HOUGH_GRADIENT,      // method
-        PIX_RESOLUTION,
-        _MIN_CENTER_DIST_ * imgwidth,
-        CANNY_HIGH_THRESHOLD,
-        _ACCUMULATOR_THRESHOLD_ * imgwidth
-    );
-    bin_findcircles.stop();
-}
-
-mvAdvancedCircles::mvAdvancedCircles () :
+mvAdvancedCircles::mvAdvancedCircles (const char* settings_file) :
     bin_findcircles ("mvAdvancedCircles")
 {
+    srand(time(NULL)); // seed for the partly random circle finding algorithm
+
     int width, height;
     read_common_mv_setting ("IMG_WIDTH_COMMON", width);
     read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
+    read_mv_setting (settings_file, "DOWNSAMPLING_FACTOR", PIXELS_PER_GRID_POINT);
+    read_mv_setting (settings_file, "_MIN_RADIUS_", _MIN_RADIUS_);
+    read_mv_setting (settings_file, "_THRESHOLD_", _THRESHOLD_);
+    read_mv_setting (settings_file, "N_CIRCLES_REQUIRED", N_CIRCLES_REQUIRED);
 
     grid_width = width / PIXELS_PER_GRID_POINT;
     grid_height = height / PIXELS_PER_GRID_POINT;
     grid = cvCreateImageHeader (cvSize(grid_width, grid_height), IPL_DEPTH_8U, 1);
-
-    srand(time(NULL));
 
     float angular_division = 2*CV_PI/N_POINTS_TO_CHECK;
     float angle = 0;
@@ -147,12 +105,12 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
         // sanity roll
         if (Circle.x < 0 || Circle.x > img->width || Circle.y < 0 || Circle.y > img->height)
             continue;
-        if (Circle.rad < MIN_RADIUS)
+        if (Circle.rad < _MIN_RADIUS_*img->width)
             continue;
 
         int count = check_circle_validity(img, Circle);
         DEBUG_PRINT("count: %d\n", count);
-        if(count < POINTS_THRESHOLD*N_POINTS_TO_CHECK)
+        if(count < _THRESHOLD_*N_POINTS_TO_CHECK)
             continue;
 
         // check each existing circle. avg with an existing circle or push new circle
@@ -166,7 +124,7 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
             int dx = Circle.x - x;
             int dy = Circle.y - y;
             int dr = Circle.rad - r;
-            if (dx*dx + dy*dy + dr*dr < CIRCLE_SIMILARITY_CONSTANT){
+            if (abs(dr) < RADIUS_SIMILARITY_CONSTANT && dx*dx + dy*dy < CENTER_SIMILARITY_CONSTANT) {
                 accepted_circles[i].first.x = (x*c + Circle.x)/(c + 1);    
                 accepted_circles[i].first.y = (y*c + Circle.y)/(c + 1);    
                 accepted_circles[i].first.rad = (r*c + Circle.rad)/(c + 1);    
@@ -181,7 +139,7 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
         }
 
         valid_circles++;
-        if (valid_circles > N_CIRCLES_REQUIRED)
+        if (valid_circles >= N_CIRCLES_REQUIRED)
             break;
     }
 

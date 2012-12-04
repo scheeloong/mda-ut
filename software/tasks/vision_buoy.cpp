@@ -17,9 +17,7 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY () :
     _HSVFilter (mvHSVFilter(MDA_VISION_BUOY_SETTINGS)),
     _Morphology5 (mvBinaryMorphology(5, 5, MV_KERN_RECT)),
     _Morphology3 (mvBinaryMorphology(3, 3, MV_KERN_RECT)),
-    _HoughCircles (mvHoughCircles(MDA_VISION_BUOY_SETTINGS)),
-    _AdvancedCircles(),
-    _circles (mvCircles())
+    _AdvancedCircles("AdvancedCircles_settings.csv")
 {
     _filtered_img = mvGetScratchImage (); // common size
 }
@@ -31,7 +29,6 @@ MDA_VISION_MODULE_BUOY:: ~MDA_VISION_MODULE_BUOY () {
 void MDA_VISION_MODULE_BUOY:: primary_filter (const IplImage* src) {
     _HSVFilter.filter (src, _filtered_img);
     _filtered_img->origin = src->origin;
-    _circles.clearData ();
     
     //_Morphology5.open(_filtered_img, _filtered_img);
     _Morphology5.gradient(_filtered_img, _filtered_img);

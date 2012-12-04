@@ -18,9 +18,11 @@ _MIN_LINE_LENGTH_, 0.15          # scaled by image width
 _MIN_COLINEAR_LINE_DIST_ 0.3   # scaled by image width
 
 
-### HoughCircles
-CANNY_HIGH_THRESHOLD, 50
-_MIN_CENTER_DIST_, 0.5
+### Circles
+DOWNSAMPLING_FACTOR, 5
+_MIN_RADIUS_, 0.1
+_THRESHOLD_, 0.5
+N_CIRCLES_REQUIRED, 12
 
 ### lines clustering
 # the following value specifies when the algorithm should choose 1 cluster over 

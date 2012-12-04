@@ -1,0 +1,20 @@
+# AdvancedCircles_settings.csv
+# settings needed for the circle finding algorithm
+
+# This is how much the image will be downsampled when generating
+# (but not checking the validity of) the circles. Higher means
+# faster but less accurate circles. 5 is good.
+DOWNSAMPLING_FACTOR, 5
+
+# This is the min radius of the circle generated, scaled by
+# image width
+_MIN_RADIUS_, 0.1
+
+# This is the fraction of points on a circle need to be supported
+# in the image for it to be a "good" circle
+_THRESHOLD_, 0.5
+
+# Number of valid circles to generate before algorithm stops. 
+# Note the algorithm still averages similar circles together, so
+# it may return less circles than this
+N_CIRCLES_REQUIRED, 10
