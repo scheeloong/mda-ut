@@ -13,7 +13,7 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
-bool m_circle_has_greater_count (M_CIRCLE c1, M_CIRCLE c2) { return (c1.second > c2.second); }
+bool m_circle_has_greater_count (CIRCLE_U_PAIR c1, CIRCLE_U_PAIR c2) { return (c1.second > c2.second); }
 
 mvAdvancedCircles::mvAdvancedCircles (const char* settings_file) :
     bin_findcircles ("mvAdvancedCircles")
@@ -93,7 +93,7 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
         int c3 = rand() % n_points;
         
         // get the circle center and radius
-        CIRCLE_STRUCT Circle;
+        MV_CIRCLE Circle;
         if ( get_circle_from_3_points (point_vector[c1],point_vector[c2],point_vector[c3], Circle) )
             continue;
 
@@ -150,8 +150,8 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
 }
 
 void mvAdvancedCircles::drawOntoImage (IplImage* img) {
-    std::vector<M_CIRCLE>::iterator iter = accepted_circles.begin();
-    std::vector<M_CIRCLE>::iterator end_iter = accepted_circles.end();
+    std::vector<CIRCLE_U_PAIR>::iterator iter = accepted_circles.begin();
+    std::vector<CIRCLE_U_PAIR>::iterator end_iter = accepted_circles.end();
     for (; iter != end_iter; ++iter) {
         cvCircle (img, cvPoint(iter->first.x,iter->first.y), iter->first.rad, CV_RGB(100,100,100), CIRCLE_THICKNESS);        
     }
@@ -161,7 +161,7 @@ int mvAdvancedCircles::ncircles() {
     return (int)(accepted_circles.size());
 }
 
-int mvAdvancedCircles::get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, CIRCLE_STRUCT &Circle) {
+int mvAdvancedCircles::get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, MV_CIRCLE &Circle) {
     /** Basically, if you have 3 points, you can solve for the point which is equidistant to all 3.
      *  You get a matrix equation Ax = B, where A is a 2x2 matrix, x is trans([X, Y]), and B is trans([B1 B2])
      *  Then you can solve for x = inv(A) * B. Which is what we do below.
@@ -190,7 +190,7 @@ int mvAdvancedCircles::get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint
     return 0;
 }
 
-int mvAdvancedCircles::check_circle_validity (IplImage* img, CIRCLE_STRUCT Circle) {
+int mvAdvancedCircles::check_circle_validity (IplImage* img, MV_CIRCLE Circle) {
     int x, y, count = 0;
     std::vector<FLOAT_PAIR>::iterator it = cos_sin_vector.begin();
     std::vector<FLOAT_PAIR>::iterator end_it = cos_sin_vector.end();

@@ -94,7 +94,7 @@ void mvSplitImage (const IplImage* src, IplImage** plane1, IplImage** plane2) {
 
 void mvBinaryDilate (const IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_area);
 void mvBinaryErode (const IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_area);
-void mvBinaryGradient (const IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_area);
+void mvBinaryGradient (const IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_width, unsigned kernel_height, unsigned kernel_area);
 
 mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV_KERNEL_SHAPE Shape) :
     bin_morph ("mvMorphology - morph"),
@@ -191,7 +191,7 @@ void mvBinaryMorphology:: mvBinaryMorphologyMain (
         mvBinaryDilate (temp, dst, kernel_point_array, kernel_area);
     }
     else if (morphology_type == MV_GRADIENT) {
-        mvBinaryGradient (src, temp, kernel_point_array, kernel_area);
+        mvBinaryGradient (src, temp, kernel_point_array, kernel_width, kernel_height, kernel_area);
     }
     
     cvCopy (temp, dst);
@@ -207,7 +207,7 @@ void mvBinaryDilate (
     unsigned kernel_area
 )
 {
-    assert (src != dst);
+    assert (src->imageData != dst->imageData);
     unsigned width = src->width;
     unsigned height = src->height;
     unsigned widthStep = src->widthStep;    // width in bytes
@@ -253,7 +253,7 @@ void mvBinaryErode (
     unsigned kernel_area
 )
 {
-    assert (src != dst);
+    assert (src->imageData != dst->imageData);
     unsigned width = src->width;
     unsigned height = src->height;
     unsigned widthStep = src->widthStep;    // width in bytes
@@ -294,6 +294,8 @@ void mvBinaryErode (
 void mvBinaryGradient (
     const IplImage* src, IplImage* dst,
     int* kernel_point_array,
+    unsigned kernel_width,
+    unsigned kernel_height,
     unsigned kernel_area
 )
 {
@@ -312,26 +314,32 @@ void mvBinaryGradient (
 
     // go over each high pixel in dst (dilated img). If the kernel around the 
     // equivalent src pixel is zero or will be eroded to zero, leave it alone.
-    // Else set it to 0
+    // Else set it to 0, because the src pixel is 1 and Grad = Dst - Src
     for (unsigned r = 0; r < height; r++) {
         srcPtr = (unsigned char*) (src->imageData + r*widthStep);
         dstPtr = (unsigned char*) (dst->imageData + r*widthStep);
  
         for (unsigned c = 0; c < width; c++) {
-            if (*srcPtr != 0) { // we must check if *srcPtr will be eroded to 0
-                
-                bool BREAK = false;
-                for (unsigned i = 0; i < kernel_area; i++) {
-                    unsigned char *ptr = srcPtr + kernel_point_array[i];
-                    if (IN_SRC(ptr) && *ptr == 0) { // *srcPtr eroded to 0
-                        BREAK = true;
-                        break;
-                    }
-                }
-                if (!BREAK)
+            if (dstPtr != 0) {
+                // this hack makes all pixels around the left/right edges zero.
+                // Otherwise artifacts are left on the edges.
+                if (2*c < kernel_width || 2*(width-1-c) < kernel_width) {
                     *dstPtr = 0;
-
-            }   
+                }
+                // here we check if *srcPtr will be eroded to 0
+                else if (*srcPtr != 0) {
+                    bool BREAK = false;
+                    for (unsigned i = 0; i < kernel_area; i++) {
+                        unsigned char *ptr = srcPtr + kernel_point_array[i];
+                        if (IN_SRC(ptr) && *ptr == 0) { // *srcPtr eroded to 0
+                            BREAK = true;
+                            break;
+                        }
+                    }
+                    if (!BREAK)
+                        *dstPtr = 0;
+                }
+            }
             srcPtr++;
             dstPtr++;
         }
