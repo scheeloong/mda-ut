@@ -77,10 +77,14 @@ class ImageInputVideo : public ImageInput {
 /* Read from webcam */
 class ImageInputWebcam : public ImageInput {
   public:
-    ImageInputWebcam();
+    ImageInputWebcam(const char* settings_file);
     virtual ~ImageInputWebcam();
 
     virtual const IplImage* get_image(ImageDirection dir = FWD_IMG);
+
+  private:
+    mvCamera *fwdCam;
+    mvCamera *dwnCam;
 };
 
 #endif
