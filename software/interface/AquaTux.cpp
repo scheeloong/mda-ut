@@ -30,8 +30,8 @@ AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
 
   if (image_input == "SIMULATOR") {
     m_image_input = new ImageInputSimulator();
-  } else if (image_input == "SUBMARINE") {
-    m_image_input = new ImageInputSubmarine();
+  } else if (image_input == "WEBCAM") {
+    m_image_input = new ImageInputWebcam();
   } else if (image_input == "VIDEO") {
     m_image_input = new ImageInputVideo(settings_file);
   } else {
