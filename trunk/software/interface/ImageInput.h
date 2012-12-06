@@ -74,11 +74,11 @@ class ImageInputVideo : public ImageInput {
     virtual const IplImage* get_image(ImageDirection dir = FWD_IMG);
 };
 
-/* The real submarine implementation */
-class ImageInputSubmarine : public ImageInput {
+/* Read from webcam */
+class ImageInputWebcam : public ImageInput {
   public:
-    ImageInputSubmarine();
-    virtual ~ImageInputSubmarine();
+    ImageInputWebcam();
+    virtual ~ImageInputWebcam();
 
     virtual const IplImage* get_image(ImageDirection dir = FWD_IMG);
 };
