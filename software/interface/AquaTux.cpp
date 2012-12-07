@@ -17,6 +17,7 @@ AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
   read_mv_setting(settings_file, "OPERATION", operation);
   read_mv_setting(settings_file, "ACTUATOR_OUTPUT", actuator_output);
 
+  // Attitude input
   if (attitude_input == "SIMULATOR") {
     m_attitude_input = new AttitudeInputSimulator();
   } else if (attitude_input == "SUBMARINE") {
@@ -28,6 +29,7 @@ AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
     m_attitude_input = new AttitudeInputNull();
   }
 
+  // Image input
   if (image_input == "SIMULATOR") {
     m_image_input = new ImageInputSimulator();
   } else if (image_input == "VIDEO") {
@@ -41,6 +43,7 @@ AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
     m_image_input = new ImageInputNull();
   }
 
+  // Actuator output
   if (actuator_output == "SIMULATOR") {
     m_actuator_output = new ActuatorOutputSimulator();
   } else if (actuator_output == "SUBMARINE") {
@@ -52,6 +55,7 @@ AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
     m_actuator_output = new ActuatorOutputNull();
   }
 
+  // Operation, ie overall algorithm
   if (operation == "JOYSTICK") {
     m_operation = new JoystickOperation(m_attitude_input, m_image_input, m_actuator_output);
   } else if (operation == "COMMAND_LINE") {
