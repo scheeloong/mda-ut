@@ -17,7 +17,7 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY () :
     _HSVFilter (mvHSVFilter(MDA_VISION_BUOY_SETTINGS)),
     _Morphology5 (mvBinaryMorphology(5, 5, MV_KERN_RECT)),
     _Morphology3 (mvBinaryMorphology(3, 3, MV_KERN_RECT)),
-    _AdvancedCircles("AdvancedCircles_settings.csv")
+    _AdvancedCircles(MDA_VISION_BUOY_SETTINGS)
 {
     _filtered_img = mvGetScratchImage (); // common size
 }

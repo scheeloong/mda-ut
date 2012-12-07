@@ -4,6 +4,8 @@ static IplImage* scratch_img_1channel = NULL;
 static int instances_1channel = 0;
 static IplImage* scratch_img_1channel_2 = NULL;
 static int instances_1channel_2 = 0;
+static IplImage* scratch_img_1channel_3 = NULL;
+static int instances_1channel_3 = 0;
 
 static IplImage* scratch_img_3channel = NULL;
 static int instances_3channel = 0;
@@ -80,6 +82,45 @@ void mvReleaseScratchImage2() {
     }
     else {
         fprintf (stderr, "Tried to release 1 channel image #2 without getting it first\n");
+        exit (1);
+    }
+}
+
+IplImage* mvGetScratchImage3() {
+    if (instances_1channel_3 == 0) {
+        instances_1channel_3++;
+
+        // For this one, we are going to use the last 1/3 of the 3 channel image's data array
+        mvGetScratchImage_Color();
+        scratch_img_1channel_3 = cvCreateImageHeader(
+            cvGetSize(scratch_img_3channel),
+            IPL_DEPTH_8U,
+            1
+        );
+        scratch_img_1channel_3->imageData = scratch_img_3channel->imageData + 
+                                            2*scratch_img_1channel_3->height * scratch_img_1channel_3->widthStep;
+
+        return scratch_img_1channel_3;
+    }
+    else {
+        instances_1channel_3++;
+        scratch_img_1channel_3->imageData = scratch_img_3channel->imageData + 
+                                            2*scratch_img_1channel_3->height * scratch_img_1channel_3->widthStep;
+        return scratch_img_1channel_3;
+    }
+}
+
+void mvReleaseScratchImage3() {
+    if (instances_1channel_3 == 1) {
+        mvReleaseScratchImage_Color();
+        cvReleaseImageHeader(&scratch_img_1channel_3);
+        instances_1channel_3 = 0;
+    }
+    else if (instances_1channel_3 >= 1) {
+        instances_1channel_3--;
+    }
+    else {
+        fprintf (stderr, "Tried to release 1 channel image #3 without getting it first\n");
         exit (1);
     }
 }

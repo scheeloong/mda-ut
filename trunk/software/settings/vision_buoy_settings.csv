@@ -1,20 +1,13 @@
 # HSV filter settings for buoy - Yellow buoy
-HUE_MIN, 30 
-HUE_MAX, 40
+HUE_MIN, 170 
+HUE_MAX, 10
 SAT_MIN, 140
 SAT_MAX, 255
 VAL_MIN, 170
 VAL_MAX, 255
 
-# step size in pixels, > 1 means the line finder skips pixels
-PIXEL_RESOLUTION 1 
-# how easy it is for a transition from high to low to be detected as a contour
-# higher means harder detection. Keep it between 30 and 60
-CANNY_HIGH_THRESHOLD, 30
-
-# number of points a circle must pass through to be accepted
-_ACCUMULATOR_THRESHOLD_, 0.1        # scales image width
-# minimum distance between centers of 2 circles for them to be
-# seperate circles
-_MIN_CENTER_DIST_, 0.2              # scales image width
-
+DOWNSAMPLING_FACTOR, 4
+_MIN_RADIUS_, 0.01
+_THRESHOLD_, 0.60
+N_CIRCLES_GENERATED, 12
+N_CIRCLES_CUTOFF, 5
