@@ -103,7 +103,7 @@ mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV
     assert (Kernel_Width % 2 == 1); // odd number
     assert (Kernel_Height % 2 == 1);
 
-    temp = mvGetScratchImage2();
+    temp = mvGetScratchImage3();
     kernel_width = Kernel_Width;
     kernel_height = Kernel_Height;   
     kernel_area = Kernel_Width * Kernel_Height;
@@ -157,7 +157,7 @@ mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV
 }
 
 mvBinaryMorphology:: ~mvBinaryMorphology () {
-	mvReleaseScratchImage2();
+	mvReleaseScratchImage3();
 }
 
 void mvBinaryMorphology:: mvBinaryMorphologyMain (

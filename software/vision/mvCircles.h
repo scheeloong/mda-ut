@@ -29,11 +29,13 @@ class mvAdvancedCircles {
     static const int CENTER_SIMILARITY_CONSTANT = 64; // squared
     static const int RADIUS_SIMILARITY_CONSTANT = 8;
     static const int N_POINTS_TO_CHECK = 20;
+    static const int POINTS_NEEDED_IN_RESAMPLED_IMAGE = 10;
 
     int PIXELS_PER_GRID_POINT;
     float _MIN_RADIUS_;
     float _THRESHOLD_;
-    int N_CIRCLES_REQUIRED;
+    int N_CIRCLES_GENERATED;
+    unsigned N_CIRCLES_CUTOFF;
 
     IplImage* grid;                             // downsampled image
     unsigned grid_width, grid_height;
@@ -42,6 +44,7 @@ class mvAdvancedCircles {
     std::vector<CIRCLE_U_PAIR> accepted_circles;    // list of circles found
 
     PROFILE_BIN bin_findcircles;
+    mvWindow win;
 
     private:
     int get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, MV_CIRCLE &Circle);

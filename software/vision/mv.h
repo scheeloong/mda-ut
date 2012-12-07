@@ -61,6 +61,8 @@ IplImage* mvGetScratchImage();
 void mvReleaseScratchImage();
 IplImage* mvGetScratchImage2();
 void mvReleaseScratchImage2();
+IplImage* mvGetScratchImage3();
+void mvReleaseScratchImage3();
 IplImage* mvGetScratchImage_Color();
 void mvReleaseScratchImage_Color();
 

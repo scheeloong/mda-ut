@@ -16,7 +16,8 @@
 bool m_circle_has_greater_count (CIRCLE_U_PAIR c1, CIRCLE_U_PAIR c2) { return (c1.second > c2.second); }
 
 mvAdvancedCircles::mvAdvancedCircles (const char* settings_file) :
-    bin_findcircles ("mvAdvancedCircles")
+    bin_findcircles ("mvAdvancedCircles"),
+    win ("test")
 {
     srand(time(NULL)); // seed for the partly random circle finding algorithm
 
@@ -26,7 +27,10 @@ mvAdvancedCircles::mvAdvancedCircles (const char* settings_file) :
     read_mv_setting (settings_file, "DOWNSAMPLING_FACTOR", PIXELS_PER_GRID_POINT);
     read_mv_setting (settings_file, "_MIN_RADIUS_", _MIN_RADIUS_);
     read_mv_setting (settings_file, "_THRESHOLD_", _THRESHOLD_);
-    read_mv_setting (settings_file, "N_CIRCLES_REQUIRED", N_CIRCLES_REQUIRED);
+    read_mv_setting (settings_file, "N_CIRCLES_GENERATED", N_CIRCLES_GENERATED);
+    read_mv_setting (settings_file, "N_CIRCLES_CUTOFF", N_CIRCLES_CUTOFF);
+
+    assert (PIXELS_PER_GRID_POINT >= 1);
 
     grid_width = width / PIXELS_PER_GRID_POINT;
     grid_height = height / PIXELS_PER_GRID_POINT;
@@ -39,13 +43,13 @@ mvAdvancedCircles::mvAdvancedCircles (const char* settings_file) :
         angle += angular_division;
     }
 
-    IplImage* temp = mvGetScratchImage2();
+    IplImage* temp = mvGetScratchImage3();
     grid->imageData = temp->imageData;
 }
 
 mvAdvancedCircles::~mvAdvancedCircles () {
     cvReleaseImageHeader(&grid);
-    mvReleaseScratchImage2();
+    mvReleaseScratchImage3();
 }
 
 void mvAdvancedCircles::findCircles (IplImage* img) {
@@ -67,26 +71,23 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
         for (int j = 0; j < grid->width; j++) {
             if (*ptr != 0) {
                 point_vector.push_back(cvPoint(j,i));
-                //DEBUG_PRINT ("#");
             }
             else {
-                //DEBUG_PRINT (".");
             }
             ptr++;
         }
-        //DEBUG_PRINT ("\n");
     }
-    //DEBUG_PRINT ("\n\n");
-    unsigned n_points = point_vector.size();
-
-    if (n_points < 5) {
+    int n_points = point_vector.size();
+    if (n_points < POINTS_NEEDED_IN_RESAMPLED_IMAGE) {
         printf ("Not enough points in resampled image\n");
         return;
     }
 
+    //win.showImage(grid);
+
     /// main working loop
-    int valid_circles = 0;
-    for (int N = 0; N < 200; N++) {
+    int n_valid_circles = 0;
+    for (int N = 0; N < 60*N_CIRCLES_GENERATED; N++) {
         // choose 3 points at random to form a circle
         int c1 = rand() % n_points;
         int c2 = rand() % n_points;
@@ -109,12 +110,12 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
             continue;
 
         int count = check_circle_validity(img, Circle);
-        DEBUG_PRINT("count: %d\n", count);
+        //DEBUG_PRINT("count: %d\n", count);
         if(count < _THRESHOLD_*N_POINTS_TO_CHECK)
             continue;
 
         // check each existing circle. avg with an existing circle or push new circle
-        bool success = false;
+        bool similar_circle_exists = false;
         for (unsigned i = 0; i < accepted_circles.size(); i++) {
             int x = accepted_circles[i].first.x;
             int y = accepted_circles[i].first.y;
@@ -130,21 +131,56 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
                 accepted_circles[i].first.rad = (r*c + Circle.rad)/(c + 1);    
                 accepted_circles[i].second++;
 
-                success = true;
+                // erase the circle from resampled image if cutoff is reached
+                // this gets rid of a circle that is already found
+                // this is done by removing points from point_vector
+                if (accepted_circles[i].second == N_CIRCLES_CUTOFF) {
+                    for (unsigned j = 0; j < point_vector.size(); j++) {
+                        MV_CIRCLE temp_circle;
+                        temp_circle.x = accepted_circles[i].first.x / PIXELS_PER_GRID_POINT;
+                        temp_circle.y = accepted_circles[i].first.y / PIXELS_PER_GRID_POINT;
+                        temp_circle.rad = accepted_circles[i].first.rad / PIXELS_PER_GRID_POINT;
+
+                        int dx = point_vector[j].x - temp_circle.x;
+                        int dy = point_vector[j].y - temp_circle.y;
+                        float ratio = sqrt(dx*dx + dy*dy) / temp_circle.rad;
+
+                        if (ratio < 1.2 && ratio > 0.83) {    // remove point if its approximately on temp_circle
+                            point_vector.erase(point_vector.begin()+j);
+                        }
+                    }              
+                }
+
+                similar_circle_exists = true;
                 break;
             }
         }
-        if (!success) {
+        if (!similar_circle_exists) {
             accepted_circles.push_back( std::make_pair(Circle, 1) );
         }
 
-        valid_circles++;
-        if (valid_circles >= N_CIRCLES_REQUIRED)
+        n_valid_circles++;
+        if (n_valid_circles >= N_CIRCLES_GENERATED) {
             break;
+        }
+    }
+
+    /// remove each circle with less than N_CIRCLES_CUTOFF support
+    std::vector<CIRCLE_U_PAIR>::iterator it = accepted_circles.begin();
+    std::vector<CIRCLE_U_PAIR>::iterator end_it = accepted_circles.end();
+    for (; it != end_it; ++it) {
+        if (it->second < N_CIRCLES_CUTOFF) {
+            accepted_circles.erase(it);
+        } 
     }
 
     /// sort the circles by their counts
     std::sort (accepted_circles.begin(), accepted_circles.end(), m_circle_has_greater_count);
+
+    /*for (unsigned i = 0; i < accepted_circles.size(); i++) {
+        MV_CIRCLE circle = accepted_circles[i].first;
+        printf ("(x=%d, y=%d, R=%f)  c=%d\n", circle.x,circle.y,circle.rad,accepted_circles[i].second);
+    }*/
 
     bin_findcircles.stop();
 }
