@@ -4,3 +4,31 @@ IMAGE_INPUT SIMULATOR
 ATTITUDE_INPUT SIMULATOR
 OPERATION JOYSTICK
 ACTUATOR_OUTPUT SIMULATOR
+
+### Options for the submarine ###
+
+## For streaming image source
+
+# IMAGE_INPUT VIDEO
+## VIDEO_FWD video.avi
+## VIDEO_DWN video2.avi
+# IMAGE_INPUT WEBCAM
+## WEBCAM_FWD 0
+## WEBCAM_DWN 1
+# IMAGE_INPUT SIMULATOR
+
+## For attitude (yaw, pitch, roll, depth) readings
+
+# ATTITUDE_INPUT SIMULATOR
+# ATTITUDE_INPUT SUBMARINE
+
+## For controlling movement
+# ACTUATOR_INPUT SIMULATOR
+# ACTUATOR_INPUT SUBMARINE
+
+## Algorithm to process input data and output control movement
+# OPERATION JOYSTICK     # Manual control with single-button pressing
+# OPERATION COMMAND_LINE # Fine-grained manual control with string commands
+# OPERATION MISSION      # Autonomous control
+
+## Note: all options also have a NULL option which does nothing
