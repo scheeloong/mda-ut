@@ -2,10 +2,11 @@
 #define __MDA_TASK__MDA_TASK__
 
 #include "mda_vision.h"
-#include "../interface/AttitudeInput.h"
-#include "../interface/ImageInput.h"
-#include "../interface/ActuatorOutput.h"
-#include "../interface/CharacterStreamSingleton.h"
+#include "viterbi.h"
+#include "AttitudeInput.h"
+#include "ImageInput.h"
+#include "ActuatorOutput.h"
+#include "CharacterStreamSingleton.h"
 
 enum MDA_TASK {
 	TASK_TEST,
@@ -69,6 +70,18 @@ public:
 	~MDA_TASK_GATE ();
 
 	MDA_TASK_RETURN_CODE run_task ();
+};
+
+// gate task with Viterbi algorithm
+class MDA_TASK_GATE_VITERBI : public MDA_TASK_BASE {
+
+public:
+	MDA_TASK_GATE_VITERBI (AttitudeInput* a, ImageInput* i, ActuatorOutput* o);
+	~MDA_TASK_GATE_VITERBI ();
+
+	MDA_TASK_RETURN_CODE run_task ();
+private:
+  Viterbi *v;
 };
 
 /// ########################################################################
