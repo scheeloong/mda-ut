@@ -44,11 +44,27 @@ void Viterbi::set_transition_prob(int state, double * user_transition_prob)
   assert(fabs(1 - total_prob) < 0.01);
 }
 
-void Viterbi::set_emission_prob(int observation, double* updated_emission_prob)
+void Viterbi::set_emission_prob(int observation, double* user_emission_prob)
 {
   for (int i = 0; i < num_hidden_states; i++) {
-    emission_prob[observation].push_back(ln(updated_emission_prob[i]));
+    double prob = user_emission_prob[i];
+    emission_prob[observation].push_back(ln(prob));
   }
+}
+
+bool Viterbi::check_emission_prob()
+{
+  for (int i = 0; i < num_hidden_states; i++) {
+    double total_prob = 0;
+    for (int j = 0; j < num_observations; j++) {
+      total_prob += exp(emission_prob[j][i]);
+    }
+    if (fabs(1 - total_prob) >= 0.01) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 int Viterbi::optimal_state(int observation)
@@ -61,7 +77,7 @@ int Viterbi::optimal_state(int observation)
     // Add the best transition from a previous state to the emission probability
     double max_trans_prob = prev_state_prob[0] + transition_prob[0][i];
     for (int j = 1; j < num_hidden_states; j++) {
-      double trans_prob = prev_state_prob[i] + transition_prob[j][i];
+      double trans_prob = prev_state_prob[j] + transition_prob[j][i];
       if (trans_prob > max_trans_prob) {
         max_trans_prob = trans_prob;
       }

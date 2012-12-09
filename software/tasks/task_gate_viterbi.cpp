@@ -1,7 +1,8 @@
 #include "mda_tasks.h"
 #include "mda_vision.h"
 
-// TODO: add left and right states within SEEN_GATE
+#include <assert.h>
+
 enum HIDDEN_STATES {
   START = 0,
   SEEN_GATE,
@@ -12,10 +13,12 @@ enum HIDDEN_STATES {
   NUM_STATES
 };
 
-// TODO: add more observation types
 enum OBSERVATIONS {
   NONE = 0,
+  GATE,
+  PAST_GATE,
   PATH,
+  UNUSED,
   NUM_OBSERVATIONS
 };
 
@@ -26,9 +29,9 @@ MDA_TASK_GATE_VITERBI:: MDA_TASK_GATE_VITERBI (AttitudeInput* a, ImageInput* i, 
 
   // Assign state transition probabilities (these can be tuned!)
   //                                START SEEN_GATE DONE_GATE SUCCEED FAIL_TO_START FAIL_TO_COMPLETE
-  double start_trans[] =            {0.45,     0.45,     0.00,   0.05,         0.05,            0.00};
-  double seen_gate_trans[] =        {0.05,     0.55,     0.30,   0.05,         0.00,            0.05};
-  double done_gate_trans[] =        {0.00,     0.15,     0.60,   0.20,         0.00,            0.05};
+  double start_trans[] =            {0.62,     0.35,     0.00,   0.01,         0.02,            0.00};
+  double seen_gate_trans[] =        {0.05,     0.45,     0.30,   0.15,         0.00,            0.05};
+  double done_gate_trans[] =        {0.00,     0.05,     0.45,   0.45,         0.00,            0.05};
   double succeed_trans[] =          {0.00,     0.00,     0.00,   1.00,         0.00,            0.00};
   double fail_to_start_trans[] =    {0.00,     0.00,     0.00,   0.00,         1.00,            0.00};
   double fail_to_complete_trans[] = {0.00,     0.00,     0.00,   0.00,         0.00,            1.00};
@@ -42,11 +45,20 @@ MDA_TASK_GATE_VITERBI:: MDA_TASK_GATE_VITERBI (AttitudeInput* a, ImageInput* i, 
 
   // Assign emission probabilities (these can also be tuned!)
   //                                START SEEN_GATE DONE_GATE SUCCEED FAIL_TO_START FAIL_TO_COMPLETE
-  double none_emission[] =          {0.20,     0.20,     0.20,   0.20,         0.20,            0.20};
-  double path_emission[] =          {0.35,     0.20,     0.00,   0.80,         0.00,            0.00};
+  double none_emission[] =          {0.95,     0.10,     0.20,   0.00,         0.25,            0.20};
+  double gate_emission[] =          {0.00,     0.88,     0.10,   0.00,         0.00,            0.03};
+  double past_gate_emission[] =     {0.00,     0.00,     0.55,   0.00,         0.00,            0.02};
+  double path_emission[] =          {0.05,     0.02,     0.15,   1.00,         0.00,            0.00};
+  // To ensure the sums add to 1
+  double unused_emission[] =        {0.00,     0.00,     0.00,   0.00,         0.75,            0.75};
 
   v->set_emission_prob(NONE, none_emission);
+  v->set_emission_prob(GATE, gate_emission);
+  v->set_emission_prob(PAST_GATE, past_gate_emission);
   v->set_emission_prob(PATH, path_emission);
+  v->set_emission_prob(UNUSED, unused_emission);
+
+  assert(v->check_emission_prob());
 }
 
 MDA_TASK_GATE_VITERBI:: ~MDA_TASK_GATE_VITERBI ()
@@ -78,6 +90,12 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE_VITERBI:: run_task() {
         int observation = NONE;
         if (path_vcode == ONE_SEGMENT || path_vcode == FULL_DETECT || path_vcode == UNKNOWN_TARGET) {
             observation = PATH;
+        } else if (gate_vcode == ONE_SEGMENT || gate_vcode == FULL_DETECT) {
+            if (gate_vcode == FULL_DETECT && gate_vision.get_range() < 400) {
+                observation = PAST_GATE;
+            } else {
+                observation = GATE;
+            }
         }
 
         // compute the current state, given the current observation

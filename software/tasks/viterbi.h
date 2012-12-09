@@ -40,8 +40,9 @@ class Viterbi {
     Viterbi(int num_states, int observations);
 
     void set_transition_prob(int state, double * user_transition_prob);
-    void set_emission_prob(int observation, double * updated_emission_prob);
+    void set_emission_prob(int observation, double * user_emission_prob);
 
+    bool check_emission_prob();
     int optimal_state(int observation); // compute the optimal state and return it
   private:
     int num_hidden_states, num_observations;
