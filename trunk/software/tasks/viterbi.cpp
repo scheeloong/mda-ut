@@ -18,7 +18,7 @@ double ln(double x)
   return log(x);
 }
 
-Viterbi::Viterbi(int num_states, int observations) : num_hidden_states(num_states), num_observations(observations), prev_state(0)
+Viterbi::Viterbi(int num_states, int observations) : num_hidden_states(num_states), num_observations(observations), end_state(0)
 {
   // initialize state probabilities, assuming we start in state 0 with probability 1 => log(1) = 0
   // initialize other state to probability 0 => log(0+) = -infinity
@@ -46,10 +46,22 @@ Viterbi::Viterbi(int num_states, int observations) : num_hidden_states(num_state
       emission_data[i].push_back(0);
     }
   }
+
+  // initialize traceback
+  for (int i = 0; i < num_states; i++) {
+    tracebacks.push_back(vector<unsigned>());
+  }
 }
 
 Viterbi::~Viterbi()
 {
+  // follow traceback for transition results
+  for (int i = tracebacks[0].size() - 1; i >= 0; i--) {
+    int prev_state = tracebacks[end_state][i];
+    transition_data[prev_state][end_state]++;
+    end_state = prev_state;
+  }
+
   // print out the collected data
   cout << "Viterbi\n=======\nTransition results\n\n";
   for (int i = 0; i < num_hidden_states; i++) {
@@ -114,13 +126,16 @@ int Viterbi::optimal_state(int observation)
   for (int i = 0; i < num_hidden_states; i++) {
     // Add the best transition from a previous state to the emission probability
     double max_trans_prob = prev_state_prob[0] + transition_prob[0][i];
+    int max_prev_state = 0;
     for (int j = 1; j < num_hidden_states; j++) {
       double trans_prob = prev_state_prob[j] + transition_prob[j][i];
       if (trans_prob > max_trans_prob) {
         max_trans_prob = trans_prob;
+        max_prev_state = j;
       }
     }
     state_prob[i] = max_trans_prob + emission_prob[observation][i];
+    tracebacks[i].push_back(max_prev_state);
 
     // Compute the maximum current state
     if (i == 0) {
@@ -132,9 +147,8 @@ int Viterbi::optimal_state(int observation)
   }
 
   // Update data for transitions and emissions
-  transition_data[prev_state][state]++;
   emission_data[observation][state]++;
-  prev_state = state;
+  end_state = state;
 
   return state;
 }

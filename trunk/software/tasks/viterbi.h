@@ -43,12 +43,13 @@ class Viterbi {
     bool check_emission_prob();
     int optimal_state(int observation); // compute the optimal state and return it
   private:
-    int num_hidden_states, num_observations, prev_state;
+    int num_hidden_states, num_observations, end_state;
     vector<double> state_prob;
     vector<vector<double> > transition_prob;
     vector<vector<double> > emission_prob;
 
     // data collection that can be used for learning
+    vector<vector<unsigned> > tracebacks;
     vector<vector<unsigned> > transition_data;
     vector<vector<unsigned> > emission_data;
 };
