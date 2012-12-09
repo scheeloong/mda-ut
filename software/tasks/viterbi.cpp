@@ -2,9 +2,12 @@
 
 #include <assert.h>
 #include <math.h>
-#include <stdio.h>
+#include <iostream>
 
-#define DEBUG_VITERBI 1
+using namespace std;
+
+// define a large number as infinity since we're working in the log-domain to combat numerical underflow
+#define INF 1000000000.
 
 // return -infinity if passed in 0
 double ln(double x)
@@ -15,7 +18,7 @@ double ln(double x)
   return log(x);
 }
 
-Viterbi::Viterbi(int num_states, int observations) : num_hidden_states(num_states), num_observations(observations)
+Viterbi::Viterbi(int num_states, int observations) : num_hidden_states(num_states), num_observations(observations), prev_state(0)
 {
   // initialize state probabilities, assuming we start in state 0 with probability 1 => log(1) = 0
   // initialize other state to probability 0 => log(0+) = -infinity
@@ -27,6 +30,41 @@ Viterbi::Viterbi(int num_states, int observations) : num_hidden_states(num_state
   // initialize emission_prob vector
   for (int i = 0; i < num_observations; i++) {
     emission_prob.push_back(vector<double>());
+  }
+
+  // initialize data counts to 0
+  for (int i = 0; i < num_states; i++) {
+    transition_data.push_back(vector<unsigned>());
+    for (int j = 0; j < num_states; j++) {
+      transition_data[i].push_back(0);
+    }
+  }
+
+  for (int i = 0; i < num_observations; i++) {
+    emission_data.push_back(vector<unsigned>());
+    for (int j = 0; j < num_states; j++) {
+      emission_data[i].push_back(0);
+    }
+  }
+}
+
+Viterbi::~Viterbi()
+{
+  // print out the collected data
+  cout << "Viterbi\n=======\nTransition results\n\n";
+  for (int i = 0; i < num_hidden_states; i++) {
+    for (int j = 0; j < num_hidden_states; j++) {
+      cout << transition_data[i][j] << ' ';
+    }
+    cout << '\n';
+  }
+
+  cout << "\nEmission results\n\n";
+  for (int i = 0; i < num_observations; i++) {
+    for (int j = 0; j < num_hidden_states; j++) {
+      cout << emission_data[i][j] << ' ';
+    }
+    cout << '\n';
   }
 }
 
@@ -84,10 +122,6 @@ int Viterbi::optimal_state(int observation)
     }
     state_prob[i] = max_trans_prob + emission_prob[observation][i];
 
-#ifdef DEBUG_VITERBI
-    printf("%lf ", state_prob[i]);
-#endif
-
     // Compute the maximum current state
     if (i == 0) {
       max_state_prob = state_prob[i];
@@ -97,9 +131,10 @@ int Viterbi::optimal_state(int observation)
     }
   }
 
-#ifdef DEBUG_VITERBI
-  puts("");
-#endif
+  // Update data for transitions and emissions
+  transition_data[prev_state][state]++;
+  emission_data[observation][state]++;
+  prev_state = state;
 
   return state;
 }
