@@ -4,6 +4,8 @@
 #include <math.h>
 #include <stdio.h>
 
+#define DEBUG_VITERBI 1
+
 // return -infinity if passed in 0
 double ln(double x)
 {
@@ -13,7 +15,7 @@ double ln(double x)
   return log(x);
 }
 
-Viterbi::Viterbi(int num_states) : num_hidden_states(num_states)
+Viterbi::Viterbi(int num_states, int observations) : num_hidden_states(num_states), num_observations(observations)
 {
   // initialize state probabilities, assuming we start in state 0 with probability 1 => log(1) = 0
   // initialize other state to probability 0 => log(0+) = -infinity
@@ -23,8 +25,8 @@ Viterbi::Viterbi(int num_states) : num_hidden_states(num_states)
   }
 
   // initialize emission_prob vector
-  for (int i = 0; i < num_states; i++) {
-    emission_prob.push_back(-INF);
+  for (int i = 0; i < num_observations; i++) {
+    emission_prob.push_back(vector<double>());
   }
 }
 
@@ -42,14 +44,14 @@ void Viterbi::set_transition_prob(int state, double * user_transition_prob)
   assert(fabs(1 - total_prob) < 0.01);
 }
 
-void Viterbi::update_emission_prob(double* updated_emission_prob)
+void Viterbi::set_emission_prob(int observation, double* updated_emission_prob)
 {
   for (int i = 0; i < num_hidden_states; i++) {
-    emission_prob[i] = ln(updated_emission_prob[i]);
+    emission_prob[observation].push_back(ln(updated_emission_prob[i]));
   }
 }
 
-int Viterbi::optimal_state()
+int Viterbi::optimal_state(int observation)
 {
   vector<double> prev_state_prob = state_prob;
   int state = 0;
@@ -64,8 +66,11 @@ int Viterbi::optimal_state()
         max_trans_prob = trans_prob;
       }
     }
-    state_prob[i] = max_trans_prob + emission_prob[i];
+    state_prob[i] = max_trans_prob + emission_prob[observation][i];
+
+#ifdef DEBUG_VITERBI
     printf("%lf ", state_prob[i]);
+#endif
 
     // Compute the maximum current state
     if (i == 0) {
@@ -76,7 +81,9 @@ int Viterbi::optimal_state()
     }
   }
 
+#ifdef DEBUG_VITERBI
   puts("");
+#endif
 
   return state;
 }

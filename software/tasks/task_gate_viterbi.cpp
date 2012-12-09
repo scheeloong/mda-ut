@@ -12,10 +12,17 @@ enum HIDDEN_STATES {
   NUM_STATES
 };
 
+// TODO: add more observation types
+enum OBSERVATIONS {
+  NONE = 0,
+  PATH,
+  NUM_OBSERVATIONS
+};
+
 MDA_TASK_GATE_VITERBI:: MDA_TASK_GATE_VITERBI (AttitudeInput* a, ImageInput* i, ActuatorOutput* o) :
     MDA_TASK_BASE (a, i, o)
 {
-  v = new Viterbi(NUM_STATES);
+  v = new Viterbi(NUM_STATES, NUM_OBSERVATIONS);
 
   // Assign state transition probabilities (these can be tuned!)
   //                                START SEEN_GATE DONE_GATE SUCCEED FAIL_TO_START FAIL_TO_COMPLETE
@@ -32,6 +39,14 @@ MDA_TASK_GATE_VITERBI:: MDA_TASK_GATE_VITERBI (AttitudeInput* a, ImageInput* i, 
   v->set_transition_prob(SUCCEED, succeed_trans);
   v->set_transition_prob(FAIL_TO_START, fail_to_start_trans);
   v->set_transition_prob(FAIL_TO_COMPLETE, fail_to_complete_trans);
+
+  // Assign emission probabilities (these can also be tuned!)
+  //                                START SEEN_GATE DONE_GATE SUCCEED FAIL_TO_START FAIL_TO_COMPLETE
+  double none_emission[] =          {0.20,     0.20,     0.20,   0.20,         0.20,            0.20};
+  double path_emission[] =          {0.35,     0.20,     0.00,   0.80,         0.00,            0.00};
+
+  v->set_emission_prob(NONE, none_emission);
+  v->set_emission_prob(PATH, path_emission);
 }
 
 MDA_TASK_GATE_VITERBI:: ~MDA_TASK_GATE_VITERBI ()
@@ -60,30 +75,21 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE_VITERBI:: run_task() {
         MDA_VISION_RETURN_CODE gate_vcode = gate_vision.filter(frame);
         MDA_VISION_RETURN_CODE path_vcode = path_vision.filter(down_frame);
 
-        // TODO: fill in more emission probabilities!
-        // Assign emission probabilities (these can also be tuned!)
-        //                                START SEEN_GATE DONE_GATE SUCCEED FAIL_TO_START FAIL_TO_COMPLETE
-        double default_emission[] =       {0.20,     0.20,     0.20,   0.20,         0.20,            0.20};
-        double path_found_emission[] =    {0.35,     0.20,     0.00,   0.80,         0.00,            0.00};
-
+        int observation = NONE;
         if (path_vcode == ONE_SEGMENT || path_vcode == FULL_DETECT || path_vcode == UNKNOWN_TARGET) {
-            v->update_emission_prob(path_found_emission);
-        } else {
-            v->update_emission_prob(default_emission);
+            observation = PATH;
         }
 
-        // update emission probabilities and compute the current state
-        int state = v->optimal_state();
+        // compute the current state, given the current observation
+        int state = v->optimal_state(observation);
 
         switch(state) {
             case START:
+            case DONE_GATE:
                 actuator_output->set_attitude_change(FORWARD);
                 break;
             case SEEN_GATE:
                 // complicated control code, done after switch statement
-                break;
-            case DONE_GATE:
-                actuator_output->set_attitude_change(FORWARD);
                 break;
             case SUCCEED:
                 done_task = true;
@@ -106,10 +112,10 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE_VITERBI:: run_task() {
             else if (gate_vcode == ONE_SEGMENT) {
                 int ang_x = gate_vision.get_angular_x();
 
-                actuator_output->set_attitude_change(RIGHT, ang_x);
-
                 if (fabs(ang_x) < 5.0) {
                     actuator_output->set_attitude_change(FORWARD);
+                } else {
+                    actuator_output->set_attitude_change(RIGHT, ang_x);
                 }
             } 
             else if (gate_vcode == FULL_DETECT) {
@@ -123,10 +129,10 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE_VITERBI:: run_task() {
 
                 int ang_x = gate_vision.get_angular_x();
 
-                actuator_output->set_attitude_change(RIGHT, ang_x);
-
                 if (fabs(ang_x) < 5.0) {
                     actuator_output->set_attitude_change(FORWARD);
+                } else {
+                    actuator_output->set_attitude_change(RIGHT, ang_x);
                 }
             }
         }
