@@ -37,17 +37,17 @@ using namespace std;
 class Viterbi {
   public:
     // Initialize state probabilities, given the number of hidden states
-    Viterbi(int num_states);
+    Viterbi(int num_states, int observations);
 
     void set_transition_prob(int state, double * user_transition_prob);
-    void update_emission_prob(double * updated_emission_prob);
+    void set_emission_prob(int observation, double * updated_emission_prob);
 
-    int optimal_state(); // compute the optimal state and return it
+    int optimal_state(int observation); // compute the optimal state and return it
   private:
-    int num_hidden_states;
+    int num_hidden_states, num_observations;
     vector<double> state_prob;
     vector<vector<double> > transition_prob;
-    vector<double> emission_prob;
+    vector<vector<double> > emission_prob;
 };
 
 #endif
