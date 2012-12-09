@@ -30,7 +30,7 @@ MDA_TASK_GATE_VITERBI:: MDA_TASK_GATE_VITERBI (AttitudeInput* a, ImageInput* i, 
   // Assign state transition probabilities (these can be tuned!)
   //                                START SEEN_GATE DONE_GATE SUCCEED FAIL_TO_START FAIL_TO_COMPLETE
   double start_trans[] =            {0.62,     0.35,     0.00,   0.01,         0.02,            0.00};
-  double seen_gate_trans[] =        {0.05,     0.45,     0.30,   0.18,         0.00,            0.02};
+  double seen_gate_trans[] =        {0.00,     0.50,     0.30,   0.18,         0.00,            0.02};
   double done_gate_trans[] =        {0.00,     0.02,     0.65,   0.32,         0.00,            0.01};
   double succeed_trans[] =          {0.00,     0.00,     0.00,   1.00,         0.00,            0.00};
   double fail_to_start_trans[] =    {0.00,     0.00,     0.00,   0.00,         1.00,            0.00};
@@ -45,9 +45,9 @@ MDA_TASK_GATE_VITERBI:: MDA_TASK_GATE_VITERBI (AttitudeInput* a, ImageInput* i, 
 
   // Assign emission probabilities (these can also be tuned!)
   //                                START SEEN_GATE DONE_GATE SUCCEED FAIL_TO_START FAIL_TO_COMPLETE
-  double none_emission[] =          {0.95,     0.10,     0.20,   0.00,         0.62,            0.30};
-  double gate_emission[] =          {0.00,     0.88,     0.20,   0.00,         0.00,            0.15};
-  double past_gate_emission[] =     {0.00,     0.00,     0.55,   0.00,         0.00,            0.15};
+  double none_emission[] =          {0.95,     0.10,     0.30,   0.00,         0.62,            0.30};
+  double gate_emission[] =          {0.00,     0.88,     0.30,   0.00,         0.00,            0.15};
+  double past_gate_emission[] =     {0.00,     0.00,     0.35,   0.00,         0.00,            0.15};
   double path_emission[] =          {0.05,     0.02,     0.05,   1.00,         0.00,            0.00};
   // To ensure the sums add to 1 in termination states
   double unused_emission[] =        {0.00,     0.00,     0.00,   0.00,         0.38,            0.40};
