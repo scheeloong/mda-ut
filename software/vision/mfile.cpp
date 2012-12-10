@@ -78,7 +78,8 @@ void read_mv_setting (const char filename[], const char setting_name[], TYPE &da
     fprintf (stderr, "**** ERROR: read_mv_setting: setting %s not found in file %s\n", setting_name, settings_file.c_str());
     exit (1);
 }
-/* these lines declare the use of int,unsigned,float of read_mv_setting */
+/* these lines declare the use of bool,int,unsigned,float of read_mv_setting */
+template void read_mv_setting<bool>(const char filename[], const char setting_name[], bool &data);
 template void read_mv_setting<int>(const char filename[], const char setting_name[], int &data);
 template void read_mv_setting<unsigned>(const char filename[], const char setting_name[], unsigned &data);
 template void read_mv_setting<float>(const char filename[], const char setting_name[], float &data);

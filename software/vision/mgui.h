@@ -68,10 +68,10 @@ public:
     mvVideoWriter (const char* filename, unsigned framerate = 30);
     ~mvVideoWriter ();
 
-    void writeFrame (IplImage* frame) {
-          bin_writeFrame.start();
+    void writeFrame (const IplImage* frame) {
+        bin_writeFrame.start();
         cvWriteFrame (_writer, frame);
-          bin_writeFrame.stop();
+        bin_writeFrame.stop();
     }
 };
 

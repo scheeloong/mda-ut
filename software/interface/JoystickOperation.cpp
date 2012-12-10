@@ -335,7 +335,10 @@ void JoystickOperation::process_image()
     }
   } else {
     // needs to be called periodically for highgui event-processing
-    cvWaitKey(3);
+    char ch = cvWaitKey(3);
+    if (ch) {
+      CharacterStreamSingleton::get_instance().write_char(ch);
+    }
   }
 }
 
