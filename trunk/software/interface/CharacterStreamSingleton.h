@@ -1,3 +1,11 @@
+/* CharacterStreamSingleton
+
+  This class implements a thread-safe multiple-writer and single-reader character stream to pass data. The data passed is meant to
+  be from stdin. The multiple writers generally grab stdin from a timer that uses select on stdin. The writer doesn't process the input
+  and relays it through this stream to the single-reader. To ensure thread-safety and functionality between threads, this class is
+  implemented with a pipe. The write interface is locked to ensure thread-safety, but no lock exists when reading.
+*/
+
 #ifndef CHARACTERSTREAM_SINGLETON_H
 #define CHARACTERSTREAM_SINGLETON_H
 

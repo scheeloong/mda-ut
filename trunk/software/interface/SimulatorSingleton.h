@@ -1,3 +1,11 @@
+/* SimulatorSingleton
+
+  This class implements a singleton as an interface to the simulator. The simulator should only have one instance, but can
+  be accessed by different objects, hence the singleton. The actual simulator is run in a different thread, using shared global
+  variables to pass data. The Simulator can return a set of images, attitude information and can be controlled by setting a target
+  orientation.
+*/
+
 #ifndef SIMULATOR_SINGLETON_H
 #define SIMULATOR_SINGLETON_H
 

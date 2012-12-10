@@ -2,6 +2,12 @@
 
    This interface represents the eyes of the submarine. It can return a forward image
    or a below image.
+
+   Subclasses must implement const IplImage* get_internal_image(ImageDirection), which returns either a forward or a below image.
+   The base class implements some utility functions that does not depend on how get_internal_image() is implemented:
+     - Display the raw image stream when accessed (may be suppressed by the subclass)
+     - Write image stream to two video files
+     - Take a 'screenshot', stored to two images (see dump_images)
 */
 
 #ifndef IMAGE_INPUT_H
