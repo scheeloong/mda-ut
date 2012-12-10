@@ -70,7 +70,14 @@ public:
 
     void writeFrame (const IplImage* frame) {
         bin_writeFrame.start();
+      if (frame->origin) {
+        IplImage *flipped = cvCreateImage (cvSize(frame->width,frame->height), IPL_DEPTH_8U, 3);
+        cvConvertImage(frame, flipped, CV_CVTIMG_FLIP);
+        cvWriteFrame (_writer, flipped);
+        cvReleaseImage(&flipped);
+      } else {
         cvWriteFrame (_writer, frame);
+      }
         bin_writeFrame.stop();
     }
 };
