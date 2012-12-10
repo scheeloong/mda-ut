@@ -20,17 +20,18 @@ enum ImageDirection {
 /* Image Input interface */
 class ImageInput {
   public:
-    ImageInput(const char *settings_file, bool _can_display_images = true) : writer_fwd(NULL), writer_dwn(NULL), window(NULL), can_display_images(_can_display_images)
+    ImageInput(const char *settings_file, bool _can_display_images = true) : writer_fwd(NULL), writer_dwn(NULL), window_fwd(NULL), window_dwn(NULL), can_display_images(_can_display_images)
     {
       if (!settings_file) {
         return;
       }
 
       if (can_display_images) {
-        bool continuous_display;
-        read_mv_setting(settings_file, "IMAGE_CONTINUOUS_DISPLAY", continuous_display);
-        if (continuous_display) {
-          window = new mvWindow("Image Stream");
+        bool show_raw;
+        read_mv_setting(settings_file, "IMAGE_SHOW_RAW", show_raw);
+        if (show_raw) {
+          window_fwd = new mvWindow("Forward Cam");
+          window_dwn = new mvWindow("Down Cam");
         }
       }
 
@@ -50,10 +51,14 @@ class ImageInput {
     {
       delete writer_fwd;
       delete writer_dwn;
-      delete window;
+      delete window_fwd;
+      delete window_dwn;
     }
 
+    // To be implemented by subclasses
     virtual const IplImage* get_internal_image(ImageDirection dir = FWD_IMG) = 0;
+
+    bool can_display() { return can_display_images; }
     const IplImage* get_image(ImageDirection dir = FWD_IMG)
     {
       const IplImage *frame = get_internal_image(dir);
@@ -61,19 +66,27 @@ class ImageInput {
         return frame;
       }
 
-      if (window) {
-        window->showImage(frame);
+      // show, write image if configured to
+      if (dir == FWD_IMG) {
+        if (window_fwd) {
+          window_fwd->showImage(frame);
+        }
+        if (writer_fwd) {
+          writer_fwd->writeFrame(frame);
+        }
+      } else if (dir == DWN_IMG) {
+        if (window_dwn) {
+          window_dwn->showImage(frame);
+        }
+        if (writer_dwn) {
+          writer_dwn->writeFrame(frame);
+        }
       }
-      if (writer_fwd && dir == FWD_IMG) {
-        writer_fwd->writeFrame(frame);
-      }
-      if (writer_dwn && dir == DWN_IMG) {
-        writer_dwn->writeFrame(frame);
-      }
+
       return frame;
     }
 
-    virtual void dump_images()
+    void dump_images()
     {
       static int count = 0;
 
@@ -96,7 +109,7 @@ class ImageInput {
 
   protected:
     mvVideoWriter *writer_fwd, *writer_dwn;
-    mvWindow *window;
+    mvWindow *window_fwd, *window_dwn;
     bool can_display_images;
 };
 

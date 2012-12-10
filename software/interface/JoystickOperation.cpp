@@ -20,6 +20,7 @@ void JoystickOperation::display_start_message()
          "Commands:\n"
          "  q    - exit simulator\n"
          "  z    - save input image screenshots as image_[fwd/dwn].jpg\n"
+         "  y    - toggle display of raw input image stream\n"
          "\n"
          "  wasd - use controller to move forward/reverse/left/right\n"
          "  rf   - use controller to move up/down\n"
@@ -74,6 +75,13 @@ void JoystickOperation::work()
       case 'z':
          dump_images();
          break;
+      case 'y':
+         if (image_input->can_display()) {
+           show_raw_images = !show_raw_images;
+         } else {
+           message_hold("Image stream should already be displayed");
+         }
+         break;
       case 'i':
          actuator_output->special_cmd(SIM_MOVE_FWD);
          break;
@@ -118,7 +126,7 @@ void JoystickOperation::work()
          break;
       case 'm':
          endwin();
-           // Scope mission so that it is destructed before display_start_message
+         // Scope mission so that it is destructed before display_start_message
          {
            Mission m(attitude_input, image_input, actuator_output);
            m.work();
@@ -333,8 +341,16 @@ void JoystickOperation::process_image()
     } else {
       message_hold("Image stream over");
     }
+    if (show_raw_images) {
+      // show the other image by getting it
+      image_input->get_image(use_fwd_img?DWN_IMG:FWD_IMG);
+    }
   } else {
     // needs to be called periodically for highgui event-processing
+    if (show_raw_images) {
+      image_input->get_image(FWD_IMG);
+      image_input->get_image(DWN_IMG);
+    }
     char ch = cvWaitKey(3);
     if (ch) {
       CharacterStreamSingleton::get_instance().write_char(ch);
