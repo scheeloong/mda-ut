@@ -1,6 +1,6 @@
 #include "ImageInput.h"
 
-ImageInputVideo::ImageInputVideo(const char* settings_file)
+ImageInputVideo::ImageInputVideo(const char* settings_file) : ImageInput(settings_file)
 {
     std::string video_fwd, video_dwn;
     read_mv_setting(settings_file, "VIDEO_FWD", video_fwd);
@@ -19,16 +19,13 @@ ImageInputVideo::~ImageInputVideo()
     delete cam_dwn;
 }
 
-const IplImage *ImageInputVideo::get_image(ImageDirection dir)
+const IplImage *ImageInputVideo::get_internal_image(ImageDirection dir)
 {
-    // we need to grab both frames, but only return the relevant one
-    int have_fwd_frame = cam_fwd->grabFrame();
-    int have_dwn_frame = cam_dwn->grabFrame();
-
-    if (dir == FWD_IMG && have_fwd_frame) 
-        return cam_fwd->retrieveFrame();
-    else if (have_dwn_frame)
-        return cam_dwn->retrieveFrame();
-
+    if (dir == FWD_IMG) {
+        return cam_fwd ? cam_fwd->getFrameResized() : NULL;
+    }
+    if (dir == DWN_IMG) {
+        return cam_dwn ? cam_dwn->getFrameResized() : NULL;
+    }
     return NULL;
 }
