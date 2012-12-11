@@ -7,8 +7,8 @@ fi
 
 rm -f $3
 
-avconv -i $1 -f image2 in1%d.png
-avconv -i $2 -f image2 in2%d.png
+ffmpeg -i $1 -f image2 in1%d.png
+ffmpeg -i $2 -f image2 in2%d.png
 
 count=1
 
@@ -25,6 +25,6 @@ done
 
 rm -f $OUT
 
-avconv -f image2 -i out%d.png -vcodec copy -r 24 $3
+ffmpeg -f image2 -i out%d.png -vcodec copy -r 24 $3
 
 rm -f *.png
