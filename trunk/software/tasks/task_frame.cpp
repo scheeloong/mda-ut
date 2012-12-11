@@ -19,11 +19,13 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
     bool done_frame = false;
 
     while (1) {
-        const IplImage* frame = image_input->get_image(FWD_IMG);
+        const IplImage* frame = image_input->get_image();
         if (!frame) {
             ret_code = TASK_ERROR;
             break;
         }
+        // clear dwn image
+        image_input->get_image(DWN_IMG);
         if(!done_frame){
             MDA_VISION_RETURN_CODE vision_code = frame_vision.filter(frame);
             if (vision_code == FATAL_ERROR) {

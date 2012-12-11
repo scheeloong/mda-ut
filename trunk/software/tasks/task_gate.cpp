@@ -21,11 +21,14 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
     while (1) {
-        const IplImage* frame = image_input->get_image(FWD_IMG);
+        const IplImage* frame = image_input->get_image();
         if (!frame) {
             ret_code = TASK_ERROR;
             break;
         }
+
+        // clear dwn image
+        const IplImage* down_frame = image_input->get_image(DWN_IMG);
 
         if (!done_gate) {
             MDA_VISION_RETURN_CODE vision_code = gate_vision.filter(frame);
@@ -67,7 +70,6 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
         }
         else {
             // if done gate, we look for path
-            const IplImage* down_frame = image_input->get_image(DWN_IMG);
             if (!down_frame) {
                 ret_code = TASK_ERROR;
                 break;
