@@ -47,8 +47,16 @@ void cvQueryFrameGL (IplImage* img) {
 // this function reads the OpenGL buffer and puts the data into an iplimage.
 // Plz allocate the image before calling
 // MAKE SURE the ORIGIN parameter in img is set to 1 !!!
-    // read the GL buffer. This is a lot easier than that guy on the internet said
+
+// Note: MAC's openGL doesn't seem to reverse the vertical axis, but Linux's does
+#ifndef MAC
     glReadPixels(0,0, img->width-1,img->height-1, GL_BGR,GL_UNSIGNED_BYTE, img->imageData);
+#else
+    for (int i = 0; i < img->height; i++) {
+        int row = img->height - 1 - i;
+        glReadPixels(0,i, img->width-1,1, GL_BGR,GL_UNSIGNED_BYTE, img->imageData+row*3*img->width);
+    }
+#endif
 }
 
 void cv_display () {
@@ -147,9 +155,9 @@ void cv_reshape(int w, int h)
    if (true) {
        cvReleaseImage (&cv_img_fwd);
        cv_img_fwd = cvCreateImage (cvSize(w,h), IPL_DEPTH_8U, 3);
-       cv_img_fwd->origin=1;
+       cv_img_fwd->origin = 1;
        cvReleaseImage (&cv_img_down);
        cv_img_down = cvCreateImage (cvSize(w,h), IPL_DEPTH_8U, 3);
-       cv_img_down->origin=1;
+       cv_img_down->origin = 1;
     }
 }
