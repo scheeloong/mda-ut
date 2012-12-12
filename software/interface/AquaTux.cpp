@@ -56,10 +56,8 @@ AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
   }
 
   // Operation, ie overall algorithm
-  if (operation == "JOYSTICK") {
-    m_operation = new JoystickOperation(m_attitude_input, m_image_input, m_actuator_output);
-  } else if (operation == "COMMAND_LINE") {
-    m_operation = new CommandLineOperation(m_attitude_input, m_image_input, m_actuator_output);
+  if (operation == "MANUAL") {
+    m_operation = new ManualOperation(m_attitude_input, m_image_input, m_actuator_output);
   } else if (operation == "MISSION") {
     m_operation = new Mission(m_attitude_input, m_image_input, m_actuator_output);
   } else {

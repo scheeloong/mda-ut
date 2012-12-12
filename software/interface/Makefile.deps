@@ -18,14 +18,6 @@ AttitudeInputSimulator.o: AttitudeInputSimulator.cpp AttitudeInput.h \
  ../vision/mgui.h ../vision/profile_bin.h
 AttitudeInputSubmarine.o: AttitudeInputSubmarine.cpp AttitudeInput.h \
  SubmarineSingleton.h ../scripts/scripts.h ../ui/fpga_ui.h
-CommandLineOperation.o: CommandLineOperation.cpp Operation.h \
- AttitudeInput.h ImageInput.h ../vision/mgui.h ../vision/profile_bin.h \
- ActuatorOutput.h CharacterStreamSingleton.h ../tasks/mda_vision.h \
- ../vision/mv.h ../vision/mgui.h ../vision/mvLines.h \
- ../vision/mvCircles.h ../tasks/mda_tasks.h ../tasks/mda_vision.h \
- ../tasks/viterbi.h ../interface/ActuatorOutput.h \
- ../interface/AttitudeInput.h ../interface/ImageInput.h \
- ../interface/CharacterStreamSingleton.h
 ImageInputSimulator.o: ImageInputSimulator.cpp ImageInput.h \
  ../vision/mgui.h ../vision/profile_bin.h SimulatorSingleton.h \
  ../sim/physical_model.h ../sim/types.h
@@ -33,7 +25,14 @@ ImageInputVideo.o: ImageInputVideo.cpp ImageInput.h ../vision/mgui.h \
  ../vision/profile_bin.h
 ImageInputWebcam.o: ImageInputWebcam.cpp ImageInput.h ../vision/mgui.h \
  ../vision/profile_bin.h
-JoystickOperation.o: JoystickOperation.cpp ../tasks/Mission.h \
+main.o: main.cpp AquaTux.h AttitudeInput.h ImageInput.h ../vision/mgui.h \
+ ../vision/profile_bin.h Operation.h ActuatorOutput.h \
+ CharacterStreamSingleton.h ../tasks/mda_vision.h ../vision/mv.h \
+ ../vision/mgui.h ../vision/mvLines.h ../vision/mvCircles.h \
+ ../tasks/mda_tasks.h ../tasks/mda_vision.h ../tasks/viterbi.h \
+ ../interface/ActuatorOutput.h ../interface/AttitudeInput.h \
+ ../interface/ImageInput.h ../interface/CharacterStreamSingleton.h
+ManualOperation.o: ManualOperation.cpp ../tasks/Mission.h \
  ../tasks/../interface/Operation.h ../tasks/../interface/AttitudeInput.h \
  ../tasks/../interface/ImageInput.h ../vision/mgui.h \
  ../vision/profile_bin.h ../tasks/../interface/ActuatorOutput.h \
@@ -44,13 +43,6 @@ JoystickOperation.o: JoystickOperation.cpp ../tasks/Mission.h \
  ../interface/AttitudeInput.h ../interface/ImageInput.h \
  ../interface/CharacterStreamSingleton.h Operation.h \
  CharacterStreamSingleton.h
-main.o: main.cpp AquaTux.h AttitudeInput.h ImageInput.h ../vision/mgui.h \
- ../vision/profile_bin.h Operation.h ActuatorOutput.h \
- CharacterStreamSingleton.h ../tasks/mda_vision.h ../vision/mv.h \
- ../vision/mgui.h ../vision/mvLines.h ../vision/mvCircles.h \
- ../tasks/mda_tasks.h ../tasks/mda_vision.h ../tasks/viterbi.h \
- ../interface/ActuatorOutput.h ../interface/AttitudeInput.h \
- ../interface/ImageInput.h ../interface/CharacterStreamSingleton.h
 OperationNull.o: OperationNull.cpp Operation.h AttitudeInput.h \
  ImageInput.h ../vision/mgui.h ../vision/profile_bin.h ActuatorOutput.h \
  CharacterStreamSingleton.h ../tasks/mda_vision.h ../vision/mv.h \

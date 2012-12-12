@@ -5,7 +5,7 @@
 #include "Operation.h"
 #include "CharacterStreamSingleton.h"
 
-void JoystickOperation::display_start_message()
+void ManualOperation::display_start_message()
 {
   // clear regular I/O
   fflush(stdout);
@@ -47,7 +47,7 @@ void JoystickOperation::display_start_message()
 
 #define REFRESH_RATE_IN_HZ 60
 
-void JoystickOperation::work()
+void ManualOperation::work()
 {
   display_start_message();
 
@@ -327,7 +327,7 @@ void JoystickOperation::work()
   endwin();
 }
 
-void JoystickOperation::process_image()
+void ManualOperation::process_image()
 {
   if (vision_module) {
     const IplImage* frame = image_input->get_image(use_fwd_img?FWD_IMG:DWN_IMG);
@@ -358,7 +358,7 @@ void JoystickOperation::process_image()
   }
 }
 
-void JoystickOperation::message(const char *msg)
+void ManualOperation::message(const char *msg)
 {
   if (mode == VISION) {
     if (strlen(msg) == 0) {
@@ -382,7 +382,7 @@ void JoystickOperation::message(const char *msg)
   fflush(stdout);
 }
 
-void JoystickOperation::message_hold(const char *msg, int delay_in_s)
+void ManualOperation::message_hold(const char *msg, int delay_in_s)
 {
   if (mode == VISION) {
     message(msg);
@@ -392,7 +392,7 @@ void JoystickOperation::message_hold(const char *msg, int delay_in_s)
   }
 }
 
-void JoystickOperation::dump_images()
+void ManualOperation::dump_images()
 {
   message_hold("Saved images");
   image_input->dump_images();

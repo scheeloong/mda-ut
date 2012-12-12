@@ -47,12 +47,12 @@ class OperationNull : public Operation {
     virtual void work();
 };
 
-/* Joystick implementation */
-class JoystickOperation: public Operation {
+/* Manual implementation */
+class ManualOperation: public Operation {
   public:
-    JoystickOperation(AttitudeInput *a, ImageInput *i, ActuatorOutput *o) : Operation(a, i, o),
+    ManualOperation(AttitudeInput *a, ImageInput *i, ActuatorOutput *o) : Operation(a, i, o),
       mode(NORMAL), vision_module(NULL), use_fwd_img(true), show_raw_images(false), count(0) {}
-    virtual ~JoystickOperation() { delete vision_module; }
+    virtual ~ManualOperation() { delete vision_module; }
 
     virtual void work();
   private:
@@ -62,25 +62,16 @@ class JoystickOperation: public Operation {
     void display_start_message();
     void process_image();
 
-    enum MDA_JOYSTICK_MODE {
+    enum MDA_MANUAL_MODE {
       NORMAL,
       TASK,
       VISION
     };
 
-    MDA_JOYSTICK_MODE mode;
+    MDA_MANUAL_MODE mode;
     MDA_VISION_MODULE_BASE* vision_module;
     bool use_fwd_img, show_raw_images;
     int count;
-};
-
-/* Command Line implementation */
-class CommandLineOperation: public Operation {
-  public:
-    CommandLineOperation(AttitudeInput *a, ImageInput *i, ActuatorOutput *o) : Operation(a, i, o) {}
-    virtual ~CommandLineOperation() {}
-
-    virtual void work();
 };
 
 #endif
