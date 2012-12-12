@@ -3,7 +3,7 @@
 # Choose type of inputs, operation and outputs
 IMAGE_INPUT SIMULATOR
 ATTITUDE_INPUT SIMULATOR
-OPERATION JOYSTICK
+OPERATION MANUAL
 ACTUATOR_OUTPUT SIMULATOR
 
 # IMAGE_INPUT options
@@ -37,8 +37,7 @@ DWN_VIDEO_FILE sim_dwn.avi
 # ACTUATOR_INPUT SUBMARINE
 
 ## Algorithm to process input data and output control movement
-# OPERATION JOYSTICK     # Manual control with single-button pressing
-# OPERATION COMMAND_LINE # Fine-grained manual control with string commands
-# OPERATION MISSION      # Autonomous control
+# OPERATION MANUAL  # Manual control with single-button pressing
+# OPERATION MISSION # Autonomous control
 
 ## Note: all options also have a NULL option which does nothing
