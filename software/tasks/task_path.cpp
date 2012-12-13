@@ -52,7 +52,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                 if (distance < frame->height/2){
                     actuator_output->set_attitude_absolute(DEPTH, 585);
 
-                    if(attitude_input->depth() > 570){
+                    if(attitude_input->depth() > 570 && attitude_input->depth() < 600){
                         actuator_output->set_attitude_change(LEFT,pos_ang);
                         if(abs(pos_ang) < 5){
                             done_path = true;
