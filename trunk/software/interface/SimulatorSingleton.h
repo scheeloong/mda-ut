@@ -20,7 +20,10 @@
 class SimulatorSingleton {
   public:
     SimulatorSingleton() : instances(0), created(false), img_fwd(NULL), img_dwn(NULL),
-        img_copy_start(false), img_copy_done(false) {}
+        img_copy_start(false), img_copy_done(false)
+    {
+        pthread_barrier_init(&barrier, NULL, 2);
+    }
     static SimulatorSingleton& get_instance()
     {
       static SimulatorSingleton instance;
@@ -62,6 +65,7 @@ class SimulatorSingleton {
     int instances;
     bool created;
     pthread_t sim_thread;
+    pthread_barrier_t barrier;
     IplImage *img_fwd, *img_dwn;
     volatile bool img_copy_start, img_copy_done;
     volatile ImageDirection img_dir;

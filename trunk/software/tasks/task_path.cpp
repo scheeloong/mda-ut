@@ -75,7 +75,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
         // Ensure debug messages are printed
         fflush(stdout);
         // Exit if instructed to
-        char c = cvWaitKey(50);
+        char c = cvWaitKey(3);
         if (c != -1) {
             CharacterStreamSingleton::get_instance().write_char(c);
         }
