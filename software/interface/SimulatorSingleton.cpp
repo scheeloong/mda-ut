@@ -40,6 +40,10 @@ void SimulatorSingleton::create()
 
   // Start simulation (may need to use passed in data)
   pthread_create(&sim_thread, NULL, ::run_sim, NULL);
+
+  // Wait until sim has initialized
+  pthread_barrier_wait(&barrier);
+  pthread_barrier_destroy(&barrier);
 }
 
 void SimulatorSingleton::destroy()
@@ -58,7 +62,7 @@ const IplImage* SimulatorSingleton::get_image(ImageDirection dir)
   img_dir = dir;
   img_copy_start = true;
   img_copy_done = false;
-  glutPostRedisplay();
+  sim_idle();
 
   // Wait until transfer complete
   while(!img_copy_done) {
@@ -191,6 +195,9 @@ void SimulatorSingleton::run_sim()
 
   img_fwd = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
   img_dwn = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
+
+  // Sim has initialized
+  pthread_barrier_wait(&barrier);
 
   glutMainLoop();
 }
