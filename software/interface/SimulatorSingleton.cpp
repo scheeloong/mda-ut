@@ -190,9 +190,7 @@ void SimulatorSingleton::run_sim()
   init_sim();
 
   img_fwd = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
-  img_fwd->origin = 1;
   img_dwn = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
-  img_dwn->origin = 1;
 
   glutMainLoop();
 }
@@ -272,11 +270,9 @@ void SimulatorSingleton::sim_reshape(int w, int h)
   // Also resize the Ipl images
   cvReleaseImage (&img_fwd);
   img_fwd = cvCreateImage (cvSize(w,h), IPL_DEPTH_8U, 3);
-  img_fwd->origin = 1;
 
   cvReleaseImage (&img_dwn);
   img_dwn = cvCreateImage (cvSize(w,h), IPL_DEPTH_8U, 3);
-  img_dwn->origin = 1;
 }
 
 void sim_idle()
