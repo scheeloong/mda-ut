@@ -112,12 +112,6 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
     /// if we encounter any sort of sanity error, we will return only the centroid
     RETURN_CENTROID:
         m_angular_x = RAD_TO_DEG * atan((float)m_pixel_x / m_pixel_y);
-        if (m_pixel_y < 0) {
-            if (m_pixel_x > 0)
-                m_angular_x += 180.0;
-            else 
-                m_angular_x -= 180.0;
-        }
         //m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / _filtered_img->height);
         DEBUG_PRINT ("Path: (%d,%d) (%5.2f,?)\n", m_pixel_x, m_pixel_y, 
             m_angular_x); 
