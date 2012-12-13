@@ -35,9 +35,7 @@ void cv_init () {
     //vision_module = NULL;
     FLAG_USE_IMG_DOWN = false;
     cv_img_fwd = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
-    cv_img_fwd->origin = 1;
     cv_img_down = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
-    cv_img_down->origin = 1;
     
     cvNamedWindow("Downwards Cam",1);
     cvMoveWindow ("Downwards Cam", 380,0);
@@ -49,7 +47,7 @@ void cvQueryFrameGL (IplImage* img) {
 // MAKE SURE the ORIGIN parameter in img is set to 1 !!!
 
 // Note: MAC's openGL doesn't seem to reverse the vertical axis, but Linux's does
-#ifndef MAC
+#ifdef MAC
     glReadPixels(0,0, img->width-1,img->height-1, GL_BGR,GL_UNSIGNED_BYTE, img->imageData);
 #else
     for (int i = 0; i < img->height; i++) {
@@ -155,9 +153,7 @@ void cv_reshape(int w, int h)
    if (true) {
        cvReleaseImage (&cv_img_fwd);
        cv_img_fwd = cvCreateImage (cvSize(w,h), IPL_DEPTH_8U, 3);
-       cv_img_fwd->origin = 1;
        cvReleaseImage (&cv_img_down);
        cv_img_down = cvCreateImage (cvSize(w,h), IPL_DEPTH_8U, 3);
-       cv_img_down->origin = 1;
     }
 }

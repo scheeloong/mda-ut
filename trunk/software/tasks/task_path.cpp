@@ -39,7 +39,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                 if (abs(ang_x) < 5){
                     actuator_output->set_attitude_change(FORWARD);           
                 }else{
-                    actuator_output->set_attitude_change(RIGHT, ang_x);
+                    actuator_output->set_attitude_change(LEFT, ang_x);
                 }
             }
             else if (vision_code == ONE_SEGMENT || vision_code == FULL_DETECT) {
@@ -56,7 +56,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     if(attitude_input->depth() > 570){
                         int pos_ang = path_vision.get_angle();
 
-                        actuator_output->set_attitude_change(RIGHT,pos_ang);
+                        actuator_output->set_attitude_change(LEFT,pos_ang);
                         if(abs(pos_ang) < 5){
                             done_path = true;
                             break;
@@ -66,7 +66,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     if (abs(ang_x) < 5){
                         actuator_output->set_attitude_change(FORWARD);
                     }else{
-                        actuator_output->set_attitude_change(RIGHT, ang_x);
+                        actuator_output->set_attitude_change(LEFT, ang_x);
                     }
                 }
             }
