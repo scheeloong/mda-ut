@@ -4,13 +4,11 @@
 
 AttitudeInputSubmarine::AttitudeInputSubmarine()
 {
-  SubmarineSingleton::get_instance().increment_instances();
-  // no need to register anything with the singleton
+  SubmarineSingleton::get_instance().register_instance();
 }
 
 AttitudeInputSubmarine::~AttitudeInputSubmarine()
 {
-  SubmarineSingleton::get_instance().increment_instances();
 }
 
 // TODO: implement yaw, pitch and roll

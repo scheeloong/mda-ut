@@ -13,21 +13,16 @@
 
 class SubmarineSingleton {
   public:
-    SubmarineSingleton() : instances(0), created(false) {}
+    SubmarineSingleton() : registered(false), created(false) {}
+    ~SubmarineSingleton() { destroy(); }
+
     static SubmarineSingleton& get_instance()
     {
       static SubmarineSingleton instance;
       return instance;
     }
+    void register_instance() { registered = true; }
 
-    void increment_instances() {instances++;}
-    void decrement_instances()
-    {
-      instances--;
-      if (instances == 0) {
-        destroy();
-      }
-    }
     void create();
   private:
     SubmarineSingleton(SubmarineSingleton const&); // Don't implement
@@ -35,8 +30,7 @@ class SubmarineSingleton {
 
     void destroy();
 
-    int instances;
-    bool created;
+    bool registered, created;
 };
 
 #endif
