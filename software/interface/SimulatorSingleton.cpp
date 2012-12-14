@@ -28,10 +28,9 @@ void sim_close_window();
 
 /* Constructor and destructor for sim resource */
 
-SimulatorSingleton::SimulatorSingleton() : instances(0), created(false), img_fwd(NULL), img_dwn(NULL),
+SimulatorSingleton::SimulatorSingleton() : registered(false), created(false), img_fwd(NULL), img_dwn(NULL),
     img_copy_start(false), img_copy_done(false)
 {
-  pthread_barrier_init(&barrier, NULL, 2);
 }
 
 SimulatorSingleton::~SimulatorSingleton()
@@ -41,10 +40,13 @@ SimulatorSingleton::~SimulatorSingleton()
 
 void SimulatorSingleton::create()
 {
-  if (instances == 0) {
+  if (!registered) {
     return;
   }
   created = true;
+
+  // initialize barrier
+  pthread_barrier_init(&barrier, NULL, 2);
 
   // initialize target to the model
   target_model = *const_cast<physical_model *>(&model);

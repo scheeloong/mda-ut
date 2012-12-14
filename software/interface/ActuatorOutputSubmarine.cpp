@@ -4,13 +4,11 @@
 
 ActuatorOutputSubmarine::ActuatorOutputSubmarine()
 {
-  SubmarineSingleton::get_instance().increment_instances();
-  // no need to register anything with the singleton
+  SubmarineSingleton::get_instance().register_instance();
 }
 
 ActuatorOutputSubmarine::~ActuatorOutputSubmarine()
 {
-  SubmarineSingleton::get_instance().decrement_instances();
 }
 
 void ActuatorOutputSubmarine::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir, int delta)

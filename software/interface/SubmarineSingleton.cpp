@@ -5,7 +5,7 @@
 
 void SubmarineSingleton::create()
 {
-  if (instances == 0) {
+  if (!registered) {
     return;
   }
   created = true;

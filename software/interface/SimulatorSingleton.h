@@ -27,14 +27,7 @@ class SimulatorSingleton {
       static SimulatorSingleton instance;
       return instance;
     }
-    void increment_instances() {instances++;}
-    void decrement_instances()
-    {
-      instances--;
-      if (instances == 0) {
-        destroy();
-      }
-    }
+    void register_instance() { registered = true;}
 
     void create();
     void run_sim();
@@ -60,8 +53,7 @@ class SimulatorSingleton {
 
     void destroy();
 
-    int instances;
-    bool created;
+    bool registered, created;
     pthread_t sim_thread;
     pthread_barrier_t barrier;
     IplImage *img_fwd, *img_dwn;

@@ -4,13 +4,11 @@
 
 ActuatorOutputSimulator::ActuatorOutputSimulator()
 {
-  SimulatorSingleton::get_instance().increment_instances();
-  // no need to register anything with the singleton
+  SimulatorSingleton::get_instance().register_instance();
 }
 
 ActuatorOutputSimulator::~ActuatorOutputSimulator()
 {
-  SimulatorSingleton::get_instance().decrement_instances();
 }
 
 void ActuatorOutputSimulator::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir, int delta)

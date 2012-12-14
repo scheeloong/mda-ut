@@ -4,13 +4,11 @@
 
 AttitudeInputSimulator::AttitudeInputSimulator()
 {
-  SimulatorSingleton::get_instance().increment_instances();
-  // no need to register anything with the singleton
+  SimulatorSingleton::get_instance().register_instance();
 }
 
 AttitudeInputSimulator::~AttitudeInputSimulator()
 {
-  SimulatorSingleton::get_instance().decrement_instances();
 }
 
 // yaw, pitch and roll are in degrees
