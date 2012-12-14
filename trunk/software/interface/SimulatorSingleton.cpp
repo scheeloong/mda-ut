@@ -28,6 +28,17 @@ void sim_close_window();
 
 /* Constructor and destructor for sim resource */
 
+SimulatorSingleton::SimulatorSingleton() : instances(0), created(false), img_fwd(NULL), img_dwn(NULL),
+    img_copy_start(false), img_copy_done(false)
+{
+  pthread_barrier_init(&barrier, NULL, 2);
+}
+
+SimulatorSingleton::~SimulatorSingleton()
+{
+  destroy();
+}
+
 void SimulatorSingleton::create()
 {
   if (instances == 0) {
@@ -323,5 +334,5 @@ void SimulatorSingleton::sim_idle()
 
 void sim_close_window()
 {
-  raise(SIGINT);
+  CharacterStreamSingleton::get_instance().write_char('q');
 }
