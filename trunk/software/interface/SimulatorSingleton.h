@@ -27,9 +27,15 @@ class SimulatorSingleton {
       static SimulatorSingleton instance;
       return instance;
     }
-    void register_instance() { registered = true;}
+    void register_instance()
+    {
+      if (registered) {
+        return;
+      }
+      registered = true;
+      create();
+    }
 
-    void create();
     void run_sim();
     void sim_keyboard(unsigned char);
     void sim_display();
@@ -51,6 +57,7 @@ class SimulatorSingleton {
     SimulatorSingleton(SimulatorSingleton const&); // Don't implement
     void operator=(SimulatorSingleton const&);     // Don't implement
 
+    void create();
     void destroy();
 
     bool registered, created;
