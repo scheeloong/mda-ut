@@ -70,10 +70,6 @@ AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
 
 void AquaTux::work()
 {
-  // Initialize singletons if necessary
-  SubmarineSingleton::get_instance().create();
-  SimulatorSingleton::get_instance().create();
-
   // start the control algorithm until mission completes
   m_operation->work();
 }

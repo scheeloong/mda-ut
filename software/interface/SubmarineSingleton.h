@@ -21,13 +21,19 @@ class SubmarineSingleton {
       static SubmarineSingleton instance;
       return instance;
     }
-    void register_instance() { registered = true; }
-
-    void create();
+    void register_instance()
+    {
+      if (registered) {
+        return;
+      }
+      registered = true;
+      create();
+    }
   private:
     SubmarineSingleton(SubmarineSingleton const&); // Don't implement
     void operator=(SubmarineSingleton const&);     // Don't implement
 
+    void create();
     void destroy();
 
     bool registered, created;
