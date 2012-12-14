@@ -1,14 +1,10 @@
 #include <GL/glut.h>
 #include <GL/freeglut_ext.h>
 
-#include <signal.h>
-#include <unistd.h>
-
-#include "sim.h"
-
 #include "CharacterStreamSingleton.h"
 #include "SimulatorSingleton.h"
 #include "mgui.h"
+#include "sim.h"
 
 #define POOL_HEIGHT 8
 
@@ -28,8 +24,8 @@ void sim_close_window();
 
 /* Constructor and destructor for sim resource */
 
-SimulatorSingleton::SimulatorSingleton() : registered(false), created(false), img_fwd(NULL), img_dwn(NULL),
-    img_copy_start(false), img_copy_done(false)
+SimulatorSingleton::SimulatorSingleton() : registered(false), created(false), thread_done(false),
+    img_fwd(NULL), img_dwn(NULL), img_copy_start(false), img_copy_done(false)
 {
 }
 
@@ -65,7 +61,8 @@ void SimulatorSingleton::destroy()
     return;
   }
 
-  ::destroy();
+  thread_done = true;
+  pthread_join(sim_thread, NULL);
 }
 
 /* Accessors */
@@ -232,6 +229,11 @@ void sim_display()
 
 void SimulatorSingleton::sim_display()
 {
+  if (thread_done) {
+    ::destroy();
+    pthread_exit(NULL);
+  }
+
   if (img_copy_start) {
     img_copy_start = false;
     if (img_dir == DWN_IMG) {
