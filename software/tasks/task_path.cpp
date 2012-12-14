@@ -25,10 +25,12 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
             ret_code = TASK_ERROR;
             break;
         }
+        MDA_VISION_RETURN_CODE vision_code = path_vision.filter(frame);
+
         // clear fwd image
         image_input->get_image();
+
         if (!done_path){
-            MDA_VISION_RETURN_CODE vision_code = path_vision.filter(frame);
             int pos_ang = path_vision.get_angle();
             
             if (vision_code == NO_TARGET){

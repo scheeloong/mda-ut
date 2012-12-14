@@ -26,12 +26,12 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
             ret_code = TASK_ERROR;
             break;
         }
+        MDA_VISION_RETURN_CODE vision_code = gate_vision.filter(frame);
 
         // clear dwn image
         const IplImage* down_frame = image_input->get_image(DWN_IMG);
 
         if (!done_gate) {
-            MDA_VISION_RETURN_CODE vision_code = gate_vision.filter(frame);
  
             if (vision_code == FATAL_ERROR) {
                 ret_code = TASK_ERROR;

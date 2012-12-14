@@ -78,13 +78,17 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE_VITERBI:: run_task() {
 
     while (!done_task) {
         const IplImage* frame = image_input->get_image(FWD_IMG);
-        const IplImage* down_frame = image_input->get_image(DWN_IMG);
-        if (!frame || !down_frame) {
+        if (!frame) {
             ret_code = TASK_ERROR;
             break;
         }
-
         MDA_VISION_RETURN_CODE gate_vcode = gate_vision.filter(frame);
+
+        const IplImage* down_frame = image_input->get_image(DWN_IMG);
+        if (!down_frame) {
+            ret_code = TASK_ERROR;
+            break;
+        }
         MDA_VISION_RETURN_CODE path_vcode = path_vision.filter(down_frame);
 
         int observation = NONE;
