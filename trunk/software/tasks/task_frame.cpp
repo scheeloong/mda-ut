@@ -24,10 +24,12 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
             ret_code = TASK_ERROR;
             break;
         }
+        MDA_VISION_RETURN_CODE vision_code = frame_vision.filter(frame);
+
         // clear dwn image
         image_input->get_image(DWN_IMG);
+
         if(!done_frame){
-            MDA_VISION_RETURN_CODE vision_code = frame_vision.filter(frame);
             if (vision_code == FATAL_ERROR) {
                 ret_code = TASK_ERROR;
                 break;
