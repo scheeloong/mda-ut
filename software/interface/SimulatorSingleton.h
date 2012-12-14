@@ -19,17 +19,14 @@
 
 class SimulatorSingleton {
   public:
-    SimulatorSingleton() : instances(0), created(false), img_fwd(NULL), img_dwn(NULL),
-        img_copy_start(false), img_copy_done(false)
-    {
-        pthread_barrier_init(&barrier, NULL, 2);
-    }
+    SimulatorSingleton();
+    ~SimulatorSingleton();
+
     static SimulatorSingleton& get_instance()
     {
       static SimulatorSingleton instance;
       return instance;
     }
-
     void increment_instances() {instances++;}
     void decrement_instances()
     {
@@ -38,6 +35,7 @@ class SimulatorSingleton {
         destroy();
       }
     }
+
     void create();
     void run_sim();
     void sim_keyboard(unsigned char);
