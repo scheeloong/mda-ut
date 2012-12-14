@@ -60,7 +60,7 @@ class SimulatorSingleton {
     void create();
     void destroy();
 
-    bool registered, created;
+    bool registered, created, thread_done;
     pthread_t sim_thread;
     pthread_barrier_t barrier;
     IplImage *img_fwd, *img_dwn;
