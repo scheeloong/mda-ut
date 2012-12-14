@@ -288,6 +288,10 @@ void SimulatorSingleton::sim_reshape(int w, int h)
   gluPerspective(CAMERA_FIELD_OF_VIEW, (GLfloat)w/(GLfloat)h, .05, 200.0);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
+
+  if (w == img_fwd->width && h == img_fwd->height) {
+    return;
+  }
    
   // Also resize the Ipl images
   cvReleaseImage (&img_fwd);
