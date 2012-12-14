@@ -33,6 +33,7 @@ class mvLines {
     public:
     // the constructor allocates 6400 bytes of storage space, which is like 400 lines...
     mvLines () { _data=NULL; _storage=cvCreateMemStorage(6400); } 
+    ~mvLines () { cvReleaseMemStorage(&_storage); }
     
     unsigned nlines () { return (_data != NULL) ? unsigned(_data->total) : 0; }
     void removeHoriz ();

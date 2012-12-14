@@ -146,7 +146,7 @@ mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV
                 kernel_point_array[array_index++] = temp_array[i];
             }
         }
-        delete temp_array;
+        delete []temp_array;
         kernel_area = valid_count;
    
     }
@@ -157,6 +157,7 @@ mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV
 }
 
 mvBinaryMorphology:: ~mvBinaryMorphology () {
+	delete []kernel_point_array;
 	mvReleaseScratchImage3();
 }
 
