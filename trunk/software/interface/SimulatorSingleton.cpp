@@ -184,6 +184,7 @@ void SimulatorSingleton::run_sim()
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_SINGLE | GLUT_DEPTH | GLUT_RGB | GLUT_DOUBLE);
   glutInitWindowSize (width, height);
+  glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
   glutInitWindowPosition(10, 0);
 
   dwn_window = glutCreateWindow ("Down Cam");
@@ -192,7 +193,7 @@ void SimulatorSingleton::run_sim()
   glutDisplayFunc  (::sim_display);
   glutIdleFunc     (::sim_idle);
   glutKeyboardFunc (::sim_keyboard);
-  glutCloseFunc(sim_close_window);
+  glutCloseFunc    (::sim_close_window);
   init_sim();
 
   fwd_window = glutCreateWindow ("Forwards Cam");
@@ -200,7 +201,7 @@ void SimulatorSingleton::run_sim()
   glutDisplayFunc  (::sim_display);
   glutIdleFunc     (::sim_idle);
   glutKeyboardFunc (::sim_keyboard);
-  glutCloseFunc(sim_close_window);
+  glutCloseFunc    (::sim_close_window);
   init_sim();
 
   img_fwd = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
@@ -230,8 +231,8 @@ void sim_display()
 void SimulatorSingleton::sim_display()
 {
   if (thread_done) {
+    glutLeaveMainLoop();
     ::destroy();
-    pthread_exit(NULL);
   }
 
   if (img_copy_start) {
@@ -342,5 +343,12 @@ void SimulatorSingleton::sim_idle()
 
 void sim_close_window()
 {
-  CharacterStreamSingleton::get_instance().write_char('q');
+  SimulatorSingleton::get_instance().sim_close_window();
+}
+
+void SimulatorSingleton::sim_close_window()
+{
+  if (!thread_done) {
+    CharacterStreamSingleton::get_instance().write_char('q');
+  }
 }
