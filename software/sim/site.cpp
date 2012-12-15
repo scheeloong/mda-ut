@@ -721,21 +721,5 @@ void draw()
 */
 void destroy_site()
 {
-   gluDeleteQuadric(g1);
-   gluDeleteQuadric(g2);
-   gluDeleteQuadric(g3);
-   for (int i=0; i<WINDOW_CUTOUT_PARTS; i++)
-      gluDeleteQuadric(window_cutout[i]);
-   for (int i=0; i<U_GATE_PARTS * 2; i++)
-      gluDeleteQuadric(u_gate[i]);
-   for (int i=0; i<NUM_BUOYS * 2; i++)
-   {
-      gluDeleteQuadric(buoys[i]);
-   }
-   for (int i=0; i<2 * EXIT_SIDES; i++)
-   {
-      gluDeleteQuadric(EXIT[i]);
-   }
-
    glDeleteLists(list, NLIST);
 }
