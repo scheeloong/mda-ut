@@ -63,6 +63,9 @@ void SimulatorSingleton::destroy()
 
   thread_done = true;
   pthread_join(sim_thread, NULL);
+
+  cvReleaseImage(&img_fwd);
+  cvReleaseImage(&img_dwn);
 }
 
 /* Accessors */
