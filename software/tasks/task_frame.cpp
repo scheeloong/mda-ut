@@ -27,7 +27,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
         MDA_VISION_RETURN_CODE vision_code = frame_vision.filter(frame);
 
         // clear dwn image
-        image_input->get_image(DWN_IMG);
+        int down_frame_ready = image_input->ready_image(DWN_IMG);
+        (void) down_frame_ready;
 
         if(!done_frame){
             if (vision_code == FATAL_ERROR) {

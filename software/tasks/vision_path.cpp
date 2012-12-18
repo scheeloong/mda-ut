@@ -58,8 +58,6 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
 
         /// check that the line is near center of image
         
-        /// calculate the angle
-
         /// calculate range if we pass sanity check
         m_range = (PATH_REAL_LENGTH * _filtered_img->width) / (sqrt(length) * TAN_FOV_X);
         m_angle = RAD_TO_DEG * line_angle_to_vertical(_KMeans[0]);
@@ -115,7 +113,6 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
     /// if we encounter any sort of sanity error, we will return only the centroid
     RETURN_CENTROID:
         m_angular_x = RAD_TO_DEG * atan((float)m_pixel_x / m_pixel_y);
-        //m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / _filtered_img->height);
         DEBUG_PRINT ("Path: (%d,%d) (%5.2f,?)\n", m_pixel_x, m_pixel_y, 
             m_angular_x); 
         return retval;

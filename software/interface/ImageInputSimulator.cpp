@@ -10,6 +10,11 @@ ImageInputSimulator::~ImageInputSimulator()
 {
 }
 
+int ImageInputSimulator::ready_image(ImageDirection dir)
+{
+    return 1;
+}
+
 const IplImage *ImageInputSimulator::get_internal_image(ImageDirection dir)
 {
   return SimulatorSingleton::get_instance().get_image(dir);

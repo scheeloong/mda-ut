@@ -18,13 +18,24 @@ ImageInputWebcam::~ImageInputWebcam()
    delete dwnCam;
 }
 
+int ImageInputWebcam::ready_image (ImageDirection dir)
+{
+    if (dir == FWD_IMG) {
+        return fwdCam ? fwdCam->grabFrame() : NULL;
+    }
+    if (dir == DWN_IMG) {
+        return dwnCam ? dwnCam->grabFrame() : NULL;
+    }
+    return NULL;
+}
+
 const IplImage *ImageInputWebcam::get_internal_image(ImageDirection dir)
 {
    if (dir == FWD_IMG) {
-      return fwdCam ? fwdCam->getFrameResized() : NULL;
+      return fwdCam ? fwdCam->retrieveFrameResized() : NULL;
    }
    if (dir == DWN_IMG) {
-      return dwnCam ? dwnCam->getFrameResized() : NULL;
+      return dwnCam ? dwnCam->retrieveFrameResized() : NULL;
    }
    return NULL;
 }

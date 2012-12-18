@@ -106,13 +106,16 @@ class mvCamera {
      * called the image will be overwritten. This img also must not be freed/
      * modified by the user.
      */ 
-    int grabFrame () { // readies latest frame
+
+    // grabFrame readies the latest frame only - it does not return the frame
+    int grabFrame () {
         if (!_capture) return 0;
           bin_getFrame.start();
         return cvGrabFrame (_capture);
           bin_getFrame.stop();        
     }
 
+    // retrieveFrame returns the latest frame - the frame is not updated before or after the return
     IplImage* retrieveFrame () {
         assert (0); /// RetrieveFrame is no longer safe to use with current algorithms;
 
@@ -138,6 +141,7 @@ class mvCamera {
         return _imgResized;
     }
 
+    // getFrame is what you want most of the time - it grabs the latest frame and returns it.
     IplImage* getFrame () {
         if (!grabFrame()) return NULL;
         return retrieveFrame();

@@ -1,7 +1,7 @@
 # Test video input
 
 IMAGE_INPUT VIDEO
-VIDEO_FWD, ../vision/20121107_222711.mp4
+VIDEO_FWD, ../vision/runtime_sample1.avi
 VIDEO_DWN, ../vision/webcam.avi
 IMAGE_SHOW_RAW 1
 WRITE_TO_VIDEO 0
