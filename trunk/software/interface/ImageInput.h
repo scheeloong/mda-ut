@@ -62,11 +62,16 @@ class ImageInput {
     }
 
     // To be implemented by subclasses
+    // This readies but does not return the next image. Only useful for video/webcam.
+    virtual int ready_image(ImageDirection dir = FWD_IMG) = 0;
+    // This only returns the next available image. The image is not updated in webcam.
     virtual const IplImage* get_internal_image(ImageDirection dir = FWD_IMG) = 0;
 
     bool can_display() { return can_display_images; }
     const IplImage* get_image(ImageDirection dir = FWD_IMG)
     {
+      if (!ready_image(dir)) 
+        return NULL;
       const IplImage *frame = get_internal_image(dir);
       if (!frame) {
         return frame;
@@ -125,6 +130,7 @@ class ImageInputNull : public ImageInput {
     ImageInputNull() : ImageInput(NULL, false) {}
     virtual ~ImageInputNull() {}
 
+    virtual int ready_image(ImageDirection dir = FWD_IMG) {return 0;}
     virtual const IplImage* get_internal_image(ImageDirection dir = FWD_IMG) {return NULL;}
 };
 
@@ -135,6 +141,7 @@ class ImageInputSimulator : public ImageInput {
     virtual ~ImageInputSimulator();
 
     virtual const IplImage* get_internal_image(ImageDirection dir = FWD_IMG);
+    virtual int ready_image(ImageDirection dir = FWD_IMG);
 };
 
 /* Read from video file */
@@ -143,8 +150,9 @@ class ImageInputVideo : public ImageInput {
     ImageInputVideo(const char* settings_file);
     virtual ~ImageInputVideo();
 
+    virtual int ready_image(ImageDirection dir = FWD_IMG);
     virtual const IplImage* get_internal_image(ImageDirection dir = FWD_IMG);
-
+  
   private:
     mvCamera* cam_fwd;
     mvCamera* cam_dwn;
@@ -157,6 +165,7 @@ class ImageInputWebcam : public ImageInput {
     virtual ~ImageInputWebcam();
 
     virtual const IplImage* get_internal_image(ImageDirection dir = FWD_IMG);
+    virtual int ready_image(ImageDirection dir = FWD_IMG);
 
   private:
     mvCamera *fwdCam;

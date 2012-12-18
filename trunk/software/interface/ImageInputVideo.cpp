@@ -19,13 +19,24 @@ ImageInputVideo::~ImageInputVideo()
     delete cam_dwn;
 }
 
+int ImageInputVideo::ready_image (ImageDirection dir)
+{
+    if (dir == FWD_IMG) {
+        return cam_fwd ? cam_fwd->grabFrame() : NULL;
+    }
+    if (dir == DWN_IMG) {
+        return cam_dwn ? cam_dwn->grabFrame() : NULL;
+    }
+    return NULL;
+}
+
 const IplImage *ImageInputVideo::get_internal_image(ImageDirection dir)
 {
     if (dir == FWD_IMG) {
-        return cam_fwd ? cam_fwd->getFrameResized() : NULL;
+        return cam_fwd ? cam_fwd->retrieveFrameResized() : NULL;
     }
     if (dir == DWN_IMG) {
-        return cam_dwn ? cam_dwn->getFrameResized() : NULL;
+        return cam_dwn ? cam_dwn->retrieveFrameResized() : NULL;
     }
     return NULL;
 }

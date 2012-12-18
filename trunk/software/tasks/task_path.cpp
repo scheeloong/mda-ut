@@ -28,7 +28,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
         MDA_VISION_RETURN_CODE vision_code = path_vision.filter(frame);
 
         // clear fwd image
-        image_input->get_image();
+        int fwd_frame_ready = image_input->ready_image(FWD_IMG);
+        (void) fwd_frame_ready;
 
         if (!done_path){
             int pos_ang = path_vision.get_angle();
