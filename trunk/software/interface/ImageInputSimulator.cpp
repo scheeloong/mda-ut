@@ -10,9 +10,9 @@ ImageInputSimulator::~ImageInputSimulator()
 {
 }
 
-int ImageInputSimulator::ready_image(ImageDirection dir)
+bool ImageInputSimulator::ready_internal_image(ImageDirection dir)
 {
-    return 1;
+    return true;
 }
 
 const IplImage *ImageInputSimulator::get_internal_image(ImageDirection dir)

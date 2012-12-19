@@ -18,15 +18,15 @@ ImageInputWebcam::~ImageInputWebcam()
    delete dwnCam;
 }
 
-int ImageInputWebcam::ready_image (ImageDirection dir)
+bool ImageInputWebcam::ready_internal_image (ImageDirection dir)
 {
     if (dir == FWD_IMG) {
-        return fwdCam ? fwdCam->grabFrame() : 0;
+        return fwdCam ? fwdCam->grabFrame() : false;
     }
     if (dir == DWN_IMG) {
-        return dwnCam ? dwnCam->grabFrame() : 0;
+        return dwnCam ? dwnCam->grabFrame() : false;
     }
-    return 0;
+    return false;
 }
 
 const IplImage *ImageInputWebcam::get_internal_image(ImageDirection dir)

@@ -75,7 +75,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                 break;
             }
 
-            const IplImage* down_frame = image_input->get_internal_image(DWN_IMG);
+            const IplImage* down_frame = image_input->get_image(DWN_IMG);
             MDA_VISION_RETURN_CODE vision_code = path_vision.filter(down_frame);
 
             if (vision_code == ONE_SEGMENT || vision_code == FULL_DETECT || vision_code == UNKNOWN_TARGET) {
