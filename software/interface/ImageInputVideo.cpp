@@ -19,15 +19,15 @@ ImageInputVideo::~ImageInputVideo()
     delete cam_dwn;
 }
 
-int ImageInputVideo::ready_image (ImageDirection dir)
+bool ImageInputVideo::ready_internal_image (ImageDirection dir)
 {
     if (dir == FWD_IMG) {
-        return cam_fwd ? cam_fwd->grabFrame() : 0;
+        return cam_fwd ? cam_fwd->grabFrame() : false;
     }
     if (dir == DWN_IMG) {
-        return cam_dwn ? cam_dwn->grabFrame() : 0;
+        return cam_dwn ? cam_dwn->grabFrame() : false;
     }
-    return 0;
+    return false;
 }
 
 const IplImage *ImageInputVideo::get_internal_image(ImageDirection dir)

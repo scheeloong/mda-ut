@@ -61,17 +61,20 @@ class ImageInput {
       delete window_dwn;
     }
 
-    // To be implemented by subclasses
-    // This readies but does not return the next image. Only useful for video/webcam.
-    virtual int ready_image(ImageDirection dir = FWD_IMG) = 0;
-    // This only returns the next available image. The image is not updated in webcam.
-    virtual const IplImage* get_internal_image(ImageDirection dir = FWD_IMG) = 0;
-
     bool can_display() { return can_display_images; }
+    bool ready_image(ImageDirection dir = FWD_IMG)
+    {
+      // May still want to get the image to display it
+      if (writer_fwd && writer_dwn) {
+        return (get_image(dir) == NULL) ? 0 : 1;
+      }
+      return ready_internal_image(dir);
+    }
     const IplImage* get_image(ImageDirection dir = FWD_IMG)
     {
-      if (!ready_image(dir)) 
+      if (!ready_internal_image(dir)) {
         return NULL;
+      }
       const IplImage *frame = get_internal_image(dir);
       if (!frame) {
         return frame;
@@ -119,6 +122,13 @@ class ImageInput {
     }
 
   protected:
+    // To be implemented by subclasses
+    // This readies but does not return the next image. Only useful for video/webcam.
+    virtual bool ready_internal_image(ImageDirection dir) = 0;
+    // This only returns the next available image. The image is not updated in webcam.
+    virtual const IplImage* get_internal_image(ImageDirection dir) = 0;
+
+    // member variables
     mvVideoWriter *writer_fwd, *writer_dwn;
     mvWindow *window_fwd, *window_dwn;
     bool can_display_images;
@@ -130,7 +140,8 @@ class ImageInputNull : public ImageInput {
     ImageInputNull() : ImageInput(NULL, false) {}
     virtual ~ImageInputNull() {}
 
-    virtual int ready_image(ImageDirection dir = FWD_IMG) {return 0;}
+  protected:
+    virtual bool ready_internal_image(ImageDirection dir = FWD_IMG) {return false;}
     virtual const IplImage* get_internal_image(ImageDirection dir = FWD_IMG) {return NULL;}
 };
 
@@ -140,8 +151,9 @@ class ImageInputSimulator : public ImageInput {
     ImageInputSimulator(const char* settings_file);
     virtual ~ImageInputSimulator();
 
+  protected:
+    virtual bool ready_internal_image(ImageDirection dir = FWD_IMG);
     virtual const IplImage* get_internal_image(ImageDirection dir = FWD_IMG);
-    virtual int ready_image(ImageDirection dir = FWD_IMG);
 };
 
 /* Read from video file */
@@ -150,7 +162,8 @@ class ImageInputVideo : public ImageInput {
     ImageInputVideo(const char* settings_file);
     virtual ~ImageInputVideo();
 
-    virtual int ready_image(ImageDirection dir = FWD_IMG);
+  protected:
+    virtual bool ready_internal_image(ImageDirection dir = FWD_IMG);
     virtual const IplImage* get_internal_image(ImageDirection dir = FWD_IMG);
   
   private:
@@ -164,8 +177,9 @@ class ImageInputWebcam : public ImageInput {
     ImageInputWebcam(const char* settings_file);
     virtual ~ImageInputWebcam();
 
+  protected:
     virtual const IplImage* get_internal_image(ImageDirection dir = FWD_IMG);
-    virtual int ready_image(ImageDirection dir = FWD_IMG);
+    virtual bool ready_internal_image(ImageDirection dir = FWD_IMG);
 
   private:
     mvCamera *fwdCam;
