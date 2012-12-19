@@ -22,12 +22,12 @@ ImageInputVideo::~ImageInputVideo()
 int ImageInputVideo::ready_image (ImageDirection dir)
 {
     if (dir == FWD_IMG) {
-        return cam_fwd ? cam_fwd->grabFrame() : NULL;
+        return cam_fwd ? cam_fwd->grabFrame() : 0;
     }
     if (dir == DWN_IMG) {
-        return cam_dwn ? cam_dwn->grabFrame() : NULL;
+        return cam_dwn ? cam_dwn->grabFrame() : 0;
     }
-    return NULL;
+    return 0;
 }
 
 const IplImage *ImageInputVideo::get_internal_image(ImageDirection dir)
