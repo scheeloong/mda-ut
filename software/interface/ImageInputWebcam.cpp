@@ -21,12 +21,12 @@ ImageInputWebcam::~ImageInputWebcam()
 int ImageInputWebcam::ready_image (ImageDirection dir)
 {
     if (dir == FWD_IMG) {
-        return fwdCam ? fwdCam->grabFrame() : NULL;
+        return fwdCam ? fwdCam->grabFrame() : 0;
     }
     if (dir == DWN_IMG) {
-        return dwnCam ? dwnCam->grabFrame() : NULL;
+        return dwnCam ? dwnCam->grabFrame() : 0;
     }
-    return NULL;
+    return 0;
 }
 
 const IplImage *ImageInputWebcam::get_internal_image(ImageDirection dir)
