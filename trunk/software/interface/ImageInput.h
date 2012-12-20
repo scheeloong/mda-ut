@@ -65,14 +65,14 @@ class ImageInput {
     bool ready_image(ImageDirection dir = FWD_IMG)
     {
       // May still want to get the image to display it
-      /*if (writer_fwd && writer_dwn) {
-        return (get_image(dir) == NULL) ? 0 : 1;
-      }*/
+      if (writer_fwd && writer_dwn) {
+        return (get_image(dir) != NULL);
+      }
       return ready_internal_image(dir);
     }
     const IplImage* get_image(ImageDirection dir = FWD_IMG)
     {
-      if (!ready_image(dir)) {
+      if (!ready_internal_image(dir)) {
         return NULL;
       }
       const IplImage *frame = get_internal_image(dir);

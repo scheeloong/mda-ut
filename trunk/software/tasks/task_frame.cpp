@@ -20,7 +20,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
 
     // Wait 2s to sink to the approximate height
     actuator_output->set_attitude_absolute(DEPTH, 590);
-    cvWaitKey(2000);
+    sleep(2);
 
     while (1) {
         const IplImage* frame = image_input->get_image();
