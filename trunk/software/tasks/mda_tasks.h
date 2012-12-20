@@ -88,6 +88,7 @@ private:
 /// Path
 /// ########################################################################
 class MDA_TASK_PATH : public MDA_TASK_BASE {
+	static const unsigned DEPTH_TARGET = 570;
 
 public:
 	MDA_TASK_PATH (AttitudeInput* a, ImageInput* i, ActuatorOutput* o);
