@@ -88,7 +88,7 @@ private:
 /// Path
 /// ########################################################################
 class MDA_TASK_PATH : public MDA_TASK_BASE {
-	static const unsigned DEPTH_TARGET = 570;
+	static const int DEPTH_TARGET = 570;
 
 public:
 	MDA_TASK_PATH (AttitudeInput* a, ImageInput* i, ActuatorOutput* o);
@@ -101,6 +101,7 @@ public:
 /// Buoy
 /// ########################################################################
 class MDA_TASK_BUOY : public MDA_TASK_BASE {
+	static const int BUOY_RANGE_WHEN_DONE = 90; // range to the buoy to consider the tracking finished, in cm
 
 public:
 	MDA_TASK_BUOY (AttitudeInput* a, ImageInput* i, ActuatorOutput* o);

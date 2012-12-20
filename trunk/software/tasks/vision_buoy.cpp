@@ -45,6 +45,8 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
 
     // We assume most of the time we have 1 circle. If we have >1 circle we take the first
     // circle in the list (which is the strongest) and return UNKNOWN_TARGET
+    // We cant trust range if circle is too small, so in that case also return UNKNOWN_TARGET
+    // and range is not valid if UNKNOWN_TARGET is returned
 
     unsigned nCircles = _AdvancedCircles.ncircles();
 
@@ -59,19 +61,28 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
         printf ("Circle #%d: (%d,%d, %f)\n", i+1, _AdvancedCircles[i].x, _AdvancedCircles[i].y, _AdvancedCircles[i].rad);
     }*/
 
-    m_pixel_x = _AdvancedCircles[0].x;
-    m_pixel_y = _AdvancedCircles[0].y;
+    m_pixel_x = _AdvancedCircles[0].x - _filtered_img->width/2;
+    m_pixel_y = _AdvancedCircles[0].y - _filtered_img->height/2;
     unsigned rad = _AdvancedCircles[0].rad;
 
     assert (rad != 0);
-
-    m_range = (BUOY_REAL_DIAMTER * _filtered_img->width) / (rad * TAN_FOV_X);
+    
     m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / _filtered_img->width);
     m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / _filtered_img->height);
 
-    DEBUG_PRINT ("Buoy: (%d,%d) (%5.2f,%5.2f). Range = %d\n", m_pixel_x, m_pixel_y, 
-            m_angular_x, m_angular_y, m_range); 
-    
-    retval = (nCircles == 1) ? FULL_DETECT : UNKNOWN_TARGET;
+    if (nCircles == 1 && rad > MIN_PIXEL_RADIUS_FACTOR*_filtered_img->height) {
+        m_range = (BUOY_REAL_DIAMTER * _filtered_img->width) / (rad * TAN_FOV_X);
+        DEBUG_PRINT ("Buoy: (%d,%d) (%5.2f,%5.2f). Range = %d\n", m_pixel_x, m_pixel_y, 
+            m_angular_x, m_angular_y, m_range);
+
+        retval = FULL_DETECT;
+    }
+    else {
+        DEBUG_PRINT ("Buoy: (%d,%d) (%5.2f,%5.2f). Range = Unknown\n", m_pixel_x, m_pixel_y, 
+            m_angular_x, m_angular_y);
+
+        retval = UNKNOWN_TARGET;
+    }
+
     return retval;
 }
