@@ -85,14 +85,12 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         
         if (length_0 > 1.3*length_1 || 1.3*length_0 < length_1) {
             DEBUG_PRINT ("Path Sanity Failure: Lines too dissimilar\n");
-            m_angle = (position_angle_0 + position_angle_1) * 0.5;
             retval = UNKNOWN_TARGET;
             goto RETURN_CENTROID;
         }
         if (abs(position_angle_0) > 1.3*abs(position_angle_1) || 1.3*abs(position_angle_0) < abs(position_angle_1)) {
             DEBUG_PRINT ("Path Sanity Failure: Line angles do not match\n");
             // set angle to be the smaller of the two angles (absolute)
-            m_angle = (abs(position_angle_0) <= abs(position_angle_1)) ? position_angle_0 : position_angle_1;
             retval = UNKNOWN_TARGET;
             goto RETURN_CENTROID;
         }
