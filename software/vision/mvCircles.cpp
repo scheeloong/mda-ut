@@ -16,8 +16,7 @@
 bool m_circle_has_greater_count (CIRCLE_U_PAIR c1, CIRCLE_U_PAIR c2) { return (c1.second > c2.second); }
 
 mvAdvancedCircles::mvAdvancedCircles (const char* settings_file) :
-    bin_findcircles ("mvAdvancedCircles"),
-    win ("test")
+    bin_findcircles ("mvAdvancedCircles")
 {
     srand(time(NULL)); // seed for the partly random circle finding algorithm
 
@@ -82,8 +81,6 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
         printf ("Not enough points in resampled image\n");
         return;
     }
-
-    //win.showImage(grid);
 
     /// main working loop
     int n_valid_circles = 0;

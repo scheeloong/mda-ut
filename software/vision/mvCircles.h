@@ -44,7 +44,6 @@ class mvAdvancedCircles {
     std::vector<CIRCLE_U_PAIR> accepted_circles;    // list of circles found
 
     PROFILE_BIN bin_findcircles;
-    mvWindow win;
 
     private:
     int get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, MV_CIRCLE &Circle);
