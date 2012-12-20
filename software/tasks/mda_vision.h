@@ -179,6 +179,7 @@ public:
 class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
     static const char MDA_VISION_BUOY_SETTINGS[];
     static const float BUOY_REAL_DIAMTER = 23;
+    static const float MIN_PIXEL_RADIUS_FACTOR = 0.04;
 
     mvWindow _window;
     mvHSVFilter _HSVFilter;

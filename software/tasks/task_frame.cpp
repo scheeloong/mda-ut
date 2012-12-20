@@ -71,9 +71,10 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
                 //else if(ang_x < -5.0) actuator_output->set_attitude_change(LEFT, ang_x);
                 else actuator_output->set_attitude_change(FORWARD);
             }
-
-            //(void) vision_code;
-
+            else {
+                printf ("Error: %s: line %d\ntask module recieved an unhandled vision code.\n", __FILE__, __LINE__);
+                exit(1);
+            }
         }
 
         // Ensure debug messages are printed

@@ -81,6 +81,10 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     }
                 }
             }
+            else {
+                printf ("Error: %s: line %d\ntask module recieved an unhandled vision code.\n", __FILE__, __LINE__);
+                exit(1);
+            }
         }
 
         // Ensure debug messages are printed

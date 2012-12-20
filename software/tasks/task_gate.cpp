@@ -66,6 +66,10 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                     actuator_output->set_attitude_change(FORWARD);
                 }
             }
+            else {
+                printf ("Error: %s: line %d\ntask module recieved an unhandled vision code.\n", __FILE__, __LINE__);
+                exit(1);
+            }
         }
         else {
             const IplImage* down_frame = image_input->get_image(DWN_IMG);

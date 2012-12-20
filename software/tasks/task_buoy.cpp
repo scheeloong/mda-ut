@@ -17,9 +17,10 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_task() {
     MDA_VISION_MODULE_PATH path_vision;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
-    // Wait 2s to rise to the approximate height
-    actuator_output->set_attitude_absolute(DEPTH, 350);
-    cvWaitKey(2000);
+    /// Here we should store the starting attitude vector, so we can return to this attitude later
+
+    bool done_buoy = false;
+    actuator_output->set_attitude_absolute(DEPTH, 375); // this is rough depth of the buoys
 
     while (1) {
         const IplImage* frame = image_input->get_image();
@@ -29,19 +30,64 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_task() {
         }
 
         MDA_VISION_RETURN_CODE vision_code = buoy_vision.filter(frame);
-        (void) vision_code;
 
-        /* This code skips the buoy task */
-        const IplImage* down_frame = image_input->get_image(DWN_IMG);
-        vision_code = path_vision.filter(down_frame);
-        if (vision_code == ONE_SEGMENT || vision_code == FULL_DETECT || vision_code == UNKNOWN_TARGET) {
+        // clear dwn image
+        int down_frame_ready = image_input->ready_image(DWN_IMG);
+        (void) down_frame_ready;
+
+        if (!done_buoy) {
+            if (vision_code == FATAL_ERROR) {
+                ret_code = TASK_ERROR;
+                break;
+            }
+            else if (vision_code == NO_TARGET) {
+                actuator_output->set_attitude_change(FORWARD);
+            }
+            else if (vision_code == UNKNOWN_TARGET) {
+                // here range is not valid, probably cuz theres interference or circle too small
+                // we'll ignore the vertical direction for now
+                int ang_x = buoy_vision.get_angular_x();
+
+                actuator_output->set_attitude_change(RIGHT, ang_x);
+                actuator_output->set_attitude_change(FORWARD);
+            }
+            else if (vision_code == FULL_DETECT) {
+                // range is valid, so we can use it to calculate the right depth
+                int ang_x = buoy_vision.get_angular_x();
+                int ang_y = buoy_vision.get_angular_y();
+                int range = buoy_vision.get_range();
+
+                // int depth_change = tan(ang_y) * range; this doesnt work! range is bad?? hack below
+                int depth_change = tan(ang_y) * 10;
+                int target_depth = attitude_input->depth() + depth_change; // this is in cm
+
+                actuator_output->set_attitude_absolute(DEPTH, target_depth);
+
+                // we cant use set_attitude_change to rise and fwd at the same time so we have to
+                // check if we are roughly pointing at the target, and decide what to do
+                if (abs(ang_x) < 5 && abs(ang_y) < 20) {
+                    actuator_output->set_attitude_change(FORWARD);
+                }
+                else {
+                    actuator_output->set_attitude_change(RIGHT, ang_x);
+                    if (range < BUOY_RANGE_WHEN_DONE) {
+                        done_buoy = true;
+                    }                 
+                }
+            }
+            else {
+                printf ("Error: %s: line %d\ntask module recieved an unhandled vision code.\n", __FILE__, __LINE__);
+                exit(1);
+            }
+        }
+        else { // done_buoy
+            // charge forwards, then retreat back some number of meters, then realign sub to starting attitude
             actuator_output->set_attitude_change(FORWARD);
-        } else {
-            ret_code = TASK_DONE;
-            actuator_output->stop();
+            sleep (2);
+
+            // just charge fowards for now
             break;
         }
-        /* End buoy task skipping code */
 
         // Ensure debug messages are printed
         fflush(stdout);
