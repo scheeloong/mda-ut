@@ -14,7 +14,6 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_task() {
     puts("Press q to quit");
 
     MDA_VISION_MODULE_BUOY buoy_vision;
-    MDA_VISION_MODULE_PATH path_vision;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
     /// Here we should store the starting attitude vector, so we can return to this attitude later
