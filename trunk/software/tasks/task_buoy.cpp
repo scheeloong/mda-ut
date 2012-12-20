@@ -17,6 +17,10 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_task() {
     MDA_VISION_MODULE_PATH path_vision;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
+    // Wait 2s to rise to the approximate height
+    actuator_output->set_attitude_absolute(DEPTH, 350);
+    cvWaitKey(2000);
+
     while (1) {
         const IplImage* frame = image_input->get_image();
         if (!frame) {

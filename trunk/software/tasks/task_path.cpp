@@ -65,8 +65,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                         if(abs(pos_ang) < 5){
                             done_path = true;
                             // settle for 2s
-                            actuator_output->set_attitude_absolute(DEPTH, 350);
-                            sleep (2);
+                            cvWaitKey(2000);
                             break;
                         }
                     }
