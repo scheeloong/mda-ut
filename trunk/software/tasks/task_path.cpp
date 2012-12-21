@@ -55,7 +55,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
 
                 printf("xy_distance = %d\n", xy_distance);
 
-                if (xy_distance < frame->height/4) {
+                if (xy_distance < frame->height/5) {
                     // if we are oriented over the path, we can sink
                     actuator_output->set_attitude_change(FORWARD, 0);
                     actuator_output->set_attitude_absolute(DEPTH, DEPTH_TARGET);

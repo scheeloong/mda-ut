@@ -56,11 +56,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_task() {
                 int ang_y = buoy_vision.get_angular_y();
                 int range = buoy_vision.get_range();
 
-                // int depth_change = tan(ang_y) * range; this doesnt work! range is bad?? hack below
-                int depth_change = tan(ang_y) * 10;
-                int target_depth = attitude_input->depth() + depth_change; // this is in cm
-
-                actuator_output->set_attitude_absolute(DEPTH, target_depth);
+                int depth_change = tan(ang_y*0.017453) * range; 
+                actuator_output->set_attitude_change(SINK, depth_change);
 
                 // we cant use set_attitude_change to rise and fwd at the same time so we have to
                 // check if we are roughly pointing at the target, and decide what to do

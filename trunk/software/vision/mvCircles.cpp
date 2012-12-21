@@ -78,7 +78,7 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
     }
     int n_points = point_vector.size();
     if (n_points < POINTS_NEEDED_IN_RESAMPLED_IMAGE) {
-        printf ("Not enough points in resampled image\n");
+        DEBUG_PRINT ("Not enough points in resampled image\n");
         return;
     }
 
