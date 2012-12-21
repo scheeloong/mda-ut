@@ -71,7 +71,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
     m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / _filtered_img->height);
 
     if (nCircles == 1 && rad > MIN_PIXEL_RADIUS_FACTOR*_filtered_img->height) {
-        m_range = (BUOY_REAL_DIAMTER * _filtered_img->width) / (rad * TAN_FOV_X);
+        m_range = (BUOY_REAL_DIAMTER * _filtered_img->width) / (2*rad * TAN_FOV_X);
         DEBUG_PRINT ("Buoy: (%d,%d) (%5.2f,%5.2f). Range = %d\n", m_pixel_x, m_pixel_y, 
             m_angular_x, m_angular_y, m_range);
 

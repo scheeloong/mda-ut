@@ -1,9 +1,9 @@
 # HSV filter settings for buoy - Yellow buoy
-HUE_MIN, 170 
-HUE_MAX, 10
-SAT_MIN, 140
+HUE_MIN, 165 
+HUE_MAX, 5
+SAT_MIN, 150
 SAT_MAX, 255
-VAL_MIN, 170
+VAL_MIN, 90
 VAL_MAX, 255
 
 DOWNSAMPLING_FACTOR, 4
