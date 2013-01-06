@@ -101,13 +101,21 @@ public:
 /// Buoy
 /// ########################################################################
 class MDA_TASK_BUOY : public MDA_TASK_BASE {
-	static const int BUOY_RANGE_WHEN_DONE = 40; // range to the buoy to consider the tracking finished, in cm
+	static const int BUOY_RANGE_WHEN_DONE = 60; // range to the buoy to consider the tracking finished, in cm
+
+	enum BUOY_COLOR {
+		BUOY_RED,
+		BUOY_YELLOW,
+		BUOY_GREEN
+	};
 
 public:
-	MDA_TASK_BUOY (AttitudeInput* a, ImageInput* i, ActuatorOutput* o);
+	MDA_TASK_BUOY (AttitudeInput* a, ImageInput* i, ActuatorOutput* o); // defaults to red buoy
 	~MDA_TASK_BUOY ();
 
 	MDA_TASK_RETURN_CODE run_task ();
+	MDA_TASK_RETURN_CODE run_single_buoy (BUOY_COLOR color);
+
 };
 
 /// ########################################################################
