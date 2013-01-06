@@ -7,7 +7,7 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
-const char MDA_VISION_MODULE_BUOY::MDA_VISION_BUOY_SETTINGS[] = "vision_buoy_settings.csv";
+const char MDA_VISION_MODULE_BUOY::MDA_VISION_BUOY_SETTINGS[] = "vision_buoy_settings_red.csv";
 
 /// #########################################################################
 /// MODULE_BUOY methods
@@ -15,6 +15,16 @@ const char MDA_VISION_MODULE_BUOY::MDA_VISION_BUOY_SETTINGS[] = "vision_buoy_set
 MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY () :
     _window (mvWindow("Buoy Vision Module")),
     _HSVFilter (mvHSVFilter(MDA_VISION_BUOY_SETTINGS)),
+    _Morphology5 (mvBinaryMorphology(5, 5, MV_KERN_RECT)),
+    _Morphology3 (mvBinaryMorphology(3, 3, MV_KERN_RECT)),
+    _AdvancedCircles(MDA_VISION_BUOY_SETTINGS)
+{
+    _filtered_img = mvGetScratchImage (); // common size
+}
+
+MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY (const char* settings_file) :
+    _window (mvWindow("Buoy Vision Module")),
+    _HSVFilter (mvHSVFilter(settings_file)),
     _Morphology5 (mvBinaryMorphology(5, 5, MV_KERN_RECT)),
     _Morphology3 (mvBinaryMorphology(3, 3, MV_KERN_RECT)),
     _AdvancedCircles(MDA_VISION_BUOY_SETTINGS)

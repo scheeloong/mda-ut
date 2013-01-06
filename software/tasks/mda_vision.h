@@ -189,8 +189,10 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
     
     IplImage* _filtered_img;
 
+
 public:
     MDA_VISION_MODULE_BUOY ();
+    MDA_VISION_MODULE_BUOY (const char* settings_file);
     ~MDA_VISION_MODULE_BUOY ();
     
     void primary_filter (const IplImage* src);

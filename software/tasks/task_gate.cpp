@@ -31,6 +31,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
         if (!done_gate) {
             // clear dwn image
             int down_frame_ready = image_input->ready_image(DWN_IMG);
+            (void) down_frame_ready;
  
             if (vision_code == FATAL_ERROR) {
                 ret_code = TASK_ERROR;
