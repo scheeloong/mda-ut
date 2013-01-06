@@ -93,6 +93,8 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
     assert (dst != NULL);
     assert (src->nChannels == 3);
     assert (dst->nChannels == 1);
+    assert (src->width == src_HSV->width);
+    assert (src->height == src_HSV->height);
 
     /// convert imageto HSV  
     bin_CvtColor.start();

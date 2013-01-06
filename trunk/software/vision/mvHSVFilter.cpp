@@ -45,6 +45,8 @@ void mvHSVFilter:: filter (const IplImage* img, IplImage* result) {
     assert (img->nChannels == 3);
     assert (result != NULL);
     assert (result->nChannels == 1);
+    assert (img->width == HSVImg->width);
+    assert (img->height == HSVImg->height);
 
       bin_CvtColor.start();
     cvCvtColor (img, HSVImg, CV_BGR2HSV); // convert to HSV 
