@@ -9,7 +9,10 @@
 #define IMAGE_NAME "../vision/color1.jpg"
 
 int main (int argc, char** argv) {
-    IplImage * img = cvLoadImage(IMAGE_NAME);
+    IplImage * raw_img = cvLoadImage(IMAGE_NAME);
+    IplImage * img = mvCreateImage_Color();
+
+    cvResize (raw_img, img);
 
     MDA_VISION_MODULE_BASE* test_module = NULL;
     MDA_VISION_MODULE_BASE* gate_module = NULL;
@@ -53,6 +56,9 @@ int main (int argc, char** argv) {
     MDA_TASK_BASE* task_buoy = NULL;
     MDA_TASK_BASE* task_frame = NULL;
 */
+
+    cvReleaseImage (&raw_img);
+    cvReleaseImage (&img);
 
     printf ("VISION_UNDEFINED_VALUE=%d\n", MDA_VISION_MODULE_BASE::VISION_UNDEFINED_VALUE);
     printf ("\nTest PASSED.\n");
