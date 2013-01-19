@@ -1,9 +1,9 @@
-#include "highgui.h"
-#include "cv.h"
+#include <highgui.h>
+#include <cv.h>
 
 int main( int argc, char** argv ) {
     IplImage* img = cvLoadImage( argv[1]);  
-    cvNamedWindow( "window1", CV_WINDOW_AUTOSIZE ); /
+    cvNamedWindow( "window1", CV_WINDOW_AUTOSIZE );
     cvShowImage( "window1", img );       
     cvWaitKey(0);                   
 

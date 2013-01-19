@@ -1,5 +1,5 @@
-#include "highgui.h"
-#include "cv.h"
+#include <highgui.h>
+#include <cv.h>
 
 int main( int argc, char** argv ) {
     IplImage* img = cvLoadImage( argv[1]);  // load an image. Memory is allocated automatically

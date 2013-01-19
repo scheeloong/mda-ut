@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "cv.h"
-#include "highgui.h"
+#include <cv.h>
+#include <highgui.h>
 
 void callBack (int event, int x, int y, int flags, void* param) {
 // param must be the IplImage* pointer, with HSV color space    
