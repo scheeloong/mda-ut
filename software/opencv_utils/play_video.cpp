@@ -1,5 +1,5 @@
-#include "cv.h"
-#include "highgui.h"
+#include <cv.h>
+#include <highgui.h>
 
 int main( int argc, char** argv ) {
     CvCapture* g_capture;   // structure to create a video input

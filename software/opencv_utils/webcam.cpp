@@ -1,4 +1,4 @@
-#include "highgui.h"
+#include <highgui.h>
 
 int main( int argc, char** argv ) {
     cvNamedWindow( "webcam1", CV_WINDOW_AUTOSIZE );

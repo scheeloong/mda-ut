@@ -1,6 +1,6 @@
-#include "cv.h"
-#include "highgui.h"
-#include "fstream"
+#include <cv.h>
+#include <highgui.h>
+#include <fstream>
 
 #define FILENAME "pix_vert.txt"
 #define COL 10
