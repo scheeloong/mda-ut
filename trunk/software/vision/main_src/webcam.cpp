@@ -74,7 +74,7 @@ int main( int argc, char** argv ) {
 
     // declare images we need
     IplImage* filter_img = mvCreateImage ();
-    IplImage* filter_img2 = mvCreateImage ();
+    //IplImage* filter_img2 = mvCreateImage ();
  
     /// execution
     char c;
@@ -115,21 +115,21 @@ int main( int argc, char** argv ) {
             goto LOOP_BOTTOM;
         }
 
-        win1->showImage (frame);
+        /*win1->showImage (frame);
         HSVFilter.filter (frame, filter_img); // process it
         win2->showImage (filter_img);
            
         Morphology7.open (filter_img, filter_img);
         Morphology5.gradient (filter_img, filter_img);
         win3->showImage (filter_img);
-      
+      */
         if (TEST) {        
-            //adaptive.filter (frame, filter_img);
+            win1->showImage (frame);
+            AdaptiveFilter2 (frame, filter_img);
 
             //mvSplitImage (frame, &filter_img, &filter_img2);
-            win1->showImage (frame);
             win2->showImage (filter_img);
-            win3->showImage (filter_img2);
+            //win3->showImage (filter_img2);
         }
         else if (LINE) {
             HoughLines.findLines (filter_img, &lines);

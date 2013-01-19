@@ -335,14 +335,13 @@ struct mvTarget {
 };
 
 char mDistance(int a, int b, int c, int x, int y, int z){
-    return((2*std::min(abs(a-x),abs(a-x-180)) + abs(y-b) + abs(z-c))/4);
+    return((4*std::min(abs(x-a),180-abs(x-a)) + abs(y-b) + abs(z-c))/5);
 }
 
 int AdaptiveFilter2(IplImage* src, IplImage* dst){
-    mvTarget* targets = new mvTarget[2];
-    targets[0] = {0 ,100,100};
-    targets[1] = {60,100,100};
-    char minDist, tempDist;
+    mvTarget targets[] = {{179,150,120},{60,100,60}};
+
+    unsigned char minDist, tempDist;
     unsigned char* imgPtr, *resPtr;
 
     IplImage * HSVImg = mvGetScratchImage_Color();
@@ -354,7 +353,7 @@ int AdaptiveFilter2(IplImage* src, IplImage* dst){
         resPtr = (unsigned char*) (dst->imageData + r*dst->widthStep);
         
         for (int c = 0; c < dst->width; c++) {
-            minDist = 9999;
+            minDist = 255;
             for(int i =0; i<2; i++){
                 tempDist = mDistance(*imgPtr, *(imgPtr+1), *(imgPtr+2), targets[i].h, targets[i].s, targets[i].v);
                 if(tempDist < minDist) minDist = tempDist;
@@ -365,6 +364,6 @@ int AdaptiveFilter2(IplImage* src, IplImage* dst){
     }
 
     mvReleaseScratchImage_Color();
-    delete[] targets;
+    return 0;
 }
 
