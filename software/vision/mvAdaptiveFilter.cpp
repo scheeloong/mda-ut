@@ -329,3 +329,42 @@ void mvAdaptiveFilter3:: getRectangleNeighbours(Quad rect, Quad sides[]){
 
 
 }
+
+struct mvTarget {
+    char h, s, v;
+};
+
+char mDistance(int a, int b, int c, int x, int y, int z){
+    return((2*std::min(abs(a-x),abs(a-x-180)) + abs(y-b) + abs(z-c))/4);
+}
+
+int AdaptiveFilter2(IplImage* src, IplImage* dst){
+    mvTarget* targets = new mvTarget[2];
+    targets[0] = {0 ,100,100};
+    targets[1] = {60,100,100};
+    char minDist, tempDist;
+    unsigned char* imgPtr, *resPtr;
+
+    IplImage * HSVImg = mvGetScratchImage_Color();
+    cvCvtColor (src, HSVImg, CV_BGR2HSV);
+
+
+    for (int r = 0; r < HSVImg->height; r++) {                         
+        imgPtr = (unsigned char*) (HSVImg->imageData + r*HSVImg->widthStep); // imgPtr = first pixel of rth's row
+        resPtr = (unsigned char*) (dst->imageData + r*dst->widthStep);
+        
+        for (int c = 0; c < dst->width; c++) {
+            minDist = 9999;
+            for(int i =0; i<2; i++){
+                tempDist = mDistance(*imgPtr, *(imgPtr+1), *(imgPtr+2), targets[i].h, targets[i].s, targets[i].v);
+                if(tempDist < minDist) minDist = tempDist;
+            }
+            *resPtr = minDist;
+            imgPtr+=3; resPtr++;
+        }
+    }
+
+    mvReleaseScratchImage_Color();
+    delete[] targets;
+}
+
