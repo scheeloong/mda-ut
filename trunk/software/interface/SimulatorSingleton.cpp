@@ -42,7 +42,9 @@ void SimulatorSingleton::create()
   created = true;
 
   // initialize barrier
+#ifndef MAC
   pthread_barrier_init(&barrier, NULL, 2);
+#endif
 
   // initialize target to the model
   target_model = *const_cast<physical_model *>(&model);
@@ -51,8 +53,10 @@ void SimulatorSingleton::create()
   pthread_create(&sim_thread, NULL, ::run_sim, NULL);
 
   // Wait until sim has initialized
+#ifndef MAC
   pthread_barrier_wait(&barrier);
   pthread_barrier_destroy(&barrier);
+#endif
 }
 
 void SimulatorSingleton::destroy()
@@ -211,7 +215,9 @@ void SimulatorSingleton::run_sim()
   img_dwn = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
 
   // Sim has initialized
+#ifndef MAC
   pthread_barrier_wait(&barrier);
+#endif
 
   glutMainLoop();
 }
