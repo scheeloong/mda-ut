@@ -63,7 +63,9 @@ class SimulatorSingleton {
 
     bool registered, created, thread_done;
     pthread_t sim_thread;
+#ifndef MAC
     pthread_barrier_t barrier;
+#endif
     IplImage *img_fwd, *img_dwn;
     volatile bool img_copy_start, img_copy_done;
     volatile ImageDirection img_dir;
