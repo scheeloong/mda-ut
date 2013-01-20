@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 #include "physical_model.h"
 
@@ -63,9 +64,7 @@ class SimulatorSingleton {
 
     bool registered, created, thread_done;
     pthread_t sim_thread;
-#ifndef MAC
-    pthread_barrier_t barrier;
-#endif
+    sem_t sema;
     IplImage *img_fwd, *img_dwn;
     volatile bool img_copy_start, img_copy_done;
     volatile ImageDirection img_dir;
