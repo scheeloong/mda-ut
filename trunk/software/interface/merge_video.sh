@@ -7,19 +7,19 @@ fi
 
 rm -f $3
 
-ffmpeg -i $1 -f image2 in1%d.png
-ffmpeg -i $2 -f image2 in2%d.png
+ffmpeg -i $1 -f image2 in1_%d.png
+ffmpeg -i $2 -f image2 in2_%d.png
 
 count=1
 
 while [ 1 ]; do
-  if [ ! -f in1$count.png ]; then
+  if [ ! -f in1_$count.png ]; then
     break
   fi
-  if [ ! -f in2$count.png ]; then
+  if [ ! -f in2_$count.png ]; then
     break
   fi
-  convert in1$count.png in2$count.png -append out$count.png
+  convert in1_$count.png in2_$count.png -append out$count.png
   count=`expr $count + 1`
 done
 
