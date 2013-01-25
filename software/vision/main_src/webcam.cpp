@@ -9,8 +9,24 @@
 #include "mvCircles.h"
 #include "profile_bin.h"
 
+void show_HSV_call_back (int event, int x, int y, int flags, void* param) {
+// param must be the IplImage* pointer, with HSV color space    
+    IplImage* img = (IplImage*) param;
+    unsigned char * imgPtr;
+    
+    if (event == CV_EVENT_LBUTTONDOWN || event == CV_EVENT_RBUTTONDOWN) {
+        // print the HSV values at x,y
+        imgPtr = (unsigned char*) img->imageData + y*img->widthStep + x*img->nChannels;
+        printf ("(%d,%d):  %u  %u  %u\n", x,y,imgPtr[0],imgPtr[1],imgPtr[2]);
+    }
+
+    if (event == CV_EVENT_RBUTTONDOWN) {
+        usleep (500000);
+    }
+}
+
 int main( int argc, char** argv ) {
-    unsigned CAM_NUMBER=0, WRITE=0, TEST=0, CARTOON=0,
+    unsigned CAM_NUMBER=0, WRITE=0, TEST=0, SHOW_HSV=0, CARTOON=0,
              LINE=0, CIRCLE=0, LOAD=0;
     unsigned long nframes = 0, t_start, t_end;
     
@@ -24,6 +40,8 @@ int main( int argc, char** argv ) {
             CARTOON = 1;
         else if (!strcmp (argv[i], "--test"))
             TEST = 1;
+        else if (!strcmp (argv[i], "--show-hsv"))
+            SHOW_HSV = 1;
         else if (!strcmp (argv[i], "--write"))
             WRITE = 1;
         else if (!strcmp (argv[i], "--line"))
@@ -39,6 +57,7 @@ int main( int argc, char** argv ) {
             printf ("Put any integer as an argument (without --) to use that as camera number\n\n");
             printf ("  --write\n    Write captured video to file.\n\n");
             printf ("  --line\n    Run line finding code.\n\n");
+            printf ("  --show-hsv\n    Press L/R mouse button on main window to show HSV value.\n\n");
             printf ("  Example: `./webcam 1 --write` will use cam1, and will write to disk\n\n");
             return 0;
         }
@@ -73,17 +92,25 @@ int main( int argc, char** argv ) {
     mvAdaptiveFilter3 adaptive ("test_settings.csv");
 
     // declare images we need
+    IplImage* HSV_img = mvCreateImage_Color();
     IplImage* filter_img = mvCreateImage ();
     //IplImage* filter_img2 = mvCreateImage ();
  
+    if (SHOW_HSV) {
+        cvSetMouseCallback ("webcam", show_HSV_call_back, HSV_img);
+    }
+
     /// execution
     char c;
-    IplImage* frame;   
+    IplImage* frame;
 
     t_start = clock();
 
     for (;;) {
         frame = camera->getFrameResized(); // read frame from cam
+        if (LOAD) {
+            usleep(17000);
+        }
 
         if (!frame) {
             printf ("Video Finished.\n");
@@ -97,6 +124,10 @@ int main( int argc, char** argv ) {
  
         if (WRITE) {
             writer->writeFrame (frame);
+        }
+
+        if (SHOW_HSV) {
+            cvCvtColor (frame, HSV_img, CV_BGR2HSV);
         }
 
         if (CARTOON) {
@@ -115,16 +146,17 @@ int main( int argc, char** argv ) {
             goto LOOP_BOTTOM;
         }
 
-        /*win1->showImage (frame);
-        HSVFilter.filter (frame, filter_img); // process it
+        win1->showImage (frame);
+        
+        /*HSVFilter.filter (frame, filter_img); // process it
         win2->showImage (filter_img);
            
         Morphology7.open (filter_img, filter_img);
         Morphology5.gradient (filter_img, filter_img);
         win3->showImage (filter_img);
       */
-        if (TEST) {        
-            win1->showImage (frame);
+        
+        if (TEST) {             
             AdaptiveFilter2 (frame, filter_img);
 
             //mvSplitImage (frame, &filter_img, &filter_img2);
@@ -160,6 +192,7 @@ int main( int argc, char** argv ) {
     t_end = clock ();
     printf ("\nAverage Framerate = %f\n", (float)nframes/(t_end - t_start)*CLOCKS_PER_SEC);
     
+    cvReleaseImage (&HSV_img);
     cvReleaseImage (&filter_img);
     delete camera;
     if (writer)
