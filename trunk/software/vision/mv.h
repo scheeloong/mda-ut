@@ -188,7 +188,7 @@ class mvHSVFilter {
                 );    
 };
 
-int AdaptiveFilter2(IplImage* src, IplImage* dst);
+void AdaptiveFilter2(const IplImage* src, IplImage* dst);
 
 /** mvAdaptiveFilter
  *  This class is a set of AdaptiveBox's to represent the water, the target, and 

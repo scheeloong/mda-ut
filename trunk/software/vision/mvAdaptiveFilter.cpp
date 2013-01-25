@@ -331,14 +331,14 @@ void mvAdaptiveFilter3:: getRectangleNeighbours(Quad rect, Quad sides[]){
 }
 
 struct mvTarget {
-    char h, s, v;
+    unsigned char h, s, v;
 };
 
 char mDistance(int a, int b, int c, int x, int y, int z){
     return((4*std::min(abs(x-a),180-abs(x-a)) + abs(y-b) + abs(z-c))/5);
 }
 
-int AdaptiveFilter2(IplImage* src, IplImage* dst){
+void AdaptiveFilter2(const IplImage* src, IplImage* dst){
     mvTarget targets[] = {{179,150,120},{60,100,60}};
 
     unsigned char minDist, tempDist;
@@ -364,6 +364,5 @@ int AdaptiveFilter2(IplImage* src, IplImage* dst){
     }
 
     mvReleaseScratchImage_Color();
-    return 0;
 }
 
