@@ -2,6 +2,7 @@
 #include <cv.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "mgui.h"
 #include "mv.h"
