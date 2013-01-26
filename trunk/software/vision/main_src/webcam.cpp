@@ -91,6 +91,7 @@ int main( int argc, char** argv ) {
     mvAdaptiveFilter3 adaptive ("test_settings.csv");
 
     // declare images we need
+    IplImage* scratch_color = mvCreateImage_Color();
     IplImage* HSV_img = mvCreateImage_Color();
     IplImage* filter_img = mvCreateImage ();
     //IplImage* filter_img2 = mvCreateImage ();
@@ -152,9 +153,11 @@ int main( int argc, char** argv ) {
       */
         
         if (TEST) {             
-            mvMeanShift (frame, HSV_img, 5, 10, 25, 30);
+            mvMeanShift (frame, scratch_color, 5, 10, 25, 30);
+            AdaptiveFilter2(scratch_color, filter_img);
 
-            win2->showImage (HSV_img);
+            win2->showImage (scratch_color);
+            win3->showImage (filter_img);
         }
         else if (LINE) {
             HoughLines.findLines (filter_img, &lines);
@@ -186,6 +189,7 @@ int main( int argc, char** argv ) {
     printf ("\nAverage Framerate = %f\n", (float)nframes/(t_end - t_start)*CLOCKS_PER_SEC);
     
     cvReleaseImage (&HSV_img);
+    cvReleaseImage (&scratch_color);
     cvReleaseImage (&filter_img);
     delete camera;
     if (writer)
