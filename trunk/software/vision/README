@@ -15,3 +15,4 @@ Important Things:
     appropriate value indicated in the comments. 
   - A setting like LENGTH without underscores will behave as the value itself.
   - Use "gtk-v4l" to edit hardware camera settings
+    - (or v4l2ucp on the netbook)
