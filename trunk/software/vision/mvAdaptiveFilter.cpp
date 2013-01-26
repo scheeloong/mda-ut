@@ -330,6 +330,102 @@ void mvAdaptiveFilter3:: getRectangleNeighbours(Quad rect, Quad sides[]){
 
 }
 
+// assumptions:
+// Hue stays ~ the same in all lighting conditions
+// Saturation can vary, but always greater than a certain threshold
+
+#define IN_SRC(x) (((x)>=src_addr_first) && ((x)<src_addr_last))
+
+void mvMeanShift_internal(const IplImage* src, IplImage* dst, int kernel_size, int h_dist, int s_dist, int v_dist) {
+    assert (kernel_size % 2 == 1);
+    const int s_min = 60;
+    const int v_min = 30;
+
+    // generate kernel point array
+    int kernel_area = kernel_size*kernel_size;
+    int kernel_rad = (kernel_size-1)/2;
+    int widthStep = src->widthStep;
+    int* kernel_point_array = new int[kernel_area];
+    unsigned array_index = 0;
+    for (int j = -kernel_rad; j <= kernel_rad; j++)
+        for (int i = -kernel_rad; i <= kernel_rad; i++)
+            kernel_point_array[array_index++] = i*widthStep + j;
+
+    const IplImage * HSVImg = src;
+
+    unsigned char* src_addr_first = (unsigned char*)src->imageData;
+    unsigned char* src_addr_last = src_addr_first + widthStep*src->height;
+
+    unsigned char* imgPtr, *resPtr;
+    for (int r = 0; r < HSVImg->height; r++) {                         
+        imgPtr = (unsigned char*) (HSVImg->imageData + r*HSVImg->widthStep); // imgPtr = first pixel of rth's row
+        resPtr = (unsigned char*) (dst->imageData + r*dst->widthStep);
+        
+        for (int c = 0; c < dst->width; c++) {
+            unsigned char H = *imgPtr;
+            unsigned char S = *(imgPtr+1);
+            unsigned char V = *(imgPtr+2);
+            
+            *resPtr = *(resPtr+1) = *(resPtr+2) = 0;
+
+            // check if means sv min reqs
+            if (S >= s_min && V >= v_min) {
+                unsigned char* tempPtr;
+                unsigned H2 = 0, S2 = 0, V2 = 0;
+                int good_pixels = 0, total_pixels = 0;
+
+                // go thru each pixel in the kernel
+                for (int i = 0; i < kernel_area; i++) {
+                    tempPtr = imgPtr + 3*kernel_point_array[i];
+                    if (!IN_SRC(tempPtr))
+                        continue;
+
+                    if (std::min(abs(H-tempPtr[0]),180-abs(H-tempPtr[0])) <= h_dist && 
+                        abs(S-tempPtr[1]) <= s_dist && 
+                        abs(V-tempPtr[2]) <= v_dist) 
+                    {
+                        H2 += (unsigned)tempPtr[0];
+                        S2 += (unsigned)tempPtr[1];
+                        V2 += (unsigned)tempPtr[2];
+                        good_pixels++;
+                    }
+
+                    total_pixels++;
+                }
+
+                if (10*good_pixels >= total_pixels) {
+                    resPtr[0] = (unsigned char)(H2 / good_pixels);
+                    resPtr[1] = (unsigned char)(S2 / good_pixels);
+                    resPtr[2] = (unsigned char)(V2 / good_pixels);
+                }
+            }
+            
+            imgPtr += 3;
+            resPtr += 3;
+        }
+    }
+
+    delete[] kernel_point_array;
+}
+
+void mvMeanShift(const IplImage* src, IplImage* dst, int kernel_size, int h_dist, int s_dist, int v_dist) {
+    int N = 2;
+    IplImage* src_resized = cvCreateImage(cvSize(src->width/N,src->height/N), IPL_DEPTH_8U, 3);
+    IplImage* dst_resized = cvCreateImage(cvSize(src->width/N,src->height/N), IPL_DEPTH_8U, 3);
+
+    cvResize (src, src_resized, CV_INTER_NN);
+    cvCvtColor (src_resized, src_resized, CV_BGR2HSV);
+
+    mvMeanShift_internal (src_resized, dst_resized, kernel_size, h_dist, s_dist, v_dist);
+
+    cvCvtColor (dst_resized, dst_resized, CV_HSV2BGR);
+    cvResize (dst_resized, dst, CV_INTER_LINEAR);
+ 
+    cvReleaseImage(&src_resized);
+    cvReleaseImage(&dst_resized);   
+}
+
+
 struct mvTarget {
     unsigned char h, s, v;
 };
@@ -339,7 +435,7 @@ char mDistance(int a, int b, int c, int x, int y, int z){
 }
 
 void AdaptiveFilter2(const IplImage* src, IplImage* dst){
-    mvTarget targets[] = {{179,150,120},{60,100,60}};
+    mvTarget targets[] = {{50,130,60},{100,80,40}};
 
     unsigned char minDist, tempDist;
     unsigned char* imgPtr, *resPtr;
