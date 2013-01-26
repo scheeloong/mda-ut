@@ -371,8 +371,8 @@ void mvMeanShift_internal(const IplImage* src, IplImage* dst, int kernel_size, i
             // check if means sv min reqs
             if (S >= s_min && V >= v_min) {
                 unsigned char* tempPtr;
-                unsigned H2 = 0, S2 = 0, V2 = 0;
-                int good_pixels = 0, total_pixels = 0;
+                unsigned H2 = H, S2 = S, V2 = V;
+                int good_pixels = 1, total_pixels = 1;
 
                 // go thru each pixel in the kernel
                 for (int i = 0; i < kernel_area; i++) {
@@ -393,7 +393,7 @@ void mvMeanShift_internal(const IplImage* src, IplImage* dst, int kernel_size, i
                     total_pixels++;
                 }
 
-                if (10*good_pixels >= total_pixels) {
+                if (6*good_pixels >= total_pixels) {
                     resPtr[0] = (unsigned char)(H2 / good_pixels);
                     resPtr[1] = (unsigned char)(S2 / good_pixels);
                     resPtr[2] = (unsigned char)(V2 / good_pixels);
