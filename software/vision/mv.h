@@ -189,6 +189,7 @@ class mvHSVFilter {
 };
 
 void AdaptiveFilter2(const IplImage* src, IplImage* dst);
+void mvMeanShift(const IplImage* src, IplImage* dst, int kernel_size, int h_dist, int s_dist, int v_dist);
 
 /** mvAdaptiveFilter
  *  This class is a set of AdaptiveBox's to represent the water, the target, and 

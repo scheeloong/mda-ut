@@ -27,7 +27,7 @@ void show_HSV_call_back (int event, int x, int y, int flags, void* param) {
 }
 
 int main( int argc, char** argv ) {
-    unsigned CAM_NUMBER=0, WRITE=0, TEST=0, SHOW_HSV=0, CARTOON=0,
+    unsigned CAM_NUMBER=0, WRITE=0, TEST=0, CARTOON=0,
              LINE=0, CIRCLE=0, LOAD=0;
     unsigned long nframes = 0, t_start, t_end;
     
@@ -41,8 +41,6 @@ int main( int argc, char** argv ) {
             CARTOON = 1;
         else if (!strcmp (argv[i], "--test"))
             TEST = 1;
-        else if (!strcmp (argv[i], "--show-hsv"))
-            SHOW_HSV = 1;
         else if (!strcmp (argv[i], "--write"))
             WRITE = 1;
         else if (!strcmp (argv[i], "--line"))
@@ -97,9 +95,7 @@ int main( int argc, char** argv ) {
     IplImage* filter_img = mvCreateImage ();
     //IplImage* filter_img2 = mvCreateImage ();
  
-    if (SHOW_HSV) {
-        cvSetMouseCallback ("webcam", show_HSV_call_back, HSV_img);
-    }
+    cvSetMouseCallback ("webcam", show_HSV_call_back, HSV_img);
 
     /// execution
     char c;
@@ -127,9 +123,7 @@ int main( int argc, char** argv ) {
             writer->writeFrame (frame);
         }
 
-        if (SHOW_HSV) {
-            cvCvtColor (frame, HSV_img, CV_BGR2HSV);
-        }
+        cvCvtColor (frame, HSV_img, CV_BGR2HSV);
 
         if (CARTOON) {
             win1->showImage (frame);
@@ -158,11 +152,9 @@ int main( int argc, char** argv ) {
       */
         
         if (TEST) {             
-            AdaptiveFilter2 (frame, filter_img);
+            mvMeanShift (frame, HSV_img, 5, 10, 25, 30);
 
-            //mvSplitImage (frame, &filter_img, &filter_img2);
-            win2->showImage (filter_img);
-            //win3->showImage (filter_img2);
+            win2->showImage (HSV_img);
         }
         else if (LINE) {
             HoughLines.findLines (filter_img, &lines);

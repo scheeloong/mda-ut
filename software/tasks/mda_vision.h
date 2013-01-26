@@ -96,6 +96,7 @@ class MDA_VISION_MODULE_TEST : public MDA_VISION_MODULE_BASE {
     
     mvAdaptiveFilter3 _adaptive;
 
+    IplImage* _color_img;
     IplImage* _filtered_img;
 
     PROFILE_BIN bin_test;
