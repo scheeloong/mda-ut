@@ -63,7 +63,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
 
         if (abs(slope) < 0.2) { // single horizontal line
             m_pixel_x = (int)(x1+x2)*0.5 - imWidth;
-            m_pixel_y = (int)(y1-y2)*0.5 - imHeight;
+            m_pixel_y = (int)(y1+y2)*0.5 - imHeight;
             m_range = ((float)(FRAME_REAL_WIDTH) * _filtered_img->width) / ((x2-x1) * TAN_FOV_X);
             retval = ONE_SEGMENT;
             goto RETURN_CENTROID;
@@ -161,7 +161,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
 
         if(abs(slope0) < 0.2 && abs(slope1) > 6 && abs(slope2) > 6){
             m_pixel_x = (int)(x00+x01+x10+x11+x20+x21)*0.167 - imWidth;
-            m_pixel_y = (int)(MIN_OF(y10,y11)+MIN_OF(y20,y21)+y00+y01)*0.25 - imHeight;
+            m_pixel_y = (int)(MAX_OF(y10,y11)+MAX_OF(y20,y21)+y00+y01)*0.25 - imHeight;
             width  = (int)(abs(x00-x01)+abs((x10+x11)-(x20+x21)))*0.333;
             height = (int)(-1*y00-y01+MAX_OF(y10,y11)+MAX_OF(y20,y21))*0.5;
             retval = FULL_DETECT;

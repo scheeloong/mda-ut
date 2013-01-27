@@ -44,12 +44,12 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
             }
             else if (vision_code == ONE_SEGMENT) {
                 int ang_x = frame_vision.get_angular_x();
-                //int ang_y = frame_vision.get_angular_y();
+                int ang_y = frame_vision.get_angular_y();
+                int range = frame_vision.get_range();
+                int depth_change = tan(ang_y*0.017453) * range; 
 
-                //if(ang_y < 5.0) actuator_output->set_attitude_change(SINK);
-                //else if(ang_y > 5.0) actuator_output->set_attitude_change(RISE);
-                if(abs(ang_x) > 5.0) actuator_output->set_attitude_change(RIGHT, ang_x);
-                //else if(ang_x < -5.0) actuator_output->set_attitude_change(LEFT, ang_x);
+                if(fabs(ang_y) > 5.0) actuator_output->set_attitude_change(RISE,depth_change);
+                else if(abs(ang_x) > 5.0) actuator_output->set_attitude_change(RIGHT, ang_x);
                 else actuator_output->set_attitude_change(FORWARD);
             } 
             else if (vision_code == FULL_DETECT) {
@@ -63,12 +63,13 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
                 }
 
                 int ang_x = frame_vision.get_angular_x();
-                //int ang_y = frame_vision.get_angular_y();
+                int ang_y = frame_vision.get_angular_y();
+                int range = frame_vision.get_range();
+                int depth_change = tan(ang_y*0.017453) * range; 
 
-                //if(ang_y < 5.0) actuator_output->set_attitude_change(SINK);
-                //else if(ang_y > 5.0) actuator_output->set_attitude_change(RISE);
-                if(abs(ang_x) > 5.0) actuator_output->set_attitude_change(RIGHT, ang_x);
-                //else if(ang_x < -5.0) actuator_output->set_attitude_change(LEFT, ang_x);
+
+                if(fabs(ang_y) > 10.0) actuator_output->set_attitude_change(RISE, depth_change);
+                else if(abs(ang_x) > 5.0) actuator_output->set_attitude_change(RIGHT, ang_x);
                 else actuator_output->set_attitude_change(FORWARD);
             }
             else {
