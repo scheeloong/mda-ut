@@ -384,7 +384,7 @@ void mvMeanShift_internal(const IplImage* src, IplImage* dst, int kernel_size, i
                         abs(S-tempPtr[1]) <= s_dist && 
                         abs(V-tempPtr[2]) <= v_dist) 
                     {
-                        // Circular red case is hard, let's just use 0 if we're looking for red see > 90
+                        // Circular red case is hard, let's just use 0 if we're looking for red and see > 90,
                         // and use 179 if we're looking for red >= 0
                         if (H <= h_dist && abs(H-tempPtr[0]) > 90) {
                             H2 += 0;
