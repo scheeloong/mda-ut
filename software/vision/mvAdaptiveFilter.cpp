@@ -336,16 +336,26 @@ void mvAdaptiveFilter3:: getRectangleNeighbours(Quad rect, Quad sides[]){
 
 #define IN_SRC(x) (((x)>=src_addr_first) && ((x)<src_addr_last))
 
-void mvMeanShift_internal(const IplImage* src, IplImage* dst, int kernel_size, int h_dist, int s_dist, int v_dist) {
+mvMeanShift:: mvMeanShift (int kernel_sz)
+{
+    kernel_size = kernel_sz;
+    s_min = 60;
+    v_min = 30;
+    kernel_area = kernel_sz * kernel_sz;
+    kernel_rad = (kernel_sz -1)/2;
+    kernel_point_array = new int[kernel_area];
+}
+
+mvMeanShift:: ~mvMeanShift () {
+    delete[] kernel_point_array;
+}
+
+void mvMeanShift:: mvMeanShift_internal(const IplImage* src, IplImage* dst, int h_dist, int s_dist, int v_dist) {
     assert (kernel_size % 2 == 1);
-    const int s_min = 60;
-    const int v_min = 30;
+   
 
     // generate kernel point array
-    int kernel_area = kernel_size*kernel_size;
-    int kernel_rad = (kernel_size-1)/2;
     int widthStep = src->widthStep;
-    int* kernel_point_array = new int[kernel_area];
     unsigned array_index = 0;
     for (int j = -kernel_rad; j <= kernel_rad; j++)
         for (int i = -kernel_rad; i <= kernel_rad; i++)
@@ -413,10 +423,10 @@ void mvMeanShift_internal(const IplImage* src, IplImage* dst, int kernel_size, i
         }
     }
 
-    delete[] kernel_point_array;
+
 }
 
-void mvMeanShift(const IplImage* src, IplImage* dst, int kernel_size, int h_dist, int s_dist, int v_dist) {
+void mvMeanShift:: filter(const IplImage* src, IplImage* dst, int h_dist, int s_dist, int v_dist) {
     int N = 2;
     IplImage* src_resized = cvCreateImage(cvSize(src->width/N,src->height/N), IPL_DEPTH_8U, 3);
     IplImage* dst_resized = cvCreateImage(cvSize(src->width/N,src->height/N), IPL_DEPTH_8U, 3);
@@ -424,7 +434,7 @@ void mvMeanShift(const IplImage* src, IplImage* dst, int kernel_size, int h_dist
     cvResize (src, src_resized, CV_INTER_NN);
     cvCvtColor (src_resized, src_resized, CV_BGR2HSV);
 
-    mvMeanShift_internal (src_resized, dst_resized, kernel_size, h_dist, s_dist, v_dist);
+    mvMeanShift_internal (src_resized, dst_resized, h_dist, s_dist, v_dist);
 
     cvCvtColor (dst_resized, dst_resized, CV_HSV2BGR);
     cvResize (dst_resized, dst, CV_INTER_LINEAR);

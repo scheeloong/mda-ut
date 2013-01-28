@@ -153,7 +153,7 @@ int main( int argc, char** argv ) {
       */
         
         if (TEST) {             
-            mvMeanShift (frame, scratch_color, 5, 10, 25, 30);
+           // mvMeanShift (frame, scratch_color, 5, 10, 25, 30);
             AdaptiveFilter2(scratch_color, filter_img);
 
             win2->showImage (scratch_color);
