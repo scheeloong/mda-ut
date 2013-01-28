@@ -242,5 +242,30 @@ class mvAdaptiveFilter3 {
     void show_histogram ();
 };
 
+/* mvMeanShift:
+ * This class takes average values of a kernel surrounding each pixel
+ */
+class mvMeanShift {
+    //declare constants here
+    int s_min;
+    int v_min;
+    int kernel_size;
+    int kernel_area;
+    int kernel_rad;
+    int *kernel_point_array;
+    
+    private:
+    void mvMeanShift_internal(const IplImage* src, IplImage* dst, int h_dist, int s_dist, int v_dist);
+    
+    public: 
+    mvMeanShift (int kernel_sz); //constructor
+    ~mvMeanShift(); // destructor
+    void filter(const IplImage *src, IplImage* dst, int h_dist, int s_dist, int v_dist);
+      
+  
+  
+  
+  
+};
 
 #endif
