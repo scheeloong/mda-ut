@@ -48,7 +48,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
                 int range = frame_vision.get_range();
                 int depth_change = tan(ang_y*0.017453) * range; 
 
-                if(fabs(ang_y) > 5.0) actuator_output->set_attitude_change(RISE,depth_change);
+                if(fabs(ang_y) > 5.0) actuator_output->set_attitude_change(SINK,depth_change);
                 else if(abs(ang_x) > 5.0) actuator_output->set_attitude_change(RIGHT, ang_x);
                 else actuator_output->set_attitude_change(FORWARD);
             } 
@@ -68,7 +68,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
                 int depth_change = tan(ang_y*0.017453) * range; 
 
 
-                if(fabs(ang_y) > 10.0) actuator_output->set_attitude_change(RISE, depth_change);
+                if(fabs(ang_y) > 10.0) actuator_output->set_attitude_change(SINK, depth_change);
                 else if(abs(ang_x) > 5.0) actuator_output->set_attitude_change(RIGHT, ang_x);
                 else actuator_output->set_attitude_change(FORWARD);
             }
