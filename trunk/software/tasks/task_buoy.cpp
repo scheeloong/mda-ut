@@ -14,13 +14,13 @@ MDA_TASK_BUOY:: ~MDA_TASK_BUOY ()
 MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_task() {
     MDA_TASK_RETURN_CODE code;
 
-    code = run_single_buoy(BUOY_RED);
+    code = run_single_buoy(BUOY_YELLOW);
     if (code != TASK_DONE) {
         printf ("Something wrong in task_buoy!\n");
         return TASK_ERROR;
     }
 
-    code = run_single_buoy(BUOY_YELLOW);
+    code = run_single_buoy(BUOY_RED);
     if (code != TASK_DONE) {
         printf ("Something wrong in task_buoy!\n");
         return TASK_ERROR;
@@ -106,13 +106,14 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
 
                 // we cant use set_attitude_change to rise and fwd at the same time so we have to
                 // check if we are roughly pointing at the target, and decide what to do
-                if (abs(ang_x) < 5 && abs(ang_y) < 20) {
+                if ((abs(ang_x) < 5 || (abs(ang_x) < 15 && range < BUOY_RANGE_WHEN_DONE)) && abs(ang_y) < 20) {
                     actuator_output->set_attitude_change(FORWARD);
 
                     // calculate an exponential moving average for range
                     EMA_range = (EMA_range == -1) ? range : 0.1*range+0.9*EMA_range;
 
-                    if (EMA_range < BUOY_RANGE_WHEN_DONE) {
+                    // more forgiving on EMA_range
+                    if (EMA_range < BUOY_RANGE_WHEN_DONE * 1.33) {
                         done_buoy = true;
                     }   
                 }
@@ -133,8 +134,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
 
             // retreat backwards
             printf ("Resetting Position\n");
-            actuator_output->set_attitude_change(REVERSE);
-            sleep (11);
+            actuator_output->set_attitude_change(REVERSE, 3);
+            sleep (4);
 
             actuator_output->set_attitude_change(FORWARD,0);
             ret_code = TASK_DONE;
