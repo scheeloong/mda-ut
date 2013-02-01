@@ -50,8 +50,8 @@ OperationNull.o: OperationNull.cpp Operation.h AttitudeInput.h \
  ../tasks/mda_tasks.h ../tasks/mda_vision.h ../tasks/viterbi.h \
  ../interface/ActuatorOutput.h ../interface/AttitudeInput.h \
  ../interface/ImageInput.h ../interface/CharacterStreamSingleton.h
-SimulatorSingleton.o: SimulatorSingleton.cpp ../sim/sim.h \
- CharacterStreamSingleton.h SimulatorSingleton.h ../sim/physical_model.h \
- ../sim/types.h ImageInput.h ../vision/mgui.h ../vision/profile_bin.h
+SimulatorSingleton.o: SimulatorSingleton.cpp CharacterStreamSingleton.h \
+ SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h ImageInput.h \
+ ../vision/mgui.h ../vision/profile_bin.h ../sim/sim.h
 SubmarineSingleton.o: SubmarineSingleton.cpp SubmarineSingleton.h \
  ../scripts/scripts.h ../ui/fpga_ui.h
