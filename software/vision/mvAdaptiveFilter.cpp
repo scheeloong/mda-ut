@@ -336,9 +336,12 @@ void mvAdaptiveFilter3:: getRectangleNeighbours(Quad rect, Quad sides[]){
 
 #define IN_SRC(x) (((x)>=src_addr_first) && ((x)<src_addr_last))
 
-mvMeanShift:: mvMeanShift (int kernel_sz)
+mvMeanShift:: mvMeanShift (int kernel_sz, int h_dist, int s_dist, int v_dist)
 {
     kernel_size = kernel_sz;
+    this->h_dist = h_dist;
+    this->s_dist = v_dist;
+    this->s_dist = v_dist;
     s_min = 60;
     v_min = 30;
     kernel_area = kernel_sz * kernel_sz;
@@ -350,7 +353,7 @@ mvMeanShift:: ~mvMeanShift () {
     delete[] kernel_point_array;
 }
 
-void mvMeanShift:: mvMeanShift_internal(const IplImage* src, IplImage* dst, int h_dist, int s_dist, int v_dist) {
+void mvMeanShift:: mvMeanShift_internal(const IplImage* src, IplImage* dst) {
     assert (kernel_size % 2 == 1);
    
 
@@ -426,7 +429,7 @@ void mvMeanShift:: mvMeanShift_internal(const IplImage* src, IplImage* dst, int 
 
 }
 
-void mvMeanShift:: filter(const IplImage* src, IplImage* dst, int h_dist, int s_dist, int v_dist) {
+void mvMeanShift::filter(const IplImage* src, IplImage* dst) {
     int N = 2;
     IplImage* src_resized = cvCreateImage(cvSize(src->width/N,src->height/N), IPL_DEPTH_8U, 3);
     IplImage* dst_resized = cvCreateImage(cvSize(src->width/N,src->height/N), IPL_DEPTH_8U, 3);
@@ -434,7 +437,7 @@ void mvMeanShift:: filter(const IplImage* src, IplImage* dst, int h_dist, int s_
     cvResize (src, src_resized, CV_INTER_NN);
     cvCvtColor (src_resized, src_resized, CV_BGR2HSV);
 
-    mvMeanShift_internal (src_resized, dst_resized, h_dist, s_dist, v_dist);
+    mvMeanShift_internal (src_resized, dst_resized);
 
     cvCvtColor (dst_resized, dst_resized, CV_HSV2BGR);
     cvResize (dst_resized, dst, CV_INTER_LINEAR);

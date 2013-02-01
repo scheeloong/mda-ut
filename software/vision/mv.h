@@ -189,7 +189,6 @@ class mvHSVFilter {
 };
 
 void AdaptiveFilter2(const IplImage* src, IplImage* dst);
-void mvMeanShift(const IplImage* src, IplImage* dst, int kernel_size, int h_dist, int s_dist, int v_dist);
 
 /** mvAdaptiveFilter
  *  This class is a set of AdaptiveBox's to represent the water, the target, and 
@@ -247,6 +246,10 @@ class mvAdaptiveFilter3 {
  */
 class mvMeanShift {
     //declare constants here
+    int h_dist;
+    int s_dist;
+    int v_dist;
+
     int s_min;
     int v_min;
     int kernel_size;
@@ -255,12 +258,12 @@ class mvMeanShift {
     int *kernel_point_array;
     
     private:
-    void mvMeanShift_internal(const IplImage* src, IplImage* dst, int h_dist, int s_dist, int v_dist);
+    void mvMeanShift_internal(const IplImage* src, IplImage* dst);
     
     public: 
-    mvMeanShift (int kernel_sz); //constructor
+    mvMeanShift (int kernel_sz, int h_dist, int s_dist, int v_dist); //constructor
     ~mvMeanShift(); // destructor
-    void filter(const IplImage *src, IplImage* dst, int h_dist, int s_dist, int v_dist);
+    void filter(const IplImage *src, IplImage* dst);
       
   
   
