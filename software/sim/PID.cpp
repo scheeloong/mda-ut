@@ -1,11 +1,17 @@
 #include "PID.h"
+#include <stdio.h>
+#include <sys/time.h>
 
 PID::PID(){
 	Kp =  Ki =  Kd =  alpha = 0;
-	t = clock();
+	
+	gettimeofday(&t,NULL);
+	unsigned long long t_us = t.tv_sec*1000000 + t.tv_usec;
+
+	// printf("time initialized to: %d\n",t);
 	
 	for(int i=0; i<PID_NUM_OLD_VALUES; i++){
-		times[i] = ((double)t-i)/CLOCKS_PER_SEC;	//initialize to now, with an offset such that 1/(t[i]-t[i+1]) != inf
+		times[i] = (t_us-i);	//initialize to now, with an offset such that 1/(t[i]-t[i+1]) != inf
 		for(int j=0; j<PID_DEG_FREEDOM; j++){
 			oldValues[j][i] = 0;
 		}
@@ -15,10 +21,13 @@ PID::PID(){
 
 PID::PID(float _Kp, float _Ki, float _Kd, float _alpha){
 	Kp = _Kp; Ki = _Ki; Kd = _Kd; alpha = _alpha;
-	t = clock();
+
+	gettimeofday(&t,NULL);
+	unsigned long long t_us = t.tv_sec*1000000 + t.tv_usec;
+	// printf("time initialized to: %d\n",t);
 	
 	for(int i=0; i<PID_NUM_OLD_VALUES; i++){
-		times[i] = ((double)t-i)/CLOCKS_PER_SEC;	//initialize to now, with an offset such that 1/(t[i]-t[i+1]) != inf
+		times[i] = (t_us-i);	//initialize to now, with an offset such that 1/(t[i]-t[i+1]) != inf
 		for(int j=0; j<PID_DEG_FREEDOM; j++){
 			oldValues[j][i] = 0;
 		}
@@ -39,10 +48,12 @@ void PID::setAlpha(float _alpha){
 
 void PID::PID_Reset(){
 /*Resets controller while preserving PID constants*/
-	t = clock();
-	
+
+	gettimeofday(&t,NULL);
+	unsigned long long t_us = t.tv_sec*1000000 + t.tv_usec;
+
 	for(int i=0; i<PID_NUM_OLD_VALUES; i++){
-		times[i] = ((double)t-i)/CLOCKS_PER_SEC;	//initialize to now, with an offset such that 1/(t[i]-t[i+1]) != inf
+		times[i] = (t_us-i);	//initialize to now, with an offset such that 1/(t[i]-t[i+1]) != inf
 		for(int j=0; j<PID_DEG_FREEDOM; j++){
 			oldValues[j][i] = 0;
 		}
@@ -58,14 +69,16 @@ void PID::PID_Update(float *values){
 		for (int i=0; i<PID_DEG_FREEDOM; i++) oldValues[i][j] = oldValues[i][j-1];
 		times[j] = times[j-1];
 	}
-	t = clock();
-	times[0] = ((double)t)/CLOCKS_PER_SEC;
+	gettimeofday(&t,NULL);
+	unsigned long long t_us = t.tv_sec*1000000 + t.tv_usec;
+
+	times[0] = t_us;
 
 	for(int i=0; i<PID_DEG_FREEDOM; i++){
 		oldValues[i][0] = values[i];
 
-		I[i] = I[i] * (1-alpha) + (times[0] - times[1])*(oldValues[i][0] + oldValues[i][1])/2;  //Trapezoidal integration
-		D[i] = (oldValues[i][0] - oldValues[i][1])/(times[0]-times[1]);							//Backwards difference differentiation
+		I[i] = I[i] * (1-alpha) + ((times[0] - times[1])*(oldValues[i][0] + oldValues[i][1])/2) / 1000000;  //Trapezoidal integration
+		D[i] = (oldValues[i][0] - oldValues[i][1])/(times[0]-times[1]) * 1000000;							//Backwards difference differentiation
 		P[i] = values[i];
 	}
 }
@@ -79,4 +92,13 @@ float* PID::PID_Output(){
 		output[i] = Kp*P[i] + Kd*D[i] + Ki*I[i];
 	}
 	return (output);
+}
+
+void PID::debug(){
+	printf("P: %f I: %f D: %f\n", P[0], I[0], D[0]);
+	printf(" times: ");
+	for(int j=0; j<PID_NUM_OLD_VALUES; j++){
+		printf("%lld ",times[j]);
+	}
+	printf("\n");
 }
