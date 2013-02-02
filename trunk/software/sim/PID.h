@@ -13,8 +13,8 @@ class PID {
 		float P[PID_DEG_FREEDOM], I[PID_DEG_FREEDOM], D[PID_DEG_FREEDOM];
 		float Kp, Ki, Kd;						//PID constants
 
-		clock_t t;								//Record real world time of execution for numerical integration/differentiation
-		double times[PID_NUM_OLD_VALUES];
+		struct timeval t;								//Record real world time of execution for numerical integration/differentiation
+		unsigned long long times[PID_NUM_OLD_VALUES];
 
 		float oldValues[PID_DEG_FREEDOM][PID_NUM_OLD_VALUES];	//store old values
 		float alpha;											//decay constant for I
@@ -31,5 +31,7 @@ class PID {
 
 		void   PID_Update(float *values);	//performs direct update on the model values, based on the target
 		float *PID_Output();
+
+		void debug();
 };
 #endif
