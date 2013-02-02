@@ -8,13 +8,6 @@
 
 #define POOL_HEIGHT 8
 
-#define P_FACTOR 1
-#define I_FACTOR 0.0
-#define D_FACTOR 0.0
-#define A_FACTOR 0.5
-#define MAX_YAW 0.004f
-#define MAX_DEPTH 0.004f
-
 // Global variables needed by sim
 volatile physical_model model;
 unsigned DEBUG_MODEL = 0;
@@ -32,7 +25,7 @@ void sim_close_window();
 /* Constructor and destructor for sim resource */
 
 SimulatorSingleton::SimulatorSingleton() : registered(false), created(false), thread_done(false),
-    img_fwd(NULL), img_dwn(NULL), img_copy_start(false), img_copy_done(false), Controller(P_FACTOR, I_FACTOR, D_FACTOR, A_FACTOR)
+    img_fwd(NULL), img_dwn(NULL), img_copy_start(false), img_copy_done(false)
 {
 }
 
@@ -317,30 +310,37 @@ void sim_idle()
   SimulatorSingleton::get_instance().sim_idle();
 }
 
+#define YAW_P_FACTOR 0.002
+#define DEPTH_P_FACTOR 0.002
+#define MAX_YAW_P 2.f
+#define MAX_DEPTH_P 2.f
 
 void SimulatorSingleton::sim_idle()
 {
-  float *input = new float[2];
-  input[0] = target_model.position.y - model.position.y;
-  input[1] = target_model.angle.yaw - model.angle.yaw;
-
-  Controller.PID_Update(input);
-  float *accel = Controller.PID_Output();
+  // P controller for target attitude
+  model.angular_accel = (target_model.angle.yaw - model.angle.yaw);
+  if (model.angular_accel > 180) {
+    model.angular_accel -= 360;
+  } else if (model.angular_accel < -180) {
+    model.angular_accel += 360;
+  }
+  model.depth_accel = target_model.position.y - model.position.y;
 
   // cast away volatile model
   physical_model temp_model = *const_cast<physical_model *>(&model);
 
-  //Clamp the output
-  temp_model.angular_accel  = std::min(accel[1], MAX_YAW);
-  temp_model.depth_accel    = std::min(accel[0], MAX_DEPTH);
+  temp_model.angular_accel = std::min(temp_model.angular_accel, MAX_YAW_P);
+  temp_model.depth_accel = std::min(temp_model.depth_accel, MAX_DEPTH_P);
 
-  temp_model.angular_accel  = std::max(temp_model.angular_accel, -MAX_YAW);
-  temp_model.depth_accel    = std::max(temp_model.depth_accel,   -MAX_DEPTH);
+  temp_model.angular_accel = std::max(temp_model.angular_accel, -MAX_YAW_P);
+  temp_model.depth_accel = std::max(temp_model.depth_accel, -MAX_DEPTH_P);
+
+  model.angular_accel *= YAW_P_FACTOR;
+  model.depth_accel *= DEPTH_P_FACTOR;
 
   // copy back to volatile model
   memcpy((void *)&model, &temp_model, sizeof(temp_model));
 
-  delete[] accel;
   ::anim_scene();
 }
 

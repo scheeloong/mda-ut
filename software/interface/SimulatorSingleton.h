@@ -17,7 +17,6 @@
 #include "physical_model.h"
 
 #include "ImageInput.h"
-#include "PID.h"
 
 class SimulatorSingleton {
   public:
@@ -72,8 +71,6 @@ class SimulatorSingleton {
     int fwd_window, dwn_window;
 
     physical_model target_model;
-
-    PID Controller;
 };
 
 #endif
