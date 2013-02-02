@@ -315,6 +315,7 @@ void ManualOperation::work()
            "  4    - frame vision\n"
            "\n"
            "  x    - exit vision mode\n"
+           "  q    - exit simulator\n"
          );
          break;
       case '\0': // timeout
