@@ -1,9 +1,7 @@
 #ifndef _PID_H
 #define _PID_H
 
-
-#include "physical_model.h"
-#include <ctime>
+#include <sys/time.h>
 
 #define PID_NUM_OLD_VALUES 3
 #define PID_DEG_FREEDOM 2		//Number of properties being controlled: 0=>y, 1=>yaw

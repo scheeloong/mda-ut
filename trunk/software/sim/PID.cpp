@@ -1,14 +1,11 @@
 #include "PID.h"
 #include <stdio.h>
-#include <sys/time.h>
 
 PID::PID(){
 	Kp =  Ki =  Kd =  alpha = 0;
 	
 	gettimeofday(&t,NULL);
 	unsigned long long t_us = t.tv_sec*1000000 + t.tv_usec;
-
-	// printf("time initialized to: %d\n",t);
 	
 	for(int i=0; i<PID_NUM_OLD_VALUES; i++){
 		times[i] = (t_us-i);	//initialize to now, with an offset such that 1/(t[i]-t[i+1]) != inf
@@ -24,7 +21,6 @@ PID::PID(float _Kp, float _Ki, float _Kd, float _alpha){
 
 	gettimeofday(&t,NULL);
 	unsigned long long t_us = t.tv_sec*1000000 + t.tv_usec;
-	// printf("time initialized to: %d\n",t);
 	
 	for(int i=0; i<PID_NUM_OLD_VALUES; i++){
 		times[i] = (t_us-i);	//initialize to now, with an offset such that 1/(t[i]-t[i+1]) != inf
