@@ -60,7 +60,7 @@ void ManualOperation::work()
     if (c == '\0') {
       if (count < 0) {
         count++;
-      } else {
+      } else if (mode != VISION) {
         char buf[128];
         sprintf(buf, "Yaw: %+04d degrees, Depth: %+04d cm, Target Yaw: %+04d degrees, Target Depth: %+04d",
           attitude_input->yaw(), attitude_input->depth(), attitude_input->target_yaw(), attitude_input->target_depth());
