@@ -8,6 +8,14 @@
 
 #define POOL_HEIGHT 8
 
+#define P_FACTOR 0.2
+#define I_FACTOR 0.05
+#define D_FACTOR 0.05
+#define A_FACTOR 0.75
+#define DEPTH_FACTOR 2.5f
+#define MAX_YAW .5f
+#define MAX_DEPTH 1.f
+
 // Global variables needed by sim
 volatile physical_model model;
 unsigned DEBUG_MODEL = 0;
@@ -25,7 +33,7 @@ void sim_close_window();
 /* Constructor and destructor for sim resource */
 
 SimulatorSingleton::SimulatorSingleton() : registered(false), created(false), thread_done(false),
-    img_fwd(NULL), img_dwn(NULL), img_copy_start(false), img_copy_done(false)
+    img_fwd(NULL), img_dwn(NULL), img_copy_start(false), img_copy_done(false), Controller(P_FACTOR, I_FACTOR, D_FACTOR, A_FACTOR)
 {
 }
 
@@ -116,7 +124,7 @@ void SimulatorSingleton::add_orientation(orientation a)
   set_target_yaw(model.angle.yaw);
 }
 
-#define ACCEL_FACTOR .5
+#define ACCEL_FACTOR .4
 void SimulatorSingleton::set_target_accel(float accel)
 {
   // No need to use target, set directly on the model
@@ -310,33 +318,25 @@ void sim_idle()
   SimulatorSingleton::get_instance().sim_idle();
 }
 
-#define YAW_P_FACTOR 0.002
-#define DEPTH_P_FACTOR 0.002
-#define MAX_YAW_P 2.f
-#define MAX_DEPTH_P 2.f
 
 void SimulatorSingleton::sim_idle()
 {
-  // P controller for target attitude
-  model.angular_accel = (target_model.angle.yaw - model.angle.yaw);
-  if (model.angular_accel > 180) {
-    model.angular_accel -= 360;
-  } else if (model.angular_accel < -180) {
-    model.angular_accel += 360;
-  }
-  model.depth_accel = target_model.position.y - model.position.y;
+  float input[2];
+  input[0] = target_model.position.y - model.position.y;
+  input[1] = target_model.angle.yaw - model.angle.yaw;
+
+  Controller.PID_Update(input);
+  float *accel = Controller.PID_Output();
 
   // cast away volatile model
   physical_model temp_model = *const_cast<physical_model *>(&model);
 
-  temp_model.angular_accel = std::min(temp_model.angular_accel, MAX_YAW_P);
-  temp_model.depth_accel = std::min(temp_model.depth_accel, MAX_DEPTH_P);
+  //Clamp the output
+  temp_model.angular_accel  = std::min(accel[1], MAX_YAW);
+  temp_model.depth_accel    = std::min(accel[0] * DEPTH_FACTOR, MAX_DEPTH);
 
-  temp_model.angular_accel = std::max(temp_model.angular_accel, -MAX_YAW_P);
-  temp_model.depth_accel = std::max(temp_model.depth_accel, -MAX_DEPTH_P);
-
-  model.angular_accel *= YAW_P_FACTOR;
-  model.depth_accel *= DEPTH_P_FACTOR;
+  temp_model.angular_accel  = std::max(temp_model.angular_accel, -MAX_YAW);
+  temp_model.depth_accel    = std::max(temp_model.depth_accel,   -MAX_DEPTH);
 
   // copy back to volatile model
   memcpy((void *)&model, &temp_model, sizeof(temp_model));
