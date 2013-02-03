@@ -1,6 +1,6 @@
 ActuatorOutputSimulator.o: ActuatorOutputSimulator.cpp ActuatorOutput.h \
  SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h ImageInput.h \
- ../vision/mgui.h ../vision/profile_bin.h
+ ../vision/mgui.h ../vision/profile_bin.h ../sim/PID.h
 ActuatorOutputSubmarine.o: ActuatorOutputSubmarine.cpp ActuatorOutput.h \
  SubmarineSingleton.h ../scripts/scripts.h ../ui/fpga_ui.h
 AquaTux.o: AquaTux.cpp AquaTux.h AttitudeInput.h ImageInput.h \
@@ -11,16 +11,16 @@ AquaTux.o: AquaTux.cpp AquaTux.h AttitudeInput.h ImageInput.h \
  ../interface/ActuatorOutput.h ../interface/AttitudeInput.h \
  ../interface/ImageInput.h ../interface/CharacterStreamSingleton.h \
  ../tasks/Mission.h ../tasks/../interface/Operation.h \
- SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h \
+ SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h ../sim/PID.h \
  SubmarineSingleton.h
 AttitudeInputSimulator.o: AttitudeInputSimulator.cpp AttitudeInput.h \
  SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h ImageInput.h \
- ../vision/mgui.h ../vision/profile_bin.h
+ ../vision/mgui.h ../vision/profile_bin.h ../sim/PID.h
 AttitudeInputSubmarine.o: AttitudeInputSubmarine.cpp AttitudeInput.h \
  SubmarineSingleton.h ../scripts/scripts.h ../ui/fpga_ui.h
 ImageInputSimulator.o: ImageInputSimulator.cpp ImageInput.h \
  ../vision/mgui.h ../vision/profile_bin.h SimulatorSingleton.h \
- ../sim/physical_model.h ../sim/types.h
+ ../sim/physical_model.h ../sim/types.h ../sim/PID.h
 ImageInputVideo.o: ImageInputVideo.cpp ImageInput.h ../vision/mgui.h \
  ../vision/profile_bin.h
 ImageInputWebcam.o: ImageInputWebcam.cpp ImageInput.h ../vision/mgui.h \
@@ -52,6 +52,6 @@ OperationNull.o: OperationNull.cpp Operation.h AttitudeInput.h \
  ../interface/ImageInput.h ../interface/CharacterStreamSingleton.h
 SimulatorSingleton.o: SimulatorSingleton.cpp CharacterStreamSingleton.h \
  SimulatorSingleton.h ../sim/physical_model.h ../sim/types.h ImageInput.h \
- ../vision/mgui.h ../vision/profile_bin.h ../sim/sim.h
+ ../vision/mgui.h ../vision/profile_bin.h ../sim/PID.h ../sim/sim.h
 SubmarineSingleton.o: SubmarineSingleton.cpp SubmarineSingleton.h \
  ../scripts/scripts.h ../ui/fpga_ui.h
