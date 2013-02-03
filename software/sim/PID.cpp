@@ -74,7 +74,11 @@ void PID::PID_Update(float *values){
 		oldValues[i][0] = values[i];
 
 		I[i] = I[i] * (1-alpha) + ((times[0] - times[1])*(oldValues[i][0] + oldValues[i][1])/2) / 1000000;  //Trapezoidal integration
-		D[i] = (oldValues[i][0] - oldValues[i][1])/(times[0]-times[1]) * 1000000;							//Backwards difference differentiation
+		if (times[0] - times[1] == 0) {
+			D[i] = 0;
+		} else {
+			D[i] = (oldValues[i][0] - oldValues[i][1])/(times[0]-times[1]) * 1000000;  //Backwards difference differentiation
+		}
 		P[i] = values[i];
 	}
 }
