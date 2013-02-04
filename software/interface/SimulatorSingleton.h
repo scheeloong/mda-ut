@@ -73,7 +73,8 @@ class SimulatorSingleton {
 
     physical_model target_model;
 
-    PID Controller;
+    PID PID_yaw;
+    PID PID_depth;
 };
 
 #endif

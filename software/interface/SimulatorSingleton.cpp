@@ -8,12 +8,12 @@
 
 #define POOL_HEIGHT 8
 
-#define P_FACTOR 0.2
-#define I_FACTOR 0.05
-#define D_FACTOR 0.05
-#define A_FACTOR 0.75
+#define P_FACTOR 1
+#define I_FACTOR 0
+#define D_FACTOR 0
+#define A_FACTOR 0.1
 #define DEPTH_FACTOR 2.5f
-#define MAX_YAW .5f
+#define MAX_YAW 2.f
 #define MAX_DEPTH 1.f
 
 // Global variables needed by sim
@@ -33,7 +33,9 @@ void sim_close_window();
 /* Constructor and destructor for sim resource */
 
 SimulatorSingleton::SimulatorSingleton() : registered(false), created(false), thread_done(false),
-    img_fwd(NULL), img_dwn(NULL), img_copy_start(false), img_copy_done(false), Controller(P_FACTOR, I_FACTOR, D_FACTOR, A_FACTOR)
+    img_fwd(NULL), img_dwn(NULL), img_copy_start(false), img_copy_done(false),
+    PID_yaw (P_FACTOR, I_FACTOR, D_FACTOR, A_FACTOR),
+    PID_depth (1,0,0,0)
 {
 }
 
@@ -321,19 +323,15 @@ void sim_idle()
 
 void SimulatorSingleton::sim_idle()
 {
-  float input[2];
-  input[0] = target_model.position.y - model.position.y;
-  input[1] = target_model.angle.yaw - model.angle.yaw;
-
-  Controller.PID_Update(input);
-  float *accel = Controller.PID_Output();
-
+  PID_depth.PID_Update (target_model.position.y - model.position.y);
+  PID_yaw.PID_Update (target_model.angle.yaw - model.angle.yaw);
+  //printf("%f\n", PID_yaw.PID_Output());
   // cast away volatile model
   physical_model temp_model = *const_cast<physical_model *>(&model);
 
   //Clamp the output
-  temp_model.angular_accel  = std::min(accel[1], MAX_YAW);
-  temp_model.depth_accel    = std::min(accel[0] * DEPTH_FACTOR, MAX_DEPTH);
+  temp_model.angular_accel  = std::min(PID_yaw.PID_Output(), MAX_YAW);
+  temp_model.depth_accel    = std::min(PID_depth.PID_Output() * DEPTH_FACTOR, MAX_DEPTH);
 
   temp_model.angular_accel  = std::max(temp_model.angular_accel, -MAX_YAW);
   temp_model.depth_accel    = std::max(temp_model.depth_accel,   -MAX_DEPTH);
