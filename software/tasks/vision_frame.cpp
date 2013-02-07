@@ -7,9 +7,6 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
-#define MIN_OF(a,b) (((a)<(b))?(b):(a))
-#define MIN_OF(a,b) (((a)>(b))?(b):(a))
-
 const char MDA_VISION_MODULE_FRAME::MDA_VISION_FRAME_SETTINGS[] = "vision_frame_settings.csv";
 
 /// #########################################################################
@@ -108,11 +105,11 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
             width = (int)(abs(x00-x01) + abs(x10-x11))*0.25;
             retval = UNKNOWN_TARGET;
         }
-        // RZ: for some reason here Y coordinates go from 0(top) to 300(bottom), so we actually want MIN_OF for the vertical segments
+        // RZ: for some reason here Y coordinates go from 0(top) to 300(bottom), so we actually want MIN for the vertical segments
         else if(abs(slope0) < 0.2 && abs(slope1) > 6){
             //printf("1 of Each\n");
             m_pixel_x = (int)(x00 + x01)*0.5 - imWidth;
-            m_pixel_y = (int)(2*MIN_OF(y10,y11)+y00+y01)/4 - imHeight;
+            m_pixel_y = (int)(2*MIN(y10,y11)+y00+y01)/4 - imHeight;
             width  = (int)abs(x00-x01);
             height = (int)abs(y10-y11);
             retval = ONE_SEGMENT;  //Need other retval here
@@ -120,7 +117,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
         else if(abs(slope0) > 6 && abs(slope1) < 0.2){
             //printf("1 of Each\n");
             m_pixel_x = (int)(x10 + x11)*0.5 - imWidth;
-            m_pixel_y = (int)(2*MIN_OF(y00,y01)+y10+y11)/4 - imHeight;
+            m_pixel_y = (int)(2*MIN(y00,y01)+y10+y11)/4 - imHeight;
             width  = (int)abs(x10-x11);
             height = (int)abs(y00-y01);
             retval = ONE_SEGMENT;
@@ -165,23 +162,23 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
 
         if(abs(slope0) < 0.2 && abs(slope1) > 6 && abs(slope2) > 6){
             m_pixel_x = (int)(x00+x01+x10+x11+x20+x21)*0.167 - imWidth;
-            m_pixel_y = (int)(MIN_OF(y10,y11)+MIN_OF(y20,y21)+y00+y01)*0.25 - imHeight;
+            m_pixel_y = (int)(MIN(y10,y11)+MIN(y20,y21)+y00+y01)*0.25 - imHeight;
             width  = (int)(abs(x00-x01)+abs((x10+x11)-(x20+x21)))*0.333;
-            height = (int)(-1*y00-y01+MIN_OF(y10,y11)+MIN_OF(y20,y21))*0.5;
+            height = (int)(-1*y00-y01+MIN(y10,y11)+MIN(y20,y21))*0.5;
             retval = FULL_DETECT;
         }
         else if(abs(slope0) > 6 && abs(slope1) < 0.2 && abs(slope2) > 6){
             m_pixel_x = (int)(x00+x01+x10+x11+x20+x21)*0.167 - imWidth;
-            m_pixel_y = (int)(MIN_OF(y00,y01)+MIN_OF(y20,y21)+y10+y11)*0.25 - imHeight;
+            m_pixel_y = (int)(MIN(y00,y01)+MIN(y20,y21)+y10+y11)*0.25 - imHeight;
             width  = (int)(abs(x10-x11)+abs((x00+x01)-(x20+x21)))*0.333;
-            height = (int)(-1*y10-y11+MIN_OF(y00,y01)+MIN_OF(y20,y21))*0.5;
+            height = (int)(-1*y10-y11+MIN(y00,y01)+MIN(y20,y21))*0.5;
             retval = FULL_DETECT;
         }
         else if(abs(slope0) > 6 && abs(slope1) > 6 && abs(slope2) < 0.2){
             m_pixel_x = (int)(x00+x01+x10+x11+x20+x21)*0.167 - imWidth;
-            m_pixel_y = (int)(MIN_OF(y10,y11)+MIN_OF(y00,y01)+y20+y21)*0.25 - imHeight;
+            m_pixel_y = (int)(MIN(y10,y11)+MIN(y00,y01)+y20+y21)*0.25 - imHeight;
             width  = (int)(abs(x20-x21)+abs((x10+x11)-(x00+x01)))*0.333;
-            height = (int)(-1*y20-y21+MIN_OF(y10,y11)+MIN_OF(y00,y01))*0.5;
+            height = (int)(-1*y20-y21+MIN(y10,y11)+MIN(y00,y01))*0.5;
             retval = FULL_DETECT;
         }
         else{
