@@ -246,29 +246,26 @@ class mvAdaptiveFilter3 {
  */
 class mvMeanShift {
     //declare constants here
+    static const int DOWNSAMPLING_FACTOR = 2;
+    static const int GOOD_PIXELS_FACTOR = 6;;
+    
     int h_dist;
     int s_dist;
     int v_dist;
 
     int s_min;
     int v_min;
-    int kernel_size;
     int kernel_area;
-    int kernel_rad;
+    int widthStep;
     int *kernel_point_array;
     
     private:
     void mvMeanShift_internal(const IplImage* src, IplImage* dst);
     
     public: 
-    mvMeanShift (int kernel_sz, int h_dist, int s_dist, int v_dist); //constructor
+    mvMeanShift (int kernel_size, int H_dist, int S_dist, int V_dist); //constructor
     ~mvMeanShift(); // destructor
     void filter(const IplImage *src, IplImage* dst);
-      
-  
-  
-  
-  
 };
 
 #endif

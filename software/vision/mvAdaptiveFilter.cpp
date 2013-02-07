@@ -336,42 +336,46 @@ void mvAdaptiveFilter3:: getRectangleNeighbours(Quad rect, Quad sides[]){
 
 #define IN_SRC(x) (((x)>=src_addr_first) && ((x)<src_addr_last))
 
-mvMeanShift:: mvMeanShift (int kernel_sz, int h_dist, int s_dist, int v_dist)
+mvMeanShift:: mvMeanShift (int kernel_size, int H_dist, int S_dist, int V_dist) :
+    h_dist (H_dist),
+    s_dist (S_dist),
+    v_dist (V_dist)
 {
-    kernel_size = kernel_sz;
-    this->h_dist = h_dist;
-    this->s_dist = v_dist;
-    this->s_dist = v_dist;
+    assert (kernel_size % 2 == 1);
+    
     s_min = 60;
     v_min = 30;
-    kernel_area = kernel_sz * kernel_sz;
-    kernel_rad = (kernel_sz -1)/2;
+    kernel_area = kernel_size * kernel_size;
     kernel_point_array = new int[kernel_area];
-}
-
-mvMeanShift:: ~mvMeanShift () {
-    delete[] kernel_point_array;
-}
-
-void mvMeanShift:: mvMeanShift_internal(const IplImage* src, IplImage* dst) {
-    assert (kernel_size % 2 == 1);
-   
 
     // generate kernel point array
-    int widthStep = src->widthStep;
+    IplImage* img = mvGetScratchImage_Color(); // get this just to read widthStep    
+    widthStep = img->widthStep / DOWNSAMPLING_FACTOR;
+    int kernel_rad = (kernel_size - 1)/2;
+    
     unsigned array_index = 0;
     for (int j = -kernel_rad; j <= kernel_rad; j++)
         for (int i = -kernel_rad; i <= kernel_rad; i++)
             kernel_point_array[array_index++] = i*widthStep + j;
+}
 
-    const IplImage * HSVImg = src;
+mvMeanShift:: ~mvMeanShift () {
+    delete[] kernel_point_array;
+    mvReleaseScratchImage_Color();
+}
+
+void mvMeanShift:: mvMeanShift_internal(const IplImage* src, IplImage* dst) {
+    assert (src->nChannels == 3);
+    assert (dst->nChannels == 3);
+    assert (src->widthStep == widthStep);
+    assert (src->widthStep == dst->widthStep);
 
     unsigned char* src_addr_first = (unsigned char*)src->imageData;
     unsigned char* src_addr_last = src_addr_first + widthStep*src->height;
 
     unsigned char* imgPtr, *resPtr;
-    for (int r = 0; r < HSVImg->height; r++) {                         
-        imgPtr = (unsigned char*) (HSVImg->imageData + r*HSVImg->widthStep); // imgPtr = first pixel of rth's row
+    for (int r = 0; r < src->height; r++) {                         
+        imgPtr = (unsigned char*) (src->imageData + r*src->widthStep); // imgPtr = first pixel of rth's row
         resPtr = (unsigned char*) (dst->imageData + r*dst->widthStep);
         
         for (int c = 0; c < dst->width; c++) {
@@ -381,7 +385,7 @@ void mvMeanShift:: mvMeanShift_internal(const IplImage* src, IplImage* dst) {
             
             *resPtr = *(resPtr+1) = *(resPtr+2) = 0;
 
-            // check if means sv min reqs
+            // check if the src pixel meats S,V min reqs
             if (S >= s_min && V >= v_min) {
                 unsigned char* tempPtr;
                 unsigned H2 = H, S2 = S, V2 = V;
@@ -414,7 +418,7 @@ void mvMeanShift:: mvMeanShift_internal(const IplImage* src, IplImage* dst) {
                     total_pixels++;
                 }
 
-                if (6*good_pixels >= total_pixels) {
+                if (GOOD_PIXELS_FACTOR*good_pixels >= total_pixels) {
                     resPtr[0] = (unsigned char)(H2 / good_pixels);
                     resPtr[1] = (unsigned char)(S2 / good_pixels);
                     resPtr[2] = (unsigned char)(V2 / good_pixels);
@@ -425,14 +429,11 @@ void mvMeanShift:: mvMeanShift_internal(const IplImage* src, IplImage* dst) {
             resPtr += 3;
         }
     }
-
-
 }
 
 void mvMeanShift::filter(const IplImage* src, IplImage* dst) {
-    int N = 2;
-    IplImage* src_resized = cvCreateImage(cvSize(src->width/N,src->height/N), IPL_DEPTH_8U, 3);
-    IplImage* dst_resized = cvCreateImage(cvSize(src->width/N,src->height/N), IPL_DEPTH_8U, 3);
+    IplImage* src_resized = cvCreateImage(cvSize(src->width/DOWNSAMPLING_FACTOR,src->height/DOWNSAMPLING_FACTOR), IPL_DEPTH_8U, 3);
+    IplImage* dst_resized = cvCreateImage(cvSize(src->width/DOWNSAMPLING_FACTOR,src->height/DOWNSAMPLING_FACTOR), IPL_DEPTH_8U, 3);
 
     cvResize (src, src_resized, CV_INTER_NN);
     cvCvtColor (src_resized, src_resized, CV_BGR2HSV);
