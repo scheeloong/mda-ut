@@ -33,8 +33,6 @@ MDA_VISION_MODULE_TEST:: ~MDA_VISION_MODULE_TEST () {
 }
 
 void MDA_VISION_MODULE_TEST:: primary_filter (const IplImage* src) {   
-    //_HSVFilter->filter (src, _filtered_img);
-
     /** src is an image that is passed in from the simulator. It is 3 channel
      *  Because it is const you may need to deep copy (not pointer copy) it 
      *  to your own IplImage first before you can modify it.
@@ -45,12 +43,12 @@ void MDA_VISION_MODULE_TEST:: primary_filter (const IplImage* src) {
     bin_test.start();
 
     mvMeanShift mean_shift("test_settings.csv");
-    //mean_shift.filter(src, _color_img);
+    mean_shift.filter(const_cast<IplImage *>(src), _filtered_img);
 
     bin_test.stop();
 
     // this line displays the img in a window
-    _window.showImage (_color_img);
+    _window.showImage (_filtered_img);
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_TEST:: calc_vci () {
