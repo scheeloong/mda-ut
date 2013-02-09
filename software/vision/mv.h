@@ -259,7 +259,7 @@ class Hue_Box {
 
     Hue_Box (const char* settings_file) {
         read_mv_setting (settings_file, "HUE_MIN", Hue_Min);
-        read_mv_setting (settings_file, "SAT_MAX", Hue_Max);
+        read_mv_setting (settings_file, "HUE_MAX", Hue_Max);
     }
 
     bool add_value (unsigned char hue) {
