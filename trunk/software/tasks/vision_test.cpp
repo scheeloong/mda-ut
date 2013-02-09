@@ -44,9 +44,8 @@ void MDA_VISION_MODULE_TEST:: primary_filter (const IplImage* src) {
     /** YOUR CODE HERE. DO STUFF TO img */
     bin_test.start();
 
-    //_adaptive.filter (src, _filtered_img);
-    mvMeanShift mean_shift(5, 15, 25, 30);
-    mean_shift.filter(src, _color_img);
+    mvMeanShift mean_shift("test_settings.csv");
+    //mean_shift.filter(src, _color_img);
 
     bin_test.stop();
 
