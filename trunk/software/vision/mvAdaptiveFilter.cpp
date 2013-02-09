@@ -326,8 +326,6 @@ void mvAdaptiveFilter::getRectangleNeighbours(Quad rect, Quad sides[]){
     setQuad(sides[1], h0, (s1<nbins_sat-1) ? s1+1 : -1, h1, (s1<nbins_sat-1) ? s1+1: -1);
     setQuad(sides[2], (h1<nbins_hue-1) ? h1+1: 0, s0, (h1<nbins_hue-1) ? h1+1: 0, s1);
     setQuad(sides[3], h0, (s0>0)? s0-1: -1, h1, (s0>0)? s0-1: -1);
-
-
 }
 
 //####################################################################################
@@ -484,11 +482,11 @@ void mvMeanShift::mvMeanShift_internal(const IplImage* src_scratch) {
 
 void mvMeanShift::colorFilter_internal() {
     unsigned char *imgPtr, *resPtr;
-    for (int r = 0; r < ds_scratch_3->height; r++) {                        
+    for (int r = 0; r < ds_scratch->height; r++) {                        
         imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep);
         resPtr = (unsigned char*) (ds_scratch->imageData + r*ds_scratch->widthStep); 
    
-        for (int c = 0; c < ds_scratch_3->width; c++) {
+        for (int c = 0; c < ds_scratch->width; c++) {
             if (*(imgPtr+1) != 0 && hue_target->add_value(*imgPtr))
                 *resPtr = 255;
             else
