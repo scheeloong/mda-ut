@@ -87,7 +87,7 @@ int main( int argc, char** argv ) {
     mvLines lines; // data struct to store lines
     mvAdvancedCircles circles ("test_settings.csv");
     mvKMeans kmeans;
-    mvMeanShift mean_shift(5, 10, 25, 30);
+    mvMeanShift mean_shift("test_settings.csv");
 
     mvAdaptiveFilter3 adaptive ("test_settings.csv");
 
@@ -154,8 +154,8 @@ int main( int argc, char** argv ) {
       */
         
         if (TEST) {             
-            mean_shift.filter(frame, scratch_color);
-            AdaptiveFilter2(scratch_color, filter_img);
+            //mean_shift.mean_shift(frame, scratch_color);
+            mean_shift.filter(frame, filter_img);
 
             win2->showImage (scratch_color);
             win3->showImage (filter_img);

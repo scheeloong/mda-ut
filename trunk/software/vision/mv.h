@@ -241,31 +241,94 @@ class mvAdaptiveFilter3 {
     void show_histogram ();
 };
 
-/* mvMeanShift:
+
+/** Hue_Box:
+ * This is a helper class for mvMeanShift.
+ * It represents a moving pair of Hue_min and Hue_max
+ */
+class Hue_Box {
+    public:
+    unsigned char Hue_Min;
+    unsigned char Hue_Max;
+
+    Hue_Box (unsigned char hue_min, unsigned char hue_max) :
+        Hue_Min(hue_min),
+        Hue_Max(hue_max) 
+    {
+    }
+
+    Hue_Box (const char* settings_file) {
+        read_mv_setting (settings_file, "HUE_MIN", Hue_Min);
+        read_mv_setting (settings_file, "SAT_MAX", Hue_Max);
+    }
+
+    bool add_value (unsigned char hue) {
+        // shifting logic goes here
+
+        if (Hue_Max >= Hue_Min) 
+            return (hue >= Hue_Min && hue <= Hue_Max);
+        else
+            return ((hue <= Hue_Min && hue <= Hue_Max) || (hue >= Hue_Min && hue >= Hue_Max)); 
+    }
+
+};
+
+/** mvMeanShift:
  * This class takes average values of a kernel surrounding each pixel
+ * Then performs color filtering
  */
 class mvMeanShift {
     //declare constants here
-    static const int DOWNSAMPLING_FACTOR = 2;
-    static const int GOOD_PIXELS_FACTOR = 6;;
-    
-    int h_dist;
-    int s_dist;
-    int v_dist;
+    static const int DS_FACTOR = 2; // downsampling
+    static const int GOOD_PIXELS_FACTOR = 6;
+    static const int KERNEL_SIZE = 5;
+    static const int S_MIN = 60;
+    static const int V_MIN = 30;
 
-    int s_min;
-    int v_min;
-    int kernel_area;
-    int widthStep;
-    int *kernel_point_array;
+    // parameters read from settings file
+    int H_DIST;
+    int S_DIST;
+    int V_DIST;
+
+    // internal data
+    Hue_Box* hue_target;
+    int* kernel_point_array;
+    IplImage* ds_scratch_3;   // downsampled scratch image 3 channel
+    IplImage* ds_scratch;   // 1 channel
+
+    // profile bins
+    PROFILE_BIN bin_Resize;
+    PROFILE_BIN bin_MeanShift;
+    PROFILE_BIN bin_Filter;
     
     private:
-    void mvMeanShift_internal(const IplImage* src, IplImage* dst);
-    
+    void downsample_from(IplImage* src) {    // downsamples src to internal scratch image
+        assert (src->nChannels == 3);
+        bin_Resize.start();
+          cvResize (src, ds_scratch_3, CV_INTER_NN);
+        bin_Resize.stop();
+    }
+    void upsample_to_3 (IplImage* dst) {     // upsamples internal scrach to dst
+        assert (dst->nChannels == 3);
+        bin_Resize.start();
+          cvResize (ds_scratch_3, dst, CV_INTER_NN);
+        bin_Resize.stop();
+    }
+    void upsample_to (IplImage* dst) {     // upsamples internal scrach to dst
+        assert (dst->nChannels == 1);
+        bin_Resize.start();
+          cvResize (ds_scratch, dst, CV_INTER_NN);
+        bin_Resize.stop();
+    }
+
+    void mvMeanShift_internal(IplImage* scratch);
+    void colorFilter_internal();
+
     public: 
-    mvMeanShift (int kernel_size, int H_dist, int S_dist, int V_dist); //constructor
+    mvMeanShift (const char* settings_file); //constructor
     ~mvMeanShift(); // destructor
-    void filter(const IplImage *src, IplImage* dst);
+    void mean_shift(IplImage* src, IplImage* dst);
+    void filter(IplImage *src, IplImage* dst);
 };
 
 #endif
