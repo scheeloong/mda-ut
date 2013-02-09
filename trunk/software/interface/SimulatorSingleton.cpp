@@ -8,12 +8,12 @@
 
 #define POOL_HEIGHT 8
 
-#define P_FACTOR 1
-#define I_FACTOR 0
-#define D_FACTOR 0
-#define A_FACTOR 0.1
+#define P_FACTOR 0.2
+#define I_FACTOR 0.05
+#define D_FACTOR 0.05
+#define A_FACTOR 0.75
 #define DEPTH_FACTOR 2.5f
-#define MAX_YAW 2.f
+#define MAX_YAW 1.f
 #define MAX_DEPTH 1.f
 
 // Global variables needed by sim
