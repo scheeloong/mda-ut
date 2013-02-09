@@ -89,7 +89,7 @@ int main( int argc, char** argv ) {
     mvKMeans kmeans;
     mvMeanShift mean_shift("test_settings.csv");
 
-    mvAdaptiveFilter3 adaptive ("test_settings.csv");
+    mvAdaptiveFilter adaptive ("test_settings.csv");
 
     // declare images we need
     IplImage* scratch_color = mvCreateImage_Color();

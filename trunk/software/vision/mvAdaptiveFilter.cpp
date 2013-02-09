@@ -15,7 +15,7 @@
 //####################################################################################
 //####################################################################################
 
-mvAdaptiveFilter3::mvAdaptiveFilter3 (const char* settings_file) :
+mvAdaptiveFilter::mvAdaptiveFilter (const char* settings_file) :
     bin_adaptive ("Adaptive3 - Logic"),
     bin_CvtColor ("Adaptive3 - CvtColor")
 {
@@ -56,7 +56,7 @@ mvAdaptiveFilter3::mvAdaptiveFilter3 (const char* settings_file) :
     );
 }
 
-mvAdaptiveFilter3::~mvAdaptiveFilter3 () {
+mvAdaptiveFilter::~mvAdaptiveFilter () {
     delete win;
     cvReleaseHist (&hist);
     mvReleaseScratchImage_Color();
@@ -66,12 +66,12 @@ mvAdaptiveFilter3::~mvAdaptiveFilter3 () {
         cvReleaseImage(&hist_img);
 }
 
-void mvAdaptiveFilter3:: setQuad (Quad &Q, int h0, int s0, int h1, int s1) {
+void mvAdaptiveFilter:: setQuad (Quad &Q, int h0, int s0, int h1, int s1) {
     Q.h0 = h0; Q.s0 = s0;
     Q.h1 = h1; Q.s1 = s1;
 }
 
-int mvAdaptiveFilter3::getQuadValue (Quad Q) {
+int mvAdaptiveFilter::getQuadValue (Quad Q) {
     if (Q.s0 == -1)
         return -1;
 
@@ -88,7 +88,7 @@ int mvAdaptiveFilter3::getQuadValue (Quad Q) {
     return count/num_bins;
 }
 
-void mvAdaptiveFilter3::filter (const IplImage* src, IplImage* dst) {
+void mvAdaptiveFilter::filter (const IplImage* src, IplImage* dst) {
     assert (src != NULL);
     assert (dst != NULL);
     assert (src->nChannels == 3);
@@ -270,7 +270,7 @@ void mvAdaptiveFilter3::filter (const IplImage* src, IplImage* dst) {
     bin_adaptive.stop();
 }
 
-void mvAdaptiveFilter3::print_histogram () {
+void mvAdaptiveFilter::print_histogram () {
     int hist_height = hist->mat.dim[0].size;
     int hist_width = hist->mat.dim[1].size;
     printf ("\nprint_histogram():\n");
@@ -289,7 +289,7 @@ void mvAdaptiveFilter3::print_histogram () {
     }
 }
 
-void mvAdaptiveFilter3::show_histogram () {
+void mvAdaptiveFilter::show_histogram () {
     cvZero (hist_img);
     
     float max;
@@ -316,7 +316,7 @@ void mvAdaptiveFilter3::show_histogram () {
     win->showImage(hist_img);
 }
 
-void mvAdaptiveFilter3::getRectangleNeighbours(Quad rect, Quad sides[]){
+void mvAdaptiveFilter::getRectangleNeighbours(Quad rect, Quad sides[]){
     int h0 = rect.h0;
     int s0 = rect.s0;
     int h1 = rect.h1;
@@ -512,7 +512,7 @@ char mDistance(int a, int b, int c, int x, int y, int z){
     return((4*std::min(abs(x-a),180-abs(x-a)) + abs(y-b) + abs(z-c))/5);
 }
 
-void AdaptiveFilter2(const IplImage* src, IplImage* dst){
+void ManhattanDistanceFilter(const IplImage* src, IplImage* dst){
     mvTarget targets[] = {{50,130,60},{100,80,40}};
 
     unsigned char minDist, tempDist;

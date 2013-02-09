@@ -94,7 +94,7 @@ class MDA_VISION_MODULE_TEST : public MDA_VISION_MODULE_BASE {
     mvKMeans _KMeans;
     mvLines _lines;
     
-    mvAdaptiveFilter3 _adaptive;
+    mvAdaptiveFilter _adaptive;
 
     IplImage* _color_img;
     IplImage* _filtered_img;
