@@ -15,7 +15,7 @@
 //####################################################################################
 //####################################################################################
 
-mvAdaptiveFilter3:: mvAdaptiveFilter3 (const char* settings_file) :
+mvAdaptiveFilter3::mvAdaptiveFilter3 (const char* settings_file) :
     bin_adaptive ("Adaptive3 - Logic"),
     bin_CvtColor ("Adaptive3 - CvtColor")
 {
@@ -56,7 +56,7 @@ mvAdaptiveFilter3:: mvAdaptiveFilter3 (const char* settings_file) :
     );
 }
 
-mvAdaptiveFilter3:: ~mvAdaptiveFilter3 () {
+mvAdaptiveFilter3::~mvAdaptiveFilter3 () {
     delete win;
     cvReleaseHist (&hist);
     mvReleaseScratchImage_Color();
@@ -71,7 +71,7 @@ void mvAdaptiveFilter3:: setQuad (Quad &Q, int h0, int s0, int h1, int s1) {
     Q.h1 = h1; Q.s1 = s1;
 }
 
-int mvAdaptiveFilter3:: getQuadValue (Quad Q) {
+int mvAdaptiveFilter3::getQuadValue (Quad Q) {
     if (Q.s0 == -1)
         return -1;
 
@@ -88,7 +88,7 @@ int mvAdaptiveFilter3:: getQuadValue (Quad Q) {
     return count/num_bins;
 }
 
-void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
+void mvAdaptiveFilter3::filter (const IplImage* src, IplImage* dst) {
     assert (src != NULL);
     assert (dst != NULL);
     assert (src->nChannels == 3);
@@ -270,7 +270,7 @@ void mvAdaptiveFilter3:: filter (const IplImage* src, IplImage* dst) {
     bin_adaptive.stop();
 }
 
-void mvAdaptiveFilter3:: print_histogram () {
+void mvAdaptiveFilter3::print_histogram () {
     int hist_height = hist->mat.dim[0].size;
     int hist_width = hist->mat.dim[1].size;
     printf ("\nprint_histogram():\n");
@@ -289,7 +289,7 @@ void mvAdaptiveFilter3:: print_histogram () {
     }
 }
 
-void mvAdaptiveFilter3:: show_histogram () {
+void mvAdaptiveFilter3::show_histogram () {
     cvZero (hist_img);
     
     float max;
@@ -316,7 +316,7 @@ void mvAdaptiveFilter3:: show_histogram () {
     win->showImage(hist_img);
 }
 
-void mvAdaptiveFilter3:: getRectangleNeighbours(Quad rect, Quad sides[]){
+void mvAdaptiveFilter3::getRectangleNeighbours(Quad rect, Quad sides[]){
     int h0 = rect.h0;
     int s0 = rect.s0;
     int h1 = rect.h1;
@@ -330,55 +330,87 @@ void mvAdaptiveFilter3:: getRectangleNeighbours(Quad rect, Quad sides[]){
 
 }
 
-// assumptions:
-// Hue stays ~ the same in all lighting conditions
-// Saturation can vary, but always greater than a certain threshold
+//####################################################################################
+//####################################################################################
+//####################################################################################
 
-#define IN_SRC(x) (((x)>=src_addr_first) && ((x)<src_addr_last))
-
-mvMeanShift:: mvMeanShift (int kernel_size, int H_dist, int S_dist, int V_dist) :
-    h_dist (H_dist),
-    s_dist (S_dist),
-    v_dist (V_dist)
+mvMeanShift::mvMeanShift (const char* settings_file) : 
+    bin_Resize ("mvMeanShift - Resize"),
+    bin_MeanShift ("mvMeanShift - MeanShift"),
+    bin_Filter ("mvMeanShift - Filter")
 {
-    assert (kernel_size % 2 == 1);
+    assert (KERNEL_SIZE % 2 == 1);
     
-    s_min = 60;
-    v_min = 30;
-    kernel_area = kernel_size * kernel_size;
-    kernel_point_array = new int[kernel_area];
+    // read constants from file
+    read_mv_setting (settings_file, "HUE_DIST", H_DIST);
+    read_mv_setting (settings_file, "SAT_DIST", S_DIST);
+    read_mv_setting (settings_file, "VAL_DIST", V_DIST);
+
+    int width, height;
+    read_common_mv_setting ("IMG_WIDTH_COMMON", width);
+    read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
+
+    // create Hue_Box
+    hue_target = new Hue_Box(settings_file);
+
+    // create downsampled scratch images. The 1 channel image shares data with the 3 channel
+    ds_scratch_3 = cvCreateImage(cvSize(width/DS_FACTOR, height/DS_FACTOR), IPL_DEPTH_8U, 3);
+    ds_scratch = cvCreateImageHeader(cvSize(width/DS_FACTOR, height/DS_FACTOR), IPL_DEPTH_8U, 1);
+    ds_scratch->imageData = ds_scratch_3->imageData;
 
     // generate kernel point array
-    IplImage* img = mvGetScratchImage_Color(); // get this just to read widthStep    
-    widthStep = img->widthStep / DOWNSAMPLING_FACTOR;
-    int kernel_rad = (kernel_size - 1)/2;
+    int kernel_area = KERNEL_SIZE * KERNEL_SIZE;
+    int kernel_rad = (KERNEL_SIZE - 1)/2;
+    kernel_point_array = new int[kernel_area];
     
     unsigned array_index = 0;
     for (int j = -kernel_rad; j <= kernel_rad; j++)
         for (int i = -kernel_rad; i <= kernel_rad; i++)
-            kernel_point_array[array_index++] = i*widthStep + j;
+            kernel_point_array[array_index++] = i*ds_scratch->widthStep + j;
 }
 
-mvMeanShift:: ~mvMeanShift () {
+mvMeanShift::~mvMeanShift () {
     delete[] kernel_point_array;
-    mvReleaseScratchImage_Color();
+    cvReleaseImage (&ds_scratch_3);
+    cvReleaseImageHeader (&ds_scratch);
 }
 
-void mvMeanShift:: mvMeanShift_internal(const IplImage* src, IplImage* dst) {
-    assert (src->nChannels == 3);
-    assert (dst->nChannels == 3);
-    assert (src->widthStep == widthStep);
-    assert (src->widthStep == dst->widthStep);
+void mvMeanShift::mean_shift(IplImage* src, IplImage* dst) {
+      downsample_from (src);
+      cvCvtColor(ds_scratch_3, ds_scratch_3, CV_BGR2HSV);
 
-    unsigned char* src_addr_first = (unsigned char*)src->imageData;
-    unsigned char* src_addr_last = src_addr_first + widthStep*src->height;
+      mvMeanShift_internal(src);
 
+      cvCvtColor(ds_scratch_3, ds_scratch_3, CV_HSV2BGR);
+      upsample_to_3 (dst);
+}
+
+void mvMeanShift::filter(IplImage* src, IplImage* dst) {
+      downsample_from (src);
+      cvCvtColor(ds_scratch_3, ds_scratch_3, CV_BGR2HSV);
+
+      mvMeanShift_internal(src);
+      colorFilter_internal();
+
+      upsample_to (dst);
+}
+
+void mvMeanShift::mvMeanShift_internal(IplImage* src_scratch) {
+// note this will treat the image as if it was in HSV format
+// src_scratch is the src image passed in by the user, which will now be used as a scratch
+    bin_MeanShift.start();
+
+    unsigned char* ds_addr_first = (unsigned char*)ds_scratch_3->imageData;
+    unsigned char* ds_addr_last = ds_addr_first + ds_scratch_3->widthStep*ds_scratch_3->height;
+    int kernel_area = KERNEL_SIZE * KERNEL_SIZE;
+
+    // we will be filtering ds_scratch_3 to src_scratch, then copying the data back to ds_scratch_3
     unsigned char* imgPtr, *resPtr;
-    for (int r = 0; r < src->height; r++) {                         
-        imgPtr = (unsigned char*) (src->imageData + r*src->widthStep); // imgPtr = first pixel of rth's row
-        resPtr = (unsigned char*) (dst->imageData + r*dst->widthStep);
+    for (int r = 0; r < ds_scratch_3->height; r++) {                         
+        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep); // imgPtr = first pixel of rth's row
+        resPtr = (unsigned char*) (src_scratch->imageData + r*src_scratch->widthStep);
         
-        for (int c = 0; c < dst->width; c++) {
+        for (int c = 0; c < ds_scratch_3->width; c++) {
             unsigned char H = *imgPtr;
             unsigned char S = *(imgPtr+1);
             unsigned char V = *(imgPtr+2);
@@ -386,26 +418,30 @@ void mvMeanShift:: mvMeanShift_internal(const IplImage* src, IplImage* dst) {
             *resPtr = *(resPtr+1) = *(resPtr+2) = 0;
 
             // check if the src pixel meats S,V min reqs
-            if (S >= s_min && V >= v_min) {
+            if (S >= S_MIN && V >= V_MIN) {
                 unsigned char* tempPtr;
                 unsigned H2 = H, S2 = S, V2 = V;
-                int good_pixels = 1, total_pixels = 1;
+                unsigned char good_pixels = 1, total_pixels = 1;
 
                 // go thru each pixel in the kernel
                 for (int i = 0; i < kernel_area; i++) {
                     tempPtr = imgPtr + 3*kernel_point_array[i];
-                    if (!IN_SRC(tempPtr))
+
+                    // check that tempPtr points within the image
+                    if (!((tempPtr >= ds_addr_first) && (tempPtr < ds_addr_last)))
                         continue;
 
-                    if (std::min(abs(H-tempPtr[0]),180-abs(H-tempPtr[0])) <= h_dist && 
-                        abs(S-tempPtr[1]) <= s_dist && 
-                        abs(V-tempPtr[2]) <= v_dist) 
+                    if (abs(S-tempPtr[1]) <= S_DIST && 
+                        abs(V-tempPtr[2]) <= V_DIST &&
+                        std::min(abs(H-tempPtr[0]),180-abs(H-tempPtr[0])) <= H_DIST
+                        ) 
                     {
                         // Circular red case is hard, let's just use 0 if we're looking for red and see > 90,
                         // and use 179 if we're looking for red >= 0
-                        if (H <= h_dist && abs(H-tempPtr[0]) > 90) {
+                        // RZ: I'm still confused
+                        if (H <= H_DIST && abs(H-tempPtr[0]) > 90) {
                             H2 += 0;
-                        } else if (H >= 180 - h_dist && abs(H-tempPtr[0]) > 90) {
+                        } else if (H >= 180 - H_DIST && abs(H-tempPtr[0]) > 90) {
                             H2 += 179;
                         } else {
                             H2 += (unsigned)tempPtr[0];
@@ -429,24 +465,44 @@ void mvMeanShift:: mvMeanShift_internal(const IplImage* src, IplImage* dst) {
             resPtr += 3;
         }
     }
+
+    // copy src_scratch's useful data to ds_scratch_3
+    for (int r = 0; r < ds_scratch_3->height; r++) {            
+        imgPtr = (unsigned char*) (src_scratch->imageData + r*src_scratch->widthStep);             
+        resPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep);
+        memcpy (resPtr, imgPtr, ds_scratch_3->widthStep);
+        /*   
+        for (int c = 0; c < ds_scratch_3->width*3; c++) {
+            *resPtr = *imgPtr;
+            imgPtr++;
+            resPtr++;
+        }*/
+    }
+
+    bin_MeanShift.stop();
 }
 
-void mvMeanShift::filter(const IplImage* src, IplImage* dst) {
-    IplImage* src_resized = cvCreateImage(cvSize(src->width/DOWNSAMPLING_FACTOR,src->height/DOWNSAMPLING_FACTOR), IPL_DEPTH_8U, 3);
-    IplImage* dst_resized = cvCreateImage(cvSize(src->width/DOWNSAMPLING_FACTOR,src->height/DOWNSAMPLING_FACTOR), IPL_DEPTH_8U, 3);
+void mvMeanShift::colorFilter_internal() {
+    unsigned char *imgPtr, *resPtr;
+    for (int r = 0; r < ds_scratch_3->height; r++) {                        
+        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep);
+        resPtr = (unsigned char*) (ds_scratch->imageData + r*ds_scratch->widthStep); 
+   
+        for (int c = 0; c < ds_scratch_3->width; c++) {
+            if (*(imgPtr+1) != 0 && hue_target->add_value(*imgPtr))
+                *resPtr = 255;
+            else
+                *resPtr = 0;
 
-    cvResize (src, src_resized, CV_INTER_NN);
-    cvCvtColor (src_resized, src_resized, CV_BGR2HSV);
-
-    mvMeanShift_internal (src_resized, dst_resized);
-
-    cvCvtColor (dst_resized, dst_resized, CV_HSV2BGR);
-    cvResize (dst_resized, dst, CV_INTER_LINEAR);
- 
-    cvReleaseImage(&src_resized);
-    cvReleaseImage(&dst_resized);   
+            imgPtr += 3;
+            resPtr++;
+        }
+    }
 }
 
+//####################################################################################
+//####################################################################################
+//####################################################################################
 
 struct mvTarget {
     unsigned char h, s, v;

@@ -82,6 +82,7 @@ void read_mv_setting (const char filename[], const char setting_name[], TYPE &da
 template void read_mv_setting<bool>(const char filename[], const char setting_name[], bool &data);
 template void read_mv_setting<int>(const char filename[], const char setting_name[], int &data);
 template void read_mv_setting<unsigned>(const char filename[], const char setting_name[], unsigned &data);
+template void read_mv_setting<unsigned char>(const char filename[], const char setting_name[], unsigned char &data);
 template void read_mv_setting<float>(const char filename[], const char setting_name[], float &data);
 
 /* overloaded for string type */
