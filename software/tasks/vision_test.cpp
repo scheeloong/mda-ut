@@ -43,7 +43,7 @@ void MDA_VISION_MODULE_TEST:: primary_filter (const IplImage* src) {
     bin_test.start();
 
     mvMeanShift mean_shift("test_settings.csv");
-    mean_shift.filter(const_cast<IplImage *>(src), _filtered_img);
+    mean_shift.filter(src, _filtered_img);
 
     bin_test.stop();
 

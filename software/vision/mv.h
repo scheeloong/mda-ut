@@ -302,7 +302,7 @@ class mvMeanShift {
     PROFILE_BIN bin_Filter;
     
     private:
-    void downsample_from(IplImage* src) {    // downsamples src to internal scratch image
+    void downsample_from(const IplImage* src) {    // downsamples src to internal scratch image
         assert (src->nChannels == 3);
         bin_Resize.start();
           cvResize (src, ds_scratch_3, CV_INTER_NN);
@@ -321,14 +321,14 @@ class mvMeanShift {
         bin_Resize.stop();
     }
 
-    void mvMeanShift_internal(IplImage* scratch);
+    void mvMeanShift_internal(const IplImage* scratch);
     void colorFilter_internal();
 
     public: 
     mvMeanShift (const char* settings_file); //constructor
     ~mvMeanShift(); // destructor
-    void mean_shift(IplImage* src, IplImage* dst);
-    void filter(IplImage *src, IplImage* dst);
+    void mean_shift(const IplImage* src, IplImage* dst);
+    void filter(const IplImage *src, IplImage* dst);
 };
 
 #endif

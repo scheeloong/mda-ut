@@ -375,7 +375,7 @@ mvMeanShift::~mvMeanShift () {
     cvReleaseImageHeader (&ds_scratch);
 }
 
-void mvMeanShift::mean_shift(IplImage* src, IplImage* dst) {
+void mvMeanShift::mean_shift(const IplImage* src, IplImage* dst) {
       downsample_from (src);
       cvCvtColor(ds_scratch_3, ds_scratch_3, CV_BGR2HSV);
 
@@ -385,7 +385,7 @@ void mvMeanShift::mean_shift(IplImage* src, IplImage* dst) {
       upsample_to_3 (dst);
 }
 
-void mvMeanShift::filter(IplImage* src, IplImage* dst) {
+void mvMeanShift::filter(const IplImage* src, IplImage* dst) {
       downsample_from (src);
       cvCvtColor(ds_scratch_3, ds_scratch_3, CV_BGR2HSV);
 
@@ -395,7 +395,7 @@ void mvMeanShift::filter(IplImage* src, IplImage* dst) {
       upsample_to (dst);
 }
 
-void mvMeanShift::mvMeanShift_internal(IplImage* src_scratch) {
+void mvMeanShift::mvMeanShift_internal(const IplImage* src_scratch) {
 // note this will treat the image as if it was in HSV format
 // src_scratch is the src image passed in by the user, which will now be used as a scratch
     bin_MeanShift.start();
