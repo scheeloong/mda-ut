@@ -188,13 +188,13 @@ class mvHSVFilter {
                 );    
 };
 
-void AdaptiveFilter2(const IplImage* src, IplImage* dst);
+void ManhattanDistanceFilter(const IplImage* src, IplImage* dst);
 
 /** mvAdaptiveFilter
  *  This class is a set of AdaptiveBox's to represent the water, the target, and 
  *  possibly any other objects we might see.
  */
-class mvAdaptiveFilter3 {
+class mvAdaptiveFilter {
     static const int nbins_hue = 30;
     static const int nbins_sat = 25;
     static const int hue_range_min = 0;
@@ -234,8 +234,8 @@ class mvAdaptiveFilter3 {
     void getRectangleNeighbours(Quad rect, Quad sides[]);
 
     public:
-    mvAdaptiveFilter3 (const char* settings_file);
-    ~mvAdaptiveFilter3 ();
+    mvAdaptiveFilter (const char* settings_file);
+    ~mvAdaptiveFilter ();
     void filter (const IplImage* src, IplImage* dst);
     void print_histogram ();
     void show_histogram ();
