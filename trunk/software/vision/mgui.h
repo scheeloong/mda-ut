@@ -68,7 +68,7 @@ public:
     mvVideoWriter (const char* filename, unsigned framerate = 30);
     ~mvVideoWriter ();
 
-    void writeFrame (const IplImage* frame) {
+    void writeFrame (IplImage* frame) {
         bin_writeFrame.start();
       if (frame->origin) {
         IplImage *flipped = cvCreateImage (cvSize(frame->width,frame->height), IPL_DEPTH_8U, 3);

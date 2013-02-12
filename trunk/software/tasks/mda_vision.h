@@ -20,7 +20,7 @@ enum MDA_VISION_RETURN_CODE  {
 
 /// ########################################################################
 /** This is the base class for a vision module. Every vision module needs to implement
- *      - void filter (const IplImage* src)
+ *      - void filter (IplImage* src)
  *      - void calc_vci ()
  *  
  *  The first function filters the source image into _filtered_img
@@ -48,14 +48,14 @@ protected:
     }
 
     /// you must implement these yourself!
-    virtual void primary_filter (const IplImage* src) = 0;
+    virtual void primary_filter (IplImage* src) = 0;
     virtual MDA_VISION_RETURN_CODE calc_vci () = 0;
     
 public:
     MDA_VISION_MODULE_BASE () {}
     virtual ~MDA_VISION_MODULE_BASE () {} 
 
-    MDA_VISION_RETURN_CODE filter (const IplImage* src) {
+    MDA_VISION_RETURN_CODE filter (IplImage* src) {
         assert (src != NULL);
         assert (src->nChannels == 3);
         
@@ -105,7 +105,7 @@ public:
     MDA_VISION_MODULE_TEST ();
     ~MDA_VISION_MODULE_TEST ();
     
-    void primary_filter (const IplImage* src);
+    void primary_filter (IplImage* src);
     MDA_VISION_RETURN_CODE calc_vci ();
 
     // prevent users from accessing range/angle
@@ -137,7 +137,7 @@ public:
     MDA_VISION_MODULE_GATE ();
     ~MDA_VISION_MODULE_GATE ();
     
-    void primary_filter (const IplImage* src);
+    void primary_filter (IplImage* src);
     MDA_VISION_RETURN_CODE calc_vci ();
 
     virtual int get_angle() {printf ("VISION_MODULE_GATE - get_angle not allowed\n"); exit(1); return 0;}
@@ -166,7 +166,7 @@ public:
     MDA_VISION_MODULE_PATH ();
     ~MDA_VISION_MODULE_PATH ();
     
-    void primary_filter (const IplImage* src);
+    void primary_filter (IplImage* src);
     virtual int get_angular_y() {
         printf ("MDA_VISION_MODULE_PATH does not support get_angular_y");
         exit (1);
@@ -196,7 +196,7 @@ public:
     MDA_VISION_MODULE_BUOY (const char* settings_file);
     ~MDA_VISION_MODULE_BUOY ();
     
-    void primary_filter (const IplImage* src);
+    void primary_filter (IplImage* src);
     MDA_VISION_RETURN_CODE calc_vci ();
 
     virtual int get_angle() {printf ("VISION_MODULE_BUOY- get_angle not allowed\n"); exit(1); return 0;}
@@ -224,7 +224,7 @@ public:
     MDA_VISION_MODULE_FRAME ();
     ~MDA_VISION_MODULE_FRAME ();
     
-    void primary_filter (const IplImage* src);
+    void primary_filter (IplImage* src);
     MDA_VISION_RETURN_CODE calc_vci ();
 
     virtual int get_angle() {printf ("VISION_MODULE_FRAME - get_angle not allowed\n"); exit(1); return 0;}

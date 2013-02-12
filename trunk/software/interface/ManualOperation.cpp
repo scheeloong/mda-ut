@@ -331,7 +331,7 @@ void ManualOperation::work()
 void ManualOperation::process_image()
 {
   if (vision_module) {
-    const IplImage* frame = image_input->get_image(use_fwd_img?FWD_IMG:DWN_IMG);
+    IplImage* frame = image_input->get_image(use_fwd_img?FWD_IMG:DWN_IMG);
     if (frame) {
       vision_module->filter(frame);
       for (int i = 0; i < 3; i++) {

@@ -29,7 +29,7 @@ bool ImageInputWebcam::ready_internal_image (ImageDirection dir)
     return false;
 }
 
-const IplImage *ImageInputWebcam::get_internal_image(ImageDirection dir)
+IplImage *ImageInputWebcam::get_internal_image(ImageDirection dir)
 {
    if (dir == FWD_IMG) {
       return fwdCam ? fwdCam->retrieveFrameResized() : NULL;

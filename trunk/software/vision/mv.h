@@ -67,32 +67,32 @@ IplImage* mvGetScratchImage_Color();
 void mvReleaseScratchImage_Color();
 
 /*BRG2HSV -- NOTfaster implementation to convert BRG images into HSV format */
-void mvBRG2HSV(const IplImage* src, IplImage* dst);
+void mvBRG2HSV(IplImage* src, IplImage* dst);
 
-inline void mvGaussian (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h) {
+inline void mvGaussian (IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h) {
     cvSmooth (src, dst, CV_GAUSSIAN, kern_w, kern_h);
 }
-inline void mvDilate (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
+inline void mvDilate (IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
     IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
     cvDilate (src, dst, kernel, iterations);
     cvReleaseStructuringElement (&kernel);
 }
-inline void mvErode (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
+inline void mvErode (IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
     IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
     cvErode (src, dst, kernel, iterations);
     cvReleaseStructuringElement (&kernel);
 }
-inline void mvOpen (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
+inline void mvOpen (IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
     IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
     cvMorphologyEx (src, dst, NULL, kernel, CV_MOP_OPEN, iterations);
     cvReleaseStructuringElement (&kernel);
 }
-inline void mvClose (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
+inline void mvClose (IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
     IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
     cvMorphologyEx (src, dst, NULL, kernel, CV_MOP_CLOSE, iterations);
     cvReleaseStructuringElement (&kernel);
 }
-inline void mvGradient (const IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
+inline void mvGradient (IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h, unsigned iterations=1) {
     IplImage* temp = cvCreateImage (cvGetSize(src), IPL_DEPTH_8U, 1);
     IplConvKernel* kernel = cvCreateStructuringElementEx (kern_w, kern_h, (kern_w+1)/2, (kern_h+1)/2, CV_SHAPE_ELLIPSE);
 
@@ -103,7 +103,7 @@ inline void mvGradient (const IplImage* src, IplImage* dst, unsigned kern_w, uns
 }
 
 /// split the image into any of its 2 planes in place
-void mvSplitImage (const IplImage* src, IplImage** plane1=NULL, IplImage** plane2=NULL);
+void mvSplitImage (IplImage* src, IplImage** plane1=NULL, IplImage** plane2=NULL);
 
 /** Binary Filters */
 // These are fast filters designed specifically for binary images with very
@@ -120,33 +120,33 @@ class mvBinaryMorphology {
     PROFILE_BIN bin_morph;
     PROFILE_BIN bin_gradient;
 
-	void mvBinaryMorphologyMain (MV_MORPHOLOGY_TYPE morphology_type, const IplImage* src, IplImage* dst);
+	void mvBinaryMorphologyMain (MV_MORPHOLOGY_TYPE morphology_type, IplImage* src, IplImage* dst);
 
 	public:
 	mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV_KERNEL_SHAPE Shape);
 	~mvBinaryMorphology ();
 
-	void dilate (const IplImage* src, IplImage* dst) {
+	void dilate (IplImage* src, IplImage* dst) {
           bin_morph.start();
 		mvBinaryMorphologyMain (MV_DILATE, src, dst);
           bin_morph.stop();
 	}
-	void erode (const IplImage* src, IplImage* dst) {
+	void erode (IplImage* src, IplImage* dst) {
           bin_morph.start();
 		mvBinaryMorphologyMain (MV_ERODE, src, dst);
           bin_morph.stop();
 	}
-	void close (const IplImage* src, IplImage* dst) {
+	void close (IplImage* src, IplImage* dst) {
           bin_morph.start();
 		mvBinaryMorphologyMain (MV_CLOSE, src, dst);
           bin_morph.stop();
 	}
-	void open (const IplImage* src, IplImage* dst) {
+	void open (IplImage* src, IplImage* dst) {
           bin_morph.start();
 		mvBinaryMorphologyMain (MV_OPEN, src, dst);
           bin_morph.stop();
 	}
-	void gradient (const IplImage* src, IplImage* dst) {
+	void gradient (IplImage* src, IplImage* dst) {
           bin_gradient.start();
 		mvBinaryMorphologyMain (MV_GRADIENT, src, dst);
           bin_gradient.stop();
@@ -181,14 +181,14 @@ class mvHSVFilter {
     public:
     mvHSVFilter (const char* settings_file);
     ~mvHSVFilter ();
-    void filter (const IplImage* img, IplImage* result);
+    void filter (IplImage* img, IplImage* result);
     void setHSV (int hmin=UNCHANGED, int hmax=UNCHANGED, 
                  unsigned smin=UNCHANGED, unsigned smax=UNCHANGED, 
                  unsigned vmin=UNCHANGED, unsigned vmax=UNCHANGED
                 );    
 };
 
-void ManhattanDistanceFilter(const IplImage* src, IplImage* dst);
+void ManhattanDistanceFilter(IplImage* src, IplImage* dst);
 
 /** mvAdaptiveFilter
  *  This class is a set of AdaptiveBox's to represent the water, the target, and 
@@ -236,7 +236,7 @@ class mvAdaptiveFilter {
     public:
     mvAdaptiveFilter (const char* settings_file);
     ~mvAdaptiveFilter ();
-    void filter (const IplImage* src, IplImage* dst);
+    void filter (IplImage* src, IplImage* dst);
     void print_histogram ();
     void show_histogram ();
 };
@@ -302,7 +302,7 @@ class mvMeanShift {
     PROFILE_BIN bin_Filter;
     
     private:
-    void downsample_from(const IplImage* src) {    // downsamples src to internal scratch image
+    void downsample_from(IplImage* src) {    // downsamples src to internal scratch image
         assert (src->nChannels == 3);
         bin_Resize.start();
           cvResize (src, ds_scratch_3, CV_INTER_NN);
@@ -321,14 +321,14 @@ class mvMeanShift {
         bin_Resize.stop();
     }
 
-    void mvMeanShift_internal(const IplImage* scratch);
+    void mvMeanShift_internal(IplImage* scratch);
     void colorFilter_internal();
 
     public: 
     mvMeanShift (const char* settings_file); //constructor
     ~mvMeanShift(); // destructor
-    void mean_shift(const IplImage* src, IplImage* dst);
-    void filter(const IplImage *src, IplImage* dst);
+    void mean_shift(IplImage* src, IplImage* dst);
+    void filter(IplImage *src, IplImage* dst);
 };
 
 #endif

@@ -17,7 +17,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
     while (1) {
-        const IplImage* frame = image_input->get_image(FWD_IMG);
+        IplImage* frame = image_input->get_image(FWD_IMG);
         if (!frame) {
             break;
         }

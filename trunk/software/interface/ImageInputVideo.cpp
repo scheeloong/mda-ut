@@ -30,7 +30,7 @@ bool ImageInputVideo::ready_internal_image (ImageDirection dir)
     return false;
 }
 
-const IplImage *ImageInputVideo::get_internal_image(ImageDirection dir)
+IplImage *ImageInputVideo::get_internal_image(ImageDirection dir)
 {
     if (dir == FWD_IMG) {
         return cam_fwd ? cam_fwd->retrieveFrameResized() : NULL;

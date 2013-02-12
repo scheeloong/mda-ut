@@ -20,7 +20,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
     bool done_path = false;
 
     while (1) {
-        const IplImage* frame = image_input->get_image(DWN_IMG);
+        IplImage* frame = image_input->get_image(DWN_IMG);
         if (!frame) {
             ret_code = TASK_ERROR;
             break;

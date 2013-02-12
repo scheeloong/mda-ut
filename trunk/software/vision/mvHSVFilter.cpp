@@ -40,7 +40,7 @@ void mvHSVFilter:: setHSV (int hmin, int hmax, unsigned smin, unsigned smax, uns
     if (vmax != UNCHANGED) VMAX = vmax;
 }
         
-void mvHSVFilter:: filter (const IplImage* img, IplImage* result) {
+void mvHSVFilter:: filter (IplImage* img, IplImage* result) {
     assert (img != NULL);
     assert (img->nChannels == 3);
     assert (result != NULL);

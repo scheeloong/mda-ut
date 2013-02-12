@@ -32,7 +32,7 @@ MDA_VISION_MODULE_TEST:: ~MDA_VISION_MODULE_TEST () {
     cvReleaseImage(&_color_img);
 }
 
-void MDA_VISION_MODULE_TEST:: primary_filter (const IplImage* src) {   
+void MDA_VISION_MODULE_TEST:: primary_filter (IplImage* src) {   
     /** src is an image that is passed in from the simulator. It is 3 channel
      *  Because it is const you may need to deep copy (not pointer copy) it 
      *  to your own IplImage first before you can modify it.
