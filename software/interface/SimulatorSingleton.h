@@ -44,7 +44,7 @@ class SimulatorSingleton {
     void sim_reshape(int, int);
     void sim_idle();
     void sim_close_window();
-    const IplImage* get_image(ImageDirection);
+    IplImage* get_image(ImageDirection);
 
     physical_model attitude();
     void add_position(world_vector);

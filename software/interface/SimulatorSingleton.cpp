@@ -80,7 +80,7 @@ void SimulatorSingleton::destroy()
 
 /* Accessors */
 
-const IplImage* SimulatorSingleton::get_image(ImageDirection dir)
+IplImage* SimulatorSingleton::get_image(ImageDirection dir)
 {
   img_dir = dir;
   img_copy_start = true;

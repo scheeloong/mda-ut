@@ -25,7 +25,7 @@ MDA_VISION_MODULE_GATE:: ~MDA_VISION_MODULE_GATE () {
     mvReleaseScratchImage();
 }
 
-void MDA_VISION_MODULE_GATE:: primary_filter (const IplImage* src) {
+void MDA_VISION_MODULE_GATE:: primary_filter (IplImage* src) {
     _HSVFilter.filter (src, _filtered_img);
     _filtered_img->origin = src->origin;
     _lines.clearData ();

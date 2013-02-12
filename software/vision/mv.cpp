@@ -9,7 +9,7 @@
 #endif
 
 /// in place splitting of image into its first 2 planes. The 3rd plane has to be used for scratch space.
-void mvSplitImage (const IplImage* src, IplImage** plane1, IplImage** plane2) {
+void mvSplitImage (IplImage* src, IplImage** plane1, IplImage** plane2) {
     assert (src != NULL);
     assert (src ->nChannels == 3);
 
@@ -92,9 +92,9 @@ void mvSplitImage (const IplImage* src, IplImage** plane1, IplImage** plane2) {
 #define IN_SRC(x) (((x)>=src_addr_first) && ((x)<src_addr_last))
 #define IN_DST(x) (((x)> dst_addr_first) && ((x)<dst_addr_last))
 
-void mvBinaryDilate (const IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_area);
-void mvBinaryErode (const IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_area);
-void mvBinaryGradient (const IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_width, unsigned kernel_height, unsigned kernel_area);
+void mvBinaryDilate (IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_area);
+void mvBinaryErode (IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_area);
+void mvBinaryGradient (IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_width, unsigned kernel_height, unsigned kernel_area);
 
 mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV_KERNEL_SHAPE Shape) :
     bin_morph ("mvMorphology - morph"),
@@ -163,7 +163,7 @@ mvBinaryMorphology:: ~mvBinaryMorphology () {
 
 void mvBinaryMorphology:: mvBinaryMorphologyMain (
         MV_MORPHOLOGY_TYPE morphology_type,
-        const IplImage* src, IplImage* dst
+        IplImage* src, IplImage* dst
 )
 {
     assert (src->width == temp->width);
@@ -203,7 +203,7 @@ void mvBinaryMorphology:: mvBinaryMorphologyMain (
 //#### Helper functions for mvBinaryMorphology
 //#########################################################################
 void mvBinaryDilate (
-    const IplImage* src, IplImage* dst,
+    IplImage* src, IplImage* dst,
     int* kernel_point_array,
     unsigned kernel_area
 )
@@ -249,7 +249,7 @@ void mvBinaryDilate (
 }
 
 void mvBinaryErode (
-    const IplImage* src, IplImage* dst,
+    IplImage* src, IplImage* dst,
     int* kernel_point_array,
     unsigned kernel_area
 )
@@ -293,7 +293,7 @@ void mvBinaryErode (
 }
 
 void mvBinaryGradient (
-    const IplImage* src, IplImage* dst,
+    IplImage* src, IplImage* dst,
     int* kernel_point_array,
     unsigned kernel_width,
     unsigned kernel_height,
@@ -382,7 +382,7 @@ void tripletBRG2HSV (uchar Blue, uchar Green, uchar Red, uchar &Hue, uchar &Sat,
     Sat = 255 *Chroma / Val;
 }
 
-void mvBRG2HSV(const IplImage* src, IplImage* dst) {
+void mvBRG2HSV(IplImage* src, IplImage* dst) {
     
     assert (src != NULL);
     assert (dst != NULL);

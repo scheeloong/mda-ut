@@ -67,7 +67,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
     sleep(2);
 
     while (1) {
-        const IplImage* frame = image_input->get_image();
+        IplImage* frame = image_input->get_image();
         if (!frame) {
             ret_code = TASK_ERROR;
             break;

@@ -88,7 +88,7 @@ int mvAdaptiveFilter::getQuadValue (Quad Q) {
     return count/num_bins;
 }
 
-void mvAdaptiveFilter::filter (const IplImage* src, IplImage* dst) {
+void mvAdaptiveFilter::filter (IplImage* src, IplImage* dst) {
     assert (src != NULL);
     assert (dst != NULL);
     assert (src->nChannels == 3);
@@ -373,7 +373,7 @@ mvMeanShift::~mvMeanShift () {
     cvReleaseImageHeader (&ds_scratch);
 }
 
-void mvMeanShift::mean_shift(const IplImage* src, IplImage* dst) {
+void mvMeanShift::mean_shift(IplImage* src, IplImage* dst) {
       downsample_from (src);
       cvCvtColor(ds_scratch_3, ds_scratch_3, CV_BGR2HSV);
 
@@ -383,7 +383,7 @@ void mvMeanShift::mean_shift(const IplImage* src, IplImage* dst) {
       upsample_to_3 (dst);
 }
 
-void mvMeanShift::filter(const IplImage* src, IplImage* dst) {
+void mvMeanShift::filter(IplImage* src, IplImage* dst) {
       downsample_from (src);
       cvCvtColor(ds_scratch_3, ds_scratch_3, CV_BGR2HSV);
 
@@ -393,7 +393,7 @@ void mvMeanShift::filter(const IplImage* src, IplImage* dst) {
       upsample_to (dst);
 }
 
-void mvMeanShift::mvMeanShift_internal(const IplImage* src_scratch) {
+void mvMeanShift::mvMeanShift_internal(IplImage* src_scratch) {
 // note this will treat the image as if it was in HSV format
 // src_scratch is the src image passed in by the user, which will now be used as a scratch
     bin_MeanShift.start();
@@ -510,7 +510,7 @@ char mDistance(int a, int b, int c, int x, int y, int z){
     return((4*std::min(abs(x-a),180-abs(x-a)) + abs(y-b) + abs(z-c))/5);
 }
 
-void ManhattanDistanceFilter(const IplImage* src, IplImage* dst){
+void ManhattanDistanceFilter(IplImage* src, IplImage* dst){
     mvTarget targets[] = {{50,130,60},{100,80,40}};
 
     unsigned char minDist, tempDist;

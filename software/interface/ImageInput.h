@@ -3,7 +3,7 @@
    This interface represents the eyes of the submarine. It can return a forward image
    or a below image.
 
-   Subclasses must implement const IplImage* get_internal_image(ImageDirection), which returns either a forward or a below image.
+   Subclasses must implement IplImage* get_internal_image(ImageDirection), which returns either a forward or a below image.
    The base class implements some utility functions that does not depend on how get_internal_image() is implemented:
      - Display the raw image stream when accessed (may be suppressed by the subclass)
      - Write image stream to two video files
@@ -70,12 +70,12 @@ class ImageInput {
       }
       return ready_internal_image(dir);
     }
-    const IplImage* get_image(ImageDirection dir = FWD_IMG)
+    IplImage* get_image(ImageDirection dir = FWD_IMG)
     {
       if (!ready_internal_image(dir)) {
         return NULL;
       }
-      const IplImage *frame = get_internal_image(dir);
+      IplImage *frame = get_internal_image(dir);
       if (!frame) {
         return frame;
       }
@@ -104,14 +104,14 @@ class ImageInput {
     {
       static int count = 0;
 
-      const IplImage *img_fwd = get_image();
+      IplImage *img_fwd = get_image();
       if (img_fwd) {
         std::ostringstream oss;
         oss << "image_fwd_" << count << ".jpg";
         cvSaveImage (oss.str().c_str(), img_fwd);
       }
 
-      const IplImage *img_dwn = get_image(DWN_IMG);
+      IplImage *img_dwn = get_image(DWN_IMG);
       if (img_dwn) {
         std::ostringstream oss;
         oss << "image_dwn_" << count << ".jpg";
@@ -126,7 +126,7 @@ class ImageInput {
     // This readies but does not return the next image. Only useful for video/webcam.
     virtual bool ready_internal_image(ImageDirection dir) = 0;
     // This only returns the next available image. The image is not updated in webcam.
-    virtual const IplImage* get_internal_image(ImageDirection dir) = 0;
+    virtual IplImage* get_internal_image(ImageDirection dir) = 0;
 
     // member variables
     mvVideoWriter *writer_fwd, *writer_dwn;
@@ -142,7 +142,7 @@ class ImageInputNull : public ImageInput {
 
   protected:
     virtual bool ready_internal_image(ImageDirection dir = FWD_IMG) {return false;}
-    virtual const IplImage* get_internal_image(ImageDirection dir = FWD_IMG) {return NULL;}
+    virtual IplImage* get_internal_image(ImageDirection dir = FWD_IMG) {return NULL;}
 };
 
 /* Simulator implementation */
@@ -153,7 +153,7 @@ class ImageInputSimulator : public ImageInput {
 
   protected:
     virtual bool ready_internal_image(ImageDirection dir = FWD_IMG);
-    virtual const IplImage* get_internal_image(ImageDirection dir = FWD_IMG);
+    virtual IplImage* get_internal_image(ImageDirection dir = FWD_IMG);
 };
 
 /* Read from video file */
@@ -164,7 +164,7 @@ class ImageInputVideo : public ImageInput {
 
   protected:
     virtual bool ready_internal_image(ImageDirection dir = FWD_IMG);
-    virtual const IplImage* get_internal_image(ImageDirection dir = FWD_IMG);
+    virtual IplImage* get_internal_image(ImageDirection dir = FWD_IMG);
   
   private:
     mvCamera* cam_fwd;
@@ -178,7 +178,7 @@ class ImageInputWebcam : public ImageInput {
     virtual ~ImageInputWebcam();
 
   protected:
-    virtual const IplImage* get_internal_image(ImageDirection dir = FWD_IMG);
+    virtual IplImage* get_internal_image(ImageDirection dir = FWD_IMG);
     virtual bool ready_internal_image(ImageDirection dir = FWD_IMG);
 
   private:

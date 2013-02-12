@@ -21,7 +21,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
     while (1) {
-        const IplImage* frame = image_input->get_image();
+        IplImage* frame = image_input->get_image();
         if (!frame) {
             ret_code = TASK_ERROR;
             break;
@@ -73,7 +73,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
             }
         }
         else {
-            const IplImage* down_frame = image_input->get_image(DWN_IMG);
+            IplImage* down_frame = image_input->get_image(DWN_IMG);
 
             // if done gate, we look for path
             if (!down_frame) {
