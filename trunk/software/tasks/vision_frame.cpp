@@ -14,7 +14,7 @@ const char MDA_VISION_MODULE_FRAME::MDA_VISION_FRAME_SETTINGS[] = "vision_frame_
 /// #########################################################################
 MDA_VISION_MODULE_FRAME:: MDA_VISION_MODULE_FRAME () :
     _window (mvWindow("Frame Vision Module")),
-    _HSVFilter (mvHSVFilter(MDA_VISION_FRAME_SETTINGS)),
+    _MeanShift (mvMeanShift(MDA_VISION_FRAME_SETTINGS)),
     _HoughLines (mvHoughLines(MDA_VISION_FRAME_SETTINGS)),
     _lines (mvLines())
 {
@@ -26,18 +26,13 @@ MDA_VISION_MODULE_FRAME:: ~MDA_VISION_MODULE_FRAME () {
 }
 
 void MDA_VISION_MODULE_FRAME:: primary_filter (IplImage* src) {
-    _HSVFilter.filter (src, _filtered_img);
+    _MeanShift.filter (src, _filtered_img);
     _filtered_img->origin = src->origin;
     _lines.clearData ();
     _KMeans.clearData ();
     
     _HoughLines.findLines (_filtered_img, &_lines);
     _KMeans.cluster_auto (1, 3, &_lines, 1);
-
-    _lines.drawOntoImage (_filtered_img);
-    _KMeans.drawOntoImage (_filtered_img);
-
-    _window.showImage (_filtered_img);
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
@@ -45,6 +40,13 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
     unsigned nClusters = _KMeans.nClusters();
     int imWidth  =  (int)_filtered_img->width*0.5;
     int imHeight =  (int)_filtered_img->height*0.5;
+
+    // for _IsRed, we check any vertical segments we find to see if they are red
+    // We look near the centroid of the vert. segment, and check that the pixels 
+    // are set to value I * mvMeanShift::GREYSCALE_FACTOR where I is index of red bin
+    // will be set to 0 only if we have 2 vertical segments 
+    unsigned char value_to_find = (unsigned char) RED_BIN_INDEX * mvMeanShift::GREYSCALE_FACTOR;
+    _IsRed = -1;
 
     if(nClusters == 0) {
         printf ("Frame: No clusters =(\n");
@@ -62,15 +64,22 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
             m_pixel_x = (int)(x1+x2)*0.5 - imWidth;
             m_pixel_y = (int)(y1+y2)*0.5 - imHeight;
             m_range = ((float)(FRAME_REAL_WIDTH) * _filtered_img->width) / ((x2-x1) * TAN_FOV_X);
-            m_pixel_y -= (int) (abs(x2-x1) / FRAME_REAL_WIDTH * FRAME_REAL_HEIGHT * 0.5); // displace returned y coordinate upwards by half the frame height 
 
+            // displace returned y coordinate upwards by half the frame height 
+            m_pixel_y -= (int) (abs(x2-x1) / FRAME_REAL_WIDTH * FRAME_REAL_HEIGHT * 0.5); 
+            
             retval = ONE_SEGMENT;
             goto RETURN_CENTROID;
         }
         else if (abs(slope) > 6) { // single vertical line
-            m_pixel_x = (int)(x1+x2)*0.5 - imWidth;
-            m_pixel_y = (int)(y1+y2)*0.5 - imHeight;
-            m_pixel_y -= (int) (abs(x2-x1) / FRAME_REAL_WIDTH * FRAME_REAL_HEIGHT * 0.5); // displace returned y coordinate upwards by half the frame height 
+            int centroid_x = (int)(x1+x2)*0.5;
+            int centroid_y = (int)(y1+y2)*0.5;  
+
+            m_pixel_x = centroid_x - imWidth;
+            m_pixel_y = centroid_y - imHeight;
+            
+            // displace returned y coordinate upwards by half the frame height 
+            m_pixel_y -= (int) (abs(x2-x1) / FRAME_REAL_WIDTH * FRAME_REAL_HEIGHT * 0.5);
 
             retval = ONE_SEGMENT;
             goto RETURN_CENTROID;
@@ -112,6 +121,12 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
             m_pixel_y = (int)(2*MIN(y10,y11)+y00+y01)/4 - imHeight;
             width  = (int)abs(x00-x01);
             height = (int)abs(y10-y11);
+
+            // check for red segment
+            unsigned char* centroid_pixel = (unsigned char*)(_filtered_img->imageData + (y10+y11)/2*_filtered_img->widthStep + (x10+x11)/2);
+            if (centroid_pixel[0] == value_to_find || centroid_pixel[-1] == value_to_find || centroid_pixel[1] == value_to_find)
+                _IsRed = 1;
+
             retval = ONE_SEGMENT;  //Need other retval here
         }
         else if(abs(slope0) > 6 && abs(slope1) < 0.2){
@@ -120,6 +135,12 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
             m_pixel_y = (int)(2*MIN(y00,y01)+y10+y11)/4 - imHeight;
             width  = (int)abs(x10-x11);
             height = (int)abs(y00-y01);
+            
+            // check for red segment
+            unsigned char* centroid_pixel = (unsigned char*)(_filtered_img->imageData + (y00+y01)/2*_filtered_img->widthStep + (x00+x01)/2);
+            if (centroid_pixel[0] == value_to_find || centroid_pixel[-1] == value_to_find || centroid_pixel[1] == value_to_find)
+                _IsRed = 1;
+
             retval = ONE_SEGMENT;
         }
         else if(abs(slope0) > 6 && abs(slope1) > 6){
@@ -128,6 +149,16 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
             m_pixel_y = (int)(y00+y01+y10+y11)*0.25 - imHeight;
             width  = (int)(abs(x00-x11) + abs(x10-x11))*0.5;
             height = (int)(abs(y00-y11) + abs(y10-y11))*0.5;
+
+            // check both segments for red segment
+            unsigned char* centroid_pixel = (unsigned char*)(_filtered_img->imageData + (y00+y01)/2*_filtered_img->widthStep + (x00+x01)/2);
+            unsigned char* centroid_pixel2 = (unsigned char*)(_filtered_img->imageData + (y10+y11)/2*_filtered_img->widthStep + (x10+x11)/2); 
+            if (centroid_pixel[0] == value_to_find || centroid_pixel[-1] == value_to_find || centroid_pixel[1] == value_to_find ||
+                centroid_pixel2[0] == value_to_find || centroid_pixel2[-1] == value_to_find || centroid_pixel2[1] == value_to_find)
+                _IsRed = 1;
+            else
+                _IsRed = 0;
+
             retval = ONE_SEGMENT;
         }
         else{
@@ -140,7 +171,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
     }
 
     else if(nClusters == 3){
-        DEBUG_PRINT ("Frame: 3 clusters =)\n");
+        DEBUG_PRINT ("Frame: 3 clusters\n");
         int x00 = _KMeans[0][0].x,   y00 = _KMeans[0][0].y;
         int x01 = _KMeans[0][1].x,   y01 = _KMeans[0][1].y;
         int x10 = _KMeans[1][0].x,   y10 = _KMeans[1][0].y;
@@ -165,6 +196,16 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
             m_pixel_y = (int)(MIN(y10,y11)+MIN(y20,y21)+y00+y01)*0.25 - imHeight;
             width  = (int)(abs(x00-x01)+abs((x10+x11)-(x20+x21)))*0.333;
             height = (int)(-1*y00-y01+MIN(y10,y11)+MIN(y20,y21))*0.5;
+
+            // check both vert segments for red segment
+            unsigned char* centroid_pixel = (unsigned char*)(_filtered_img->imageData + (y10+y11)/2*_filtered_img->widthStep + (x10+x11)/2); 
+            unsigned char* centroid_pixel2 = (unsigned char*)(_filtered_img->imageData + (y20+y21)/2*_filtered_img->widthStep + (x20+x21)/2);
+            if (centroid_pixel[0] == value_to_find || centroid_pixel[-1] == value_to_find || centroid_pixel[1] == value_to_find ||
+                centroid_pixel2[0] == value_to_find || centroid_pixel2[-1] == value_to_find || centroid_pixel2[1] == value_to_find)
+                _IsRed = 1;
+            else
+                _IsRed = 0;
+
             retval = FULL_DETECT;
         }
         else if(abs(slope0) > 6 && abs(slope1) < 0.2 && abs(slope2) > 6){
@@ -172,6 +213,16 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
             m_pixel_y = (int)(MIN(y00,y01)+MIN(y20,y21)+y10+y11)*0.25 - imHeight;
             width  = (int)(abs(x10-x11)+abs((x00+x01)-(x20+x21)))*0.333;
             height = (int)(-1*y10-y11+MIN(y00,y01)+MIN(y20,y21))*0.5;
+
+            // check both vert segments for red segment
+            unsigned char* centroid_pixel = (unsigned char*)(_filtered_img->imageData + (y00+y01)/2*_filtered_img->widthStep + (x00+x01)/2); 
+            unsigned char* centroid_pixel2 = (unsigned char*)(_filtered_img->imageData + (y20+y21)/2*_filtered_img->widthStep + (x20+x21)/2);
+            if (centroid_pixel[0] == value_to_find || centroid_pixel[-1] == value_to_find || centroid_pixel[1] == value_to_find ||
+                centroid_pixel2[0] == value_to_find || centroid_pixel2[-1] == value_to_find || centroid_pixel2[1] == value_to_find)
+                _IsRed = 1;
+            else
+                _IsRed = 0;
+
             retval = FULL_DETECT;
         }
         else if(abs(slope0) > 6 && abs(slope1) > 6 && abs(slope2) < 0.2){
@@ -179,6 +230,16 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
             m_pixel_y = (int)(MIN(y10,y11)+MIN(y00,y01)+y20+y21)*0.25 - imHeight;
             width  = (int)(abs(x20-x21)+abs((x10+x11)-(x00+x01)))*0.333;
             height = (int)(-1*y20-y21+MIN(y10,y11)+MIN(y00,y01))*0.5;
+        
+            // check both vert segments for red segment
+            unsigned char* centroid_pixel = (unsigned char*)(_filtered_img->imageData + (y00+y01)/2*_filtered_img->widthStep + (x00+x01)/2); 
+            unsigned char* centroid_pixel2 = (unsigned char*)(_filtered_img->imageData + (y10+y11)/2*_filtered_img->widthStep + (x10+x11)/2);
+            if (centroid_pixel[0] == value_to_find || centroid_pixel[-1] == value_to_find || centroid_pixel[1] == value_to_find ||
+                centroid_pixel2[0] == value_to_find || centroid_pixel2[-1] == value_to_find || centroid_pixel2[1] == value_to_find)
+                _IsRed = 1;
+            else
+                _IsRed = 0;
+
             retval = FULL_DETECT;
         }
         else{
@@ -197,11 +258,23 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
         return NO_TARGET;
     }
 
+    // this code has to be here since we check _filter_image values inside this function
+    _lines.drawOntoImage (_filtered_img);
+    _KMeans.drawOntoImage (_filtered_img);
+    _window.showImage (_filtered_img);
+
     /// if we encounter any sort of sanity error, we will return only the centroid
     RETURN_CENTROID:
         m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / _filtered_img->width);
         m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / _filtered_img->height);
-        DEBUG_PRINT ("Frame: (%d,%d) (%5.2f,%5.2f)\n", m_pixel_x, m_pixel_y, 
+        DEBUG_PRINT ("Frame: (%d,%d) (%5.2f, %5.2f)\n", m_pixel_x, m_pixel_y, 
             m_angular_x, m_angular_y); 
+
+        switch (_IsRed) {
+            case -1: DEBUG_PRINT ("Frame red signal: Unsure\n"); break;
+            case 0: DEBUG_PRINT ("Frame red signal: No\n"); break;
+            case 1: DEBUG_PRINT ("Frame red signal = Yes\n"); break;
+            default: printf ("Unhandled value of _IsRed in vision_frame.\n"); exit(1);
+        }
         return retval;
 }
