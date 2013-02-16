@@ -3,6 +3,9 @@
 
 #include <sys/time.h>
 
+// returns microseconds since unix era
+unsigned long long gettimeofday ();
+
 class PID {
     static const int PID_NUM_OLD_VALUES = 5;
     static const int PID_NUM_DIFF_VALUES = 2; // num of old values to use during differentiation
