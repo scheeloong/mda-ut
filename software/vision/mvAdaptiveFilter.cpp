@@ -393,6 +393,15 @@ void mvMeanShift::filter(IplImage* src, IplImage* dst) {
       downsample_from (src);
       cvCvtColor(ds_scratch_3, ds_scratch_3, CV_BGR2HSV);
 
+      colorFilter_internal();
+
+      upsample_to (dst);
+}
+
+void mvMeanShift::combined_filter(IplImage* src, IplImage* dst) {
+      downsample_from (src);
+      cvCvtColor(ds_scratch_3, ds_scratch_3, CV_BGR2HSV);
+
       mvMeanShift_internal(src);
       colorFilter_internal();
 
@@ -502,7 +511,7 @@ void mvMeanShift::colorFilter_internal() {
                     continue;
 
                 if (imgPtr[1] != 0 && (hue_box[i])->check_hue(imgPtr[0], imgPtr[1], imgPtr[2])) {
-                    *resPtr = (i+1)*50;
+                    *resPtr = (i+1)*GREYSCALE_FACTOR;
                 }
             }
 

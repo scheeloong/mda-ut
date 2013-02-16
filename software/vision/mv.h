@@ -326,6 +326,7 @@ class mvMeanShift {
 
 public:
     static const int NUM_BOXES = 3;
+    static const unsigned char GREYSCALE_FACTOR = 50;
 
 private:
     // parameters read from settings file
@@ -371,6 +372,7 @@ public:
     ~mvMeanShift(); // destructor
     void mean_shift(IplImage* src, IplImage* dst);
     void filter(IplImage *src, IplImage* dst);
+    void combined_filter(IplImage *src, IplImage* dst);
 };
 
 #endif

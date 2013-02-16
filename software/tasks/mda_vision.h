@@ -210,13 +210,16 @@ class MDA_VISION_MODULE_FRAME : public MDA_VISION_MODULE_BASE {
     static const float FRAME_REAL_WIDTH = 180.0;
     static const float FRAME_REAL_HEIGHT = 120.0;
     static const float FRAME_REAL_VERTICAL_SEGMENT_LENGTH = 40.0;
+    static const int RED_BIN_INDEX = 1;
 
     mvWindow _window;
-    mvHSVFilter _HSVFilter;
+    mvMeanShift _MeanShift;
     mvHoughLines _HoughLines;
     mvKMeans _KMeans;
 
     mvLines _lines;
+
+    int _IsRed;
     
     IplImage* _filtered_img;
 
@@ -228,6 +231,7 @@ public:
     MDA_VISION_RETURN_CODE calc_vci ();
 
     virtual int get_angle() {printf ("VISION_MODULE_FRAME - get_angle not allowed\n"); exit(1); return 0;}
+    int is_red() { return _IsRed; } // 0 means no, 1 means yes, -1 means dunno
 };
 
 #endif
