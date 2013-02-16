@@ -349,7 +349,8 @@ mvMeanShift::mvMeanShift (const char* settings_file) :
     read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
 
     // create Hue_Box
-    hue_target = new Hue_Box(settings_file);
+    for (int i = 0; i < NUM_BOXES; i++)
+        hue_box[i] = new Hue_Box(settings_file, i+1);
 
     // create downsampled scratch images. The 1 channel image shares data with the 3 channel
     ds_scratch_3 = cvCreateImage(cvSize(width/DS_FACTOR, height/DS_FACTOR), IPL_DEPTH_8U, 3);
@@ -369,6 +370,10 @@ mvMeanShift::mvMeanShift (const char* settings_file) :
 
 mvMeanShift::~mvMeanShift () {
     delete[] kernel_point_array;
+
+    for (int i = 0; i < NUM_BOXES; i++)
+        delete hue_box[i];
+
     cvReleaseImage (&ds_scratch_3);
     cvReleaseImageHeader (&ds_scratch);
 }
@@ -398,23 +403,22 @@ void mvMeanShift::mvMeanShift_internal(IplImage* src_scratch) {
 // src_scratch is the src image passed in by the user, which will now be used as a scratch
     bin_MeanShift.start();
 
-    unsigned char* ds_addr_first = (unsigned char*)ds_scratch_3->imageData;
-    unsigned char* ds_addr_last = ds_addr_first + ds_scratch_3->widthStep*ds_scratch_3->height;
     int kernel_area = KERNEL_SIZE * KERNEL_SIZE;
+    int kernel_rad = (KERNEL_SIZE - 1) / 2;
+
+    cvZero (src_scratch);
 
     // we will be filtering ds_scratch_3 to src_scratch, then copying the data back to ds_scratch_3
     unsigned char* imgPtr, *resPtr;
-    for (int r = 0; r < ds_scratch_3->height; r++) {                         
-        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep); // imgPtr = first pixel of rth's row
-        resPtr = (unsigned char*) (src_scratch->imageData + r*src_scratch->widthStep);
+    for (int r = kernel_rad; r < ds_scratch_3->height-kernel_rad; r++) {                         
+        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep + 3*kernel_rad); // imgPtr = first pixel of rth's row
+        resPtr = (unsigned char*) (src_scratch->imageData + r*src_scratch->widthStep + 3*kernel_rad);
         
-        for (int c = 0; c < ds_scratch_3->width; c++) {
+        for (int c = kernel_rad; c < ds_scratch_3->width-kernel_rad; c++) {
             unsigned char H = *imgPtr;
             unsigned char S = *(imgPtr+1);
             unsigned char V = *(imgPtr+2);
             
-            *resPtr = *(resPtr+1) = *(resPtr+2) = 0;
-
             // check if the src pixel meats S,V min reqs
             if (S >= S_MIN && V >= V_MIN) {
                 unsigned char* tempPtr;
@@ -424,10 +428,6 @@ void mvMeanShift::mvMeanShift_internal(IplImage* src_scratch) {
                 // go thru each pixel in the kernel
                 for (int i = 0; i < kernel_area; i++) {
                     tempPtr = imgPtr + 3*kernel_point_array[i];
-
-                    // check that tempPtr points within the image
-                    if (!((tempPtr >= ds_addr_first) && (tempPtr < ds_addr_last)))
-                        continue;
 
                     if (abs(S-tempPtr[1]) <= S_DIST && 
                         abs(V-tempPtr[2]) <= V_DIST &&
@@ -477,20 +477,30 @@ void mvMeanShift::mvMeanShift_internal(IplImage* src_scratch) {
         }*/
     }
 
+#ifdef M_DEBUG
+    cvNamedWindow("mvMeanShift debug", CV_WINDOW_AUTOSIZE);
+    cvShowImage("mvMeanShift debug", ds_scratch_3);
+#endif
+
     bin_MeanShift.stop();
 }
 
 void mvMeanShift::colorFilter_internal() {
+// this function goes over the Hue_Box array and if a pixel falls inside box X, it marks that pixel
+// with value X
     unsigned char *imgPtr, *resPtr;
     for (int r = 0; r < ds_scratch->height; r++) {                        
         imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep);
         resPtr = (unsigned char*) (ds_scratch->imageData + r*ds_scratch->widthStep); 
    
         for (int c = 0; c < ds_scratch->width; c++) {
-            if (*(imgPtr+1) != 0 && hue_target->add_value(*imgPtr))
-                *resPtr = 255;
-            else
-                *resPtr = 0;
+            *resPtr = 0;
+
+            for (int i = 0; i < NUM_BOXES; i++) {
+                if (imgPtr[1] != 0 && (hue_box[i])->check_hue(imgPtr[0], imgPtr[1], imgPtr[2])) {
+                    *resPtr = i;
+                }
+            }
 
             imgPtr += 3;
             resPtr++;

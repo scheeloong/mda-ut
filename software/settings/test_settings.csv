@@ -1,12 +1,27 @@
 ### color filter settings
 HUE_MIN, 60
 HUE_MAX, 80
-SAT_MIN, 90
+SAT_MIN, 150
 SAT_MAX, 255
-VAL_MIN, 80
+VAL_MIN, 30
 VAL_MAX, 255
 
 ### mean shift filter
+HUE_MIN_1, 170 # red
+HUE_MAX_1, 5
+SAT_MIN_1, 160
+VAL_MIN_1, 80
+
+HUE_MIN_2, 65 # green
+HUE_MAX_2, 85
+SAT_MIN_2, 150
+VAL_MIN_2, 30
+
+HUE_MIN_3, 110 # yellow
+HUE_MAX_3, 130
+SAT_MIN_3, 160
+VAL_MIN_3, 100
+
 HUE_DIST, 10
 SAT_DIST, 20
 VAL_DIST, 30

@@ -248,27 +248,54 @@ class mvAdaptiveFilter {
  */
 class Hue_Box {
     public:
-    unsigned char Hue_Min;
-    unsigned char Hue_Max;
+    unsigned char HUE_MIN;
+    unsigned char HUE_MAX;
+    unsigned char SAT_MIN;
+    unsigned char VAL_MIN;
+    int BOX_NUMBER;
 
     Hue_Box (unsigned char hue_min, unsigned char hue_max) :
-        Hue_Min(hue_min),
-        Hue_Max(hue_max) 
+        HUE_MIN(hue_min),
+        HUE_MAX(hue_max) 
     {
     }
 
-    Hue_Box (const char* settings_file) {
-        read_mv_setting (settings_file, "HUE_MIN", Hue_Min);
-        read_mv_setting (settings_file, "HUE_MAX", Hue_Max);
+    Hue_Box (const char* settings_file, int box_number) {
+    // read the HUE_MIN and HUE_MAX based on box number. So if box_number is 2, it reads
+    // HUE_MIN_2 and HUE_MAX_2
+        BOX_NUMBER = box_number;
+        std::string box_number_str;
+        if (box_number == 1)
+            box_number_str = "_1";
+        else if (box_number == 2)
+            box_number_str = "_2";
+        else if (box_number == 3)
+            box_number_str = "_3";
+        else {
+            printf ("Invalid box_number %d when constructing Hue_Box!\n", box_number);
+            exit (1);
+        }
+
+        std::string hue_min_str = std::string("HUE_MIN") + box_number_str;        
+        std::string hue_max_str = std::string("HUE_MAX") + box_number_str;
+        std::string sat_min_str = std::string("SAT_MIN") + box_number_str;        
+        std::string val_min_str = std::string("VAL_MIN") + box_number_str;
+
+        read_mv_setting (settings_file, hue_min_str.c_str(), HUE_MIN);
+        read_mv_setting (settings_file, hue_max_str.c_str(), HUE_MAX);
+        read_mv_setting (settings_file, sat_min_str.c_str(), SAT_MIN);
+        read_mv_setting (settings_file, val_min_str.c_str(), VAL_MIN);
     }
 
-    bool add_value (unsigned char hue) {
+    bool check_hue (unsigned char hue, unsigned char sat, unsigned char val) {
         // shifting logic goes here
-
-        if (Hue_Max >= Hue_Min) 
-            return (hue >= Hue_Min && hue <= Hue_Max);
-        else
-            return ((hue <= Hue_Min && hue <= Hue_Max) || (hue >= Hue_Min && hue >= Hue_Max)); 
+        if (sat >= SAT_MIN && val >= VAL_MIN) {
+            if (HUE_MAX >= HUE_MIN) 
+                return (hue >= HUE_MIN && hue <= HUE_MAX);
+            else
+                return ((hue <= HUE_MIN && hue <= HUE_MAX) || (hue >= HUE_MIN && hue >= HUE_MAX)); 
+        }
+        return false;
     }
 
 };
@@ -278,6 +305,7 @@ class Hue_Box {
  * Then performs color filtering
  */
 class mvMeanShift {
+    //#define M_DEBUG
     //declare constants here
     static const int DS_FACTOR = 2; // downsampling
     static const int GOOD_PIXELS_FACTOR = 6;
@@ -285,13 +313,17 @@ class mvMeanShift {
     static const int S_MIN = 60;
     static const int V_MIN = 30;
 
+public:
+    static const int NUM_BOXES = 3;
+
+private:
     // parameters read from settings file
     int H_DIST;
     int S_DIST;
     int V_DIST;
 
     // internal data
-    Hue_Box* hue_target;
+    Hue_Box* hue_box[NUM_BOXES]; // array of pointers to boxes
     int* kernel_point_array;
     IplImage* ds_scratch_3;   // downsampled scratch image 3 channel
     IplImage* ds_scratch;   // 1 channel
@@ -301,7 +333,6 @@ class mvMeanShift {
     PROFILE_BIN bin_MeanShift;
     PROFILE_BIN bin_Filter;
     
-    private:
     void downsample_from(IplImage* src) {    // downsamples src to internal scratch image
         assert (src->nChannels == 3);
         bin_Resize.start();
@@ -324,7 +355,7 @@ class mvMeanShift {
     void mvMeanShift_internal(IplImage* scratch);
     void colorFilter_internal();
 
-    public: 
+public: 
     mvMeanShift (const char* settings_file); //constructor
     ~mvMeanShift(); // destructor
     void mean_shift(IplImage* src, IplImage* dst);
