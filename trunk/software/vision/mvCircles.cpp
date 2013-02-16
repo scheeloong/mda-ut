@@ -238,7 +238,7 @@ int mvAdvancedCircles::check_circle_validity (IplImage* img, MV_CIRCLE Circle) {
             continue;
 
         unsigned char* ptr = (unsigned char*) (img->imageData + y*img->widthStep + x);
-        if(*(ptr) == 255){
+        if(*(ptr) != 0){
             count++;
         }
     }
