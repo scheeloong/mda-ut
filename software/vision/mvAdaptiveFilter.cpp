@@ -349,8 +349,9 @@ mvMeanShift::mvMeanShift (const char* settings_file) :
     read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
 
     // create Hue_Box
-    for (int i = 0; i < NUM_BOXES; i++)
+    for (int i = 0; i < NUM_BOXES; i++) {
         hue_box[i] = new Hue_Box(settings_file, i+1);
+    }
 
     // create downsampled scratch images. The 1 channel image shares data with the 3 channel
     ds_scratch_3 = cvCreateImage(cvSize(width/DS_FACTOR, height/DS_FACTOR), IPL_DEPTH_8U, 3);
@@ -497,8 +498,11 @@ void mvMeanShift::colorFilter_internal() {
             *resPtr = 0;
 
             for (int i = 0; i < NUM_BOXES; i++) {
+                if (!(hue_box[i])->is_enabled())
+                    continue;
+
                 if (imgPtr[1] != 0 && (hue_box[i])->check_hue(imgPtr[0], imgPtr[1], imgPtr[2])) {
-                    *resPtr = i;
+                    *resPtr = (i+1)*50;
                 }
             }
 
