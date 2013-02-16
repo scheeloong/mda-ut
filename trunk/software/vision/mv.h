@@ -253,6 +253,7 @@ class Hue_Box {
     unsigned char SAT_MIN;
     unsigned char VAL_MIN;
     int BOX_NUMBER;
+    bool BOX_ENABLED; // whether the box is being used or not
 
     Hue_Box (unsigned char hue_min, unsigned char hue_max) :
         HUE_MIN(hue_min),
@@ -276,6 +277,12 @@ class Hue_Box {
             exit (1);
         }
 
+        std::string enabled_str = std::string("ENABLE_BOX") + box_number_str;
+        read_mv_setting (settings_file, enabled_str.c_str(), BOX_ENABLED);
+
+        if (!BOX_ENABLED)
+            return;
+
         std::string hue_min_str = std::string("HUE_MIN") + box_number_str;        
         std::string hue_max_str = std::string("HUE_MAX") + box_number_str;
         std::string sat_min_str = std::string("SAT_MIN") + box_number_str;        
@@ -296,6 +303,10 @@ class Hue_Box {
                 return ((hue <= HUE_MIN && hue <= HUE_MAX) || (hue >= HUE_MIN && hue >= HUE_MAX)); 
         }
         return false;
+    }
+
+    bool is_enabled () {
+        return BOX_ENABLED;
     }
 
 };
