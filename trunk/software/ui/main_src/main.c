@@ -82,7 +82,7 @@ int main (int argc, char *argv[]) {
             if (token[1] == NULL || !strcmp (token[1], "status"))
                 power_status();
             else if (!strcmp (token[1], "on") || !strcmp (token[1], "1")) {
-                power_on();              
+                startup_sequence();              
             }
             else if (!strcmp (token[1], "off") || !strcmp (token[1], "0")) {
                 power_off();                    

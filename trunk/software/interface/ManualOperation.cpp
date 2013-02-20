@@ -24,10 +24,7 @@ void ManualOperation::display_start_message()
          "\n"
          "  wasd - use controller to move forward/reverse/left/right\n"
          "  rf   - use controller to move up/down\n"
-         "  'e'  - stop\n"
-         "  ijkl - move forward/reverse/left/right\n"
-         "  p;   - move up/down\n"
-         "  ' '  - nullify all speed and acceleration\n"
+         "  e    - stop\n"
          "\n"
          "  v    - enter vision mode\n"
          "\n"
@@ -37,6 +34,16 @@ void ManualOperation::display_start_message()
          "  3    - run buoy task\n"
          "  4    - run frame task\n"
          "  m    - run mission\n"
+         "\n"
+         "Simulator only commands:\n"
+         "  ijkl - move forward/reverse/left/right\n"
+         "  p;   - move up/down\n"
+         "  ' '  - nullify all speed and acceleration\n"
+         "\n"
+         "Submarine only commands:\n"
+         " ^     - power on submarine\n"
+         " %%     - submarine startup sequence\n"
+         " $     - power off submarine\n"
          "\n");
   refresh();
 }
@@ -123,6 +130,15 @@ void ManualOperation::work()
          break;
       case ' ':
          actuator_output->special_cmd(SIM_ACCEL_ZERO);
+         break;
+      case '^':
+         actuator_output->special_cmd(SUB_POWER_ON);
+         break;
+      case '%':
+         actuator_output->special_cmd(SUB_STARTUP_SEQUENCE);
+         break;
+      case '$':
+         actuator_output->special_cmd(SUB_POWER_OFF);
          break;
       case 'm':
          endwin();

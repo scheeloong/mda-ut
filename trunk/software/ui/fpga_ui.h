@@ -42,6 +42,7 @@ void motor_set (int pwm, char motor_flags);
 
 void power_status();
 void power_on();
+void startup_sequence();
 void power_off();
 int get_power();
 
