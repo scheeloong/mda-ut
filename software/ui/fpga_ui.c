@@ -242,6 +242,21 @@ void power_on () {
     write_and_flush_term ("p 1\n");
     fprintf (infp, "spf %x\n", PWM_FREQ);
 
+    power = 1;
+    printf ("turned power on.\n");
+}
+
+void startup_sequence () {
+    cmd_ok = 1;
+
+    // Disable motors first
+    fprintf (infp, "sms a\n");
+    fprintf (infp, "sc 0\n");
+
+    // Make sure the power is on
+    write_and_flush_term ("p 1\n");
+    fprintf (infp, "spf %x\n", PWM_FREQ);
+
     // Wait before turning motors on at neutral duty cycle
     sleep(1);
     fprintf (infp, "smf a\n");
@@ -253,7 +268,7 @@ void power_on () {
     fflush(infp);
 
     power = 1;
-    printf ("turned power on.\n");
+    printf ("started startup sequence.\n");
 }
 
 void power_off () {

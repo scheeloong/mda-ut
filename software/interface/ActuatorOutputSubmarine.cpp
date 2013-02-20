@@ -33,6 +33,9 @@ void ActuatorOutputSubmarine::special_cmd(SPECIAL_COMMAND cmd)
     case (SUB_POWER_ON):
       power_on();
       break;
+    case (SUB_STARTUP_SEQUENCE):
+      startup_sequence();
+      break;
     case (SUB_POWER_OFF):
       power_off();
       break;
