@@ -21,3 +21,15 @@ void SubmarineSingleton::destroy()
 
   exit_safe();
 }
+
+void SubmarineSingleton::set_target_yaw(int target_yaw)
+{
+  this->target_yaw = target_yaw;
+  dyn_set_target_yaw(target_yaw);
+}
+
+void SubmarineSingleton::set_target_depth(int target_depth)
+{
+  this->target_depth = target_depth;
+  dyn_set_target_depth(target_depth);
+}

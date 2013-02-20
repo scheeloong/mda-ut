@@ -7,6 +7,7 @@
  *    Always use exit_safe() to exit, which turns power off first.
  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -26,7 +27,7 @@ int main (int argc, char *argv[]) {
     for (;;) {
         printf (LINE_START);
         cmd_ok = 0;
-        fgets (cmd, 50, stdin);
+        assert(fgets (cmd, 50, stdin));
         
         // use strtok to grab each part of the command 
         token[0] = strtok (cmd, " \n");
