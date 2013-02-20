@@ -61,6 +61,7 @@ class ManualOperation: public Operation {
     void message_hold(const char *, int delay_in_s = 2);
     void display_start_message();
     void process_image();
+    void long_input();
 
     enum MDA_MANUAL_MODE {
       NORMAL,
