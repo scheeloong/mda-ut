@@ -5,6 +5,8 @@
 #include "Operation.h"
 #include "CharacterStreamSingleton.h"
 
+#define BUF_LEN 16
+
 void ManualOperation::display_start_message()
 {
   // clear regular I/O
@@ -27,6 +29,7 @@ void ManualOperation::display_start_message()
          "  e    - stop\n"
          "\n"
          "  v    - enter vision mode\n"
+         "  #    - input exact target attitude\n"
          "\n"
          "  0    - run test task\n"
          "  1    - run gate task\n"
@@ -139,6 +142,9 @@ void ManualOperation::work()
          break;
       case '$':
          actuator_output->special_cmd(SUB_POWER_OFF);
+         break;
+      case '#':
+         long_input();
          break;
       case 'm':
          endwin();
@@ -413,4 +419,68 @@ void ManualOperation::dump_images()
 {
   message_hold("Saved images");
   image_input->dump_images();
+}
+
+void ManualOperation::long_input()
+{
+  clear();
+  printw(
+   "Input exact target attitude:\n"
+   " speed <#> - set target speed to #\n"
+   " yaw <#>   - set target yaw to #\n"
+   " depth <#> - set target depth to #\n"
+   "\n"
+   "Your input: "
+  );
+
+  refresh();
+
+  char buf[BUF_LEN];
+  int index = 0;
+
+  char c = CharacterStreamSingleton::get_instance().wait_key(1000);
+  while (c != '\r' && index < BUF_LEN - 1) {
+    if (c != '\0') {
+      const int BACKSPACE = 8;
+      if (c == BACKSPACE) {
+        if (index > 0) {
+          index--;
+          buf[index] = '\0';
+          printw("%c %c", c, c);
+        }
+      } else {
+        buf[index] = c;
+        index++;
+        printw("%c", c);
+      }
+      refresh();
+    }
+    c = CharacterStreamSingleton::get_instance().wait_key(1000);
+  }
+
+  buf[index] = '\0';
+
+  printw("Your command: \n%s", buf);
+  refresh();
+
+  display_start_message();
+
+  if (!strncmp("speed ", buf, strlen("speed "))) {
+    int target_speed;
+    sscanf(buf, "speed %d", &target_speed);
+    actuator_output->set_attitude_absolute(SPEED, target_speed);
+    message_hold("Set target speed");
+  } else if (!strncmp("yaw ", buf, strlen("yaw "))) {
+    int target_yaw;
+    sscanf(buf, "yaw %d", &target_yaw);
+    actuator_output->set_attitude_absolute(YAW, target_yaw);
+    message_hold("Set target yaw");
+  } else if (!strncmp("depth ", buf, strlen("depth "))) {
+    int target_depth;
+    sscanf(buf, "depth %d", &target_depth);
+    actuator_output->set_attitude_absolute(DEPTH, target_depth);
+    message_hold("Set target depth");
+  } else {
+    message_hold("Invalid command");
+  }
 }
