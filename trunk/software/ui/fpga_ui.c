@@ -319,9 +319,23 @@ void dyn_status () {
     printf("depth: %d\n", d);
 }
 
+void dyn_set_target_speed (int target_speed) {
+    cmd_ok = 1;
+    printf("setting target speed to %d.\n", target_speed);
+    fprintf(infp, "ss %x\n", target_speed);
+    fflush(infp);
+}
+
 void dyn_set_target_depth (int target_depth) {
     cmd_ok = 1;
     printf("setting target depth to %d.\n", target_depth);
     fprintf(infp, "sd %x\n", target_depth);
+    fflush(infp);
+}
+
+void dyn_set_target_yaw (int target_yaw) {
+    cmd_ok = 1;
+    printf("setting target yaw to %d.\n", target_yaw);
+    fprintf(infp, "sh %x\n", target_yaw);
     fflush(infp);
 }

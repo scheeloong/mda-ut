@@ -47,7 +47,9 @@ void power_off();
 int get_power();
 
 void dyn_status();
+void dyn_set_target_speed(int);
 void dyn_set_target_depth(int);
+void dyn_set_target_yaw(int);
 
 void get_accel(int *, int *, int *);
 int get_depth();

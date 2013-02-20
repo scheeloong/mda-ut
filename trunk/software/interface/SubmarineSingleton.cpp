@@ -11,7 +11,6 @@ void SubmarineSingleton::create()
   created = true;
 
   init_fpga();
-  power_on();
 }
 
 void SubmarineSingleton::destroy()

@@ -18,7 +18,19 @@ void ActuatorOutputSubmarine::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir,
 
 void ActuatorOutputSubmarine::set_attitude_absolute(ATTITUDE_DIRECTION dir, int val)
 {
-  // TODO: implement
+  switch (val) {
+    case (SPEED):
+      dyn_set_target_speed(val);
+      break;
+    case (DEPTH):
+      dyn_set_target_depth(val);
+      break;
+    case (YAW):
+      dyn_set_target_yaw(val);
+      break;
+    default:
+      break;
+  }
 }
 
 void ActuatorOutputSubmarine::stop()
@@ -28,7 +40,6 @@ void ActuatorOutputSubmarine::stop()
 
 void ActuatorOutputSubmarine::special_cmd(SPECIAL_COMMAND cmd)
 {
-  // TODO: implement
   switch(cmd) {
     case (SUB_POWER_ON):
       power_on();
@@ -40,6 +51,6 @@ void ActuatorOutputSubmarine::special_cmd(SPECIAL_COMMAND cmd)
       power_off();
       break;
     default:
-     break;
+      break;
   }
 }
