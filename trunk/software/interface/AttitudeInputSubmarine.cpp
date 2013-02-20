@@ -11,7 +11,11 @@ AttitudeInputSubmarine::~AttitudeInputSubmarine()
 {
 }
 
-// TODO: implement yaw, pitch and roll
+// In degrees
+int AttitudeInputSubmarine::yaw()
+{
+  return get_yaw();
+}
 
 // On the order of cm
 int AttitudeInputSubmarine::depth()
@@ -19,4 +23,12 @@ int AttitudeInputSubmarine::depth()
   return get_depth();
 }
 
-// TODO: implement target yaw, pitch and roll
+int AttitudeInputSubmarine::target_yaw()
+{
+  return SubmarineSingleton::get_instance().get_target_yaw();
+}
+
+int AttitudeInputSubmarine::target_depth()
+{
+  return SubmarineSingleton::get_instance().get_target_depth();
+}

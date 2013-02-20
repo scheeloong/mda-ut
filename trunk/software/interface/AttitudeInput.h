@@ -53,7 +53,11 @@ class AttitudeInputSubmarine : public AttitudeInput {
     AttitudeInputSubmarine();
     virtual ~AttitudeInputSubmarine();
 
+    virtual int yaw();
     virtual int depth();
+
+    virtual int target_yaw();
+    virtual int target_depth();
 };
 
 #endif

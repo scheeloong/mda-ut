@@ -23,10 +23,10 @@ void ActuatorOutputSubmarine::set_attitude_absolute(ATTITUDE_DIRECTION dir, int 
       dyn_set_target_speed(val);
       break;
     case (DEPTH):
-      dyn_set_target_depth(val);
+      SubmarineSingleton::get_instance().set_target_depth(val);
       break;
     case (YAW):
-      dyn_set_target_yaw(val);
+      SubmarineSingleton::get_instance().set_target_yaw(val);
       break;
     default:
       break;

@@ -197,21 +197,6 @@ void process_command(char *st)
       }
       break;
     case COMMAND_ACCEL:
-      get_accel(&accel_data);
-      printf("raw: ");
-      print_int(accel_data.x);
-      alt_putchar(',');
-      print_int(accel_data.y);
-      alt_putchar(',');
-      print_int(accel_data.z);
-      alt_putchar('\n');
-      get_orientation(&accel_data, &orientation);
-      printf("in degrees: ");
-      print_int(orientation.pitch);
-      alt_putchar(',');
-      print_int(orientation.roll);
-      alt_putchar('\n');
-      printf("from IMU: ");
       get_imu_orientation(&orientation);
       print_int(orientation.yaw);
       alt_putchar(',');

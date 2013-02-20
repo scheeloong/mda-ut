@@ -1,5 +1,6 @@
 #include "fpga_ui.h"
 
+#include <assert.h>
 #include <math.h>
 #include <signal.h>
 #include <stdio.h>
@@ -122,7 +123,7 @@ void write_and_flush_term (char *cmd)
     char buf[BUF_SIZE];
     const char * power_fail_msg = "power failed\n";
     while (1) {
-        fgets(buf, BUF_SIZE, outfp);
+        assert(fgets(buf, BUF_SIZE, outfp));
         fprintf(log, "%s", buf);
         if (strcmp(buf, power_fail_msg) == 0) {
             power = 0;
@@ -178,13 +179,13 @@ void motor_status() {
     const int num_motors = 5;
     int duty_cycles[num_motors];
 
-    fscanf(outfp, "%d", &pwm);
+    assert(fscanf(outfp, "%d", &pwm) != EOF);
     printf("pwm: %d\n", pwm);
 
-    fscanf(outfp, "%s", line);
+    assert(fscanf(outfp, "%s", line) != EOF);
     printf("motor directions: %s\n", line);
 
-    fscanf(outfp, "%d,%d,%d,%d,%d", duty_cycles, duty_cycles+1, duty_cycles+2, duty_cycles+3, duty_cycles+4);
+    assert(fscanf(outfp, "%d,%d,%d,%d,%d", duty_cycles, duty_cycles+1, duty_cycles+2, duty_cycles+3, duty_cycles+4) != EOF);
     printf("duty cycles:");
     for (i = 0; i < num_motors; i++) {
        printf(" %d", (duty_cycles[i]-512) * 100 / 512);
@@ -288,14 +289,25 @@ int get_power() {
 }
 
 void get_accel (int *x, int *y, int *z) {
+    write_and_flush_term("gax\n");
+    assert(fscanf(outfp, "%d", x) != EOF);
+    write_and_flush_term("gay\n");
+    assert(fscanf(outfp, "%d", y) != EOF);
+    write_and_flush_term("gaz\n");
+    assert(fscanf(outfp, "%d", z) != EOF);
+}
+
+int get_yaw () {
+    int yaw;
     write_and_flush_term("ga\n");
-    fscanf(outfp, "raw: %d, %d, %d", x, y, z);
+    assert(fscanf(outfp, "%d", &yaw) != EOF);
+    return yaw;
 }
 
 int get_depth () {
     int depth;
     write_and_flush_term("gd\n");
-    fscanf(outfp, "%d", &depth);
+    assert(fscanf(outfp, "%d", &depth) != EOF);
     return depth;
 }
 

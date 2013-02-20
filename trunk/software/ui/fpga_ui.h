@@ -52,6 +52,7 @@ void dyn_set_target_depth(int);
 void dyn_set_target_yaw(int);
 
 void get_accel(int *, int *, int *);
+int get_yaw();
 int get_depth();
 
 #ifdef __cplusplus
