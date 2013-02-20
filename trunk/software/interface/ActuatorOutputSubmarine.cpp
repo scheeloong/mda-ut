@@ -13,7 +13,31 @@ ActuatorOutputSubmarine::~ActuatorOutputSubmarine()
 
 void ActuatorOutputSubmarine::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir, int delta)
 {
-  // TODO: implement
+  switch(dir) {
+    case REVERSE:
+    case LEFT:
+    case SINK:
+      delta *= -1;
+      break;
+    default:
+      break;
+  }
+  switch(dir) {
+    case FORWARD:
+    case REVERSE:
+      set_attitude_absolute(SPEED, delta); // doesn't make sense to change the speed, set absolute
+      break;
+    case RIGHT:
+    case LEFT:
+      set_attitude_absolute(SPEED, 0); // stop forward speed
+      set_attitude_absolute(YAW, get_yaw() + delta);
+      break;
+    case RISE:
+    case SINK:
+      set_attitude_absolute(SPEED, 0); // stop forward speed
+      set_attitude_absolute(DEPTH, get_depth() + delta);
+      break;
+  }
 }
 
 void ActuatorOutputSubmarine::set_attitude_absolute(ATTITUDE_DIRECTION dir, int val)
@@ -35,7 +59,9 @@ void ActuatorOutputSubmarine::set_attitude_absolute(ATTITUDE_DIRECTION dir, int 
 
 void ActuatorOutputSubmarine::stop()
 {
-  // TODO: implement
+  set_attitude_absolute(SPEED, 0);
+  set_attitude_absolute(YAW, get_yaw());
+  set_attitude_absolute(DEPTH, get_depth());
 }
 
 void ActuatorOutputSubmarine::special_cmd(SPECIAL_COMMAND cmd)

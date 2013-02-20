@@ -24,6 +24,12 @@ void SubmarineSingleton::destroy()
 
 void SubmarineSingleton::set_target_yaw(int target_yaw)
 {
+  if (target_yaw >= 180) {
+    target_yaw -= 360;
+  } else if (target_yaw < -180) {
+    target_yaw += 360;
+  }
+
   this->target_yaw = target_yaw;
   dyn_set_target_yaw(target_yaw);
 }
