@@ -216,6 +216,7 @@ void calculate_pid()
    double Pitch_Force_Needed = FACTOR_PID_PITCH_TO_FORCE * PID_Output(&PID_Pitch);
    double Depth_Force_Needed = FACTOR_PID_DEPTH_TO_FORCE * PID_Output(&PID_Depth);
    double Yaw_Force_Needed = FACTOR_PID_YAW_TO_FORCE * PID_Output(&PID_Yaw);
+   double Forward_Force_Needed = FACTOR_SPEED_TO_FORCE * target_orientation.speed;
 
    // Print some debug messages every so often...
 #ifdef DEBUG_MSG 
@@ -234,8 +235,8 @@ void calculate_pid()
    double m_front_left, m_front_right, m_rear, m_left, m_right;
    
    stabilizing_motors_force_to_pwm ( // this calculates the pwms for yaw motors
-      0.5*Yaw_Force_Needed, // m_left
-      -0.5*Yaw_Force_Needed, // m_right
+      0.5*Yaw_Force_Needed + Forward_Force_Needed, // m_left
+      -0.5*Yaw_Force_Needed + Forward_Force_Needed, // m_right
       0, // unused
       &m_left,
       &m_right,
