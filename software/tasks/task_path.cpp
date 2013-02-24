@@ -45,7 +45,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     actuator_output->set_attitude_change(LEFT, xy_ang);
                 }
             }
-            else if (vision_code == ONE_SEGMENT || vision_code == FULL_DETECT) {
+            else if (vision_code == ONE_SEGMENT || vision_code == FULL_DETECT || vision_code == FULL_DETECT_PLUS || vision_code == DOUBLE_DETECT) {
                 // here we want to position over the path, then sink and reorient ourselves
                 int pix_x = path_vision.get_pixel_x();
                 int pix_y = path_vision.get_pixel_y();
@@ -53,7 +53,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                 int pos_ang = path_vision.get_angle(); // this is the orientation of the path
                 int xy_distance = sqrt(pow(pix_y,2) + pow(pix_x,2));
 
-                printf("xy_distance = %d\n", xy_distance);
+                printf("xy_distance = %d\n==============================\n", xy_distance);
 
                 if (xy_distance < frame->height/5) {
                     // if we are oriented over the path, we can sink
