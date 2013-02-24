@@ -464,6 +464,7 @@ void do_window_cutout()
 */
 
 const double BUOY_COLOR_PERIOD[] = {1.9, 2.2, 2.8};
+const bool BUOY_CYLINDRICAL[] = {false, true, true};
 void do_buoys()
 {
    unsigned long long T = gettimeofday() / 1000000; // seconds
@@ -489,11 +490,24 @@ void do_buoys()
 
 #endif
       glTranslatef(buoys_v[i].x, buoys_v[i].y, buoys_v[i].z);
-      gluSphere(buoys[2 * i],
+      glRotatef(90, 1.0, 0.0, 0.0);
+
+      if (BUOY_CYLINDRICAL[i]) {
+        glTranslatef(0, 0, -0.25);
+        gluCylinder(buoys[2 * i],
+                  /*BASE_RADIUS*/ .12,
+                  /*TOP_RADIUS*/ .12,
+                  /*HEIGHT*/ .5,
+                  /*SLICES*/ 30,
+                  /*STACKS*/ 5);
+      }
+      else {
+        gluSphere(buoys[2 * i],
                 /* radius*/ .2,//.115, made them bigger for easier testing
                 /* slices*/ 40,
                 /* stacks*/ 40);
-      glRotatef(90, 1.0, 0.0, 0.0);
+      }
+      
       glColor3f ( 0.0f, 0.0f, 0.0f );
       gluCylinder(buoys[2 * i + 1],
                   /*BASE_RADIUS*/ .01,
