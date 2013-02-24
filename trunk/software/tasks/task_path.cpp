@@ -38,11 +38,24 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
             else if (vision_code == UNKNOWN_TARGET) {
                 // the goal here is to try to place the path right in front of us
                 float xy_ang = path_vision.get_angular_x(); // this is its position equal to atan(x/y)
-                if (abs(xy_ang) < 10){
-                    actuator_output->set_attitude_change(FORWARD);           
+                int pix_x = path_vision.get_pixel_x();
+                int pix_y = path_vision.get_pixel_y();
+                int xy_distance = sqrt(pow(pix_y,2) + pow(pix_x,2));
+
+                printf("xy_distance = %d    xy_angle = %5.2f\n==============================\n", xy_distance, xy_ang);
+
+                if(xy_distance > frame->height/5){
+                    if (abs(xy_ang) < 10){
+                        actuator_output->set_attitude_change(SINK, 0);
+                        actuator_output->set_attitude_change(FORWARD);           
+                    }
+                    else {
+                        actuator_output->set_attitude_change(RIGHT, xy_ang);
+                    }
                 }
-                else {
-                    actuator_output->set_attitude_change(LEFT, xy_ang);
+                else{
+                    actuator_output->set_attitude_change(FORWARD, 0);
+                    actuator_output->set_attitude_absolute(DEPTH, DEPTH_TARGET);
                 }
             }
             else if (vision_code == ONE_SEGMENT || vision_code == FULL_DETECT || vision_code == FULL_DETECT_PLUS || vision_code == DOUBLE_DETECT) {
@@ -53,7 +66,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                 int pos_ang = path_vision.get_angle(); // this is the orientation of the path
                 int xy_distance = sqrt(pow(pix_y,2) + pow(pix_x,2));
 
-                printf("xy_distance = %d\n==============================\n", xy_distance);
+                printf("xy_distance = %d    xy_angle = %5.2f\n==============================\n", xy_distance, xy_ang);
 
                 if (xy_distance < frame->height/5) {
                     // if we are oriented over the path, we can sink
@@ -72,12 +85,12 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                 } 
                 else {
                     // if we are not oriented over the path, put the path in front of us and go fwd
-                    if (abs(xy_ang) < 5){
+                    if (abs(xy_ang) < 10){
                         actuator_output->set_attitude_change(SINK, 0);
                         actuator_output->set_attitude_change(FORWARD);
                     } 
                     else {
-                        actuator_output->set_attitude_change(LEFT, xy_ang);
+                        actuator_output->set_attitude_change(RIGHT, xy_ang);
                     }
                 }
             }
