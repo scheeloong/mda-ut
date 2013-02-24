@@ -3,6 +3,8 @@
 
 #include <highgui.h>
 #include <cv.h>
+#include <math.h>
+#include <algorithm>
 
 #include "mgui.h"
 #include "mv.h"
@@ -15,7 +17,19 @@ enum MDA_VISION_RETURN_CODE  {
     UNKNOWN_TARGET,     // cant recognize target, returns centroid
     ONE_SEGMENT,
     TWO_SEGMENT,
-    FULL_DETECT
+    FULL_DETECT,
+    FULL_DETECT_PLUS,
+    DOUBLE_DETECT
+};
+
+enum MDA_PATH_VISION_RETURN_CODE  {
+    PATH_FATAL_ERROR,           // defaults to this if you dont change the value
+    PATH_NO_TARGET,             // cant find anything, no defined data 
+    PATH_UNKNOWN_TARGET,        // cant recognize target, returns centroid
+    PATH_ONE_SEGMENT,           // one segment detected
+    PATH_FULL_DETECT,           // one full path element detected
+    PATH_FULL_PLUS,             // one full path detected, plus another line segment
+    PATH_DOUBLE_DETECT          // two full paths detected
 };
 
 /// ########################################################################
@@ -152,6 +166,20 @@ class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
     static const float PATH_REAL_LENGTH = 120.0;
     static const float PATH_REAL_WIDTH = 15.0;
 
+    //Thresholds for line grouping
+    static const float LINE_DIS_THRESH = 20;    //PATH_REAL_WIDTH*1.33
+    static const float LINE_ANG_THRESH = 10;    //Arbitrary
+    static const float LINE_LEN_THRESH = 36;    //PATH_REAL_LENGTH*0.3
+    
+    //Relative importance/scaling of properties when grouping lines
+    static const float K_ANG = 3.0;
+    static const float K_LEN = 1.0;
+    static const float K_DIS = 2.0;
+
+    int m_pixel_x_alt, m_pixel_y_alt, m_range_alt;
+    float m_angular_x_alt, m_angular_y_alt;
+    float m_angle_alt;
+
     mvWindow _window;
     mvHSVFilter _HSVFilter;
     mvBinaryMorphology _Morphology;
@@ -165,12 +193,24 @@ class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
 public:
     MDA_VISION_MODULE_PATH ();
     ~MDA_VISION_MODULE_PATH ();
+
+    //Unless FULL_DETECT_PLUS or DOUBLE_DETECT are returned, the data in *_alt have undefined values
+    virtual int get_pixel_x_alt() {return m_pixel_x_alt;}
+    virtual int get_pixel_y_alt() {return m_pixel_y_alt;}
+    virtual int get_angular_x_alt() {return m_angular_x_alt;}
+    virtual int get_range_alt() {return m_range_alt;}
+    virtual int get_angle_alt() {return m_angle_alt;}
     
     void primary_filter (IplImage* src);
     virtual int get_angular_y() {
         printf ("MDA_VISION_MODULE_PATH does not support get_angular_y");
         exit (1);
     }
+    virtual int get_angular_y_alt() {
+        printf ("MDA_VISION_MODULE_PATH does not support get_angular_y");
+        exit (1);
+    }
+
     MDA_VISION_RETURN_CODE calc_vci ();
 };
 
