@@ -4,6 +4,7 @@
 MDA_TASK_PATH:: MDA_TASK_PATH (AttitudeInput* a, ImageInput* i, ActuatorOutput* o) :
     MDA_TASK_BASE (a, i, o)
 {
+    pix_x_old = pix_y_old = 0;
 }
 
 MDA_TASK_PATH:: ~MDA_TASK_PATH ()
@@ -62,9 +63,33 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                 // here we want to position over the path, then sink and reorient ourselves
                 int pix_x = path_vision.get_pixel_x();
                 int pix_y = path_vision.get_pixel_y();
-                float xy_ang = path_vision.get_angular_x(); // this is its position equal to atan(x/y)
-                int pos_ang = path_vision.get_angle(); // this is the orientation of the path
+                float xy_ang = 0;
+                int pos_ang = 0;
+
+                //If there are 2 fully defined paths, pick the one closest to the last path we followed
+                if(vision_code == DOUBLE_DETECT){
+                    int pix_x_alt = path_vision.get_pixel_x_alt();
+                    int pix_y_alt = path_vision.get_pixel_y_alt();
+                
+                    if(sqrt(pow(pix_y_alt - pix_y_old,2) + pow(pix_x_alt - pix_x_old,2)) < sqrt(pow(pix_y - pix_y_old,2) + pow(pix_x - pix_x_old,2))){
+                        xy_ang = path_vision.get_angular_x_alt(); // this is its position equal to atan(x/y)
+                        pos_ang = path_vision.get_angle_alt(); // this is the orientation of the path
+                        pix_x = pix_x_alt;
+                        pix_y = pix_y_alt;
+                    }
+                    else{
+                        xy_ang = path_vision.get_angular_x(); // this is its position equal to atan(x/y)
+                        pos_ang = path_vision.get_angle(); // this is the orientation of the path
+                    }
+                }
+                else{
+                    xy_ang = path_vision.get_angular_x(); // this is its position equal to atan(x/y)
+                    pos_ang = path_vision.get_angle(); // this is the orientation of the path
+                }
                 int xy_distance = sqrt(pow(pix_y,2) + pow(pix_x,2));
+
+                pix_x_old = pix_x;
+                pix_y_old = pix_y;
 
                 printf("xy_distance = %d    xy_angle = %5.2f\n==============================\n", xy_distance, xy_ang);
 
@@ -74,7 +99,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     actuator_output->set_attitude_absolute(DEPTH, DEPTH_TARGET);
 
                     if(attitude_input->depth() > DEPTH_TARGET-5 && attitude_input->depth() < DEPTH_TARGET+5){
-                        actuator_output->set_attitude_change(LEFT,pos_ang);
+                        actuator_output->set_attitude_change(RIGHT,pos_ang);
                         if(abs(pos_ang) < 5){
                             done_path = true;
                             // settle for 2s
