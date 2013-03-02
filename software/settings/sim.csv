@@ -1,0 +1,6 @@
+# Where to start the sim
+
+START_AT GATE
+# START_AT BUOY
+# START_AT FRAME
+# START_AT MULTIPATH

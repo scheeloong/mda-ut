@@ -16,6 +16,8 @@
 #define MAX_YAW 1.f
 #define MAX_DEPTH 1.f
 
+#define SIM_SETTINGS_FILE "sim.csv"
+
 // Global variables needed by sim
 volatile physical_model model;
 unsigned DEBUG_MODEL = 0;
@@ -222,6 +224,44 @@ void SimulatorSingleton::run_sim()
 
   // Sim has initialized
   sem_post(&sema);
+
+  // set initial position
+  std::string start_at;
+  read_mv_setting(SIM_SETTINGS_FILE, "START_AT", start_at);
+
+  float start_x = 0.f;
+  float start_y = 0.f;
+  float start_z = 0.f;
+  float start_yaw = 0.f;
+
+  if (start_at == "GATE") {
+    start_x = -3.f;
+    start_y = 7.5f;
+    start_z = 16.f;
+  } else if (start_at == "BUOY") {
+    start_x = -3.3f;
+    start_y = 4.5f;
+    start_z = 3.f;
+    start_yaw = 18.f;
+  } else if (start_at == "FRAME") {
+    start_x = 1.f;
+    start_y = 2.5f;
+    start_z = -4.2f;
+    start_yaw = 80.f;
+  } else if (start_at == "MULTIPATH") {
+    start_x = 7.f;
+    start_y = 2.5f;
+    start_z = -5.f;
+    start_yaw = 80.f;
+  }
+
+  model.position.x = start_x;
+  model.position.y = start_y;
+  model.position.z = start_z;
+  model.angle.yaw = start_yaw;
+
+  set_target_depth(POOL_HEIGHT - start_y);
+  set_target_yaw(start_yaw);
 
   glutMainLoop();
 }
