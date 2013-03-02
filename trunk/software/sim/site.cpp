@@ -474,14 +474,18 @@ void do_buoys()
 #ifdef CYCLE_COLORS 
       // small t is number of periods of time BUOY_COLOR_PERIOD[i]
       unsigned long long t = (unsigned long long) ((double)T / BUOY_COLOR_PERIOD[i]);
-      if (t % 3 == i) // cycle color on each period
-          glColor3f ( 0.0f, 1.0f, 0.0f );
-      else if (t % 3 == ((i+1)%3)) 
-          glColor3f ( 1.0f, 0.0f, 0.0f );
-      else 
-          glColor3f ( 1.0f, 1.0f, 0.0f);
-#else
       if (i == 0) // cycle color on each period
+          glColor3f ( 1.0f, 0.0f, 0.0f );
+      else{
+          if (t % 3 == (i-1) % 3)
+              glColor3f ( 0.0f, 1.0f, 0.0f );
+      	  else if (t % 3 == i % 3) 
+              glColor3f ( 1.0f, 0.0f, 0.0f );
+      	  else 
+              glColor3f ( 1.0f, 1.0f, 0.0f );
+      }
+#else
+      if (i == 0) // static colours
           glColor3f ( 0.0f, 1.0f, 0.0f );
       else if (i == 1) 
           glColor3f ( 1.0f, 0.0f, 0.0f );

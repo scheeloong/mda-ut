@@ -203,5 +203,5 @@ void init_sim() {
 
 void destroy () {  
     destroy_site ();
-    glDeleteTextures(5, texName);
+    glDeleteTextures(10, texName);
 }
