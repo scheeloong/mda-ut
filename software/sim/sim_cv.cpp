@@ -47,14 +47,10 @@ void cvQueryFrameGL (IplImage* img) {
 // MAKE SURE the ORIGIN parameter in img is set to 1 !!!
 
 // Note: MAC's openGL doesn't seem to reverse the vertical axis, but Linux's does
-#ifdef MAC
-    glReadPixels(0,0, img->width-1,img->height-1, GL_BGR,GL_UNSIGNED_BYTE, img->imageData);
-#else
     for (int i = 0; i < img->height; i++) {
         int row = img->height - 1 - i;
         glReadPixels(0,i, img->width-1,1, GL_BGR,GL_UNSIGNED_BYTE, img->imageData+row*3*img->width);
     }
-#endif
 }
 
 void cv_display () {

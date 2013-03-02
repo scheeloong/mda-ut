@@ -51,7 +51,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                         actuator_output->set_attitude_change(FORWARD);           
                     }
                     else {
-                        actuator_output->set_attitude_change(RIGHT, xy_ang);
+                        actuator_output->set_attitude_change(LEFT, xy_ang);
                     }
                 }
                 else{
@@ -99,7 +99,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     actuator_output->set_attitude_absolute(DEPTH, DEPTH_TARGET);
 
                     if(attitude_input->depth() > DEPTH_TARGET-5 && attitude_input->depth() < DEPTH_TARGET+5){
-                        actuator_output->set_attitude_change(RIGHT,pos_ang);
+                        actuator_output->set_attitude_change(LEFT,pos_ang);
                         if(abs(pos_ang) < 5){
                             done_path = true;
                             // settle for 2s
@@ -115,7 +115,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                         actuator_output->set_attitude_change(FORWARD);
                     } 
                     else {
-                        actuator_output->set_attitude_change(RIGHT, xy_ang);
+                        actuator_output->set_attitude_change(LEFT, xy_ang);
                     }
                 }
             }
