@@ -1,7 +1,6 @@
 # Begin compile flags
 ifeq ($(OS),APPLE)
 	GL_LIBS=-L/opt/local/lib -lGL -lglut -lGLU
-	COMPILE_FLAGS=-D MAC
 else
 	GL_LIBS=-lGL -lglut -lGLU
 endif

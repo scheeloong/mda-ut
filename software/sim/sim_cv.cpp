@@ -44,9 +44,6 @@ void cv_init () {
 void cvQueryFrameGL (IplImage* img) {
 // this function reads the OpenGL buffer and puts the data into an iplimage.
 // Plz allocate the image before calling
-// MAKE SURE the ORIGIN parameter in img is set to 1 !!!
-
-// Note: MAC's openGL doesn't seem to reverse the vertical axis, but Linux's does
     for (int i = 0; i < img->height; i++) {
         int row = img->height - 1 - i;
         glReadPixels(0,i, img->width-1,1, GL_BGR,GL_UNSIGNED_BYTE, img->imageData+row*3*img->width);
