@@ -13,6 +13,7 @@
 
 unsigned cmd_ok = 0;
 unsigned power = 0;
+int verbose = 1;
 
 pid_t child_pid = 0;
 int p_stdin[2], p_stdout[2];
@@ -244,7 +245,7 @@ void power_on () {
     fprintf (infp, "spf %x\n", PWM_FREQ);
 
     power = 1;
-    printf ("turned power on.\n");
+    if (verbose) printf ("turned power on.\n");
 }
 
 void startup_sequence () {
@@ -269,7 +270,7 @@ void startup_sequence () {
     fflush(infp);
 
     power = 1;
-    printf ("started startup sequence.\n");
+    if (verbose) printf ("started startup sequence.\n");
 }
 
 void power_off () {
@@ -286,7 +287,7 @@ void power_off () {
     write_and_flush_term ("p 0\n");
 
     power = 0;
-    printf ("turned power off.\n");
+    if (verbose) printf ("turned power off.\n");
 }
 
 int get_power() {
@@ -338,21 +339,25 @@ void dyn_status () {
 
 void dyn_set_target_speed (int target_speed) {
     cmd_ok = 1;
-    printf("setting target speed to %d.\n", target_speed);
+    if (verbose) printf("setting target speed to %d.\n", target_speed);
     fprintf(infp, "ss %x\n", target_speed);
     fflush(infp);
 }
 
 void dyn_set_target_depth (int target_depth) {
     cmd_ok = 1;
-    printf("setting target depth to %d.\n", target_depth);
+    if (verbose) printf("setting target depth to %d.\n", target_depth);
     fprintf(infp, "sd %x\n", target_depth);
     fflush(infp);
 }
 
 void dyn_set_target_yaw (int target_yaw) {
     cmd_ok = 1;
-    printf("setting target yaw to %d.\n", target_yaw);
+    if (verbose) printf("setting target yaw to %d.\n", target_yaw);
     fprintf(infp, "sh %x\n", target_yaw);
     fflush(infp);
+}
+
+void set_verbose(int v) {
+    verbose = v;
 }

@@ -42,7 +42,7 @@ void ActuatorOutputSubmarine::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir,
 
 void ActuatorOutputSubmarine::set_attitude_absolute(ATTITUDE_DIRECTION dir, int val)
 {
-  switch (val) {
+  switch (dir) {
     case (SPEED):
       dyn_set_target_speed(val);
       break;
