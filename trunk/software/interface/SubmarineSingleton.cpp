@@ -11,6 +11,9 @@ void SubmarineSingleton::create()
   created = true;
 
   init_fpga();
+
+  // disable verbosity from FPGA UI
+  set_verbose(0);
 }
 
 void SubmarineSingleton::destroy()

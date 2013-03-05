@@ -55,6 +55,8 @@ void get_accel(int *, int *, int *);
 int get_yaw();
 int get_depth();
 
+void set_verbose(int);
+
 #ifdef __cplusplus
 }
 #endif
