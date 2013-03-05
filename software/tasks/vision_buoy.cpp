@@ -7,14 +7,14 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
-const char MDA_VISION_MODULE_BUOY::MDA_VISION_BUOY_SETTINGS[] = "vision_buoy_settings_red.csv";
+const char MDA_VISION_MODULE_BUOY::MDA_VISION_BUOY_SETTINGS[] = "vision_buoy_settings_new.csv";
 
 /// #########################################################################
 /// MODULE_BUOY methods
 /// #########################################################################
 MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY () :
     _window (mvWindow("Buoy Vision Module")),
-    _HSVFilter (mvHSVFilter(MDA_VISION_BUOY_SETTINGS)),
+    _MeanShift (mvMeanShift(MDA_VISION_BUOY_SETTINGS)),
     _Morphology5 (mvBinaryMorphology(5, 5, MV_KERN_RECT)),
     _Morphology3 (mvBinaryMorphology(3, 3, MV_KERN_RECT)),
     _AdvancedCircles(MDA_VISION_BUOY_SETTINGS)
@@ -24,7 +24,7 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY () :
 
 MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY (const char* settings_file) :
     _window (mvWindow("Buoy Vision Module")),
-    _HSVFilter (mvHSVFilter(settings_file)),
+    _MeanShift (mvMeanShift(settings_file)),
     _Morphology5 (mvBinaryMorphology(5, 5, MV_KERN_RECT)),
     _Morphology3 (mvBinaryMorphology(3, 3, MV_KERN_RECT)),
     _AdvancedCircles(MDA_VISION_BUOY_SETTINGS)
@@ -37,11 +37,11 @@ MDA_VISION_MODULE_BUOY:: ~MDA_VISION_MODULE_BUOY () {
 }
 
 void MDA_VISION_MODULE_BUOY:: primary_filter (IplImage* src) {
-    _HSVFilter.filter (src, _filtered_img);
+    _MeanShift.filter (src, _filtered_img);
     _filtered_img->origin = src->origin;
     
     //_Morphology5.open(_filtered_img, _filtered_img);
-    _Morphology5.gradient(_filtered_img, _filtered_img);
+    _Morphology3.gradient(_filtered_img, _filtered_img);
 
     _AdvancedCircles.findCircles (_filtered_img);
 

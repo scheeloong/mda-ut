@@ -9,7 +9,65 @@
 #include "mgui.h"
 #include "profile_bin.h"
 
-#define CIRCLE_THICKNESS 2
+typedef std::vector<CvPoint> POINT_VECTOR;
+
+/** MV_SHAPE */
+class mvShape {
+    static const bool DEBUG = 1;
+    int DOWNSAMPLING_FACTOR;
+
+protected:
+    IplImage* ds_image; // downsampled image
+    mvWindow *window; 
+
+    // function to downsample src to ds_image. If target_brightness is set then it
+    // excludes (sets to 0) all pixels with brightness not equal to target_brightness
+    void downsample_from_image (IplImage* src, int target_brightness=-1);
+    void upsample_to_image(IplImage *dst);
+    // puts all pixels with brightness equal to target_brightness into an array
+    // if target_brightness is not set it takes all non-zero pixels
+    int collect_pixels (IplImage* src, POINT_VECTOR &p_vector, int target_brightness=-1);
+
+public:
+    mvShape ();
+    mvShape (const char* settings_file);
+    ~mvShape ();
+};
+
+
+/** MV_RECTANGLE */
+class mvRect : mvShape {
+    typedef struct _row_ {
+        int y, x1, x2;  // a row has a vertical coord, a starting x coord, an ending x coord
+    } ROW; 
+
+    ROW make_row (int y, int x1, int x2) {
+        ROW R;
+        R.y = y; R.x1 = x1; R.x2 = x2;
+        return R;
+    }
+
+    static const int MIN_STACKED_ROWS = 12;
+    static const int MIN_ROW_LENGTH = 8;
+    static const int MIN_POINTS_IN_RESAMPLED_IMAGE = 20;
+
+    CvPoint m_rect[2];
+
+public:
+    mvRect (const char* settings_file);
+    ~mvRect ();
+
+    int find_internal (IplImage* img, int target_brightness);
+    int find (IplImage* img, int target_brightness=-1);
+
+    CvPoint operator [] (unsigned index) { return m_rect[index]; }
+    void remove_rectangle (IplImage* img) {
+        cvRectangle (img, m_rect[0], m_rect[1], cvScalar(0), CV_FILLED);
+    }
+
+};
+
+
 
 /** MV_CIRCLE - simple structure to represent a circle */
 // note OpenCV stores its circle finding algorithm's output in a
@@ -30,6 +88,7 @@ class mvAdvancedCircles {
     static const int RADIUS_SIMILARITY_CONSTANT = 8;
     static const int N_POINTS_TO_CHECK = 20;
     static const int POINTS_NEEDED_IN_RESAMPLED_IMAGE = 10;
+    static const int CIRCLE_THICKNESS = 2;
 
     int PIXELS_PER_GRID_POINT;
     float _MIN_RADIUS_;
@@ -57,5 +116,9 @@ class mvAdvancedCircles {
     MV_CIRCLE operator [] (unsigned index) { return accepted_circles[index].first; }
     void drawOntoImage (IplImage* img);
 };
+
+
+int find_rectangle (IplImage* img);
+void remove_rectangle (IplImage* img);
 
 #endif

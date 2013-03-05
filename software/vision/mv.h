@@ -318,7 +318,7 @@ class Hue_Box {
 class mvMeanShift {
     //#define M_DEBUG
     //declare constants here
-    static const int DS_FACTOR = 2; // downsampling
+    static const int DS_FACTOR = 1; // downsampling
     static const int GOOD_PIXELS_FACTOR = 6;
     static const int KERNEL_SIZE = 5;
     static const int S_MIN = 60;
@@ -327,6 +327,9 @@ class mvMeanShift {
 public:
     static const int NUM_BOXES = 3;
     static const unsigned char GREYSCALE_FACTOR = 50;
+    static const unsigned char GREYSCALE_1 = GREYSCALE_FACTOR;
+    static const unsigned char GREYSCALE_2 = 2*GREYSCALE_FACTOR;
+    static const unsigned char GREYSCALE_3 = 3*GREYSCALE_FACTOR;
 
 private:
     // parameters read from settings file

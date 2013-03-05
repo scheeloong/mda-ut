@@ -173,7 +173,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
                 float scale_factor = (PATH_REAL_LENGTH / ((sqrt(lengths[i])+sqrt(lengths[j]))*0.5));
 
                 //Pre calculate and scale the separation of important variables
-                len_sep[i][j] = abs(lengths[i] - lengths[j]) * scale_factor;
+                len_sep[i][j] = abs((int)lengths[i] - (int)lengths[j]) * scale_factor;
                 dis_sep[i][j] = sqrt(pow((x[i][0] + x[i][1])/2 - (x[j][0] + x[j][1])/2, 2) 
                     + pow((y[i][0] + y[i][1])/2 - (y[j][0] + y[j][1])/2, 2)) * scale_factor;
 

@@ -13,6 +13,237 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
+// ######################################################################################
+//  mvShape base class
+// ######################################################################################
+
+mvShape::mvShape() {
+    DOWNSAMPLING_FACTOR = 1; // default constructor - use no ds
+    ds_image = mvGetScratchImage(); // can use scratch image since we are not doing ds
+    
+    if (DEBUG) window = new mvWindow("mvShape Debug");
+}
+
+mvShape::mvShape(const char* settings_file) {
+    int width, height;
+    read_common_mv_setting ("IMG_WIDTH_COMMON", width);
+    read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
+
+    read_mv_setting (settings_file, "DOWNSAMPLING_FACTOR", DOWNSAMPLING_FACTOR);
+    assert (DOWNSAMPLING_FACTOR >= 1);
+
+    IplImage* temp = mvGetScratchImage();
+    ds_image = cvCreateImageHeader(cvSize(width/DOWNSAMPLING_FACTOR, height/DOWNSAMPLING_FACTOR), IPL_DEPTH_8U, 1);
+    ds_image->imageData = temp->imageData;
+
+    if (DEBUG) window = new mvWindow("mvShape Debug");
+}
+
+mvShape::~mvShape() {
+    cvReleaseImageHeader(&ds_image);
+    mvReleaseScratchImage();
+    if (DEBUG) delete window;
+}
+
+void mvShape::downsample_from_image(IplImage* src, int target_brightness) {
+    assert (src->nChannels = 1);
+
+    // downsample image if needed
+    if (src->width == ds_image->width && src->height == ds_image->height)
+        cvCopy (src, ds_image);
+    else
+        cvResize (src, ds_image);
+
+    // remove non-target_brightness pixels if needed
+    if (target_brightness >= 0) {
+        unsigned char* ptr;
+        for (int i = 0; i < ds_image->height; i++) {
+            ptr = (unsigned char*) (ds_image->imageData + i*ds_image->widthStep);
+            for (int j = 0; j < ds_image->width; j++)
+                if (*ptr != target_brightness)
+                    *(ptr++) = 0;
+        }    
+    }
+}
+
+void mvShape::upsample_to_image(IplImage *dst) {
+
+}
+
+int mvShape::collect_pixels (IplImage* src, POINT_VECTOR &p_vector, int target_brightness) {
+    unsigned char* ptr;
+
+    if (target_brightness >= 0) {   // target_brightness pixels only
+        for (int i = 0; i < src->height; i++) {
+            ptr = (unsigned char*) (src->imageData + i*src->widthStep);
+            for (int j = 0; j < src->width; j++)
+                if (*(ptr++) == target_brightness)
+                    p_vector.push_back(cvPoint(j,i));
+        }
+    }
+    else {  // all nonzero pixels
+        for (int i = 0; i < src->height; i++) {
+            ptr = (unsigned char*) (src->imageData + i*src->widthStep);
+            for (int j = 0; j < src->width; j++)
+                if (*(ptr++) != 0)
+                    p_vector.push_back(cvPoint(j,i));
+        }   
+    }
+
+    return p_vector.size();
+}
+
+// ######################################################################################
+//  mvRect class
+// ######################################################################################
+
+mvRect::mvRect(const char* settings_file) : mvShape(settings_file) {
+}
+
+mvRect::~mvRect() {
+
+}
+
+int mvRect::find(IplImage* img, int target_brightness) {
+    int result;
+    
+    if (img->width == ds_image->width && img->height == ds_image->height) { // no downsampling required
+        result = find_internal (img, target_brightness);
+    }
+    else {
+        downsample_from_image (img, target_brightness);
+        result = find_internal (ds_image, target_brightness);
+        upsample_to_image (img);
+    }
+    
+    return result;
+}
+
+int mvRect::find_internal(IplImage* img, int target_brightness) {
+    // algorithm description
+
+    POINT_VECTOR point_vector;
+    std::vector<ROW> row_vector;
+    std::vector<int> stacked_rows;
+
+    /// put appropriate pixels into point_vector
+    int n_points = collect_pixels (img, point_vector, target_brightness);
+    if (n_points < MIN_POINTS_IN_RESAMPLED_IMAGE) {
+        DEBUG_PRINT ("mvRect: not enough points in resampled image\n");
+        return -1;
+    }
+
+    /// go through the point_vector, identify long rows and put them in row_vector
+    /// this is done simply by keeping track of continuous pixels on a row and putting the row into the
+    /// vector if number of continuous pixels is greater than MIN_ROW_LENGTH 
+    int contiguous_length = 0;
+    for (int curr=1, first=-1; curr < n_points; curr++) {
+        if (point_vector[curr].y == point_vector[curr-1].y && point_vector[curr].x-point_vector[curr-1].x < 3) { // contiguous point
+            if (contiguous_length == 0) // start of new sequence
+                first = curr-1;
+
+            contiguous_length++;
+        }
+        else { // end of current sequence
+            if (contiguous_length >= MIN_ROW_LENGTH)
+                row_vector.push_back(make_row(point_vector[first].y, point_vector[first].x, point_vector[curr-1].x));
+
+            contiguous_length = 0;
+        }
+
+        curr++;
+    }
+    
+    /// look for a bunch of rows stacked on top of each other. the algorithm to do so is very similar to above!
+    /// a bunch of stacked rows == a rectangle
+    while (1) {
+        int n_rows = row_vector.size();
+        if (n_rows < MIN_STACKED_ROWS)
+            break;
+
+        printf ("mvRect: looping to look for stacked rows. %d rows total\n", n_rows);
+
+        /// go thru each row. Look at next row and curr row. If they constitute a stack, push curr row
+        /// when we find a non-stacking row, either empty the stacked_rows vector (if num of stacked rows is low)
+        /// or (if num of stacked rows is high) we detected a rectangle => exit
+        for (int curr=0; curr < n_rows-1; curr++) {
+            if (row_vector[curr+1].y - row_vector[curr].y <= 2 && 
+                abs(row_vector[curr+1].x1 - row_vector[curr].x1) <= 5 &&
+                abs(row_vector[curr+1].x2 - row_vector[curr].x2) <= 5
+                ) 
+            {   // curr+1 is stacked on top of curr
+                stacked_rows.push_back(curr);
+            }
+            else {
+                if ((int)stacked_rows.size() < MIN_STACKED_ROWS) { 
+                    // if number of stacked lines detected is small, delete all rows we just encountered
+                    for (int i = (int)stacked_rows.size()-1; i >= 0; i--) {
+                        row_vector.erase(row_vector.begin() + stacked_rows[i]);
+                    }
+                    stacked_rows.clear();
+                    break;
+                }
+                else {
+                    stacked_rows.push_back(curr+1);
+                    break;
+                }
+            }
+        }
+
+        /// have to do this check here or we get errors (why?)
+        int n_stacked = stacked_rows.size();
+        if (n_stacked < MIN_STACKED_ROWS) {
+            continue;
+        }    
+        printf ("mvRect: found stack of %d rows\n", n_stacked);
+
+        /// next look at whether this stack of rows can be considered a rectangle
+        int mean_left=0, mean_right=0;
+        float var_left=0, var_right=0;
+
+        for (int i = (int)n_stacked-1; i >= 0; i--) {
+            int index = stacked_rows[i];
+            printf ("\trow %d, %d-%d\n", row_vector[index].y,row_vector[index].x1,row_vector[index].x2);
+        
+            mean_left += row_vector[index].x1;
+            mean_right += row_vector[index].x2;     
+        }
+        mean_left /= n_stacked;
+        mean_right /= n_stacked;
+
+        for (int i = (int)n_stacked-1; i >= 0; i--) {
+            int index = stacked_rows[i];
+
+            float delta_left = row_vector[index].x1 - mean_left;
+            var_left += delta_left*delta_left;
+            float delta_right = row_vector[index].x2 - mean_right;
+            var_left += delta_right*delta_right;
+        }
+        var_left /= n_stacked;
+        var_right /= n_stacked;
+
+        printf ("mean = %d, %d\n", mean_left, mean_right);
+        printf ("var = %f, %f\n", var_left, var_right);
+
+        /// if variances are low, accept this rectangle
+        if (var_left < 3 && var_right < 3) {
+            m_rect[0].x = mean_left - 1;
+            m_rect[0].y = row_vector[stacked_rows[0]].y - 1;
+            m_rect[1].x = mean_right + 1;
+            m_rect[1].y = row_vector[stacked_rows[n_stacked-1]].y + 1;
+            break;
+        }
+
+        /// otherwise erase all the rows we examined
+        for (int i = (int)n_stacked-1; i >= 0; i--) {
+            row_vector.erase(row_vector.begin() + stacked_rows[i]);
+        }
+        stacked_rows.clear();
+    }
+    return 0;
+}
+
+
 bool m_circle_has_greater_count (CIRCLE_U_PAIR c1, CIRCLE_U_PAIR c2) { return (c1.second > c2.second); }
 
 mvAdvancedCircles::mvAdvancedCircles (const char* settings_file) :
@@ -85,10 +316,37 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
     /// main working loop
     int n_valid_circles = 0;
     for (int N = 0; N < 60*N_CIRCLES_GENERATED; N++) {
-        // choose 3 points at random to form a circle
-        int c1 = rand() % n_points;
-        int c2 = rand() % n_points;
-        int c3 = rand() % n_points;
+        // choose a point at random then choose a point with same Y, then a point with same X
+        int c1, c2, c3;
+        c1 = rand() % n_points;
+        do {c2 = rand() % n_points;} while (c2 == c1);
+        do {c3 = rand() % n_points;} while (c3 == c1 || c3 == c2);
+        /*
+        // now choose a point with same Y coord as c1, by looking near c1 first
+        int i=c1, j=c1;
+        while (1) {
+            // search forward with index i until hit end of vector or hit a point that is not within 1 row of c1
+            if (i < n_points-1 && point_vector[++i].y-point_vector[c1].y <= 1) { 
+                if (std::abs(point_vector[i].x - point_vector[c1].x) > 3) {
+                    c3 = i;
+                    break;
+                }
+            }
+            // search backward with index j until hit end of vector or hit a point that is not within 1 row of c1
+            else if (j > 0 && point_vector[c1].y-point_vector[--j].y <= 1) {
+                if (std::abs(point_vector[j].x - point_vector[c1].x) > 3) {
+                    c3 = j;
+                    break;
+                }
+            }
+            // break if both iterators cannot advance 
+            else {
+                c3 = rand() % n_points;
+                break;
+            }
+        }*/
+    
+        
         
         // get the circle center and radius
         MV_CIRCLE Circle;
