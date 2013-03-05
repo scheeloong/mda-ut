@@ -223,7 +223,7 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
     static const float MIN_PIXEL_RADIUS_FACTOR = 0.04;
 
     mvWindow _window;
-    mvHSVFilter _HSVFilter;
+    mvMeanShift _MeanShift;
     mvBinaryMorphology _Morphology5;
     mvBinaryMorphology _Morphology3;
     mvAdvancedCircles _AdvancedCircles;
