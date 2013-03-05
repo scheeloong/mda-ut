@@ -32,8 +32,8 @@ void kill_child ()
 {
     fflush(infp);
     fflush(outfp);
-    fclose(infp);
-    fclose(outfp);
+    if (infp) fclose(infp);
+    if (outfp) fclose(outfp);
 
     close(p_stdin[0]);
     close(p_stdout[1]);
@@ -273,7 +273,12 @@ void startup_sequence () {
 }
 
 void power_off () {
+    if (!infp) {
+        return;
+    }
+
     cmd_ok = 1;
+
     fprintf (infp, "sms a\n");
     fprintf (infp, "sc 0\n");
 
