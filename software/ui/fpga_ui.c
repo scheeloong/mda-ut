@@ -12,12 +12,13 @@
 #define PWM_FREQ 20
 
 unsigned cmd_ok = 0;
-unsigned power = 0;
-int verbose = 1;
 
-pid_t child_pid = 0;
-int p_stdin[2], p_stdout[2];
-FILE *infp = NULL, *outfp = NULL;
+static unsigned power = 0;
+static int verbose = 1;
+
+static pid_t child_pid = 0;
+static int p_stdin[2], p_stdout[2];
+static FILE *infp = NULL, *outfp = NULL;
 
 int atoi_safe (char *str) {
     if (str == NULL) {
