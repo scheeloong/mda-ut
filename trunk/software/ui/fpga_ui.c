@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #define ZERO_DC 512
 #define PWM_FREQ 20
@@ -115,6 +116,14 @@ void spawn_term (char *proc)
 
 void write_and_flush_term (char *cmd)
 {
+    // Check child status
+    int status;
+    pid_t result = waitpid(child_pid, &status, WNOHANG);
+    if (result != 0) {
+      fprintf(stderr, "No longer connected to nios2-terminal, exiting\n");
+      exit(1);
+    }
+
     fprintf(infp, "%s", cmd);
     fflush(infp);
     // Also write the output to a log file

@@ -45,6 +45,8 @@ inline void init_fpga()
 
   // Call int_handler on SIGINT (Ctrl+C)
   signal(SIGINT, int_handler);
+  // Call int_handler on SIGCHLD as well
+  signal(SIGCHLD, int_handler);
 
   initialized = true;
 }
