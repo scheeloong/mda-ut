@@ -202,11 +202,16 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
             //Zero out trivial self comparisons
             dis_sep[i][i] = len_sep[i][i] = ang_sep[i][i] = 0;
             len_bool[i][i] = sep_bool[i][i] = ang_bool[i][i] = false;
-            pair_weight[i][i] = 9001;
+            pair_weight[i][i] = -1;
 
             //Calculate frequently used quantities
-            lengths[i] = line_sqr_length(_KMeans[i]);
-            position_angles[i] = RAD_TO_DEG * line_angle_to_vertical(_KMeans[i]);  
+            int dx = _KMeans[i][0].x - _KMeans[i][1].x;
+            int dy = _KMeans[i][0].y - _KMeans[i][1].y;
+            //DEBUG_PRINT("Line %d: (%d,%d):(%d,%d)   (dx,dy): (%d,%d) ==> %d\n",i,_KMeans[i][0].x, _KMeans[i][0].y,_KMeans[i][1].x, _KMeans[i][1].y,dx,dy,dx*dx+dy*dy); 
+
+            lengths[i] = (unsigned)(dx*dx + dy*dy);
+            position_angles[i] = RAD_TO_DEG * line_angle_to_vertical(_KMeans[i]);
+            //DEBUG_PRINT("Length[%d]: %d\n",i,dx*dx + dy*dy);  
         }
 
         //Fill out the lower half of commonly used properties
@@ -216,7 +221,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
                 float scale_factor = (PATH_REAL_LENGTH / ((sqrt(lengths[i])+sqrt(lengths[j]))*0.5));
 
                 //Pre calculate and scale the separation of important variables
-                len_sep[i][j] = abs((int)lengths[i] - (int)lengths[j]) * scale_factor;
+                len_sep[i][j] = absf(sqrt(lengths[i]) - sqrt(lengths[j])) * scale_factor;
                 dis_sep[i][j] = sqrt(pow((x[i][0] + x[i][1])/2 - (x[j][0] + x[j][1])/2, 2) 
                     + pow((y[i][0] + y[i][1])/2 - (y[j][0] + y[j][1])/2, 2)) * scale_factor;
 
@@ -257,7 +262,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         int lHalf = (int)((nClusters*(nClusters-1))/2);    //(n*(n-1))/2; the # of elements in the lower half of an n*n matrix
         int ranked[lHalf][2];
         float scores[lHalf];
-        std::fill_n(scores, lHalf, 9001);    //OVER 9000.
+        std::fill_n(scores, lHalf, 9001);   //Fill with an arbitrary large number
         bool flag;
 
         //sort each possible pair in descending order by pair weight
@@ -277,12 +282,16 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
                     ranked[l][0] = ranked[l-1][0];
                     ranked[l][1] = ranked[l-1][1];
                 }
-
                 scores[k] = pair_weight[i][j];
                 ranked[k][0] = i; ranked[k][1] = j;
             }
         }
-
+/*
+        for(int i=0; i<lHalf; i++){
+            printf("Pair[%d]: (%d,%d) ==> %5.2f\n",i,ranked[i][0],ranked[i][1],scores[i]);
+        }
+        fflush(stdout);
+*/
         //Best pair goes into A, next best pair containing no lines from A goes into B
         A[0] = ranked[0][0]; A[1] = ranked[0][1];
         for(int i = 1; i < lHalf; i++){
