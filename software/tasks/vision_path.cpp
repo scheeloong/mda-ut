@@ -90,21 +90,62 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         unsigned length_0 = line_sqr_length(_KMeans[0]);
         unsigned length_1 = line_sqr_length(_KMeans[1]);
         DEBUG_PRINT ("angles = %f, %f\n",position_angle_0,position_angle_1);
-        
-        if (length_0 > 1.3*length_1 || 1.3*length_0 < length_1) {
-            DEBUG_PRINT ("Path Sanity Failure: Lines too dissimilar\n");
-            retval = UNKNOWN_TARGET;
-            goto RETURN_CENTROID;
-        }
 
         // Tragically, angles are a circular quantity, and we can't just subtract them.
         float normal_diff = absf(position_angle_0 - position_angle_1);
         float circular_diff = (float)180 - absf(position_angle_0) - absf(position_angle_1);
         float dA = (((normal_diff) < (circular_diff)) ? (normal_diff) : (circular_diff));
+        
+        if (dA > LINE_ANG_THRESH) {
+            //Detecting one line from each of two paths
+            if(length_0 > LINE_LEN_THRESH && length_0 > LINE_LEN_THRESH){    
+                m_pixel_x = (int)((x00+x01)*0.5 - _filtered_img->width*0.5);
+                m_pixel_y = (int)((y00+y01)*0.5 - _filtered_img->height*0.5);
+                m_pixel_x_alt = (int)((x10+x11)*0.5 - _filtered_img->width*0.5);
+                m_pixel_y_alt = (int)((y10+y11)*0.5 - _filtered_img->height*0.5);
 
-        if (dA> LINE_ANG_THRESH) {
+                m_range = (PATH_REAL_LENGTH * _filtered_img->width) / (sqrt(length_0) * TAN_FOV_X);
+                m_angle = position_angle_0;
+                m_range_alt = (PATH_REAL_LENGTH * _filtered_img->width) / (sqrt(length_1) * TAN_FOV_X);
+                m_angle_alt = position_angle_1;
+
+                DEBUG_PRINT ("Double Segment Detect: Range_A = %d, PAngle_A = %5.2f\n", m_range, m_angle);
+                DEBUG_PRINT ("Double Segment Detect: Range_B = %d, PAngle_B = %5.2f\n", m_range_alt, m_angle_alt);
+
+                retval = TWO_SEGMENT;
+                goto RETURN_TWO_CENTROIDS;
+            }
+            //Return one line or the other if one is too short
+            else if (length_0 > LINE_LEN_THRESH){
+                m_pixel_x = (int)((x00+x01)*0.5 - _filtered_img->width*0.5);
+                m_pixel_y = (int)((y00+y01)*0.5 - _filtered_img->height*0.5);
+                m_range = (PATH_REAL_LENGTH * _filtered_img->width) / (sqrt(length_0) * TAN_FOV_X);
+                m_angle = position_angle_0;
+
+                DEBUG_PRINT ("One Segment Range = %d, PAngle = %5.2f\n", m_range, m_angle);
+
+                retval = ONE_SEGMENT;
+                goto RETURN_CENTROID;
+            }
+            else if (length_1 > LINE_LEN_THRESH){
+                m_pixel_x = (int)((x10+x11)*0.5 - _filtered_img->width*0.5);
+                m_pixel_y = (int)((y10+y11)*0.5 - _filtered_img->height*0.5);
+                m_range = (PATH_REAL_LENGTH * _filtered_img->width) / (sqrt(length_1) * TAN_FOV_X);
+                m_angle = position_angle_1;
+
+                DEBUG_PRINT ("One Segment Range = %d, PAngle = %5.2f\n", m_range, m_angle);
+
+                retval = ONE_SEGMENT;
+                goto RETURN_CENTROID;
+            }
+
             DEBUG_PRINT ("Path Sanity Failure: Line angles do not match\n");
             // set angle to be the smaller of the two angles (absolute)
+            retval = UNKNOWN_TARGET;
+            goto RETURN_CENTROID;
+        }
+        else if (length_0 > 1.3*length_1 || 1.3*length_0 < length_1) {
+            DEBUG_PRINT ("Path Sanity Failure: Lines too dissimilar\n");
             retval = UNKNOWN_TARGET;
             goto RETURN_CENTROID;
         }
@@ -119,8 +160,10 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
     }
 //============ 3 OR MORE CLUSTERS ========================================================================================
     else if (nClusters >= 3 && nClusters <= 4){
+        DEBUG_PRINT("Path: %d Clusters =/\n", nClusters);
         //A and B are the indicies of paired lines, R holds rejected lines
         int A[2] = {-1,-1}, B[2] = {-1,-1}, R[nClusters];
+        bool partial = false;
         
         float    position_angles [nClusters];
         unsigned lengths         [nClusters];
@@ -188,9 +231,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
                 sep_bool[i][j] = dis_sep[i][j] < LINE_DIS_THRESH;
 
                 cross_sum += (unsigned)(len_bool[i][j] && ang_bool[i][j] && sep_bool[i][j]);
-
-                if(!ang_bool[i][j] || !len_bool[i][j] || !sep_bool[i][j]) pair_weight[i][j] = 9001;
-                else pair_weight[i][j] = (float)(K_ANG * ang_sep[i][j] + K_LEN * len_sep[i][j] + K_DIS * dis_sep[i][j]);
+                pair_weight[i][j] = (float)(K_ANG * ang_sep[i][j] + K_LEN * len_sep[i][j] + K_DIS * dis_sep[i][j]);
             }
         }
 
@@ -213,202 +254,86 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         m_pixel_x = (int)(xSum*0.167 - _filtered_img->width*0.5);
         m_pixel_y = (int)(ySum*0.167 - _filtered_img->height*0.5);
 
-        //Check the easily identifiable bad case first
+        int lHalf = (int)((nClusters*(nClusters-1))/2);    //(n*(n-1))/2; the # of elements in the lower half of an n*n matrix
+        int ranked[lHalf][2];
+        float scores[lHalf];
+        std::fill_n(scores, lHalf, 9001);    //OVER 9000.
+        bool flag;
+
+        //sort each possible pair in descending order by pair weight
+        for(int i=0; i<nClusters; i++){
+            for(int j=0; j<i; j++){
+
+                //Insertion sort; easy to implement and good enough for n = 6
+                int k = -1; flag = false;
+                while(!flag && k < lHalf){
+                    k++;
+                    if(pair_weight[i][j] < scores[k]) flag = true;
+                }
+
+                //shift everything down, erasing last element
+                for(int l = lHalf-1; l > k; l--){
+                    scores[l] = scores[l-1];
+                    ranked[l][0] = ranked[l-1][0];
+                    ranked[l][1] = ranked[l-1][1];
+                }
+
+                scores[k] = pair_weight[i][j];
+                ranked[k][0] = i; ranked[k][1] = j;
+            }
+        }
+
+        //Best pair goes into A, next best pair containing no lines from A goes into B
+        A[0] = ranked[0][0]; A[1] = ranked[0][1];
+        for(int i = 1; i < lHalf; i++){
+            if(ranked[i][0] == A[0] || ranked[i][0] == A[1] || ranked[i][1] == A[0] || ranked[i][1] == A[1]) continue;
+            
+            B[0] = ranked[i][0];
+            B[1] = ranked[i][1];
+            break;
+        }
+
+        //No viable second pair; only occurrs when nClusters = 3
+        if(B[0] == -1){
+            int temp = 0;
+            for(int i=0; i<nClusters; i++){
+                if(i != A[0] && i != A[1]){
+                    R[temp] = i;
+                    temp++;
+                }
+            }
+            B[0] = B[1] = R[0];
+        }
+
+        //Always calculare both points of interest; it is up to control code to use/ignore based on return code
+        m_pixel_x = (int)((x[A[0]][0] + x[A[0]][1] + x[A[1]][0] + x[A[1]][1])*0.25 - _filtered_img->width*0.5);
+        m_pixel_y = (int)((y[A[0]][0] + y[A[0]][1] + y[A[1]][0] + y[A[1]][1])*0.25 - _filtered_img->height*0.5);
+        m_pixel_x_alt = (int)((x[B[0]][0] + x[B[0]][1] + x[B[1]][1] + x[B[1]][1])*0.5 - _filtered_img->width*0.5);
+        m_pixel_y_alt = (int)((y[B[0]][0] + y[B[0]][1] + x[B[1]][1] + x[B[1]][1])*0.5 - _filtered_img->height*0.5);
+
+        m_range = (PATH_REAL_LENGTH * _filtered_img->width) / ((sqrt(lengths[A[0]])+sqrt(lengths[A[1]]))*0.5 * TAN_FOV_X);
+        m_angle = (position_angles[A[0]] + position_angles[A[1]]) * 0.5;
+        m_range_alt = (PATH_REAL_LENGTH * _filtered_img->width) / ((sqrt(lengths[B[0]])+sqrt(lengths[B[1]]))*0.5 * TAN_FOV_X);
+        m_angle_alt = (position_angles[B[0]] + position_angles[B[1]]) * 0.5;
+
+
         if(cross_sum == 0){
             //No lines meet all 3 similarity criteria
             DEBUG_PRINT ("Path Sanity Failure: Lines are too dissimilar\n");
             retval = UNKNOWN_TARGET;
             goto RETURN_CENTROID;
         }
-
-        //We only have one possible pair; find it and determine if the remaining lines are
-        //rejected, or counted as a partial match
         else if(cross_sum == 1){
-            float best = 9000;
-
-            DEBUG_PRINT("Path: %d Clusters =/\n", nClusters);
-            //Find the lowest pairing score
-            for(int i = 0; i<(int)nClusters; i++){
-                for (int j = 0; j<i; j++){
-                    if(pair_weight[i][j] < best){
-                        A[0] = i; A[1] = j;
-                        best = pair_weight[i][j];
-                    }
-                }
-            }
-            assert(A[0] != -1);  //at least one sane pair must exist, as cross_sum was not zero
-            
-            //Given the path pairing, determine the leftover line(s)
-            unsigned temp = 0;
-            for(int i=0; i<(int)nClusters; i++){
-                if(i == A[0] || i == A[1]) continue;
-                R[temp] = i;
-                temp++;
-                if(temp + 2 >= nClusters) break;
-            }
-
-            //Determine whether remaining lines are partial detects or rejects
-            if(nClusters == 3 && dis_sep[R[0]][A[0]] > 10*LINE_DIS_THRESH && dis_sep[R[0]][A[1]] > 10*LINE_DIS_THRESH){
-                //For nClusters = 3, count as a partial if it is far enough away from the main pair
-                B[0] = B[1] = R[0];
-                R[0] = -1;
-            }
-            else if(nClusters > 3){
-                //Discard any lines that are too close to the main pair
-                for(int i = 0; i<(int)nClusters-2; i++){
-                    if(dis_sep[R[i]][A[0]] < 10*LINE_DIS_THRESH && dis_sep[R[i]][A[1]] < 10*LINE_DIS_THRESH) R[i] = 0;
-                }
-
-                //Of the remaining lines, pick the closest pair, or none if they all fail relaxed proximity test
-                best = 2*LINE_DIS_THRESH;
-                for(int i = 0; i<(int)nClusters-2; i++){
-                    for (int j = 0; j<i; j++){
-                        if(R[i] != -1 && R[j] != -1 && dis_sep[R[i]][R[j]] < best){
-                            B[0] = i; B[1] = j;
-                            best = dis_sep[R[i]][R[j]];
-                        }
-                    }
-                }
-            }
-
-            //If we found a partial detect, return it
-            if(B[0] != -1){
-                m_pixel_x = (int)((x[A[0]][0] + x[A[0]][1] + x[A[1]][0] + x[A[1]][1])*0.25 - _filtered_img->width*0.5);
-                m_pixel_y = (int)((y[A[0]][0] + y[A[0]][1] + y[A[1]][0] + y[A[1]][1])*0.25 - _filtered_img->height*0.5);
-                m_pixel_x_alt = (int)((x[B[0]][0] + x[B[0]][1] + x[B[1]][1] + x[B[1]][1])*0.5 - _filtered_img->width*0.5);
-                m_pixel_y_alt = (int)((y[B[0]][0] + y[B[0]][1] + x[B[1]][1] + x[B[1]][1])*0.5 - _filtered_img->height*0.5);
-
-                m_range = (PATH_REAL_LENGTH * _filtered_img->width) / ((sqrt(lengths[A[0]])+sqrt(lengths[A[1]]))*0.5 * TAN_FOV_X);
-                m_angle = (position_angles[A[0]] + position_angles[A[1]]) * 0.5;
-                m_range_alt = (PATH_REAL_LENGTH * _filtered_img->width) / ((sqrt(lengths[B[0]])+sqrt(lengths[B[1]]))*0.5 * TAN_FOV_X);
-                m_angle_alt = (position_angles[B[0]] + position_angles[B[1]]) * 0.5;
-
-                DEBUG_PRINT ("Path Detect + Partial: Range = %d, PAngle = %5.2f\n", m_range, m_angle);
-                retval = FULL_DETECT_PLUS;
-                goto RETURN_TWO_CENTROIDS;
-            }
-            //Else, reject the other lines; we have only found one path
-            else{
-                m_pixel_x = (int)((xSum - x[R[0]][0] - x[R[0]][1])*0.25 - _filtered_img->width*0.5);
-                m_pixel_y = (int)((ySum - y[R[0]][0] - y[R[0]][1])*0.25 - _filtered_img->height*0.5);
-                m_range = (PATH_REAL_LENGTH * _filtered_img->width) / ((sqrt(lengths[A[0]])+sqrt(lengths[A[1]]))*0.5 * TAN_FOV_X);
-                m_angle = (position_angles[A[0]] + position_angles[A[1]]) * 0.5;
-
-                DEBUG_PRINT ("Path Detect: Range = %d, PAngle = %5.2f\n", m_range, m_angle);
-                retval = FULL_DETECT;
-                goto RETURN_CENTROID;
-            }
+            //Only one pair, but we know there are 3 or 4 lines
+            DEBUG_PRINT("One pair plus lines\n");
+            retval = FULL_DETECT_PLUS;
+            goto RETURN_CENTROID;
         }
         else if (cross_sum > 1){
-            int pair_ranks[cross_sum][2];
-            float scores[cross_sum];
-
-            //Rank pairs by score; insertion sort used as n is small
-            for(int i = 0; i<(int)nClusters; i++){
-                for(int j = 0; j<i; j++){
-                    if(pair_weight[i][j] > 9000) continue;
-                    int k = 0;
-                    while(pair_weight[i][j] > scores[k]) k++;
-                    for(int l=cross_sum-1; l>k; l--){
-                        pair_ranks[l][0] = pair_ranks[l-1][0];
-                        pair_ranks[l][1] = pair_ranks[l-1][1];
-                    }
-                    pair_ranks[k][0] = i;
-                    pair_ranks[k][1] = j;
-                    scores[k] = pair_weight[i][j];
-                }
-            }
-            A[0] = pair_ranks[0][0]; A[1] = pair_ranks[0][1];
-
-            for(int i = 1; i < (int)cross_sum; i++){
-                //Skip ranked pairs that contain lines from the first pair
-                if(pair_ranks[i][0] == A[0] || pair_ranks[i][0] == A[1] || pair_ranks[i][1] == A[0] || pair_ranks[i][1] == A[1]) continue;
-                if(dis_sep[A[0]][pair_ranks[i][0]] < 6*LINE_DIS_THRESH || dis_sep[A[0]][pair_ranks[i][1]] < 6*LINE_DIS_THRESH ||
-                    dis_sep[A[1]][pair_ranks[i][0]] < 6*LINE_DIS_THRESH || dis_sep[A[1]][pair_ranks[i][1]] < 6*LINE_DIS_THRESH) continue;
-                
-                B[0] = pair_ranks[i][0];
-                B[1] = pair_ranks[i][1];
-                break;
-            }
-
-            //If we have two independant pairs, far enough apart, discard everything else
-            if(B[0] != -1){
-                m_pixel_x = (int)((x[A[0]][0] + x[A[0]][1] + x[A[1]][0] + x[A[1]][1])*0.25 - _filtered_img->width*0.5);
-                m_pixel_y = (int)((y[A[0]][0] + y[A[0]][1] + y[A[1]][0] + y[A[1]][1])*0.25 - _filtered_img->height*0.5);
-                m_pixel_x_alt = (int)((x[B[0]][0] + x[B[0]][1] + x[B[1]][1] + x[B[1]][1])*0.5 - _filtered_img->width*0.5);
-                m_pixel_y_alt = (int)((y[B[0]][0] + y[B[0]][1] + x[B[1]][1] + x[B[1]][1])*0.5 - _filtered_img->height*0.5);
-
-                m_range = (PATH_REAL_LENGTH * _filtered_img->width) / ((sqrt(lengths[A[0]])+sqrt(lengths[A[1]]))*0.5 * TAN_FOV_X);
-                m_angle = (position_angles[A[0]] + position_angles[A[1]]) * 0.5;
-                m_range_alt = (PATH_REAL_LENGTH * _filtered_img->width) / ((sqrt(lengths[B[0]])+sqrt(lengths[B[1]]))*0.5 * TAN_FOV_X);
-                m_angle_alt = (position_angles[B[0]] + position_angles[B[1]]) * 0.5;
-
-                DEBUG_PRINT ("Double Path Detect: Range_A = %d, PAngle_A = %5.2f\n", m_range, m_angle);
-                DEBUG_PRINT ("Double Path Detect: Range_B = %d, PAngle_B = %5.2f\n", m_range_alt, m_angle_alt);
-                retval = DOUBLE_DETECT;
-                goto RETURN_TWO_CENTROIDS;
-            }
-
-            //If not, given the path pairing, determine the leftover line(s)
-            unsigned temp = 0;
-            for(int i=0; i<(int)nClusters; i++){
-                if(i == A[0] || i == A[1]) continue;
-                R[temp] = i;
-                temp++;
-                if(temp + 2 >= nClusters) break;
-            }
-
-            //Determine whether remaining lines are partial detects or rejects
-            if(nClusters == 3 && dis_sep[R[0]][A[0]] > 6*LINE_DIS_THRESH && dis_sep[R[0]][A[1]] > 6*LINE_DIS_THRESH){
-                //For nClusters = 3, count as a partial if it is far enough away from the main pair
-                B[0] = B[1] = R[0];
-                R[0] = -1;
-            }
-            else if(nClusters > 3){
-                //Discard any lines that are too close to the main pair
-                for(int i = 0; i<(int)nClusters-2; i++){
-                    if(dis_sep[R[i]][A[0]] < 6*LINE_DIS_THRESH && dis_sep[R[i]][A[1]] < 6*LINE_DIS_THRESH) R[i] = 0;
-                }
-
-                //Of the remaining lines, pick the closest pair, or none if they all fail relaxed proximity test
-                float best = 2*LINE_DIS_THRESH;
-                for(int i = 0; i<(int)nClusters-2; i++){
-                    for (int j = 0; j<i; j++){
-                        if(R[i] != -1 && R[j] != -1 && dis_sep[R[i]][R[j]] < best){
-                            B[0] = i; B[1] = j;
-                            best = dis_sep[R[i]][R[j]];
-                        }
-                    }
-                }
-            }
-
-            //If we found a partial detect, return it
-            if(B[0] != -1){
-                m_pixel_x = (int)((x[A[0]][0] + x[A[0]][1] + x[A[1]][0] + x[A[1]][1])*0.25 - _filtered_img->width*0.5);
-                m_pixel_y = (int)((y[A[0]][0] + y[A[0]][1] + y[A[1]][0] + y[A[1]][1])*0.25 - _filtered_img->height*0.5);
-                m_pixel_x_alt = (int)((x[B[0]][0] + x[B[0]][1] + x[B[1]][1] + x[B[1]][1])*0.5 - _filtered_img->width*0.5);
-                m_pixel_y_alt = (int)((y[B[0]][0] + y[B[0]][1] + x[B[1]][1] + x[B[1]][1])*0.5 - _filtered_img->height*0.5);
-
-                m_range = (PATH_REAL_LENGTH * _filtered_img->width) / ((sqrt(lengths[A[0]])+sqrt(lengths[A[1]]))*0.5 * TAN_FOV_X);
-                m_angle = (position_angles[A[0]] + position_angles[A[1]]) * 0.5;
-                m_range_alt = (PATH_REAL_LENGTH * _filtered_img->width) / ((sqrt(lengths[B[0]])+sqrt(lengths[B[1]]))*0.5 * TAN_FOV_X);
-                m_angle_alt = (position_angles[B[0]] + position_angles[B[1]]) * 0.5;
-
-                DEBUG_PRINT ("Path Detect + Partial: Range = %d, PAngle = %5.2f\n", m_range, m_angle);
-                retval = FULL_DETECT_PLUS;
-                goto RETURN_TWO_CENTROIDS;
-            }
-            //Else, reject the other lines; we have only found one path
-            else{
-                m_pixel_x = (int)((xSum - x[R[0]][0] - x[R[0]][1])*0.25 - _filtered_img->width*0.5);
-                m_pixel_y = (int)((ySum - y[R[0]][0] - y[R[0]][1])*0.25 - _filtered_img->height*0.5);
-                m_range = (PATH_REAL_LENGTH * _filtered_img->width) / ((sqrt(lengths[A[0]])+sqrt(lengths[A[1]]))*0.5 * TAN_FOV_X);
-                m_angle = (position_angles[A[0]] + position_angles[A[1]]) * 0.5;
-
-                DEBUG_PRINT ("Path Detect: Range = %d, PAngle = %5.2f\n", m_range, m_angle);
-                retval = FULL_DETECT;
-                goto RETURN_CENTROID;
-            }
+            //Two full paths
+            DEBUG_PRINT("Two full pairs\n");
+            retval = DOUBLE_DETECT;
+            goto RETURN_TWO_CENTROIDS;
         }
     }
 

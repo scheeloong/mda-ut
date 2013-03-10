@@ -22,15 +22,6 @@ enum MDA_VISION_RETURN_CODE  {
     DOUBLE_DETECT
 };
 
-enum MDA_PATH_VISION_RETURN_CODE  {
-    PATH_FATAL_ERROR,           // defaults to this if you dont change the value
-    PATH_NO_TARGET,             // cant find anything, no defined data 
-    PATH_UNKNOWN_TARGET,        // cant recognize target, returns centroid
-    PATH_ONE_SEGMENT,           // one segment detected
-    PATH_FULL_DETECT,           // one full path element detected
-    PATH_FULL_PLUS,             // one full path detected, plus another line segment
-    PATH_DOUBLE_DETECT          // two full paths detected
-};
 
 /// ########################################################################
 /** This is the base class for a vision module. Every vision module needs to implement
@@ -167,9 +158,9 @@ class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
     static const float PATH_REAL_WIDTH = 15.0;
 
     //Thresholds for line grouping
-    static const float LINE_DIS_THRESH = 20;    //PATH_REAL_WIDTH*1.33
-    static const float LINE_ANG_THRESH = 10;    //Arbitrary
-    static const float LINE_LEN_THRESH = 36;    //PATH_REAL_LENGTH*0.3
+    static const float LINE_DIS_THRESH = 25;    //PATH_REAL_WIDTH*1.33
+    static const float LINE_ANG_THRESH = 15;    //Arbitrary
+    static const float LINE_LEN_THRESH = 50;    //PATH_REAL_LENGTH*0.3
     
     //Relative importance/scaling of properties when grouping lines
     static const float K_ANG = 3.0;
