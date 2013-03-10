@@ -158,7 +158,7 @@ class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
     static const float PATH_REAL_WIDTH = 15.0;
 
     //Thresholds for line grouping
-    static const float LINE_DIS_THRESH = 25;    //PATH_REAL_WIDTH*1.33
+    static const float LINE_DIS_THRESH = 50;    //PATH_REAL_WIDTH*1.33
     static const float LINE_ANG_THRESH = 15;    //Arbitrary
     static const float LINE_LEN_THRESH = 50;    //PATH_REAL_LENGTH*0.3
     
