@@ -1,11 +1,10 @@
-/** mvCircles.cpp  */
+/** mvShapes.cpp  */
 
-#include "mvCircles.h"
+#include "mvShapes.h"
 #include "mgui.h"
 #include "mv.h"
 #include "math.h"
 #include <cv.h>
-#include <list>
 
 //#define FLAG_DEBUG
 #ifdef FLAG_DEBUG

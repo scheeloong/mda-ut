@@ -10,7 +10,7 @@
 #include "mv.h"
 #include "mgui.h"
 #include "mvLines.h"
-#include "mvCircles.h"
+#include "mvShapes.h"
 
 int main (int argc, char** argv) {
     // We want to do HSV color filter, take the gradient of result,
