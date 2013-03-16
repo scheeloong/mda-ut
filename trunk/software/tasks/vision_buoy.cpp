@@ -17,7 +17,8 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY () :
     _MeanShift (mvMeanShift(MDA_VISION_BUOY_SETTINGS)),
     _Morphology5 (mvBinaryMorphology(5, 5, MV_KERN_RECT)),
     _Morphology3 (mvBinaryMorphology(3, 3, MV_KERN_RECT)),
-    _AdvancedCircles(MDA_VISION_BUOY_SETTINGS)
+    _AdvancedCircles(MDA_VISION_BUOY_SETTINGS),
+    _Rect ("Rect_settings.csv")
 {
     _filtered_img = mvGetScratchImage (); // common size
 }
@@ -27,7 +28,8 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY (const char* settings_file) :
     _MeanShift (mvMeanShift(settings_file)),
     _Morphology5 (mvBinaryMorphology(5, 5, MV_KERN_RECT)),
     _Morphology3 (mvBinaryMorphology(3, 3, MV_KERN_RECT)),
-    _AdvancedCircles(MDA_VISION_BUOY_SETTINGS)
+    _AdvancedCircles(MDA_VISION_BUOY_SETTINGS),
+    _Rect ("Rect_settings.csv")
 {
     _filtered_img = mvGetScratchImage (); // common size
 }
@@ -39,12 +41,16 @@ MDA_VISION_MODULE_BUOY:: ~MDA_VISION_MODULE_BUOY () {
 void MDA_VISION_MODULE_BUOY:: primary_filter (IplImage* src) {
     _MeanShift.filter (src, _filtered_img);
     _filtered_img->origin = src->origin;
-    
+  
     //_Morphology5.open(_filtered_img, _filtered_img);
+    _Rect.find (_filtered_img);
+    _Rect.remove_rectangle(_filtered_img);
+
     _Morphology3.gradient(_filtered_img, _filtered_img);
 
     _AdvancedCircles.findCircles (_filtered_img);
 
+    _Rect.draw_rectangle(_filtered_img);
     _AdvancedCircles.drawOntoImage (_filtered_img);
 
     _window.showImage (_filtered_img);

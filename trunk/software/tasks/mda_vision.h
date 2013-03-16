@@ -219,6 +219,8 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
     mvBinaryMorphology _Morphology3;
     mvAdvancedCircles _AdvancedCircles;
     
+    mvRect _Rect;
+
     IplImage* _filtered_img;
 
 

@@ -5,6 +5,7 @@
 #include "mv.h"
 #include "math.h"
 #include <cv.h>
+#include <list>
 
 //#define FLAG_DEBUG
 #ifdef FLAG_DEBUG
@@ -97,11 +98,18 @@ int mvShape::collect_pixels (IplImage* src, POINT_VECTOR &p_vector, int target_b
 //  mvRect class
 // ######################################################################################
 
-mvRect::mvRect(const char* settings_file) : mvShape(settings_file) {
+mvRect::mvRect(const char* settings_file) : 
+    mvShape(settings_file),
+    LINES (settings_file),
+    KMEANS (),
+    bin_rect("Rect")
+{
+    read_mv_setting (settings_file, "MIN_STACKED_ROWS", MIN_STACKED_ROWS);
+    read_mv_setting (settings_file, "MIN_ROW_LENGTH", MIN_ROW_LENGTH);
+    read_mv_setting (settings_file, "RECT_HEIGHT_TO_WIDTH_RATIO", RECT_HEIGHT_TO_WIDTH_RATIO);   
 }
 
 mvRect::~mvRect() {
-
 }
 
 int mvRect::find(IplImage* img, int target_brightness) {
@@ -119,12 +127,25 @@ int mvRect::find(IplImage* img, int target_brightness) {
     return result;
 }
 
+int mvRect::find_internal2(IplImage* img, int target_brightness) {
+    mvLines lines;
+    LINES.findLines (img, &lines);
+    KMEANS.cluster_auto (1, 10, &lines);
+
+    KMEANS.drawOntoImage(img);
+    window->showImage(img);
+    return 0;
+}
+
 int mvRect::find_internal(IplImage* img, int target_brightness) {
     // algorithm description
 
+    bin_rect.start();
+    m_rect_v.clear();
+
     POINT_VECTOR point_vector;
     std::vector<ROW> row_vector;
-    std::vector<int> stacked_rows;
+    std::vector<ROW> stacked_rows;
 
     /// put appropriate pixels into point_vector
     int n_points = collect_pixels (img, point_vector, target_brightness);
@@ -137,109 +158,138 @@ int mvRect::find_internal(IplImage* img, int target_brightness) {
     /// this is done simply by keeping track of continuous pixels on a row and putting the row into the
     /// vector if number of continuous pixels is greater than MIN_ROW_LENGTH 
     int contiguous_length = 0;
-    for (int curr=1, first=-1; curr < n_points; curr++) {
-        if (point_vector[curr].y == point_vector[curr-1].y && point_vector[curr].x-point_vector[curr-1].x < 3) { // contiguous point
+    POINT_VECTOR::iterator prev_iter = point_vector.begin();
+    POINT_VECTOR::iterator iter = prev_iter + 1;
+    POINT_VECTOR::iterator first_iter; 
+    for (; iter != point_vector.end(); ++iter,++prev_iter) {
+        if (iter->y == prev_iter->y  &&  iter->x - prev_iter->x <= 2) { // contiguous point
             if (contiguous_length == 0) // start of new sequence
-                first = curr-1;
+                first_iter = prev_iter;
 
             contiguous_length++;
         }
-        else { // end of current sequence
-            if (contiguous_length >= MIN_ROW_LENGTH)
-                row_vector.push_back(make_row(point_vector[first].y, point_vector[first].x, point_vector[curr-1].x));
+        else {
+            // end of current sequence
+            if (contiguous_length >= MIN_ROW_LENGTH) {
+                row_vector.push_back(make_row(first_iter->y, first_iter->x, prev_iter->x));
+            }
 
             contiguous_length = 0;
+        }   
+    }
+
+    for (std::vector<ROW>::iterator it = row_vector.begin(); it != row_vector.end(); ++it)
+        printf ("\tRow %d, %d-%d\n", it->y, it->x1, it->x2);
+    
+    /// iterate over the rows and cluster them
+    for (std::vector<ROW>::iterator row_iter = row_vector.begin(); row_iter != row_vector.end(); ++row_iter) {
+        /// compare the row object with all existing m_rect_v objects, clustering to closest one or adding a new
+        /// m_rect_v if no good clustering option
+        bool cluster_success = false;
+        for (std::vector<RECT>::iterator rect_iter = m_rect_v.begin(); rect_iter != m_rect_v.end(); ++rect_iter) {
+            if (row_iter->y >= rect_iter->y1-2 && row_iter->y <= rect_iter->y2+2 &&
+                abs(row_iter->x1 - rect_iter->x1) <= 2 && abs(row_iter->x2 - rect_iter->x2) <= 2)
+            {
+                rect_iter->x1 = (rect_iter->num*rect_iter->x1 + row_iter->x1) / (rect_iter->num+1);
+                rect_iter->x2 = (rect_iter->num*rect_iter->x2 + row_iter->x2) / (rect_iter->num+1);
+                rect_iter->y1 = std::min(row_iter->y, rect_iter->y1);
+                rect_iter->y2 = std::max(row_iter->y, rect_iter->y2);
+                rect_iter->num++;
+
+                cluster_success = true;
+            }
         }
 
-        curr++;
+        if (!cluster_success)
+            m_rect_v.push_back(make_rect(row_iter->x1,row_iter->y, row_iter->x2,row_iter->y));
+    }
+
+    for (std::vector<RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end();) {
+        float hw_ratio = (float)(it->y2 - it->y1) / (float)(it->x2 - it->x1);
+
+        if (it->num < 6 || hw_ratio > 1.2*RECT_HEIGHT_TO_WIDTH_RATIO || hw_ratio < 0.8*RECT_HEIGHT_TO_WIDTH_RATIO)
+            m_rect_v.erase(it);
+        else
+            it++;
     }
     
+/*    
     /// look for a bunch of rows stacked on top of each other. the algorithm to do so is very similar to above!
     /// a bunch of stacked rows == a rectangle
     while (1) {
+        int n_stacked;
         int n_rows = row_vector.size();
         if (n_rows < MIN_STACKED_ROWS)
             break;
 
         printf ("mvRect: looping to look for stacked rows. %d rows total\n", n_rows);
 
-        /// go thru each row. Look at next row and curr row. If they constitute a stack, push curr row
+        /// go thru each row. Look at next row and curr row. If they constitute a stack, splice row to stacked_rows
         /// when we find a non-stacking row, either empty the stacked_rows vector (if num of stacked rows is low)
         /// or (if num of stacked rows is high) we detected a rectangle => exit
-        for (int curr=0; curr < n_rows-1; curr++) {
-            if (row_vector[curr+1].y - row_vector[curr].y <= 2 && 
-                abs(row_vector[curr+1].x1 - row_vector[curr].x1) <= 5 &&
-                abs(row_vector[curr+1].x2 - row_vector[curr].x2) <= 5
+        std::vector<ROW>::iterator iter = row_vector.begin();
+        std::vector<ROW>::iterator prev_iter = iter++;
+        for (; iter != row_vector.end();) {
+            printf ("\tcomparing (%d,%d,%d)->(%d,%d,%d)\n", prev_iter->y,prev_iter->x1,prev_iter->x2,iter->y,iter->x1,iter->x2);
+
+            if (iter->y - prev_iter->y <= 2 && 
+                abs(iter->x1 - prev_iter->x1) <= 5 &&
+                abs(iter->x2 - prev_iter->x2) <= 5
                 ) 
             {   // curr+1 is stacked on top of curr
-                stacked_rows.push_back(curr);
+                //stacked_rows.splice (stacked_rows.begin(), row_vector, prev_iter);
+                stacked_rows.push_back(*prev_iter);
+                row_vector.erase(prev_iter);
             }
             else {
                 if ((int)stacked_rows.size() < MIN_STACKED_ROWS) { 
                     // if number of stacked lines detected is small, delete all rows we just encountered
-                    for (int i = (int)stacked_rows.size()-1; i >= 0; i--) {
-                        row_vector.erase(row_vector.begin() + stacked_rows[i]);
-                    }
-                    stacked_rows.clear();
-                    break;
+                    //stacked_rows.splice (stacked_rows.begin(), row_vector, prev_iter); 
+                    stacked_rows.push_back(*prev_iter);
+                    row_vector.erase(prev_iter);
+                    goto LOOP_CLEANUP;
                 }
                 else {
-                    stacked_rows.push_back(curr+1);
                     break;
                 }
             }
+
+            //prev_iter = iter++; // list only
         }
 
         /// have to do this check here or we get errors (why?)
-        int n_stacked = stacked_rows.size();
+        n_stacked = stacked_rows.size();
         if (n_stacked < MIN_STACKED_ROWS) {
-            continue;
+            goto LOOP_CLEANUP;
         }    
         printf ("mvRect: found stack of %d rows\n", n_stacked);
 
-        /// next look at whether this stack of rows can be considered a rectangle
-        int mean_left=0, mean_right=0;
-        float var_left=0, var_right=0;
+                m_rect[0].x = stacked_rows.front().x1 - 2;
+                m_rect[0].y = stacked_rows.front().y - 1;
+                m_rect[1].x = stacked_rows.back().x2 + 1;
+                m_rect[1].y = stacked_rows.back().y + 1;
 
-        for (int i = (int)n_stacked-1; i >= 0; i--) {
-            int index = stacked_rows[i];
-            printf ("\trow %d, %d-%d\n", row_vector[index].y,row_vector[index].x1,row_vector[index].x2);
-        
-            mean_left += row_vector[index].x1;
-            mean_right += row_vector[index].x2;     
-        }
-        mean_left /= n_stacked;
-        mean_right /= n_stacked;
+                printf ("rect = ((%d,%d), (%d,%d))\n", m_rect[0].x, m_rect[0].y, m_rect[1].x, m_rect[1].y);
 
-        for (int i = (int)n_stacked-1; i >= 0; i--) {
-            int index = stacked_rows[i];
 
-            float delta_left = row_vector[index].x1 - mean_left;
-            var_left += delta_left*delta_left;
-            float delta_right = row_vector[index].x2 - mean_right;
-            var_left += delta_right*delta_right;
-        }
-        var_left /= n_stacked;
-        var_right /= n_stacked;
+                //remove_rectangle(img);
+                draw_rectangle(img);
+            
 
-        printf ("mean = %d, %d\n", mean_left, mean_right);
-        printf ("var = %f, %f\n", var_left, var_right);
-
-        /// if variances are low, accept this rectangle
-        if (var_left < 3 && var_right < 3) {
-            m_rect[0].x = mean_left - 1;
-            m_rect[0].y = row_vector[stacked_rows[0]].y - 1;
-            m_rect[1].x = mean_right + 1;
-            m_rect[1].y = row_vector[stacked_rows[n_stacked-1]].y + 1;
-            break;
-        }
-
-        /// otherwise erase all the rows we examined
-        for (int i = (int)n_stacked-1; i >= 0; i--) {
-            row_vector.erase(row_vector.begin() + stacked_rows[i]);
-        }
+    LOOP_CLEANUP:
+        n_stacked = stacked_rows.size();
+        printf ("deleting %d rows.\n", n_stacked);
+        /// erase all the rows we examined
+        //std::vector<int>::reverse_iterator rit = stacked_rows.rbegin();
+        //for (; rit != stacked_rows.rend(); ++rit) {
+        //    row_vector.erase(row_vector.begin() + *rit);
+        //}
         stacked_rows.clear();
     }
+*/
+    bin_rect.stop();
+
+    window->showImage(img);
     return 0;
 }
 
