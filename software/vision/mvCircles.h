@@ -7,6 +7,7 @@
 
 #include <cv.h>
 #include "mgui.h"
+#include "mvLines.h"
 #include "profile_bin.h"
 
 typedef std::vector<CvPoint> POINT_VECTOR;
@@ -40,29 +41,56 @@ class mvRect : mvShape {
     typedef struct _row_ {
         int y, x1, x2;  // a row has a vertical coord, a starting x coord, an ending x coord
     } ROW; 
+    typedef struct _rect_ {
+        int x1, y1, x2, y2;
+        int num;
+    } RECT;
 
     ROW make_row (int y, int x1, int x2) {
         ROW R;
         R.y = y; R.x1 = x1; R.x2 = x2;
         return R;
     }
+    RECT make_rect (int x1, int y1, int x2, int y2) {
+        RECT R;
+        R.x1 = x1; R.y1 = y1; R.x2 = x2; R.y2 = y2;
+        R.num = 0;
+        return R;
+    }
 
-    static const int MIN_STACKED_ROWS = 12;
-    static const int MIN_ROW_LENGTH = 8;
     static const int MIN_POINTS_IN_RESAMPLED_IMAGE = 20;
 
-    CvPoint m_rect[2];
+    int MIN_STACKED_ROWS;
+    int MIN_ROW_LENGTH;
+    float RECT_HEIGHT_TO_WIDTH_RATIO;
+    
+    mvHoughLines LINES;
+    mvKMeans KMEANS;
+
+    std::vector<RECT> m_rect_v;
+
+    PROFILE_BIN bin_rect;
 
 public:
     mvRect (const char* settings_file);
     ~mvRect ();
 
     int find_internal (IplImage* img, int target_brightness);
+    int find_internal2 (IplImage* img, int target_brightness);
     int find (IplImage* img, int target_brightness=-1);
 
-    CvPoint operator [] (unsigned index) { return m_rect[index]; }
+    //CvPoint operator [] (unsigned index) { return m_rect[index]; }
+    void draw_rectangle (IplImage *img) {
+        for (std::vector<RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end(); it++) {
+            cvRectangle (img, cvPoint(it->x1-1,it->y1-2), cvPoint(it->x2+1,it->y2+2), cvScalar(120));
+            printf ("\tRect: (%d,%d) (%d,%d)\n", it->x1,it->y1, it->x2,it->y2);
+        }
+        //cvRectangle (img, m_rect[0], m_rect[1], cvScalar(120));
+    }
     void remove_rectangle (IplImage* img) {
-        cvRectangle (img, m_rect[0], m_rect[1], cvScalar(0), CV_FILLED);
+        for (std::vector<RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end(); it++)
+            cvRectangle (img, cvPoint(it->x1-6,it->y1-8), cvPoint(it->x2+6,it->y2+8), cvScalar(0), CV_FILLED);
+        //cvRectangle (img, m_rect[0], m_rect[1], cvScalar(0), CV_FILLED);
     }
 
 };
