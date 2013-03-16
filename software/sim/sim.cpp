@@ -125,8 +125,8 @@ void init_sim() {
     #define BINNAME2 "img/tank.bmp"
     #define BINNAME3 "img/plane.bmp"
     #define BINNAME4 "img/factory.bmp"
-    #define RED_CUTOUT "img/red_cutout.bmp"
-    #define BLUE_CUTOUT "img/blue_cutout.bmp"
+    #define RED_CUTOUT "img/torpedo_cutout.bmp"
+    #define BLUE_CUTOUT "img/torpedo_cutout.bmp"
 
    makeTextureImage((char *)TNAME, 0);
    makeTextureImage((char *)SNAME, 1);
