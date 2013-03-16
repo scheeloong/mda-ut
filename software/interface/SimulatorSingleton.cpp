@@ -363,8 +363,15 @@ void sim_idle()
 
 void SimulatorSingleton::sim_idle()
 {
+  double d_yaw = target_model.angle.yaw - model.angle.yaw;
+  if (d_yaw > 180) {
+    d_yaw -= 360;
+  } else if (d_yaw < -180) {
+    d_yaw += 360;
+  }
+
   PID_depth.PID_Update (target_model.position.y - model.position.y);
-  PID_yaw.PID_Update (target_model.angle.yaw - model.angle.yaw);
+  PID_yaw.PID_Update (d_yaw);
   //printf("%f\n", PID_yaw.PID_Output());
   // cast away volatile model
   physical_model temp_model = *const_cast<physical_model *>(&model);
