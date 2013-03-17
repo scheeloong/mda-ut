@@ -19,6 +19,10 @@ void init_fpga();
 
 inline void int_handler(int signal)
 {
+  if (signal == SIGCHLD) {
+    exit(0);
+  }
+
   // If the power is already off, just kill child and exit
   if (!get_power()) {
     kill_child();
