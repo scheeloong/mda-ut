@@ -222,9 +222,6 @@ void SimulatorSingleton::run_sim()
   img_fwd = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
   img_dwn = cvCreateImage (cvSize(width,height), IPL_DEPTH_8U, 3);
 
-  // Sim has initialized
-  sem_post(&sema);
-
   // set initial position
   std::string start_at;
   read_mv_setting(SIM_SETTINGS_FILE, "START_AT", start_at);
@@ -253,6 +250,16 @@ void SimulatorSingleton::run_sim()
     start_y = 2.5f;
     start_z = -5.f;
     start_yaw = 80.f;
+  } else if (start_at == "TORPEDO_TARGET") {
+    start_x = 10.1f;
+    start_y = 2.35f;
+    start_z = -1.9f;
+    start_yaw = -170.f;
+  } else if (start_at == "MARKER_DROPPER") {
+    start_x = 10.8f;
+    start_y = 1.65f;
+    start_z = -7.1f;
+    start_yaw = -4.f;
   }
 
   model.position.x = start_x;
@@ -262,6 +269,9 @@ void SimulatorSingleton::run_sim()
 
   set_target_depth(POOL_HEIGHT - start_y);
   set_target_yaw(start_yaw);
+
+  // Sim has initialized
+  sem_post(&sema);
 
   glutMainLoop();
 }
