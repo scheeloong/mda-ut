@@ -428,7 +428,11 @@ void ManualOperation::long_input()
    "Input exact target attitude:\n"
    " speed <#> - set target speed to #\n"
    " yaw <#>   - set target yaw to #\n"
+   " left <#>  - go left by # degress\n"
+   " right <#> - go right by # degress\n"
    " depth <#> - set target depth to #\n"
+   " up <#>    - go up by # cm\n"
+   " down <#>  - go down by # cm\n"
    "\n"
    "Your input: "
   );
@@ -473,13 +477,57 @@ void ManualOperation::long_input()
   } else if (!strncmp("yaw ", buf, strlen("yaw "))) {
     int target_yaw;
     sscanf(buf, "yaw %d", &target_yaw);
-    actuator_output->set_attitude_absolute(YAW, target_yaw);
-    message_hold("Set target yaw");
+    if (abs(target_yaw) <= 180) {
+      actuator_output->set_attitude_absolute(YAW, target_yaw);
+      message_hold("Set target yaw");
+    } else {
+      message_hold("Invalid yaw, must be [-180, 180]");
+    }
+  } else if (!strncmp("left ", buf, strlen("left "))) {
+    int target_yaw_change;
+    sscanf(buf, "left %d", &target_yaw_change);
+    if (target_yaw_change >= 0 && target_yaw_change <= 180) {
+      actuator_output->set_attitude_change(LEFT, target_yaw_change);
+      message_hold("Turning left");
+    } else {
+      message_hold("Invalid left turn, must be [0, 180]");
+    }
+  } else if (!strncmp("right ", buf, strlen("right "))) {
+    int target_yaw_change;
+    sscanf(buf, "right %d", &target_yaw_change);
+    if (target_yaw_change >= 0 && target_yaw_change <= 180) {
+      actuator_output->set_attitude_change(RIGHT, target_yaw_change);
+      message_hold("Turning left");
+    } else {
+      message_hold("Invalid left turn, must be [0, 180]");
+    }
   } else if (!strncmp("depth ", buf, strlen("depth "))) {
     int target_depth;
     sscanf(buf, "depth %d", &target_depth);
-    actuator_output->set_attitude_absolute(DEPTH, target_depth);
-    message_hold("Set target depth");
+    if (target_depth >= 0) {
+      actuator_output->set_attitude_absolute(DEPTH, target_depth);
+      message_hold("Set target depth");
+    } else {
+      message_hold("Invalid depth, must be >= 0");
+    }
+  } else if (!strncmp("up ", buf, strlen("up "))) {
+    int target_depth_change;
+    sscanf(buf, "up %d", &target_depth_change);
+    if (target_depth_change >= 0) {
+      actuator_output->set_attitude_change(RISE, target_depth_change);
+      message_hold("Rising up");
+    } else {
+      message_hold("Invalid up command, must be >= 0");
+    }
+  } else if (!strncmp("down ", buf, strlen("down "))) {
+    int target_depth_change;
+    sscanf(buf, "down %d", &target_depth_change);
+    if (target_depth_change >= 0) {
+      actuator_output->set_attitude_change(SINK, target_depth_change);
+      message_hold("Sinking down");
+    } else {
+      message_hold("Invalid down command, must be >= 0");
+    }
   } else {
     message_hold("Invalid command");
   }
