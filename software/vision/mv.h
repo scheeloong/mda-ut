@@ -10,6 +10,12 @@
 
 typedef unsigned char uchar;
 
+
+/** mvHuMoments calculates the Hu moments for a bitmap image
+ *  It is a wrapper for cvMoments and cvHuMoments
+ */
+void mvHuMoments(IplImage *src, double *hus);
+
 /** mvCreateImage is a wrapper for cvCreateImage which drops the need for specifying
  *  depth and nChannels. The default mvCreateImage always returns a greyscale image 
  *  while mvCreateImage_Color always returns a color image;
