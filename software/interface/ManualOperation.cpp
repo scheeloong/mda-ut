@@ -36,6 +36,7 @@ void ManualOperation::display_start_message()
          "  2    - run path task\n"
          "  3    - run buoy task\n"
          "  4    - run frame task\n"
+         "  5    - run marker dropper task\n"
          "  m    - run mission\n"
          "\n"
          "Simulator only commands:\n"
@@ -312,6 +313,37 @@ void ManualOperation::work()
          vision_module = new MDA_VISION_MODULE_FRAME();
          use_fwd_img = true;
          break;
+      case '5':
+         if (mode != VISION) {
+           endwin();
+
+           MDA_TASK_RETURN_CODE ret_code;
+           // Scope task so that it is destructed before display_start_message
+           {
+             MDA_TASK_MARKER marker_task(attitude_input, image_input, actuator_output);
+             ret_code = marker_task.run_task();
+           }
+
+           display_start_message();
+
+           switch(ret_code) {
+             case TASK_DONE:
+                message_hold("Frame task completed successfully");
+                break;
+             case TASK_QUIT:
+                message_hold("Frame task quit by user");
+                break;
+             default:
+                message_hold("Frame task errored out");
+                break;
+           }
+           break;
+         }
+         delete vision_module;
+         message_hold("Selected marker dropper vision module\n");
+         vision_module = new MDA_VISION_MODULE_MARKER();
+         use_fwd_img = false;
+         break;
       case 'x':
          if (mode == NORMAL) {
            break;
@@ -335,6 +367,7 @@ void ManualOperation::work()
            "  2    - path vision\n"
            "  3    - buoy vision\n"
            "  4    - frame vision\n"
+           "  5    - marker dropper vision\n"
            "\n"
            "  x    - exit vision mode\n"
            "  q    - exit simulator\n"
