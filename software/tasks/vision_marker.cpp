@@ -46,7 +46,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_MARKER:: calc_vci () {
     MDA_VISION_RETURN_CODE retval = NO_TARGET;
     double target[2][7] = {
                            {0.256755, 0.001068, 0.006488, 0.001148, 0.000003, 0.000037, -0.000000}, //the plane
-                           {0.256755, 0.001068, 0.006488, 0.001148, 0.000003, 0.000037, -0.000000}
+                           {0.240729, 0.027823, 0.000024, 0.000029, -0.000000, 0.000004, 0.000000} //the tank
                           };
     
     double hu[7];
