@@ -68,7 +68,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                 int pos_ang = 0;
 
                 //If there are 2 fully defined paths, pick the one closest to the last path we followed
-                if(vision_code == DOUBLE_DETECT || vision_code == TWO_SEGMENT){
+                if(vision_code != ONE_SEGMENT && vision_code != FULL_DETECT){
                     int pix_x_alt = path_vision.get_pixel_x_alt();
                     int pix_y_alt = path_vision.get_pixel_y_alt();
                 
