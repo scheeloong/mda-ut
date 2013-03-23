@@ -45,6 +45,8 @@ void mvHSVFilter:: filter (IplImage* img, IplImage* result) {
     assert (img->nChannels == 3);
     assert (result != NULL);
     assert (result->nChannels == 1);
+    HSVImg = mvCreateImage_Color(img);
+    
     assert (img->width == HSVImg->width);
     assert (img->height == HSVImg->height);
 
@@ -76,5 +78,7 @@ void mvHSVFilter:: filter (IplImage* img, IplImage* result) {
         }
     }
       bin_WorkingLoop.stop();
+
+    cvReleaseImage(&HSVImg);
 }
 
