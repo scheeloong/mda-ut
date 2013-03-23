@@ -11,6 +11,7 @@
 enum MDA_TASK {
 	TASK_TEST,
 	TASK_GATE,
+	TASK_MARKER,
 	TASK_PATH,
 	TASK_BUOY,
 	TASK_FRAME
@@ -83,6 +84,19 @@ public:
 private:
   Viterbi *v;
 };
+
+/// ########################################################################
+/// Marker
+/// ########################################################################
+class MDA_TASK_MARKER : public MDA_TASK_BASE {
+
+public:
+	MDA_TASK_MARKER (AttitudeInput* a, ImageInput* i, ActuatorOutput* o);
+	~MDA_TASK_MARKER ();
+
+	MDA_TASK_RETURN_CODE run_task ();
+};
+
 
 /// ########################################################################
 /// Path

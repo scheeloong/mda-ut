@@ -317,8 +317,8 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         //Always calculare both points of interest; it is up to control code to use/ignore based on return code
         m_pixel_x = (int)((x[A[0]][0] + x[A[0]][1] + x[A[1]][0] + x[A[1]][1])*0.25 - _filtered_img->width*0.5);
         m_pixel_y = (int)((y[A[0]][0] + y[A[0]][1] + y[A[1]][0] + y[A[1]][1])*0.25 - _filtered_img->height*0.5);
-        m_pixel_x_alt = (int)((x[B[0]][0] + x[B[0]][1] + x[B[1]][1] + x[B[1]][1])*0.5 - _filtered_img->width*0.5);
-        m_pixel_y_alt = (int)((y[B[0]][0] + y[B[0]][1] + x[B[1]][1] + x[B[1]][1])*0.5 - _filtered_img->height*0.5);
+        m_pixel_x_alt = (int)((x[B[0]][0] + x[B[0]][1] + x[B[1]][0] + x[B[1]][1])*0.5 - _filtered_img->width*0.5);
+        m_pixel_y_alt = (int)((y[B[0]][0] + y[B[0]][1] + x[B[1]][0] + x[B[1]][1])*0.5 - _filtered_img->height*0.5);
 
         m_range = (PATH_REAL_LENGTH * _filtered_img->width) / ((sqrt(lengths[A[0]])+sqrt(lengths[A[1]]))*0.5 * TAN_FOV_X);
         m_angle = (position_angles[A[0]] + position_angles[A[1]]) * 0.5;

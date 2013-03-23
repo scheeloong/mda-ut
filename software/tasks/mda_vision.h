@@ -150,6 +150,28 @@ public:
 
 
 /// ########################################################################
+/// this class is for the marker dropper
+/// ########################################################################
+class MDA_VISION_MODULE_MARKER : public MDA_VISION_MODULE_BASE {
+    static const char MDA_VISION_MARKER_SETTINGS[];
+    static const float HU_THRESH = 0.005;
+
+    mvWindow _window;
+    mvHSVFilter _HSVFilter;
+    
+    IplImage* _filtered_img;
+
+public:
+    MDA_VISION_MODULE_MARKER ();
+    ~MDA_VISION_MODULE_MARKER ();
+    
+    void primary_filter (IplImage* src);
+    MDA_VISION_RETURN_CODE calc_vci ();
+
+};
+
+
+/// ########################################################################
 /// this class is for the path
 /// ########################################################################
 class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
