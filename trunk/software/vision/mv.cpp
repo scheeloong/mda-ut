@@ -87,6 +87,12 @@ void mvSplitImage (IplImage* src, IplImage** plane1, IplImage** plane2) {
     }
 }
 
+void mvHuMoments(IplImage *src, double *hus){
+    CvMoments moments;
+
+    cvMoments(src, &moments, true);
+    cvGetHuMoments(&moments, (CvHuMoments*)hus); 
+}
 
 /// TERRIBLE TERRIBLE CODING
 #define IN_SRC(x) (((x)>=src_addr_first) && ((x)<src_addr_last))
