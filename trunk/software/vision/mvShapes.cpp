@@ -21,7 +21,10 @@ mvShape::mvShape() {
     DOWNSAMPLING_FACTOR = 1; // default constructor - use no ds
     ds_image = mvGetScratchImage(); // can use scratch image since we are not doing ds
     
-    if (DEBUG) window = new mvWindow("mvShape Debug");
+    if (DEBUG_SHAPE)
+        window = new mvWindow("mvShape Debug");
+    else
+        window = NULL;
 }
 
 mvShape::mvShape(const char* settings_file) {
@@ -36,13 +39,16 @@ mvShape::mvShape(const char* settings_file) {
     ds_image = cvCreateImageHeader(cvSize(width/DOWNSAMPLING_FACTOR, height/DOWNSAMPLING_FACTOR), IPL_DEPTH_8U, 1);
     ds_image->imageData = temp->imageData;
 
-    if (DEBUG) window = new mvWindow("mvShape Debug");
+    if (DEBUG_SHAPE)
+        window = new mvWindow("mvShape Debug");
+    else
+        window = NULL;
 }
 
 mvShape::~mvShape() {
     cvReleaseImageHeader(&ds_image);
     mvReleaseScratchImage();
-    if (DEBUG) delete window;
+    if (DEBUG_SHAPE) delete window;
 }
 
 void mvShape::downsample_from_image(IplImage* src, int target_brightness) {
@@ -67,10 +73,14 @@ void mvShape::downsample_from_image(IplImage* src, int target_brightness) {
 }
 
 void mvShape::upsample_to_image(IplImage *dst) {
-
+    if (dst->width == ds_image->width && dst->height == ds_image->height)
+        cvCopy (ds_image, dst);
+    else
+        cvResize (ds_image, dst);
 }
 
 int mvShape::collect_pixels (IplImage* src, POINT_VECTOR &p_vector, int target_brightness) {
+// put all pixels with value == target_brightness into the array p_vector
     unsigned char* ptr;
 
     if (target_brightness >= 0) {   // target_brightness pixels only
@@ -99,9 +109,7 @@ int mvShape::collect_pixels (IplImage* src, POINT_VECTOR &p_vector, int target_b
 
 mvRect::mvRect(const char* settings_file) : 
     mvShape(settings_file),
-    LINES (settings_file),
-    KMEANS (),
-    bin_rect("Rect")
+    bin_rect("mvRect")
 {
     read_mv_setting (settings_file, "MIN_STACKED_ROWS", MIN_STACKED_ROWS);
     read_mv_setting (settings_file, "MIN_ROW_LENGTH", MIN_ROW_LENGTH);
@@ -126,16 +134,6 @@ int mvRect::find(IplImage* img, int target_brightness) {
     return result;
 }
 
-int mvRect::find_internal2(IplImage* img, int target_brightness) {
-    mvLines lines;
-    LINES.findLines (img, &lines);
-    KMEANS.cluster_auto (1, 10, &lines);
-
-    KMEANS.drawOntoImage(img);
-    window->showImage(img);
-    return 0;
-}
-
 int mvRect::find_internal(IplImage* img, int target_brightness) {
     // algorithm description
 
@@ -149,7 +147,7 @@ int mvRect::find_internal(IplImage* img, int target_brightness) {
     /// put appropriate pixels into point_vector
     int n_points = collect_pixels (img, point_vector, target_brightness);
     if (n_points < MIN_POINTS_IN_RESAMPLED_IMAGE) {
-        DEBUG_PRINT ("mvRect: not enough points in resampled image\n");
+        DEBUG_PRINT ("mvRect: Not enough points in resampled image\n");
         return -1;
     }
 
@@ -178,14 +176,14 @@ int mvRect::find_internal(IplImage* img, int target_brightness) {
     }
 
     for (std::vector<ROW>::iterator it = row_vector.begin(); it != row_vector.end(); ++it)
-        printf ("\tRow %d, %d-%d\n", it->y, it->x1, it->x2);
+        DEBUG_PRINT ("\tRow %d, %d-%d\n", it->y, it->x1, it->x2);
     
     /// iterate over the rows and cluster them
     for (std::vector<ROW>::iterator row_iter = row_vector.begin(); row_iter != row_vector.end(); ++row_iter) {
         /// compare the row object with all existing m_rect_v objects, clustering to closest one or adding a new
         /// m_rect_v if no good clustering option
         bool cluster_success = false;
-        for (std::vector<RECT>::iterator rect_iter = m_rect_v.begin(); rect_iter != m_rect_v.end(); ++rect_iter) {
+        for (std::vector<MV_RECT>::iterator rect_iter = m_rect_v.begin(); rect_iter != m_rect_v.end(); ++rect_iter) {
             if (row_iter->y >= rect_iter->y1-2 && row_iter->y <= rect_iter->y2+2 &&
                 abs(row_iter->x1 - rect_iter->x1) <= 2 && abs(row_iter->x2 - rect_iter->x2) <= 2)
             {
@@ -203,7 +201,7 @@ int mvRect::find_internal(IplImage* img, int target_brightness) {
             m_rect_v.push_back(make_rect(row_iter->x1,row_iter->y, row_iter->x2,row_iter->y));
     }
 
-    for (std::vector<RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end();) {
+    for (std::vector<MV_RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end();) {
         float hw_ratio = (float)(it->y2 - it->y1) / (float)(it->x2 - it->x1);
 
         if (it->num < 6 || hw_ratio > 1.2*RECT_HEIGHT_TO_WIDTH_RATIO || hw_ratio < 0.8*RECT_HEIGHT_TO_WIDTH_RATIO)
@@ -212,90 +210,17 @@ int mvRect::find_internal(IplImage* img, int target_brightness) {
             it++;
     }
     
-/*    
-    /// look for a bunch of rows stacked on top of each other. the algorithm to do so is very similar to above!
-    /// a bunch of stacked rows == a rectangle
-    while (1) {
-        int n_stacked;
-        int n_rows = row_vector.size();
-        if (n_rows < MIN_STACKED_ROWS)
-            break;
-
-        printf ("mvRect: looping to look for stacked rows. %d rows total\n", n_rows);
-
-        /// go thru each row. Look at next row and curr row. If they constitute a stack, splice row to stacked_rows
-        /// when we find a non-stacking row, either empty the stacked_rows vector (if num of stacked rows is low)
-        /// or (if num of stacked rows is high) we detected a rectangle => exit
-        std::vector<ROW>::iterator iter = row_vector.begin();
-        std::vector<ROW>::iterator prev_iter = iter++;
-        for (; iter != row_vector.end();) {
-            printf ("\tcomparing (%d,%d,%d)->(%d,%d,%d)\n", prev_iter->y,prev_iter->x1,prev_iter->x2,iter->y,iter->x1,iter->x2);
-
-            if (iter->y - prev_iter->y <= 2 && 
-                abs(iter->x1 - prev_iter->x1) <= 5 &&
-                abs(iter->x2 - prev_iter->x2) <= 5
-                ) 
-            {   // curr+1 is stacked on top of curr
-                //stacked_rows.splice (stacked_rows.begin(), row_vector, prev_iter);
-                stacked_rows.push_back(*prev_iter);
-                row_vector.erase(prev_iter);
-            }
-            else {
-                if ((int)stacked_rows.size() < MIN_STACKED_ROWS) { 
-                    // if number of stacked lines detected is small, delete all rows we just encountered
-                    //stacked_rows.splice (stacked_rows.begin(), row_vector, prev_iter); 
-                    stacked_rows.push_back(*prev_iter);
-                    row_vector.erase(prev_iter);
-                    goto LOOP_CLEANUP;
-                }
-                else {
-                    break;
-                }
-            }
-
-            //prev_iter = iter++; // list only
-        }
-
-        /// have to do this check here or we get errors (why?)
-        n_stacked = stacked_rows.size();
-        if (n_stacked < MIN_STACKED_ROWS) {
-            goto LOOP_CLEANUP;
-        }    
-        printf ("mvRect: found stack of %d rows\n", n_stacked);
-
-                m_rect[0].x = stacked_rows.front().x1 - 2;
-                m_rect[0].y = stacked_rows.front().y - 1;
-                m_rect[1].x = stacked_rows.back().x2 + 1;
-                m_rect[1].y = stacked_rows.back().y + 1;
-
-                printf ("rect = ((%d,%d), (%d,%d))\n", m_rect[0].x, m_rect[0].y, m_rect[1].x, m_rect[1].y);
-
-
-                //remove_rectangle(img);
-                draw_rectangle(img);
-            
-
-    LOOP_CLEANUP:
-        n_stacked = stacked_rows.size();
-        printf ("deleting %d rows.\n", n_stacked);
-        /// erase all the rows we examined
-        //std::vector<int>::reverse_iterator rit = stacked_rows.rbegin();
-        //for (; rit != stacked_rows.rend(); ++rit) {
-        //    row_vector.erase(row_vector.begin() + *rit);
-        //}
-        stacked_rows.clear();
-    }
-*/
     bin_rect.stop();
 
-    window->showImage(img);
+    if (window != NULL) window->showImage(img); // window may not exist if mvShape::DEBUG_SHAPE is not set
     return 0;
 }
 
 
-bool m_circle_has_greater_count (CIRCLE_U_PAIR c1, CIRCLE_U_PAIR c2) { return (c1.second > c2.second); }
+bool m_circle_has_greater_count (MV_CIRCLE c1, MV_CIRCLE c2) { return (c1.num > c2.num); }
 
 mvAdvancedCircles::mvAdvancedCircles (const char* settings_file) :
+    mvShape(settings_file),
     bin_findcircles ("mvAdvancedCircles")
 {
     srand(time(NULL)); // seed for the partly random circle finding algorithm
@@ -303,17 +228,10 @@ mvAdvancedCircles::mvAdvancedCircles (const char* settings_file) :
     int width, height;
     read_common_mv_setting ("IMG_WIDTH_COMMON", width);
     read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
-    read_mv_setting (settings_file, "DOWNSAMPLING_FACTOR", PIXELS_PER_GRID_POINT);
     read_mv_setting (settings_file, "_MIN_RADIUS_", _MIN_RADIUS_);
     read_mv_setting (settings_file, "_THRESHOLD_", _THRESHOLD_);
     read_mv_setting (settings_file, "N_CIRCLES_GENERATED", N_CIRCLES_GENERATED);
     read_mv_setting (settings_file, "N_CIRCLES_CUTOFF", N_CIRCLES_CUTOFF);
-
-    assert (PIXELS_PER_GRID_POINT >= 1);
-
-    grid_width = width / PIXELS_PER_GRID_POINT;
-    grid_height = height / PIXELS_PER_GRID_POINT;
-    grid = cvCreateImageHeader (cvSize(grid_width, grid_height), IPL_DEPTH_8U, 1);
 
     float angular_division = 2*CV_PI/N_POINTS_TO_CHECK;
     float angle = 0;
@@ -321,45 +239,39 @@ mvAdvancedCircles::mvAdvancedCircles (const char* settings_file) :
         cos_sin_vector.push_back(std::make_pair(cos(angle),sin(angle)));
         angle += angular_division;
     }
-
-    IplImage* temp = mvGetScratchImage3();
-    grid->imageData = temp->imageData;
 }
 
 mvAdvancedCircles::~mvAdvancedCircles () {
-    cvReleaseImageHeader(&grid);
-    mvReleaseScratchImage3();
 }
 
-void mvAdvancedCircles::findCircles (IplImage* img) {
+int mvAdvancedCircles::find (IplImage* img) {
+    int result;
+
+    if (img->width == ds_image->width && img->height == ds_image->height) { // no downsampling required
+        result = find_internal (img);
+    }
+    else {
+        downsample_from_image (img);
+        result = find_internal (ds_image);
+        upsample_to_image (img);
+    }
+    return result;
+}
+
+int mvAdvancedCircles::find_internal (IplImage* img) {
     assert (img != NULL);
     assert (img->nChannels == 1);
-    assert (img->imageData != grid->imageData);
-
+    
     bin_findcircles.start();
     accepted_circles.clear();
 
-    /// massively downsample the image
-    cvResize (img, grid, CV_INTER_NN);
-
     /// extract all the nonzero pixels and put them in an array
-    std::vector<CvPoint> point_vector;
-    unsigned char* ptr;
-    for (int i = 0; i < grid->height; i++) {
-        ptr = (unsigned char*) (grid->imageData + i*grid->widthStep);
-        for (int j = 0; j < grid->width; j++) {
-            if (*ptr != 0) {
-                point_vector.push_back(cvPoint(j,i));
-            }
-            else {
-            }
-            ptr++;
-        }
-    }
-    int n_points = point_vector.size();
-    if (n_points < POINTS_NEEDED_IN_RESAMPLED_IMAGE) {
-        DEBUG_PRINT ("Not enough points in resampled image\n");
-        return;
+    POINT_VECTOR point_vector;
+    /// put appropriate pixels into point_vector
+    int n_points = collect_pixels (img, point_vector);
+    if (n_points < MIN_POINTS_IN_RESAMPLED_IMAGE) {
+        DEBUG_PRINT ("mvCircles: Not enough points in resampled image\n");
+        return -1 ;
     }
 
     /// main working loop
@@ -394,18 +306,18 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
                 break;
             }
         }*/
-    
-        
-        
+            
         // get the circle center and radius
         MV_CIRCLE Circle;
+        Circle.num = 1;
+        Circle.color = 0;
         if ( get_circle_from_3_points (point_vector[c1],point_vector[c2],point_vector[c3], Circle) )
             continue;
 
         // scale back to normal-sized image
-        Circle.x *= PIXELS_PER_GRID_POINT;
-        Circle.y *= PIXELS_PER_GRID_POINT;
-        Circle.rad *= PIXELS_PER_GRID_POINT;
+        Circle.x *= DOWNSAMPLING_FACTOR;
+        Circle.y *= DOWNSAMPLING_FACTOR;
+        Circle.rad *= DOWNSAMPLING_FACTOR;
 
         // sanity roll
         if (Circle.x < 0 || Circle.x > img->width || Circle.y < 0 || Circle.y > img->height)
@@ -421,29 +333,29 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
         // check each existing circle. avg with an existing circle or push new circle
         bool similar_circle_exists = false;
         for (unsigned i = 0; i < accepted_circles.size(); i++) {
-            int x = accepted_circles[i].first.x;
-            int y = accepted_circles[i].first.y;
-            int r = accepted_circles[i].first.rad;
-            int c = accepted_circles[i].second;
+            int x = accepted_circles[i].x;
+            int y = accepted_circles[i].y;
+            int r = accepted_circles[i].rad;
+            int c = accepted_circles[i].num;
 
             int dx = Circle.x - x;
             int dy = Circle.y - y;
             int dr = Circle.rad - r;
             if (abs(dr) < RADIUS_SIMILARITY_CONSTANT && dx*dx + dy*dy < CENTER_SIMILARITY_CONSTANT) {
-                accepted_circles[i].first.x = (x*c + Circle.x)/(c + 1);    
-                accepted_circles[i].first.y = (y*c + Circle.y)/(c + 1);    
-                accepted_circles[i].first.rad = (r*c + Circle.rad)/(c + 1);    
-                accepted_circles[i].second++;
+                accepted_circles[i].x = (x*c + Circle.x)/(c + 1);
+                accepted_circles[i].y = (y*c + Circle.y)/(c + 1);
+                accepted_circles[i].rad = (r*c + Circle.rad)/(c + 1);
+                accepted_circles[i].num++;
 
                 // erase the circle from resampled image if cutoff is reached
                 // this gets rid of a circle that is already found
                 // this is done by removing points from point_vector
-                if (accepted_circles[i].second == N_CIRCLES_CUTOFF) {
+                if (accepted_circles[i].num == N_CIRCLES_CUTOFF) {
                     for (unsigned j = 0; j < point_vector.size(); j++) {
                         MV_CIRCLE temp_circle;
-                        temp_circle.x = accepted_circles[i].first.x / PIXELS_PER_GRID_POINT;
-                        temp_circle.y = accepted_circles[i].first.y / PIXELS_PER_GRID_POINT;
-                        temp_circle.rad = accepted_circles[i].first.rad / PIXELS_PER_GRID_POINT;
+                        temp_circle.x = accepted_circles[i].x / DOWNSAMPLING_FACTOR;
+                        temp_circle.y = accepted_circles[i].y / DOWNSAMPLING_FACTOR;
+                        temp_circle.rad = accepted_circles[i].rad / DOWNSAMPLING_FACTOR;
 
                         int dx = point_vector[j].x - temp_circle.x;
                         int dy = point_vector[j].y - temp_circle.y;
@@ -452,7 +364,9 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
                         if (ratio < 1.2 && ratio > 0.83) {    // remove point if its approximately on temp_circle
                             point_vector.erase(point_vector.begin()+j);
                         }
-                    }              
+                    }
+
+                    check_circle_color (img, accepted_circles[i]);
                 }
 
                 similar_circle_exists = true;
@@ -460,7 +374,7 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
             }
         }
         if (!similar_circle_exists) {
-            accepted_circles.push_back( std::make_pair(Circle, 1) );
+            accepted_circles.push_back( Circle );
         }
 
         n_valid_circles++;
@@ -470,10 +384,10 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
     }
 
     /// remove each circle with less than N_CIRCLES_CUTOFF support
-    std::vector<CIRCLE_U_PAIR>::iterator it = accepted_circles.begin();
-    std::vector<CIRCLE_U_PAIR>::iterator end_it = accepted_circles.end();
+    CIRCLE_VECTOR::iterator it = accepted_circles.begin();
+    CIRCLE_VECTOR::iterator end_it = accepted_circles.end();
     for (; it != end_it; ++it) {
-        if (it->second < N_CIRCLES_CUTOFF) {
+        if (it->num < N_CIRCLES_CUTOFF) {
             accepted_circles.erase(it);
         } 
     }
@@ -482,18 +396,19 @@ void mvAdvancedCircles::findCircles (IplImage* img) {
     std::sort (accepted_circles.begin(), accepted_circles.end(), m_circle_has_greater_count);
 
     /*for (unsigned i = 0; i < accepted_circles.size(); i++) {
-        MV_CIRCLE circle = accepted_circles[i].first;
-        printf ("(x=%d, y=%d, R=%f)  c=%d\n", circle.x,circle.y,circle.rad,accepted_circles[i].second);
+        MV_CIRCLE circle = accepted_circles[i];
+        DEBUG_PRINT ("(x=%d, y=%d, R=%f)  c=%d\n", circle.x,circle.y,circle.rad,accepted_circles[i].num);
     }*/
 
     bin_findcircles.stop();
+    return 0;
 }
 
 void mvAdvancedCircles::drawOntoImage (IplImage* img) {
-    std::vector<CIRCLE_U_PAIR>::iterator iter = accepted_circles.begin();
-    std::vector<CIRCLE_U_PAIR>::iterator end_iter = accepted_circles.end();
+    CIRCLE_VECTOR::iterator iter = accepted_circles.begin();
+    CIRCLE_VECTOR::iterator end_iter = accepted_circles.end();
     for (; iter != end_iter; ++iter) {
-        cvCircle (img, cvPoint(iter->first.x,iter->first.y), iter->first.rad, CV_RGB(100,100,100), CIRCLE_THICKNESS);        
+        cvCircle (img, cvPoint(iter->x,iter->y), iter->rad, CV_RGB(100,100,100), CIRCLE_THICKNESS);        
     }
 }
 
@@ -541,14 +456,57 @@ int mvAdvancedCircles::check_circle_validity (IplImage* img, MV_CIRCLE Circle) {
         x = Circle.x + Circle.rad*cos_val;
         y = Circle.y + Circle.rad*sin_val;
 
-         if (x < 0 || x > img->width || y < 0 || y > img->height)
+        if (x < 0 || x > img->width || y < 0 || y > img->height)
             continue;
 
         unsigned char* ptr = (unsigned char*) (img->imageData + y*img->widthStep + x);
-        if(*(ptr) != 0){
+        if (*(ptr) != 0) {
             count++;
         }
     }
 
     return count;
+}
+
+int mvAdvancedCircles::check_circle_color (IplImage* img, MV_CIRCLE Circle) {
+    Circle.color = MV_UNCOLORED;
+    int x, y;
+    int color_count[4] = {0,0,0,0};
+    
+    std::vector<FLOAT_PAIR>::iterator it = cos_sin_vector.begin();
+    std::vector<FLOAT_PAIR>::iterator end_it = cos_sin_vector.end();
+    for(; it != end_it; ++it) {
+        float cos_val = it->first;
+        float sin_val = it->second;
+        x = Circle.x + Circle.rad*cos_val;
+        y = Circle.y + Circle.rad*sin_val;
+
+        if (x < 0 || x > img->width || y < 0 || y > img->height)
+            continue;
+
+        unsigned char* ptr = (unsigned char*) (img->imageData + y*img->widthStep + x);
+        switch (*(ptr)) { 
+            case MV_RED: color_count[0]++; break;
+            case MV_YELLOW: color_count[1]++; break;
+            case MV_GREEN: color_count[2]++; break;
+            case MV_BLUE: color_count[3]++; break;
+            default:;
+        }
+    }
+
+    // find which color has the highest count, then compare it to the the num of pixels
+    int max_count=-1, max_count_index=-1;
+    for (int i = 0; i < 4; i++) {
+        if (color_count[i] > max_count) {
+            max_count = color_count[i];
+            max_count_index = i;
+        }
+    }
+    printf ("check_circle_color: max_count = %d, n_pixels = %d\n", max_count, cos_sin_vector.size());
+    if (max_count > 0.75*cos_sin_vector.size()) {
+        Circle.color = MV_COLOR_VECTOR[max_count_index];
+        return 1;
+    }
+
+    return 0;
 }

@@ -14,10 +14,10 @@ typedef std::vector<CvPoint> POINT_VECTOR;
 
 /** MV_SHAPE */
 class mvShape {
-    static const bool DEBUG = 1;
+protected:
+    static const bool DEBUG_SHAPE = 0;
     int DOWNSAMPLING_FACTOR;
 
-protected:
     IplImage* ds_image; // downsampled image
     mvWindow *window; 
 
@@ -41,18 +41,19 @@ class mvRect : mvShape {
     typedef struct _row_ {
         int y, x1, x2;  // a row has a vertical coord, a starting x coord, an ending x coord
     } ROW; 
-    typedef struct _rect_ {
+    typedef struct _RECT_ {
         int x1, y1, x2, y2;
-        int num;
-    } RECT;
+        int color;
+        unsigned num;
+    } MV_RECT;
 
     ROW make_row (int y, int x1, int x2) {
         ROW R;
         R.y = y; R.x1 = x1; R.x2 = x2;
         return R;
     }
-    RECT make_rect (int x1, int y1, int x2, int y2) {
-        RECT R;
+    MV_RECT make_rect (int x1, int y1, int x2, int y2) {
+        MV_RECT R;
         R.x1 = x1; R.y1 = y1; R.x2 = x2; R.y2 = y2;
         R.num = 0;
         return R;
@@ -63,11 +64,8 @@ class mvRect : mvShape {
     int MIN_STACKED_ROWS;
     int MIN_ROW_LENGTH;
     float RECT_HEIGHT_TO_WIDTH_RATIO;
-    
-    mvHoughLines LINES;
-    mvKMeans KMEANS;
 
-    std::vector<RECT> m_rect_v;
+    std::vector<MV_RECT> m_rect_v;
 
     PROFILE_BIN bin_rect;
 
@@ -75,22 +73,22 @@ public:
     mvRect (const char* settings_file);
     ~mvRect ();
 
+    int n_rect() { return m_rect_v.size(); }
+    MV_RECT operator [] (unsigned index) { return m_rect_v[index]; }
+    
     int find_internal (IplImage* img, int target_brightness);
-    int find_internal2 (IplImage* img, int target_brightness);
     int find (IplImage* img, int target_brightness=-1);
 
     //CvPoint operator [] (unsigned index) { return m_rect[index]; }
-    void draw_rectangle (IplImage *img) {
-        for (std::vector<RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end(); it++) {
+    void drawOntoImage (IplImage *img) {
+        for (std::vector<MV_RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end(); it++) {
             cvRectangle (img, cvPoint(it->x1-1,it->y1-2), cvPoint(it->x2+1,it->y2+2), cvScalar(120));
             printf ("\tRect: (%d,%d) (%d,%d)\n", it->x1,it->y1, it->x2,it->y2);
         }
-        //cvRectangle (img, m_rect[0], m_rect[1], cvScalar(120));
     }
-    void remove_rectangle (IplImage* img) {
-        for (std::vector<RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end(); it++)
+    void removeFromImage (IplImage* img) {
+        for (std::vector<MV_RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end(); it++)
             cvRectangle (img, cvPoint(it->x1-6,it->y1-8), cvPoint(it->x2+6,it->y2+8), cvScalar(0), CV_FILLED);
-        //cvRectangle (img, m_rect[0], m_rect[1], cvScalar(0), CV_FILLED);
     }
 
 };
@@ -106,42 +104,46 @@ typedef struct _Circle_ {
     int x;
     int y;
     float rad;
+    int color;
+    unsigned num;
 } MV_CIRCLE;
 
-typedef std::pair<MV_CIRCLE, unsigned> CIRCLE_U_PAIR;
+typedef std::vector<MV_CIRCLE> CIRCLE_VECTOR;
 typedef std::pair<float,float> FLOAT_PAIR;
 
-class mvAdvancedCircles {
+class mvAdvancedCircles : mvShape {
     static const int CENTER_SIMILARITY_CONSTANT = 64; // squared
     static const int RADIUS_SIMILARITY_CONSTANT = 8;
     static const int N_POINTS_TO_CHECK = 20;
-    static const int POINTS_NEEDED_IN_RESAMPLED_IMAGE = 10;
+    static const int MIN_POINTS_IN_RESAMPLED_IMAGE = 10;
     static const int CIRCLE_THICKNESS = 2;
 
-    int PIXELS_PER_GRID_POINT;
     float _MIN_RADIUS_;
     float _THRESHOLD_;
     int N_CIRCLES_GENERATED;
     unsigned N_CIRCLES_CUTOFF;
 
-    IplImage* grid;                             // downsampled image
-    unsigned grid_width, grid_height;
+    //IplImage* grid;                             // downsampled image
+    //unsigned grid_width, grid_height;
 
     std::vector<FLOAT_PAIR> cos_sin_vector;     // list of cos/sin values, precalculated
-    std::vector<CIRCLE_U_PAIR> accepted_circles;    // list of circles found
+    CIRCLE_VECTOR accepted_circles;    // list of circles found
 
     PROFILE_BIN bin_findcircles;
 
     private:
+    int find_internal (IplImage* img);
     int get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, MV_CIRCLE &Circle);
     int check_circle_validity (IplImage* img, MV_CIRCLE Circle);
+    int check_circle_color (IplImage* img, MV_CIRCLE Circle);
 
     public:
     mvAdvancedCircles (const char* settings_file);
     ~mvAdvancedCircles ();
-    void findCircles (IplImage* img);
+    int find (IplImage* img);
     int ncircles ();
-    MV_CIRCLE operator [] (unsigned index) { return accepted_circles[index].first; }
+
+    MV_CIRCLE operator [] (unsigned index) { return accepted_circles[index]; }
     void drawOntoImage (IplImage* img);
 };
 

@@ -27,6 +27,11 @@ task_gate_viterbi.o: task_gate_viterbi.cpp mda_tasks.h mda_vision.h \
  ../vision/mvLines.h ../vision/mvShapes.h ../vision/mvLines.h viterbi.h \
  ../interface/ActuatorOutput.h ../interface/AttitudeInput.h \
  ../interface/ImageInput.h ../interface/CharacterStreamSingleton.h
+task_marker.o: task_marker.cpp mda_tasks.h mda_vision.h ../vision/mgui.h \
+ ../vision/profile_bin.h ../vision/mv.h ../vision/mgui.h \
+ ../vision/mvLines.h ../vision/mvShapes.h ../vision/mvLines.h viterbi.h \
+ ../interface/ActuatorOutput.h ../interface/AttitudeInput.h \
+ ../interface/ImageInput.h ../interface/CharacterStreamSingleton.h
 task_path.o: task_path.cpp mda_tasks.h mda_vision.h ../vision/mgui.h \
  ../vision/profile_bin.h ../vision/mv.h ../vision/mgui.h \
  ../vision/mvLines.h ../vision/mvShapes.h ../vision/mvLines.h viterbi.h \
@@ -44,6 +49,9 @@ vision_frame.o: vision_frame.cpp mda_vision.h ../vision/mgui.h \
  ../vision/profile_bin.h ../vision/mv.h ../vision/mgui.h \
  ../vision/mvLines.h ../vision/mvShapes.h ../vision/mvLines.h
 vision_gate.o: vision_gate.cpp mda_vision.h ../vision/mgui.h \
+ ../vision/profile_bin.h ../vision/mv.h ../vision/mgui.h \
+ ../vision/mvLines.h ../vision/mvShapes.h ../vision/mvLines.h
+vision_marker.o: vision_marker.cpp mda_vision.h ../vision/mgui.h \
  ../vision/profile_bin.h ../vision/mv.h ../vision/mgui.h \
  ../vision/mvLines.h ../vision/mvShapes.h ../vision/mvLines.h
 vision_path.o: vision_path.cpp mda_vision.h ../vision/mgui.h \

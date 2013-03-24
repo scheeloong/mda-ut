@@ -172,7 +172,7 @@ int main( int argc, char** argv ) {
             win3->showImage (filter_img);
         }
         else if (CIRCLE) {
-            circles.findCircles (filter_img);
+            circles.find (filter_img);
             printf ("ncircles = %d\n", circles.ncircles());
             circles.drawOntoImage (filter_img);
 

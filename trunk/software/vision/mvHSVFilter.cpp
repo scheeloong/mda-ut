@@ -23,7 +23,7 @@ mvHSVFilter:: mvHSVFilter (const char* settings_file) :
     HMIN = (HMIN>=0) ? HMIN : HMIN+180; 
     HMAX = (HMAX<180) ? HMAX : HMAX-180; 
 
-    HSVImg = mvGetScratchImage_Color();
+    scratch_3 = mvGetScratchImage_Color();
 }
 
 mvHSVFilter:: ~mvHSVFilter () {
@@ -39,29 +39,23 @@ void mvHSVFilter:: setHSV (int hmin, int hmax, unsigned smin, unsigned smax, uns
     if (vmin != UNCHANGED) VMIN = vmin;
     if (vmax != UNCHANGED) VMAX = vmax;
 }
-        
-void mvHSVFilter:: filter (IplImage* img, IplImage* result) {
-    assert (img != NULL);
-    assert (img->nChannels == 3);
+    
+void mvHSVFilter:: filter_internal (IplImage* HSV_img, IplImage* result) {
+    assert (HSV_img != NULL);
+    assert (HSV_img->nChannels == 3);
     assert (result != NULL);
     assert (result->nChannels == 1);
-    HSVImg = mvCreateImage_Color(img);
-    
-    assert (img->width == HSVImg->width);
-    assert (img->height == HSVImg->height);
-
-      bin_CvtColor.start();
-    cvCvtColor (img, HSVImg, CV_BGR2HSV); // convert to HSV 
-      bin_CvtColor.stop();
-
-    /* go through each pixel, set the result image's pixel to 0 or 255 based on whether the
-     * origin img's HSV values are withing bounds
-     */
-    unsigned char *imgPtr, *resPtr;
+    assert (HSV_img->width == result->width);
+    assert (HSV_img->height == result->height);
     
       bin_WorkingLoop.start();
+
+    /* go through each pixel, set the result image's pixel to 0 or 255 based on whether the
+     * origin HSV_img's HSV values are withing bounds
+     */
+    unsigned char *imgPtr, *resPtr;
     for (int r = 0; r < result->height; r++) {                         
-        imgPtr = (unsigned char*) (HSVImg->imageData + r*HSVImg->widthStep); // imgPtr = first pixel of rth's row
+        imgPtr = (unsigned char*) (HSV_img->imageData + r*HSV_img->widthStep); // imgPtr = first pixel of rth's row
         resPtr = (unsigned char*) (result->imageData + r*result->widthStep);
         
         for (int c = 0; c < result->width; c++) {
@@ -78,7 +72,5 @@ void mvHSVFilter:: filter (IplImage* img, IplImage* result) {
         }
     }
       bin_WorkingLoop.stop();
-
-    cvReleaseImage(&HSVImg);
 }
 

@@ -9,7 +9,35 @@
 #include "mgui.h"
 
 typedef unsigned char uchar;
+const int MV_NUMBER_OF_COLORS = 4;
+const int MV_RED = 50;
+const int MV_YELLOW = 100;
+const int MV_GREEN = 150;
+const int MV_BLUE = 200;
+const int MV_COLOR_VECTOR[4] = { MV_RED, MV_YELLOW, MV_GREEN, MV_BLUE };
+const int MV_UNCOLORED = 255;
 
+inline int color_str_to_int (std::string str) {
+    if (str == "RED")
+        return MV_RED;
+    else if (str == "YELLOW")
+        return MV_YELLOW;
+    else if (str == "GREEN")
+        return MV_GREEN;
+    else if (str == "BLUE")
+        return MV_BLUE;
+    return MV_UNCOLORED;
+}
+inline std::string color_int_to_string (int color) {
+    switch (color) {
+        case MV_RED: return std::string("RED");
+        case MV_YELLOW: return std::string("YELLOW");
+        case MV_GREEN: return std::string("GREEN");
+        case MV_BLUE: return std::string("BLUE");
+        default:;
+    }
+    return std::string("UNKNOWN");
+}
 
 /** mvHuMoments calculates the Hu moments for a bitmap image
  *  It is a wrapper for cvMoments and cvHuMoments
@@ -179,15 +207,38 @@ class mvHSVFilter {
     int HMIN,HMAX;
     unsigned SMIN,SMAX, VMIN, VMAX;
     
-    IplImage* HSVImg;
+    IplImage* scratch_3;
 
     PROFILE_BIN bin_WorkingLoop;
     PROFILE_BIN bin_CvtColor;
     
+    void filter_internal (IplImage* HSV_img, IplImage* result);
+
     public:
     mvHSVFilter (const char* settings_file);
     ~mvHSVFilter ();
-    void filter (IplImage* img, IplImage* result);
+    
+    void filter (IplImage* img, IplImage* result) {
+        bin_CvtColor.start();
+        cvCvtColor (img, scratch_3, CV_BGR2HSV); // convert to HSV 
+        bin_CvtColor.stop();
+
+        filter_internal (scratch_3, result);
+    }
+
+    void filter_non_common_size (IplImage* img, IplImage* result) {
+        IplImage * temp_scratch; // scratch_3 is common size. temp_scratch will be same size as img
+        temp_scratch = mvCreateImage_Color (img);
+
+        bin_CvtColor.start();
+        cvCvtColor (img, temp_scratch, CV_BGR2HSV); // convert to HSV 
+        bin_CvtColor.stop();
+
+        filter_internal (temp_scratch, result);
+
+        cvReleaseImage (&temp_scratch);
+    }
+
     void setHSV (int hmin=UNCHANGED, int hmax=UNCHANGED, 
                  unsigned smin=UNCHANGED, unsigned smax=UNCHANGED, 
                  unsigned vmin=UNCHANGED, unsigned vmax=UNCHANGED
@@ -259,6 +310,7 @@ class Hue_Box {
     unsigned char SAT_MIN;
     unsigned char VAL_MIN;
     int BOX_NUMBER;
+    int BOX_COLOR;
     bool BOX_ENABLED; // whether the box is being used or not
 
     Hue_Box (unsigned char hue_min, unsigned char hue_max) :
@@ -288,6 +340,12 @@ class Hue_Box {
 
         if (!BOX_ENABLED)
             return;
+
+        // read the box color
+        std::string box_color_str = std::string("COLOR_BOX") + box_number_str;
+        std::string box_color;
+        read_mv_setting (settings_file, box_color_str.c_str(), box_color);
+        BOX_COLOR = color_str_to_int (box_color_str);
 
         std::string hue_min_str = std::string("HUE_MIN") + box_number_str;        
         std::string hue_max_str = std::string("HUE_MAX") + box_number_str;
@@ -332,10 +390,6 @@ class mvMeanShift {
 
 public:
     static const int NUM_BOXES = 3;
-    static const unsigned char GREYSCALE_FACTOR = 50;
-    static const unsigned char GREYSCALE_1 = GREYSCALE_FACTOR;
-    static const unsigned char GREYSCALE_2 = 2*GREYSCALE_FACTOR;
-    static const unsigned char GREYSCALE_3 = 3*GREYSCALE_FACTOR;
 
 private:
     // parameters read from settings file

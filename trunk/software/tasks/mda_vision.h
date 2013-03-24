@@ -265,7 +265,6 @@ class MDA_VISION_MODULE_FRAME : public MDA_VISION_MODULE_BASE {
     static const float FRAME_REAL_WIDTH = 180.0;
     static const float FRAME_REAL_HEIGHT = 120.0;
     static const float FRAME_REAL_VERTICAL_SEGMENT_LENGTH = 40.0;
-    static const int RED_BIN_INDEX = 1;
 
     mvWindow _window;
     mvMeanShift _MeanShift;
@@ -277,6 +276,17 @@ class MDA_VISION_MODULE_FRAME : public MDA_VISION_MODULE_BASE {
     int _IsRed;
     
     IplImage* _filtered_img;
+
+    int check_pixel_is_color (unsigned char* imgPtr, unsigned char color) {
+        if ((imgPtr[0] == color || imgPtr[0] == MV_UNCOLORED) &&
+            (imgPtr[-1] == color || imgPtr[-1] == MV_UNCOLORED) && 
+            (imgPtr[1] == color || imgPtr[1] == MV_UNCOLORED)
+          )
+        {
+            return 1;            
+        }
+        return 0;
+    }
 
 public:
     MDA_VISION_MODULE_FRAME ();

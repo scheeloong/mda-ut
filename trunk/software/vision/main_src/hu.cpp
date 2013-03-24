@@ -30,7 +30,7 @@ int main(int argc, char** argv)
     printf("Here's your resized image. Press a key to filter.\n");
     cvWaitKey(0);
 
-    HSVFilter.filter (resized, filtered);
+    HSVFilter.filter_non_common_size (resized, filtered);
 
     double hus[7];
     mvHuMoments(filtered,hus);
