@@ -42,10 +42,8 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
     int imHeight =  (int)_filtered_img->height*0.5;
 
     // for _IsRed, we check any vertical segments we find to see if they are red
-    // We look near the centroid of the vert. segment, and check that the pixels 
-    // are set to value I * mvMeanShift::GREYSCALE_FACTOR where I is index of red bin
-    // will be set to 0 only if we have 2 vertical segments 
-    unsigned char value_to_find = (unsigned char) RED_BIN_INDEX * mvMeanShift::GREYSCALE_FACTOR;
+    // We look near the centroid of the vert. segment, and check that the pixels are set 
+    // to value MV_RED, which is what the filter will set red pixels to in greyscale images
     _IsRed = -1;
 
     if(nClusters == 0) {
@@ -124,8 +122,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
 
             // check for red segment
             unsigned char* centroid_pixel = (unsigned char*)(_filtered_img->imageData + (y10+y11)/2*_filtered_img->widthStep + (x10+x11)/2);
-            if (centroid_pixel[0] == value_to_find || centroid_pixel[-1] == value_to_find || centroid_pixel[1] == value_to_find)
-                _IsRed = 1;
+            _IsRed = check_pixel_is_color (centroid_pixel, MV_RED);
 
             retval = ONE_SEGMENT;  //Need other retval here
         }
@@ -138,8 +135,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
             
             // check for red segment
             unsigned char* centroid_pixel = (unsigned char*)(_filtered_img->imageData + (y00+y01)/2*_filtered_img->widthStep + (x00+x01)/2);
-            if (centroid_pixel[0] == value_to_find || centroid_pixel[-1] == value_to_find || centroid_pixel[1] == value_to_find)
-                _IsRed = 1;
+            _IsRed = check_pixel_is_color (centroid_pixel, MV_RED);
 
             retval = ONE_SEGMENT;
         }
@@ -153,11 +149,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
             // check both segments for red segment
             unsigned char* centroid_pixel = (unsigned char*)(_filtered_img->imageData + (y00+y01)/2*_filtered_img->widthStep + (x00+x01)/2);
             unsigned char* centroid_pixel2 = (unsigned char*)(_filtered_img->imageData + (y10+y11)/2*_filtered_img->widthStep + (x10+x11)/2); 
-            if (centroid_pixel[0] == value_to_find || centroid_pixel[-1] == value_to_find || centroid_pixel[1] == value_to_find ||
-                centroid_pixel2[0] == value_to_find || centroid_pixel2[-1] == value_to_find || centroid_pixel2[1] == value_to_find)
-                _IsRed = 1;
-            else
-                _IsRed = 0;
+            _IsRed = check_pixel_is_color (centroid_pixel, MV_RED) | check_pixel_is_color (centroid_pixel2, MV_RED);
 
             retval = ONE_SEGMENT;
         }
@@ -200,11 +192,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
             // check both vert segments for red segment
             unsigned char* centroid_pixel = (unsigned char*)(_filtered_img->imageData + (y10+y11)/2*_filtered_img->widthStep + (x10+x11)/2); 
             unsigned char* centroid_pixel2 = (unsigned char*)(_filtered_img->imageData + (y20+y21)/2*_filtered_img->widthStep + (x20+x21)/2);
-            if (centroid_pixel[0] == value_to_find || centroid_pixel[-1] == value_to_find || centroid_pixel[1] == value_to_find ||
-                centroid_pixel2[0] == value_to_find || centroid_pixel2[-1] == value_to_find || centroid_pixel2[1] == value_to_find)
-                _IsRed = 1;
-            else
-                _IsRed = 0;
+            _IsRed = check_pixel_is_color (centroid_pixel, MV_RED) | check_pixel_is_color (centroid_pixel2, MV_RED);
 
             retval = FULL_DETECT;
         }
@@ -217,11 +205,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
             // check both vert segments for red segment
             unsigned char* centroid_pixel = (unsigned char*)(_filtered_img->imageData + (y00+y01)/2*_filtered_img->widthStep + (x00+x01)/2); 
             unsigned char* centroid_pixel2 = (unsigned char*)(_filtered_img->imageData + (y20+y21)/2*_filtered_img->widthStep + (x20+x21)/2);
-            if (centroid_pixel[0] == value_to_find || centroid_pixel[-1] == value_to_find || centroid_pixel[1] == value_to_find ||
-                centroid_pixel2[0] == value_to_find || centroid_pixel2[-1] == value_to_find || centroid_pixel2[1] == value_to_find)
-                _IsRed = 1;
-            else
-                _IsRed = 0;
+            _IsRed = check_pixel_is_color (centroid_pixel, MV_RED) | check_pixel_is_color (centroid_pixel2, MV_RED);
 
             retval = FULL_DETECT;
         }
@@ -234,11 +218,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
             // check both vert segments for red segment
             unsigned char* centroid_pixel = (unsigned char*)(_filtered_img->imageData + (y00+y01)/2*_filtered_img->widthStep + (x00+x01)/2); 
             unsigned char* centroid_pixel2 = (unsigned char*)(_filtered_img->imageData + (y10+y11)/2*_filtered_img->widthStep + (x10+x11)/2);
-            if (centroid_pixel[0] == value_to_find || centroid_pixel[-1] == value_to_find || centroid_pixel[1] == value_to_find ||
-                centroid_pixel2[0] == value_to_find || centroid_pixel2[-1] == value_to_find || centroid_pixel2[1] == value_to_find)
-                _IsRed = 1;
-            else
-                _IsRed = 0;
+            _IsRed = check_pixel_is_color (centroid_pixel, MV_RED) | check_pixel_is_color (centroid_pixel2, MV_RED);
 
             retval = FULL_DETECT;
         }
@@ -272,7 +252,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
 
         switch (_IsRed) {
             case -1: DEBUG_PRINT ("Frame red signal: Unsure\n"); break;
-            case 0: DEBUG_PRINT ("Frame red signal: No\n"); break;
+            case 0: DEBUG_PRINT ("Frame red signal = No\n"); break;
             case 1: DEBUG_PRINT ("Frame red signal = Yes\n"); break;
             default: printf ("Unhandled value of _IsRed in vision_frame.\n"); exit(1);
         }

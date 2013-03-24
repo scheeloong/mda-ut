@@ -44,13 +44,13 @@ void MDA_VISION_MODULE_BUOY:: primary_filter (IplImage* src) {
   
     //_Morphology5.open(_filtered_img, _filtered_img);
     _Rect.find (_filtered_img);
-    _Rect.remove_rectangle(_filtered_img);
+    _Rect.removeFromImage(_filtered_img);
 
     _Morphology3.gradient(_filtered_img, _filtered_img);
 
-    _AdvancedCircles.findCircles (_filtered_img);
+    _AdvancedCircles.find (_filtered_img);
 
-    _Rect.draw_rectangle(_filtered_img);
+    _Rect.drawOntoImage(_filtered_img);
     _AdvancedCircles.drawOntoImage (_filtered_img);
 
     _window.showImage (_filtered_img);
@@ -88,14 +88,14 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
 
     if (nCircles == 1 && rad > MIN_PIXEL_RADIUS_FACTOR*_filtered_img->height) {
         m_range = (BUOY_REAL_DIAMTER * _filtered_img->width) / (2*rad * TAN_FOV_X);
-        DEBUG_PRINT ("Buoy: (%d,%d) (%5.2f,%5.2f). Range = %d\n", m_pixel_x, m_pixel_y, 
-            m_angular_x, m_angular_y, m_range);
+        DEBUG_PRINT ("Buoy: (%d,%d) (%5.2f,%5.2f). Color = %s. Range = %d\n", m_pixel_x, m_pixel_y, 
+            m_angular_x, m_angular_y, color_int_to_string(_AdvancedCircles[0].color).c_str(), m_range);
 
         retval = FULL_DETECT;
     }
     else {
-        DEBUG_PRINT ("Buoy: (%d,%d) (%5.2f,%5.2f). Range = Unknown\n", m_pixel_x, m_pixel_y, 
-            m_angular_x, m_angular_y);
+        DEBUG_PRINT ("Buoy: (%d,%d) (%5.2f,%5.2f). Color = %s. Range = Unknown\n", m_pixel_x, m_pixel_y, 
+            m_angular_x, m_angular_y, color_int_to_string(_AdvancedCircles[0].color).c_str());
 
         retval = UNKNOWN_TARGET;
     }
