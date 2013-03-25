@@ -209,6 +209,8 @@ int mvRect::find_internal(IplImage* img, int target_brightness) {
         else
             it++;
     }
+
+    get_rect_color (img);
     
     bin_rect.stop();
 
@@ -216,6 +218,47 @@ int mvRect::find_internal(IplImage* img, int target_brightness) {
     return 0;
 }
 
+void mvRect::get_rect_color(IplImage* img) {
+// takes the internal array of rectangles, and checks what color each of them are on the input image
+// the check is done by looking at 5 different points in a cruciform pattern inside the rectangle
+    for (std::vector<MV_RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end(); ++it) {
+        int color_count[5] = {0,0,0,0,0};
+        int Px[5], Py[5];
+        it->color = MV_UNCOLORED;
+
+        Px[0] = Px[1] = Px[4] = (it->x1 + it->x2) / 2; // P1 and P2 are the vertical points
+        Py[0] = (3*it->y1 + it->y2) / 4;
+        Py[1] = (3*it->y2 + it->y1) / 4;
+
+        Py[2] = Py[3] = Py[4] = (it->y1 + it->y2) / 2; // P1 and P2 are the horiz points
+        Px[2] = (3*it->x1 + it->x2) / 4;
+        Px[3] = (3*it->x2 + it->x1) / 4;
+
+        for (int i = 0; i < 5; i++) {
+            unsigned char pixel_color = (unsigned char)(*(img->imageData + Py[i]*img->widthStep + Px[i]));
+            switch (pixel_color) { 
+                case MV_RED: color_count[0]++; break;
+                case MV_YELLOW: color_count[1]++; break;
+                case MV_GREEN: color_count[2]++; break;
+                case MV_BLUE: color_count[3]++; break;
+                default:;
+            }            
+        }
+
+        // find which color has the highest count, then compare it to the the num of pixels checked
+        int max_count=-1, max_count_index=-1;
+        for (int i = 0; i < 4; i++) {
+            if (color_count[i] > max_count) {
+                max_count = color_count[i];
+                max_count_index = i;
+            }
+        }
+        printf ("get_rect_color: %d/5 pixels are colored %d, %s\n", max_count, max_count_index, color_int_to_string(MV_COLOR_VECTOR[max_count_index]).c_str());
+        if (max_count >= 3) {
+            it->color = MV_COLOR_VECTOR[max_count_index];
+        }
+    }
+}
 
 bool m_circle_has_greater_count (MV_CIRCLE c1, MV_CIRCLE c2) { return (c1.num > c2.num); }
 
@@ -366,7 +409,7 @@ int mvAdvancedCircles::find_internal (IplImage* img) {
                         }
                     }
 
-                    check_circle_color (img, accepted_circles[i]);
+                    get_circle_color (img, accepted_circles[i]);
                 }
 
                 similar_circle_exists = true;
@@ -468,7 +511,7 @@ int mvAdvancedCircles::check_circle_validity (IplImage* img, MV_CIRCLE Circle) {
     return count;
 }
 
-int mvAdvancedCircles::check_circle_color (IplImage* img, MV_CIRCLE Circle) {
+int mvAdvancedCircles::get_circle_color (IplImage* img, MV_CIRCLE &Circle) {
     Circle.color = MV_UNCOLORED;
     int x, y;
     int color_count[4] = {0,0,0,0};
@@ -502,8 +545,8 @@ int mvAdvancedCircles::check_circle_color (IplImage* img, MV_CIRCLE Circle) {
             max_count_index = i;
         }
     }
-    printf ("check_circle_color: max_count = %d, n_pixels = %d\n", max_count, cos_sin_vector.size());
-    if (max_count > 0.75*cos_sin_vector.size()) {
+    DEBUG_PRINT ("get_circle_color: max_count = %d, n_pixels = %d\n", max_count, (int)cos_sin_vector.size());
+    if (max_count > (int)cos_sin_vector.size()/4) {
         Circle.color = MV_COLOR_VECTOR[max_count_index];
         return 1;
     }

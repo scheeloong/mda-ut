@@ -511,7 +511,7 @@ void mvMeanShift::colorFilter_internal() {
                     continue;
 
                 if (imgPtr[1] != 0 && (hue_box[i])->check_hue(imgPtr[0], imgPtr[1], imgPtr[2])) {
-                    *resPtr = (i+1)*hue_box[i]->BOX_COLOR;
+                    *resPtr = (unsigned char) hue_box[i]->BOX_COLOR;
                 }
             }
 

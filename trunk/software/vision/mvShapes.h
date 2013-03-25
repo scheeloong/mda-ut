@@ -76,6 +76,7 @@ public:
     int n_rect() { return m_rect_v.size(); }
     MV_RECT operator [] (unsigned index) { return m_rect_v[index]; }
     
+    void get_rect_color (IplImage* img);
     int find_internal (IplImage* img, int target_brightness);
     int find (IplImage* img, int target_brightness=-1);
 
@@ -83,7 +84,6 @@ public:
     void drawOntoImage (IplImage *img) {
         for (std::vector<MV_RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end(); it++) {
             cvRectangle (img, cvPoint(it->x1-1,it->y1-2), cvPoint(it->x2+1,it->y2+2), cvScalar(120));
-            printf ("\tRect: (%d,%d) (%d,%d)\n", it->x1,it->y1, it->x2,it->y2);
         }
     }
     void removeFromImage (IplImage* img) {
@@ -135,7 +135,7 @@ class mvAdvancedCircles : mvShape {
     int find_internal (IplImage* img);
     int get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, MV_CIRCLE &Circle);
     int check_circle_validity (IplImage* img, MV_CIRCLE Circle);
-    int check_circle_color (IplImage* img, MV_CIRCLE Circle);
+    int get_circle_color (IplImage* img, MV_CIRCLE &Circle);
 
     public:
     mvAdvancedCircles (const char* settings_file);

@@ -9,6 +9,8 @@
 #include "mgui.h"
 
 typedef unsigned char uchar;
+const int MV_UNDEFINED_VALUE = -8888888;
+
 const int MV_NUMBER_OF_COLORS = 4;
 const int MV_RED = 50;
 const int MV_YELLOW = 100;
@@ -304,7 +306,8 @@ class mvAdaptiveFilter {
  * It represents a moving pair of Hue_min and Hue_max
  */
 class Hue_Box {
-    public:
+    static const bool DEBUG = 1;
+public:
     unsigned char HUE_MIN;
     unsigned char HUE_MAX;
     unsigned char SAT_MIN;
@@ -313,50 +316,7 @@ class Hue_Box {
     int BOX_COLOR;
     bool BOX_ENABLED; // whether the box is being used or not
 
-    Hue_Box (unsigned char hue_min, unsigned char hue_max) :
-        HUE_MIN(hue_min),
-        HUE_MAX(hue_max) 
-    {
-    }
-
-    Hue_Box (const char* settings_file, int box_number) {
-    // read the HUE_MIN and HUE_MAX based on box number. So if box_number is 2, it reads
-    // HUE_MIN_2 and HUE_MAX_2
-        BOX_NUMBER = box_number;
-        std::string box_number_str;
-        if (box_number == 1)
-            box_number_str = "_1";
-        else if (box_number == 2)
-            box_number_str = "_2";
-        else if (box_number == 3)
-            box_number_str = "_3";
-        else {
-            printf ("Invalid box_number %d when constructing Hue_Box!\n", box_number);
-            exit (1);
-        }
-
-        std::string enabled_str = std::string("ENABLE_BOX") + box_number_str;
-        read_mv_setting (settings_file, enabled_str.c_str(), BOX_ENABLED);
-
-        if (!BOX_ENABLED)
-            return;
-
-        // read the box color
-        std::string box_color_str = std::string("COLOR_BOX") + box_number_str;
-        std::string box_color;
-        read_mv_setting (settings_file, box_color_str.c_str(), box_color);
-        BOX_COLOR = color_str_to_int (box_color_str);
-
-        std::string hue_min_str = std::string("HUE_MIN") + box_number_str;        
-        std::string hue_max_str = std::string("HUE_MAX") + box_number_str;
-        std::string sat_min_str = std::string("SAT_MIN") + box_number_str;        
-        std::string val_min_str = std::string("VAL_MIN") + box_number_str;
-
-        read_mv_setting (settings_file, hue_min_str.c_str(), HUE_MIN);
-        read_mv_setting (settings_file, hue_max_str.c_str(), HUE_MAX);
-        read_mv_setting (settings_file, sat_min_str.c_str(), SAT_MIN);
-        read_mv_setting (settings_file, val_min_str.c_str(), VAL_MIN);
-    }
+    Hue_Box (const char* settings_file, int box_number);
 
     bool check_hue (unsigned char hue, unsigned char sat, unsigned char val) {
         // shifting logic goes here
