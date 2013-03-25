@@ -48,8 +48,8 @@ protected:
     float m_angle;
 
     void clear_data () {
-        m_pixel_x = m_pixel_y = m_range = VISION_UNDEFINED_VALUE;
-        m_angular_x = m_angular_y = m_angle = VISION_UNDEFINED_VALUE;
+        m_pixel_x = m_pixel_y = m_range = MV_UNDEFINED_VALUE;
+        m_angular_x = m_angular_y = m_angle = MV_UNDEFINED_VALUE;
     }
 
     /// you must implement these yourself!
@@ -72,8 +72,6 @@ public:
         assert (retval != FATAL_ERROR);
         return retval;
     };
-
-    static const int VISION_UNDEFINED_VALUE = -88888888;
 
     virtual int get_pixel_x() {return m_pixel_x;}
     virtual int get_pixel_y() {return m_pixel_y;}

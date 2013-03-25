@@ -60,7 +60,6 @@ int main (int argc, char** argv) {
     cvReleaseImage (&raw_img);
     cvReleaseImage (&img);
 
-    printf ("VISION_UNDEFINED_VALUE=%d\n", MDA_VISION_MODULE_BASE::VISION_UNDEFINED_VALUE);
     printf ("\nTest PASSED.\n");
     return 0;
 }

@@ -139,7 +139,7 @@ mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV
                     valid_count++;   
                 }
                 else {
-                    temp_array[array_index++] = -88888888;
+                    temp_array[array_index++] = MV_UNDEFINED_VALUE;
                 }                
             }
         }
@@ -148,7 +148,7 @@ mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV
         kernel_point_array = new int[valid_count];
         array_index = 0;
         for (unsigned i = 0; i < kernel_area; i++) {
-            if (temp_array[i] != -88888888) {
+            if (temp_array[i] != MV_UNDEFINED_VALUE) {
                 kernel_point_array[array_index++] = temp_array[i];
             }
         }
@@ -237,7 +237,7 @@ void mvBinaryDilate (
                 for (unsigned i = Prev_Pixel_High?kernel_area/2:0; i < kernel_area; i++) {
                     unsigned char *ptr = dstPtr + kernel_point_array[i];
                     if (IN_DST(ptr)) {
-                        *ptr = 255;
+                        *ptr = *srcPtr;
                         Prev_Pixel_High = true;
                     }
                     else
@@ -289,7 +289,7 @@ void mvBinaryErode (
                     }
                 }
                 if (!BREAK)
-                    *dstPtr = 255;
+                    *dstPtr = *srcPtr;
 
             }
             srcPtr++;
@@ -350,6 +350,54 @@ void mvBinaryGradient (
             srcPtr++;
             dstPtr++;
         }
+    }
+}
+
+//#########################################################################
+//#### Functions for Hue_Box.
+//#########################################################################
+Hue_Box::Hue_Box (const char* settings_file, int box_number) {
+// read the HUE_MIN and HUE_MAX based on box number. So if box_number is 2, it reads
+// HUE_MIN_2 and HUE_MAX_2
+    BOX_NUMBER = box_number;
+    std::string box_number_str;
+    if (box_number == 1)
+        box_number_str = "_1";
+    else if (box_number == 2)
+        box_number_str = "_2";
+    else if (box_number == 3)
+        box_number_str = "_3";
+    else {
+        printf ("Invalid box_number %d when constructing Hue_Box!\n", box_number);
+        exit (1);
+    }
+
+    std::string enabled_str = std::string("ENABLE_BOX") + box_number_str;
+    read_mv_setting (settings_file, enabled_str.c_str(), BOX_ENABLED);
+
+    if (!BOX_ENABLED)
+        return;
+
+    // read the box color
+    std::string box_color_str = std::string("COLOR_BOX") + box_number_str;
+    std::string box_color;
+    read_mv_setting (settings_file, box_color_str.c_str(), box_color);
+    BOX_COLOR = color_str_to_int (box_color);
+
+    std::string hue_min_str = std::string("HUE_MIN") + box_number_str;        
+    std::string hue_max_str = std::string("HUE_MAX") + box_number_str;
+    std::string sat_min_str = std::string("SAT_MIN") + box_number_str;        
+    std::string val_min_str = std::string("VAL_MIN") + box_number_str;
+
+    read_mv_setting (settings_file, hue_min_str.c_str(), HUE_MIN);
+    read_mv_setting (settings_file, hue_max_str.c_str(), HUE_MAX);
+    read_mv_setting (settings_file, sat_min_str.c_str(), SAT_MIN);
+    read_mv_setting (settings_file, val_min_str.c_str(), VAL_MIN);
+
+    if (DEBUG) {
+        printf ("Hue_Box Number %d Constructed\n", box_number);
+        printf ("\tBox Color %s. Greyscale Value = %d\n", box_color.c_str(), BOX_COLOR);
+        printf ("\tHue MinMax = [%d,%d]\n", HUE_MIN, HUE_MAX);
     }
 }
 
