@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "fpga_ui.h"
 
 #ifdef __cplusplus
@@ -19,9 +20,11 @@ void init_fpga();
 
 inline void int_handler(int signal)
 {
-  static bool killed = false;
+  static volatile bool killed = false;
 
   if (signal == SIGCHLD) {
+    // A kill signal will kill the child too, so sleep to prevent race condition
+    sleep(1);
     if (killed) {
       return;
     } else {
