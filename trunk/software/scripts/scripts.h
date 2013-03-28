@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
 #include "fpga_ui.h"
 
 #ifdef __cplusplus
@@ -20,19 +21,10 @@ void init_fpga();
 
 inline void int_handler(int signal)
 {
-  static volatile bool killed = false;
-
+  // ignore SIGCHLD
   if (signal == SIGCHLD) {
-    // A kill signal will kill the child too, so sleep to prevent race condition
-    sleep(1);
-    if (killed) {
-      return;
-    } else {
-      exit(0);
-    }
+    return;
   }
-
-  killed = true;
 
   // If the power is already off, just kill child and exit
   if (!get_power()) {

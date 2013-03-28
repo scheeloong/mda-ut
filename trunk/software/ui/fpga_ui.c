@@ -1,4 +1,5 @@
 #include "fpga_ui.h"
+#include <curses.h>
 
 #include <assert.h>
 #include <math.h>
@@ -50,6 +51,7 @@ void exit_safe ()
     power_off();
     kill_child();
 
+    endwin();
     exit(0);
 }
 
@@ -120,6 +122,7 @@ void write_and_flush_term (char *cmd)
     int status;
     pid_t result = waitpid(child_pid, &status, WNOHANG);
     if (result != 0) {
+      endwin();
       fprintf(stderr, "No longer connected to nios2-terminal, exiting\n");
       exit(1);
     }

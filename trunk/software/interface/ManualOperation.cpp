@@ -381,6 +381,8 @@ void ManualOperation::work()
 
   // close ncurses
   endwin();
+
+  actuator_output->special_cmd(SUB_POWER_OFF);
 }
 
 void ManualOperation::process_image()
