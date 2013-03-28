@@ -257,7 +257,7 @@ void SimulatorSingleton::run_sim()
     start_yaw = -170.f;
   } else if (start_at == "MARKER_DROPPER") {
     start_x = 10.8f;
-    start_y = 1.65f;
+    start_y = 2.5f;
     start_z = -7.1f;
     start_yaw = -4.f;
   }
