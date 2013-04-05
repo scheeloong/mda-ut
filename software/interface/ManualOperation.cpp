@@ -56,7 +56,7 @@ void ManualOperation::display_start_message()
 #define YAW_CHG_IN_DEG 10
 #define DEPTH_CHG_IN_CM 200
 
-#define REFRESH_RATE_IN_HZ 10
+#define REFRESH_RATE_IN_HZ 30
 
 void ManualOperation::work()
 {
@@ -479,13 +479,14 @@ void ManualOperation::long_input()
 
   char c = CharacterStreamSingleton::get_instance().wait_key(1000);
   while (c != '\r' && index < BUF_LEN - 1) {
-    if (c != '\0') {
-      const int BACKSPACE = 8;
-      if (c == BACKSPACE) {
+    if (c != '\0' && c != -1) {
+      const char BACKSPACE = 8;
+      const char BACKSPACE2 = 127;
+      if (c == BACKSPACE || c == BACKSPACE2) {
         if (index > 0) {
           index--;
           buf[index] = '\0';
-          printw("%c %c", c, c);
+          printw("%c %c", BACKSPACE, BACKSPACE);
         }
       } else {
         buf[index] = c;
