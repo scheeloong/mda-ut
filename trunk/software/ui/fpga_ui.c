@@ -320,6 +320,10 @@ int get_yaw () {
     int yaw;
     write_and_flush_term("ga\n");
     assert(fscanf(outfp, "%d", &yaw) != EOF);
+    // Also write the output to a log file
+    FILE *log = fopen("log.txt", "a");
+    fprintf(log, "%d", yaw);
+    fclose(log);
     return yaw;
 }
 
@@ -327,6 +331,10 @@ int get_depth () {
     int depth;
     write_and_flush_term("gd\n");
     assert(fscanf(outfp, "%d", &depth) != EOF);
+    // Also write the output to a log file
+    FILE *log = fopen("log.txt", "a");
+    fprintf(log, "%d", depth);
+    fclose(log);
     return depth;
 }
 
