@@ -266,7 +266,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         bool flag;
 
         //sort each possible pair in descending order by pair weight
-        for(int i=0; i<nClusters; i++){
+        for(int i=0; i<(int)nClusters; i++){
             for(int j=0; j<i; j++){
 
                 //Insertion sort; easy to implement and good enough for n = 6
@@ -305,7 +305,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         //No viable second pair; only occurrs when nClusters = 3
         if(B[0] == -1){
             int temp = 0;
-            for(int i=0; i<nClusters; i++){
+            for(int i=0; i<(int)nClusters; i++){
                 if(i != A[0] && i != A[1]){
                     R[temp] = i;
                     temp++;
