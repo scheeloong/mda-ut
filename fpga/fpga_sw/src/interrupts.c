@@ -55,13 +55,15 @@ static void timer_interrupts(void* context, alt_u32 id)
       }
       old_power_failures[i] = power_failures[i];
    }
+
+   // Calculate PID and set the motor controllers.
+   calculate_pid();
    
    // Restart Interrupt for this timer
    IOWR_ALTERA_AVALON_TIMER_SNAPL(CONTROLLER_INTERRUPT_COUNTER_BASE, 1);
    IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,0); // Clear interrupt (ITO)
    IOWR_ALTERA_AVALON_TIMER_STATUS(CONTROLLER_INTERRUPT_COUNTER_BASE, 0); // Clear TO
    if (enable_controller) {
-      calculate_pid();
       IOWR_ALTERA_AVALON_TIMER_CONTROL(CONTROLLER_INTERRUPT_COUNTER_BASE,7); // Enable IRQ and Start timer
    }
 }
