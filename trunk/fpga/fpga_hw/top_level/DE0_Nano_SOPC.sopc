@@ -37,14 +37,6 @@
          type = "long";
       }
    }
-   element motor_controller_0.avalon_slave_0
-   {
-      datum baseAddress
-      {
-         value = "2176";
-         type = "long";
-      }
-   }
    element RS232_0.avalon_slave_0
    {
       datum baseAddress
@@ -58,6 +50,14 @@
       datum baseAddress
       {
          value = "2304";
+         type = "long";
+      }
+   }
+   element motor_controller_0.avalon_slave_0
+   {
+      datum baseAddress
+      {
+         value = "2176";
          type = "long";
       }
    }
@@ -303,22 +303,6 @@
          type = "int";
       }
    }
-   element led.s1
-   {
-      datum baseAddress
-      {
-         value = "48";
-         type = "long";
-      }
-   }
-   element clock_crossing_io2.s1
-   {
-      datum baseAddress
-      {
-         value = "83886080";
-         type = "long";
-      }
-   }
    element controller_interrupt_counter.s1
    {
       datum _tags
@@ -329,38 +313,6 @@
       datum baseAddress
       {
          value = "2368";
-         type = "long";
-      }
-   }
-   element i2c_scl.s1
-   {
-      datum baseAddress
-      {
-         value = "2128";
-         type = "long";
-      }
-   }
-   element select_i2c_clk.s1
-   {
-      datum baseAddress
-      {
-         value = "96";
-         type = "long";
-      }
-   }
-   element key.s1
-   {
-      datum baseAddress
-      {
-         value = "32";
-         type = "long";
-      }
-   }
-   element clock_crossing_io.s1
-   {
-      datum baseAddress
-      {
-         value = "67108864";
          type = "long";
       }
    }
@@ -385,6 +337,38 @@
          type = "long";
       }
    }
+   element i2c_sda.s1
+   {
+      datum baseAddress
+      {
+         value = "2112";
+         type = "long";
+      }
+   }
+   element key.s1
+   {
+      datum baseAddress
+      {
+         value = "32";
+         type = "long";
+      }
+   }
+   element clock_crossing_io.s1
+   {
+      datum baseAddress
+      {
+         value = "67108864";
+         type = "long";
+      }
+   }
+   element clock_crossing_io2.s1
+   {
+      datum baseAddress
+      {
+         value = "83886080";
+         type = "long";
+      }
+   }
    element sw.s1
    {
       datum baseAddress
@@ -393,11 +377,27 @@
          type = "long";
       }
    }
-   element i2c_sda.s1
+   element select_i2c_clk.s1
    {
       datum baseAddress
       {
-         value = "2112";
+         value = "96";
+         type = "long";
+      }
+   }
+   element i2c_scl.s1
+   {
+      datum baseAddress
+      {
+         value = "2128";
+         type = "long";
+      }
+   }
+   element led.s1
+   {
+      datum baseAddress
+      {
+         value = "48";
          type = "long";
       }
    }
@@ -475,8 +475,8 @@
  <parameter name="maxAdditionalLatency" value="0" />
  <parameter name="projectName" value="DE0_Nano.qpf" />
  <parameter name="sopcBorderPoints" value="true" />
- <parameter name="systemHash" value="39182249687" />
- <parameter name="timeStamp" value="1348669460490" />
+ <parameter name="systemHash" value="43439652365" />
+ <parameter name="timeStamp" value="1365219343082" />
  <parameter name="useTestBenchNamingPattern" value="false" />
  <module kind="clock_source" version="12.0" enabled="1" name="clk_50">
   <parameter name="clockFrequency" value="50000000" />
@@ -552,7 +552,7 @@
   <parameter name="mmu_TLBMissExcSlave" value="" />
   <parameter name="mmu_TLBMissExcOffset" value="0" />
   <parameter name="manuallyAssignCpuID" value="false" />
-  <parameter name="internalIrqMaskSystemInfo" value="510" />
+  <parameter name="internalIrqMaskSystemInfo" value="255" />
   <parameter name="instSlaveMapParam"><![CDATA[<address-map><slave name='sdram.s1' start='0x2000000' end='0x4000000' /><slave name='cpu.jtag_debug_module' start='0x6000800' end='0x6001000' /></address-map>]]></parameter>
   <parameter name="instAddrWidth" value="27" />
   <parameter name="impl" value="Tiny" />
@@ -997,6 +997,7 @@
   <parameter name="TOTAL_DATA_WIDTH" value="11" />
   <parameter name="DATA_WIDTH" value="8" />
   <parameter name="ODD_PARITY" value="0" />
+  <parameter name="AUTO_CLOCK_CLOCK_RATE" value="50000000" />
  </module>
  <connection
    kind="avalon"
@@ -1015,10 +1016,10 @@
   <parameter name="baseAddress" value="0x06000800" />
  </connection>
  <connection kind="interrupt" version="12.0" start="cpu.d_irq" end="key.irq">
-  <parameter name="irqNumber" value="1" />
+  <parameter name="irqNumber" value="6" />
  </connection>
  <connection kind="interrupt" version="12.0" start="cpu.d_irq" end="sw.irq">
-  <parameter name="irqNumber" value="2" />
+  <parameter name="irqNumber" value="7" />
  </connection>
  <connection
    kind="clock"
@@ -1089,7 +1090,7 @@
    version="12.0"
    start="cpu.d_irq"
    end="g_sensor_int.irq">
-  <parameter name="irqNumber" value="3" />
+  <parameter name="irqNumber" value="5" />
  </connection>
  <connection
    kind="avalon"
@@ -1139,7 +1140,7 @@
   <parameter name="baseAddress" value="0x06001010" />
  </connection>
  <connection kind="interrupt" version="12.0" start="cpu.d_irq" end="jtag_uart.irq">
-  <parameter name="irqNumber" value="5" />
+  <parameter name="irqNumber" value="3" />
  </connection>
  <connection kind="clock" version="12.0" start="altpll_sys.c0" end="jtag_uart.clk" />
  <connection kind="clock" version="12.0" start="clk_50.clk" end="epcs.clk" />
@@ -1234,7 +1235,7 @@
    version="12.0"
    start="cpu.d_irq"
    end="controller_interrupt_counter.irq">
-  <parameter name="irqNumber" value="6" />
+  <parameter name="irqNumber" value="2" />
  </connection>
  <connection
    kind="avalon"
@@ -1254,7 +1255,7 @@
    version="12.0"
    start="cpu.d_irq"
    end="power_management_slave_0.interrupt_sender">
-  <parameter name="irqNumber" value="7" />
+  <parameter name="irqNumber" value="0" />
  </connection>
  <connection
    kind="clock"
@@ -1288,6 +1289,6 @@
    version="12.0"
    start="cpu.d_irq"
    end="RS232_0.interrupt_sender">
-  <parameter name="irqNumber" value="8" />
+  <parameter name="irqNumber" value="1" />
  </connection>
 </system>

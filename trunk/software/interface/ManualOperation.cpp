@@ -56,7 +56,7 @@ void ManualOperation::display_start_message()
 #define YAW_CHG_IN_DEG 10
 #define DEPTH_CHG_IN_CM 200
 
-#define REFRESH_RATE_IN_HZ 30
+#define REFRESH_RATE_IN_HZ 10
 
 void ManualOperation::work()
 {
