@@ -57,6 +57,7 @@ void ManualOperation::display_start_message()
 #define DEPTH_CHG_IN_CM 200
 
 #define REFRESH_RATE_IN_HZ 10
+#define WAIT_KEY_IN_MS 5
 
 void ManualOperation::work()
 {
@@ -65,17 +66,22 @@ void ManualOperation::work()
   // Take keyboard commands
   bool loop = true;
   while (loop) {
-    char c = CharacterStreamSingleton::get_instance().wait_key(1000/REFRESH_RATE_IN_HZ);
+    char c = CharacterStreamSingleton::get_instance().wait_key(WAIT_KEY_IN_MS);
 
     // Print yaw and depth unless delayed by another message
     if (c == '\0') {
       if (count < 0) {
         count++;
       } else if (mode != VISION) {
-        char buf[128];
-        sprintf(buf, "Yaw: %+04d degrees, Depth: %+04d cm, Target Yaw: %+04d degrees, Target Depth: %+04d",
-          attitude_input->yaw(), attitude_input->depth(), attitude_input->target_yaw(), attitude_input->target_depth());
-        message(buf);
+        static int attitude_counter = 0;
+        attitude_counter++;
+        if (attitude_counter == 1000 / WAIT_KEY_IN_MS / REFRESH_RATE_IN_HZ) {
+          attitude_counter = 0;
+          char buf[128];
+          sprintf(buf, "Yaw: %+04d degrees, Depth: %+04d cm, Target Yaw: %+04d degrees, Target Depth: %+04d",
+            attitude_input->yaw(), attitude_input->depth(), attitude_input->target_yaw(), attitude_input->target_depth());
+          message(buf);
+        }
       }
     }
 
@@ -451,7 +457,7 @@ void ManualOperation::message_hold(const char *msg, int delay_in_s)
     message(msg);
   } else {
     message(msg);
-    count = -delay_in_s * REFRESH_RATE_IN_HZ;
+    count = -delay_in_s * 1000 / WAIT_KEY_IN_MS;
   }
 }
 
