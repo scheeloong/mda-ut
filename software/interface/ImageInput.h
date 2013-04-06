@@ -64,11 +64,19 @@ class ImageInput {
     bool can_display() { return can_display_images; }
     bool ready_image(ImageDirection dir = FWD_IMG)
     {
-      // May still want to get the image to display it
-      if (writer_fwd && writer_dwn) {
-        return (get_image(dir) != NULL);
+      bool ret = ready_internal_image(dir);
+
+      // May still want to get the image to write to video file
+      if ((writer_fwd && dir == FWD_IMG) || (writer_dwn && dir == DWN_IMG)) {
+        IplImage *frame = get_internal_image(dir);
+        if (!frame) {
+          return ret;
+        }
+
+        mvVideoWriter *writer = (dir == FWD_IMG) ? writer_fwd : writer_dwn;
+        writer->writeFrame(frame);
       }
-      return ready_internal_image(dir);
+      return ret;
     }
     IplImage* get_image(ImageDirection dir = FWD_IMG)
     {
