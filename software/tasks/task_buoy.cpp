@@ -13,33 +13,34 @@ MDA_TASK_BUOY:: ~MDA_TASK_BUOY ()
 
 MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_task() {
     MDA_TASK_RETURN_CODE code;
-
+/*
     code = run_single_buoy(BUOY_YELLOW);
     if (code != TASK_DONE) {
         printf ("Something wrong in task_buoy!\n");
         return TASK_ERROR;
     }
-
+*/
     code = run_single_buoy(BUOY_RED);
     if (code != TASK_DONE) {
         printf ("Something wrong in task_buoy!\n");
         return TASK_ERROR;
     }
-    
+/*    
     code = run_single_buoy(BUOY_GREEN);
      if (code != TASK_DONE) {
         printf ("Something wrong in task_buoy!\n");
         return TASK_ERROR;
     }
-
+*/
     return TASK_DONE;
 }
 
 MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
     puts("Press q to quit");
-
+    
+    int starting_depth = 400;
+/*
     char settings_file[50];
-    int starting_depth = 0;
     if (color == BUOY_RED) {
         sprintf (settings_file, "vision_buoy_settings_red.csv");
         starting_depth = 375;
@@ -54,8 +55,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
     }
     else 
         exit (1);
-
-    MDA_VISION_MODULE_BUOY buoy_vision(settings_file);
+*/
+    MDA_VISION_MODULE_BUOY buoy_vision;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
     /// Here we should store the starting attitude vector, so we can return to this attitude later
