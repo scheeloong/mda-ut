@@ -402,12 +402,17 @@ void ManualOperation::process_image()
     if (show_raw_images) {
       // show the other image by getting it
       image_input->get_image(use_fwd_img?DWN_IMG:FWD_IMG);
+    } else {
+      image_input->ready_image(use_fwd_img?DWN_IMG:FWD_IMG);
     }
   } else {
     // needs to be called periodically for highgui event-processing
     if (show_raw_images) {
       image_input->get_image(FWD_IMG);
       image_input->get_image(DWN_IMG);
+    } else {
+      image_input->ready_image(FWD_IMG);
+      image_input->ready_image(DWN_IMG);
     }
     char ch = cvWaitKey(3);
     if (ch) {
