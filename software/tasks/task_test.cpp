@@ -16,19 +16,83 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
 
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
+    const int sink_depth = 600;
+    const int rise_depth = 300;
+    const int depth_threshold = 10;
+    const int yaw_threshold = 5;
+    const int fwd_timesteps = 250;
+    const int speed = 3;
+
+    enum state {FWD_STATE, SINK_STATE, REV_STATE, RISE_STATE};
+    enum state cur_state = SINK_STATE;
+
+    int fwd_yaw = attitude_input->yaw();
+    int rev_yaw = fwd_yaw + 180;
+    if (rev_yaw > 180) rev_yaw -= 360;
+    int counter = 0;
+
+    printf("Sinking\n");
+
     while (1) {
         IplImage* frame = image_input->get_image(FWD_IMG);
         if (!frame) {
             break;
         }
         window.showImage (frame);
+
+        image_input->ready_image(DWN_IMG);
         
-        actuator_output->set_attitude_change(RIGHT, 10);
+        switch (cur_state) {
+          case SINK_STATE:
+            actuator_output->set_attitude_absolute(DEPTH, sink_depth);
+            actuator_output->set_attitude_absolute(SPEED, 0);
+            if (abs(attitude_input->depth() - sink_depth) < depth_threshold) {
+              printf("Going forward\n");
+              cur_state = FWD_STATE;
+              counter = 0;
+            }
+            break;
+          case FWD_STATE:
+            actuator_output->set_attitude_absolute(YAW, fwd_yaw);
+            if (abs(attitude_input->yaw() - fwd_yaw) < yaw_threshold) {
+              actuator_output->set_attitude_absolute(SPEED, speed);
+              printf("Current timestep: %d Maximum timestep: %d\n", counter, fwd_timesteps);
+              counter++;
+            }
+            if (counter == fwd_timesteps) {
+              printf("Rising\n");
+              cur_state = RISE_STATE;
+            }
+            break;
+          case RISE_STATE:
+            actuator_output->set_attitude_absolute(DEPTH, rise_depth);
+            actuator_output->set_attitude_absolute(SPEED, 0);
+            if (abs(attitude_input->depth() - rise_depth) < depth_threshold) {
+              printf("Going back\n");
+              cur_state = REV_STATE;
+              counter = 0;
+            }
+            break;
+          case REV_STATE:
+            actuator_output->set_attitude_absolute(YAW, rev_yaw);
+            if (abs(attitude_input->yaw() - rev_yaw) < yaw_threshold) {
+              actuator_output->set_attitude_absolute(SPEED, speed);
+              printf("Current timestep: %d Maximum timestep: %d\n", counter, fwd_timesteps);
+              counter++;
+            }
+            if (counter == fwd_timesteps) {
+              printf("Sinking\n");
+              cur_state = SINK_STATE;
+            }
+            break;
+        }
+
+        printf("Yaw: %d Depth %d\n", attitude_input->yaw(), attitude_input->depth());
 
         // Ensure debug messages are printed
         fflush(stdout);
         // Exit if instructed to
-        char c = cvWaitKey(3);
+        char c = cvWaitKey(5);
         if (c != -1) {
             CharacterStreamSingleton::get_instance().write_char(c);
         }
