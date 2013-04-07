@@ -40,10 +40,12 @@ void set_target_depth(int depth);
 
 void get_orientation(struct t_accel_data *accel_data, struct orientation *orientation);
 
+void update_depth_reading();
 void calculate_pid();
 void controller_output(int pitch_setting, int roll_setting, int heading, int speed, int depth_setting);
 
-void calculate_pid_2();
+void print_debug_controller();
+
 void pid_init();
 
 #endif

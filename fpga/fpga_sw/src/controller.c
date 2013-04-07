@@ -21,7 +21,6 @@
 #include "utils.h"
 
 #define MAX_YAW 360
-//#define DEBUG_MSG
 
 // Structures used by the PD controller for stabilization
 struct orientation target_orientation = {};
@@ -175,22 +174,12 @@ void stabilizing_motors_force_to_pwm (
 
 void calculate_pid()
 {
-   update_depth_reading();
-
-   static unsigned counter = 0;
-   counter++;
-
-   if (counter % NUM_DEPTH_VALUES != 0) {
-      return;
-   }
-
    // Get orientation data from IMU and depth from depth sensor
    get_imu_orientation(&current_orientation);
    current_orientation.depth = get_average_depth();
    
-   /** Ritchie - At this point I assume that current_orientation.pitch and .roll should be controlled towards zero
-    *            and .depth should be controlled towards target_orientation.depth
-    *            and nothing else matters just yet
+   /* current_orientation.pitch and .roll are controlled towards zero
+    * and .depth is controlled towards target_orientation.depth
     */
    
    // update the controller with the new pitch and roll values
@@ -218,16 +207,6 @@ void calculate_pid()
    double Yaw_Force_Needed = FACTOR_PID_YAW_TO_FORCE * PID_Output(&PID_Yaw);
    double Forward_Force_Needed = FACTOR_SPEED_TO_FORCE * target_orientation.speed;
 
-   // Print some debug messages every so often...
-#ifdef DEBUG_MSG 
-   if (counter % (128*NUM_DEPTH_VALUES) == 0) {
-	printf ("depth current = %d\n", current_orientation.depth);
-	printf ("PID_Depth.P = %f\n", PID_Depth.P*PID_Depth.Const_P);
-	printf ("PID_Depth.I = %f\n", PID_Depth.I*PID_Depth.Const_I);
-	printf ("PID_Depth.D = %f\n", PID_Depth.D*PID_Depth.Const_D);
-	printf ("Depth_PID: %f\n", Depth_Force_Needed);
-    }
-#endif
    /** orientation stability
     *  If the COM is off center we would have some sort of factors here instead of 0.5
     */
@@ -270,3 +249,13 @@ void calculate_pid()
    }  
 }
 
+void print_debug_controller()
+{
+   double Depth_Force_Needed = FACTOR_PID_DEPTH_TO_FORCE * PID_Output(&PID_Depth);
+
+   // Print controller debug messages
+   printf ("PID_Depth.P = %f\n", PID_Depth.P*PID_Depth.Const_P);
+   printf ("PID_Depth.I = %f\n", PID_Depth.I*PID_Depth.Const_I);
+   printf ("PID_Depth.D = %f\n", PID_Depth.D*PID_Depth.Const_D);
+   printf ("Depth_PID: %f\n", Depth_Force_Needed);
+}
