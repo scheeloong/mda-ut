@@ -56,8 +56,16 @@ static void timer_interrupts(void* context, alt_u32 id)
       old_power_failures[i] = power_failures[i];
    }
 
-   // Calculate PID and set the motor controllers.
-   calculate_pid();
+   update_depth_reading();
+
+   static unsigned counter = 0;
+   counter++;
+
+   // TODO: move to main loop and out of interrupt handler
+   if (counter % NUM_DEPTH_VALUES == 0) {
+      // Calculate PID and set the motor controllers.
+      calculate_pid();
+   }
    
    // Restart Interrupt for this timer
    IOWR_ALTERA_AVALON_TIMER_SNAPL(CONTROLLER_INTERRUPT_COUNTER_BASE, 1);
