@@ -24,6 +24,9 @@ int old_power_failures[7] = {0};
 
 int enable_controller = 0;
 
+// Flag to update pid in main loop
+int update_pid = 0;
+
 void set_controller(int status)
 {
    enable_controller = status;
@@ -61,10 +64,8 @@ static void timer_interrupts(void* context, alt_u32 id)
    static unsigned counter = 0;
    counter++;
 
-   // TODO: move to main loop and out of interrupt handler
    if (counter % NUM_DEPTH_VALUES == 0) {
-      // Calculate PID and set the motor controllers.
-      calculate_pid();
+      update_pid = 1;
    }
    
    // Restart Interrupt for this timer
