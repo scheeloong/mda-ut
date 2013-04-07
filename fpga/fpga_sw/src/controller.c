@@ -94,7 +94,7 @@ static Controller_PID PID_Pitch;
 static Controller_PID PID_Yaw;
 static Controller_PID PID_Depth;
 
-void pid_init () // call this anytime before calling calculate_pid2
+void pid_init () // call this anytime before calling calculate_pid
 {
     // set up PID values
     PID_Reset (&PID_Roll);

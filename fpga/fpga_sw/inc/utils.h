@@ -14,6 +14,7 @@ enum MOTOR_DIR {
 
 void init();
 void alt_getline(char *, int);
+void service_main_loop();
 int read_hex(char *);
 void print_int(int);
 void set_motor_dir(int, enum MOTOR_DIR);

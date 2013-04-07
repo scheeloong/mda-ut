@@ -6,8 +6,10 @@
  * Author: victor
  */
 
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "alt_types.h"
 #include "io.h"
@@ -27,6 +29,9 @@ int motor_duty_cycles[NUM_MOTORS];
 
 // remember the PWM period (calculated from inputted frequency)
 int pwm_period = -1;
+
+// flag to update pid calculations and set motor controls
+extern int update_pid;
 
 // initialize array values
 void init()
@@ -50,19 +55,37 @@ void init()
 
   // Initialize interrupts (must be last)
   init_interrupts();
+
+  // Change stdin to non-blocking
+  fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
 }
 
 // returns a string until the maximum length (int len) or a newline character is reached from stdin
 void alt_getline(char *st, int len)
 {
   while (len--) {
+    service_main_loop();
     char c = (char)alt_getchar();
+    // if non-blocking, c == 0 means no input was received
+    if (c == 0) {
+      len++;
+      continue;
+    }
     alt_putchar(c);
     *st++ = c;
     if (c == '\n')
       break;
   }
   *st = '\0';
+}
+
+// with non-blocking stdin, you can use this function to schedule commands that should not run in interrupt handlers
+void service_main_loop()
+{
+  if (update_pid) {
+    update_pid = 0;
+    calculate_pid();
+  }
 }
 
 // returns an int from reading a hex string
