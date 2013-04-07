@@ -228,7 +228,7 @@ void process_command(char *st)
       alt_putchar('\n');
       break;
     case COMMAND_DEPTH:
-      i = get_depth();
+      i = get_user_depth();
       print_int(i);
       alt_putchar('\n');
       break;

@@ -27,6 +27,16 @@ int enable_controller = 0;
 // Flag to update pid in main loop
 int update_pid = 0;
 
+// Return time-averaged depth if possible to give a sense of
+// what depth the controller is using
+int get_user_depth()
+{
+  if (enable_controller) {
+    return get_average_depth();
+  }
+  return get_depth();
+}
+
 void set_controller(int status)
 {
    enable_controller = status;
