@@ -21,17 +21,16 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
     while (1) {
-        IplImage* frame = image_input->get_image();
-        if (!frame) {
-            ret_code = TASK_ERROR;
-            break;
-        }
-        MDA_VISION_RETURN_CODE vision_code = gate_vision.filter(frame);
-
         if (!done_gate) {
+            IplImage* frame = image_input->get_image();
+            if (!frame) {
+                ret_code = TASK_ERROR;
+                break;
+            }
+            MDA_VISION_RETURN_CODE vision_code = gate_vision.filter(frame);
+
             // clear dwn image
-            int down_frame_ready = image_input->ready_image(DWN_IMG);
-            (void) down_frame_ready;
+            image_input->ready_image(DWN_IMG);
  
             if (vision_code == FATAL_ERROR) {
                 ret_code = TASK_ERROR;
@@ -80,8 +79,10 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                 ret_code = TASK_ERROR;
                 break;
             }
-
             MDA_VISION_RETURN_CODE vision_code = path_vision.filter(down_frame);
+
+            // clear fwd image
+            image_input->ready_image();
 
             if (vision_code == ONE_SEGMENT || vision_code == FULL_DETECT || vision_code == UNKNOWN_TARGET) {
                 ret_code = TASK_DONE;
