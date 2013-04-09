@@ -67,7 +67,7 @@ void alt_getline(char *st, int len)
     service_main_loop();
     char c = (char)alt_getchar();
     // if non-blocking, c == 0 means no input was received
-    if (c == 0) {
+    if (c == -1) {
       len++;
       continue;
     }
