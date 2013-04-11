@@ -393,7 +393,7 @@ void mvMeanShift::filter(IplImage* src, IplImage* dst) {
       downsample_from (src);
       cvCvtColor(ds_scratch_3, ds_scratch_3, CV_BGR2HSV);
 
-      colorFilter_internal();
+      colorFilter_internal_adaptive_hue();
 
       upsample_to (dst);
 }
@@ -510,7 +510,7 @@ void mvMeanShift::colorFilter_internal() {
                 if (!(hue_box[i])->is_enabled())
                     continue;
 
-                if (imgPtr[1] != 0 && (hue_box[i])->check_hue(imgPtr[0], imgPtr[1], imgPtr[2])) {
+                if (imgPtr[1] != 0 && (hue_box[i])->check_hsv(imgPtr[0], imgPtr[1], imgPtr[2])) {
                     *resPtr = (unsigned char) hue_box[i]->BOX_COLOR;
                 }
             }
@@ -519,6 +519,181 @@ void mvMeanShift::colorFilter_internal() {
             resPtr++;
         }
     }
+}
+
+void mvMeanShift::colorFilter_internal_adaptive_hue() {
+// this function goes over the Hue_Box array and if a pixel falls inside box X, it marks that pixel
+// with value X. Uses adaptive hue box so the range of hue can change
+    unsigned char *imgPtr, *resPtr;
+    for (int r = 0; r < ds_scratch->height; r++) {                        
+        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep);
+        resPtr = (unsigned char*) (ds_scratch->imageData + r*ds_scratch->widthStep); 
+   
+        for (int c = 0; c < ds_scratch->width; c++) {
+            *resPtr = 0;
+
+            for (int i = 0; i < NUM_BOXES; i++) {
+                if (!(hue_box[i])->is_enabled())
+                    continue;
+
+                if (imgPtr[1] != 0 && (hue_box[i])->check_hsv_adaptive_hue(imgPtr[0], imgPtr[1], imgPtr[2])) {
+                    *resPtr = (unsigned char) hue_box[i]->BOX_COLOR;
+                }
+            }
+
+            imgPtr += 3;
+            resPtr++;
+        }
+    }
+
+    for (int i = 0; i < NUM_BOXES; i++) {
+        hue_box[i]->update_hue();
+    }
+}
+
+//#########################################################################
+//#### Functions for Hue_Box.
+//#########################################################################
+Hue_Box::Hue_Box (const char* settings_file, int box_number) {
+// read the HUE_MIN and HUE_MAX based on box number. So if box_number is 2, it reads
+// HUE_MIN_2 and HUE_MAX_2
+    BOX_NUMBER = box_number;
+    std::string box_number_str;
+    if (box_number == 1)
+        box_number_str = "_1";
+    else if (box_number == 2)
+        box_number_str = "_2";
+    else if (box_number == 3)
+        box_number_str = "_3";
+    else {
+        printf ("Invalid box_number %d when constructing Hue_Box!\n", box_number);
+        exit (1);
+    }
+
+    std::string enabled_str = std::string("ENABLE_BOX") + box_number_str;
+    read_mv_setting (settings_file, enabled_str.c_str(), BOX_ENABLED);
+
+    if (!BOX_ENABLED)
+        return;
+
+    // read the box color
+    std::string box_color_str = std::string("COLOR_BOX") + box_number_str;
+    std::string box_color;
+    read_mv_setting (settings_file, box_color_str.c_str(), box_color);
+    BOX_COLOR = color_str_to_int (box_color);
+
+    std::string hue_min_str = std::string("HUE_MIN") + box_number_str;        
+    std::string hue_max_str = std::string("HUE_MAX") + box_number_str;
+    std::string sat_min_str = std::string("SAT_MIN") + box_number_str;        
+    std::string val_min_str = std::string("VAL_MIN") + box_number_str;
+
+    read_mv_setting (settings_file, hue_min_str.c_str(), HUE_MIN);
+    read_mv_setting (settings_file, hue_max_str.c_str(), HUE_MAX);
+    read_mv_setting (settings_file, sat_min_str.c_str(), SAT_MIN);
+    read_mv_setting (settings_file, val_min_str.c_str(), VAL_MIN);
+
+    HUE_MIN_OUT = (HUE_MIN < HUE_GUTTER_LEN) ? 180+HUE_MIN-HUE_GUTTER_LEN : HUE_MIN-HUE_GUTTER_LEN;
+    HUE_MAX_OUT = (HUE_MAX + HUE_GUTTER_LEN >= 180) ? HUE_MAX+HUE_GUTTER_LEN-180 : HUE_MAX+HUE_GUTTER_LEN;
+    HUE_MIN_ADP = HUE_MIN;
+    HUE_MAX_ADP = HUE_MAX;
+    inner_count = min_inside_count = max_inside_count = min_outside_count = max_outside_count = 0;
+
+    if (DEBUG) {
+        printf ("Hue_Box Number %d Constructed\n", box_number);
+        printf ("\tBox Color %s. Greyscale Value = %d\n", box_color.c_str(), BOX_COLOR);
+        printf ("\tHue MinMax = [%d,%d]\n", HUE_MIN, HUE_MAX);
+    }
+}
+
+bool Hue_Box::check_hsv_adaptive_hue (unsigned char hue, unsigned char sat, unsigned char val) {
+    if (sat >= SAT_MIN && val >= VAL_MIN) {
+        /// only 1 of these 3 can be true
+        bool wrap_around_min_out = (HUE_MIN_OUT > HUE_MIN_ADP);
+        bool wrap_around_max_out = (HUE_MAX_OUT < HUE_MAX_ADP);
+        bool wrap_around = (HUE_MAX_ADP < HUE_MIN_ADP);
+
+        if (wrap_around_min_out) {          // if the 180deg wraparound is between min_out and min_adp
+            if (hue >= HUE_MIN_ADP && hue <= HUE_MAX_ADP) {
+                inner_count++;
+                return true;
+            }
+            else if ((hue <= HUE_MIN_OUT && hue <= HUE_MIN_ADP) || (hue >= HUE_MIN_OUT && hue >= HUE_MIN_ADP)) {
+                min_outside_count++;
+                return false;
+            }
+            else if (hue >= HUE_MAX_ADP && hue <= HUE_MAX_OUT) {
+                max_outside_count++;
+                return false;
+            }
+        }
+        else if (wrap_around) {
+            if ((hue >= HUE_MIN_ADP && hue >= HUE_MAX_ADP) || (hue <= HUE_MIN_ADP && hue <= HUE_MAX_ADP)) {
+                inner_count++;
+                return true;
+            }
+            else if (hue >= HUE_MIN_OUT && hue <= HUE_MIN_ADP) {
+                min_outside_count++;
+                return false;
+            }
+            else if (hue >= HUE_MAX_ADP && hue <= HUE_MAX_OUT) {
+                max_outside_count++;
+                return false;
+            }
+        }
+        else if (wrap_around_max_out) {
+            if (hue >= HUE_MIN_ADP && hue <= HUE_MAX_ADP) {
+                inner_count++;
+                return true;
+            }
+            else if (hue >= HUE_MIN_OUT && hue <= HUE_MIN_ADP) {
+                min_outside_count++;
+                return false;
+            }
+            else if ((hue >= HUE_MAX_ADP && hue >= HUE_MAX_OUT) || (hue <= HUE_MAX_ADP && hue <= HUE_MAX_OUT)) {
+                max_outside_count++;
+                return false;
+            }
+        }
+        else {
+            if (hue >= HUE_MIN_ADP && hue <= HUE_MAX_ADP) {
+                inner_count++;
+                return true;
+            }
+            else if (hue >= HUE_MIN_OUT && hue <= HUE_MIN_ADP) {
+                min_outside_count++;
+                return false;
+            }
+            else if (hue >= HUE_MAX_ADP && hue <= HUE_MAX_OUT) {
+                max_outside_count++;
+                return false;
+            }
+        }
+    }
+    return false;
+}
+
+void Hue_Box::update_hue () {
+    printf ("Counts: %d  %d  %d  %d  %d\n", min_outside_count,min_inside_count, inner_count, max_inside_count, max_outside_count);
+    
+    if (abs(HUE_MIN_ADP-HUE_MIN) <= 10 && 6*min_outside_count > inner_count) {
+        HUE_MIN_ADP = (HUE_MIN_ADP < HUE_ADP_LEN) ? 180+HUE_MIN_ADP-HUE_ADP_LEN : HUE_MIN_ADP-HUE_ADP_LEN;
+        HUE_MIN_OUT = (HUE_MIN_OUT < HUE_ADP_LEN) ? 180+HUE_MIN_OUT-HUE_ADP_LEN : HUE_MIN_OUT-HUE_ADP_LEN;
+    }
+    else if (HUE_MAX_ADP > HUE_MIN_ADP+HUE_ADP_LEN && 60*min_outside_count < inner_count) {
+        HUE_MIN_ADP = (HUE_MIN_ADP + HUE_ADP_LEN >= 180) ? HUE_MIN_ADP+HUE_ADP_LEN-180 : HUE_MIN_ADP+HUE_ADP_LEN;
+        HUE_MIN_OUT = (HUE_MIN_OUT + HUE_ADP_LEN >= 180) ? HUE_MIN_OUT+HUE_ADP_LEN-180 : HUE_MIN_OUT+HUE_ADP_LEN;
+    }
+
+    if (abs(HUE_MAX_ADP-HUE_MAX) <= 10 && 6*max_outside_count > inner_count) {
+        HUE_MAX_ADP = (HUE_MAX_ADP + HUE_ADP_LEN >= 180) ? HUE_MAX_ADP+HUE_ADP_LEN-180 : HUE_MAX_ADP+HUE_ADP_LEN;
+        HUE_MAX_OUT = (HUE_MAX_OUT + HUE_ADP_LEN >= 180) ? HUE_MAX_OUT+HUE_ADP_LEN-180 : HUE_MAX_OUT+HUE_ADP_LEN;
+    }
+    else if (HUE_MAX_ADP > HUE_MIN_ADP+HUE_ADP_LEN && 60*max_outside_count < inner_count) {
+        HUE_MAX_ADP = (HUE_MAX_ADP < HUE_ADP_LEN) ? 180+HUE_MAX_ADP-HUE_ADP_LEN : HUE_MAX_ADP-HUE_ADP_LEN;
+        HUE_MAX_OUT = (HUE_MAX_OUT < HUE_ADP_LEN) ? 180+HUE_MAX_OUT-HUE_ADP_LEN : HUE_MAX_OUT-HUE_ADP_LEN;
+    }
+
+    inner_count = min_inside_count = max_inside_count = min_outside_count = max_outside_count = 0;
 }
 
 //####################################################################################
