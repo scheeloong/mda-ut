@@ -253,7 +253,7 @@ void mvRect::get_rect_color(IplImage* img) {
                 max_count_index = i;
             }
         }
-        printf ("get_rect_color: %d/5 pixels are colored %d, %s\n", max_count, max_count_index, color_int_to_string(MV_COLOR_VECTOR[max_count_index]).c_str());
+        DEBUG_PRINT ("get_rect_color: %d/5 pixels checked are colored %d, %s\n", max_count, MV_COLOR_VECTOR[max_count_index], color_int_to_string(MV_COLOR_VECTOR[max_count_index]).c_str());
         if (max_count >= 3) {
             it->color = MV_COLOR_VECTOR[max_count_index];
         }

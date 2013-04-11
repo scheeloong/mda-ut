@@ -316,9 +316,20 @@ public:
     int BOX_COLOR;
     bool BOX_ENABLED; // whether the box is being used or not
 
+    
+    static const int HUE_GUTTER_LEN = 6;
+    static const int HUE_ADP_LEN = 2;
+    static const float RESET_THRESHOLD_FRACTION = 0.0005;
+    unsigned char HUE_MIN_OUT, HUE_MAX_OUT;     // outer hue limits for expanding the box
+    unsigned char HUE_MIN_IN, HUE_MAX_IN;       // inner hue limits for contracting the box
+    unsigned char HUE_MIN_ADP, HUE_MAX_ADP;     // normal hue limits
+    int inner_count;                            // num of pixels within the inner box
+    int min_inside_count, max_inside_count;     // num of pixels within the normal box
+    int min_outside_count, max_outside_count;   // num of pixels within the outside box
+
     Hue_Box (const char* settings_file, int box_number);
 
-    bool check_hue (unsigned char hue, unsigned char sat, unsigned char val) {
+    bool check_hsv (unsigned char hue, unsigned char sat, unsigned char val) {
         // shifting logic goes here
         if (sat >= SAT_MIN && val >= VAL_MIN) {
             if (HUE_MAX >= HUE_MIN) 
@@ -328,6 +339,9 @@ public:
         }
         return false;
     }
+
+    bool check_hsv_adaptive_hue (unsigned char hue, unsigned char sat, unsigned char val);
+    void update_hue ();
 
     bool is_enabled () {
         return BOX_ENABLED;
@@ -389,6 +403,7 @@ private:
 
     void mvMeanShift_internal(IplImage* scratch);
     void colorFilter_internal();
+    void colorFilter_internal_adaptive_hue();
 
 public: 
     mvMeanShift (const char* settings_file); //constructor
