@@ -23,6 +23,7 @@ void ManualOperation::display_start_message()
          "  q    - exit simulator\n"
          "  z    - save input image screenshots as image_[fwd/dwn].jpg\n"
          "  y    - toggle display of raw input image stream\n"
+         "  u    - switch between fwd and dwn webcam (only in vision mode and if 2 webcams disabled)\n"
          "\n"
          "  wasd - use controller to move forward/reverse/left/right\n"
          "  rf   - use controller to move up/down\n"
@@ -99,6 +100,8 @@ void ManualOperation::work()
            message_hold("Image stream should already be displayed");
          }
          break;
+      case 'u':
+         use_fwd_img = use_fwd_img?false:true;
       case 'i':
          actuator_output->special_cmd(SIM_MOVE_FWD);
          break;
@@ -405,20 +408,31 @@ void ManualOperation::process_image()
     } else {
       message_hold("Image stream over");
     }
+#ifndef DISABLE_DOUBLE_WEBCAM
     if (show_raw_images) {
       // show the other image by getting it
       image_input->get_image(use_fwd_img?DWN_IMG:FWD_IMG);
     } else {
       image_input->ready_image(use_fwd_img?DWN_IMG:FWD_IMG);
     }
+#endif
   } else {
     // needs to be called periodically for highgui event-processing
     if (show_raw_images) {
+#ifndef DISABLE_DOUBLE_WEBCAM
       image_input->get_image(FWD_IMG);
       image_input->get_image(DWN_IMG);
+#else
+      printf ("\ncalling get_image\n");
+      image_input->get_image(use_fwd_img?FWD_IMG:DWN_IMG);
+#endif
     } else {
+#ifndef DISABLE_DOUBLE_WEBCAM
       image_input->ready_image(FWD_IMG);
       image_input->ready_image(DWN_IMG);
+#else
+      image_input->ready_image(use_fwd_img?FWD_IMG:DWN_IMG);
+#endif
     }
     char ch = cvWaitKey(3);
     if (ch) {
