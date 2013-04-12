@@ -64,7 +64,7 @@ class ImageInput {
     }
 
     bool can_display() { return can_display_images; }
-    bool ready_image(ImageDirection dir = FWD_IMG)
+    virtual bool ready_image(ImageDirection dir = FWD_IMG)
     {
       bool ret = ready_internal_image(dir);
 
@@ -185,6 +185,15 @@ class ImageInputWebcam : public ImageInput {
   public:
     ImageInputWebcam(const char* settings_file);
     virtual ~ImageInputWebcam();
+
+    bool ready_image(ImageDirection dir = FWD_IMG)
+    {
+#ifdef DISABLE_DOUBLE_WEBCAM
+        return false;
+#else
+        return ImageInput::ready_image(dir);
+#endif
+    }
 
   protected:
     virtual IplImage* get_internal_image(ImageDirection dir = FWD_IMG);
