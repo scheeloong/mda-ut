@@ -428,11 +428,14 @@ int mvAdvancedCircles::find_internal (IplImage* img) {
 
     /// remove each circle with less than N_CIRCLES_CUTOFF support
     CIRCLE_VECTOR::iterator it = accepted_circles.begin();
-    CIRCLE_VECTOR::iterator end_it = accepted_circles.end();
-    for (; it != end_it; ++it) {
+    /// Note: The loop is strange because it is erasing while iterating.
+    ///       You will risk strange segfaults if you change this!
+    while (it != accepted_circles.end()) {
         if (it->num < N_CIRCLES_CUTOFF) {
             accepted_circles.erase(it);
-        } 
+        } else {
+            ++it;
+        }
     }
 
     /// sort the circles by their counts
