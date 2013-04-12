@@ -43,6 +43,7 @@ void set_controller(int status)
    if (enable_controller) {
      struct orientation o;
      get_imu_orientation(&o);
+     set_target_speed(0);
      set_target_heading(o.yaw);
      set_target_depth(get_depth());
 
