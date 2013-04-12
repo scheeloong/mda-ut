@@ -534,13 +534,13 @@ void ManualOperation::long_input()
     int target_speed;
     sscanf(buf, "speed %d", &target_speed);
     actuator_output->set_attitude_absolute(SPEED, target_speed);
-    message_hold("Set target speed");
+    message_hold("Target speed has been set");
   } else if (!strncmp("yaw ", buf, strlen("yaw "))) {
     int target_yaw;
     sscanf(buf, "yaw %d", &target_yaw);
     if (abs(target_yaw) <= 180) {
       actuator_output->set_attitude_absolute(YAW, target_yaw);
-      message_hold("Set target yaw");
+      message_hold("Target yaw has been set");
     } else {
       message_hold("Invalid yaw, must be [-180, 180]");
     }
@@ -567,7 +567,7 @@ void ManualOperation::long_input()
     sscanf(buf, "depth %d", &target_depth);
     if (target_depth >= 0) {
       actuator_output->set_attitude_absolute(DEPTH, target_depth);
-      message_hold("Set target depth");
+      message_hold("Target depth has been set");
     } else {
       message_hold("Invalid depth, must be >= 0");
     }
