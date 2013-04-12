@@ -18,6 +18,8 @@
 #include <sstream>
 #include "mgui.h"
 
+#define DISABLE_DOUBLE_WEBCAM  // define this if computer can't support 2 webcams at the same time 
+
 enum ImageDirection {
   FWD_IMG,
   DWN_IMG
@@ -87,7 +89,6 @@ class ImageInput {
       if (!frame) {
         return frame;
       }
-
       // show, write image if configured to
       if (dir == FWD_IMG) {
         if (window_fwd) {
@@ -190,6 +191,9 @@ class ImageInputWebcam : public ImageInput {
     virtual bool ready_internal_image(ImageDirection dir = FWD_IMG);
 
   private:
+#ifdef DISABLE_DOUBLE_WEBCAM
+    int fwd_cam_number, dwn_cam_number;
+#endif
     mvCamera *fwdCam;
     mvCamera *dwnCam;
 };
