@@ -359,14 +359,45 @@ mvMeanShift::mvMeanShift (const char* settings_file) :
     ds_scratch->imageData = ds_scratch_3->imageData;
 
     // generate kernel point array
-    int kernel_area = KERNEL_SIZE * KERNEL_SIZE;
-    int kernel_rad = (KERNEL_SIZE - 1)/2;
-    kernel_point_array = new int[kernel_area];
+    KERNEL_AREA = KERNEL_SIZE * KERNEL_SIZE;
+    KERNEL_RAD = (KERNEL_SIZE - 1)/2;
+
+#ifdef KERNEL_SHAPE_RECT
+    kernel_point_array = new int[KERNEL_AREA];
     
     unsigned array_index = 0;
-    for (int j = -kernel_rad; j <= kernel_rad; j++)
-        for (int i = -kernel_rad; i <= kernel_rad; i++)
-            kernel_point_array[array_index++] = i*ds_scratch->widthStep + j;
+    for (int j = -KERNEL_RAD; j <= KERNEL_RAD; j++)
+        for (int i = -KERNEL_RAD; i <= KERNEL_RAD; i++)
+            kernel_point_array[array_index++] = i*ds_scratch->widthStep + j;       
+#else    
+    int* temp_array = new int[KERNEL_AREA];
+    unsigned array_index = 0;
+    unsigned valid_count = 0;
+    int R2 = KERNEL_RAD*KERNEL_RAD;//KERNEL_SIZE*KERNEL_SIZE/4;
+
+    for (int j = -KERNEL_RAD; j <= KERNEL_RAD; j++) {
+        for (int i = -KERNEL_RAD; i <= KERNEL_RAD; i++) {
+            if (i*i + j*j <= R2) { // check if i,j are in the ellipse
+                temp_array[array_index++] = i*ds_scratch->widthStep + j;
+                valid_count++;   
+            }
+            else {
+                temp_array[array_index++] = MV_UNDEFINED_VALUE;
+            }                
+        }
+    }
+
+    /// copy the valid points to kernel_point_array
+    kernel_point_array = new int[valid_count];
+    array_index = 0;
+    for (int i = 0; i < KERNEL_AREA; i++) {
+        if (temp_array[i] != MV_UNDEFINED_VALUE) {
+            kernel_point_array[array_index++] = temp_array[i];
+        }
+    }
+    delete[] temp_array;
+    KERNEL_AREA = valid_count;
+#endif
 }
 
 mvMeanShift::~mvMeanShift () {
@@ -413,18 +444,22 @@ void mvMeanShift::mvMeanShift_internal(IplImage* src_scratch) {
 // src_scratch is the src image passed in by the user, which will now be used as a scratch
     bin_MeanShift.start();
 
-    int kernel_area = KERNEL_SIZE * KERNEL_SIZE;
-    int kernel_rad = (KERNEL_SIZE - 1) / 2;
-
     cvZero (src_scratch);
 
     // we will be filtering ds_scratch_3 to src_scratch, then copying the data back to ds_scratch_3
     unsigned char* imgPtr, *resPtr;
-    for (int r = kernel_rad; r < ds_scratch_3->height-kernel_rad; r++) {                         
-        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep + 3*kernel_rad); // imgPtr = first pixel of rth's row
-        resPtr = (unsigned char*) (src_scratch->imageData + r*src_scratch->widthStep + 3*kernel_rad);
+    for (int r = KERNEL_RAD; r < ds_scratch_3->height-KERNEL_RAD; r++) {                         
+        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep + 3*KERNEL_RAD); // imgPtr = first pixel of rth's row
+        resPtr = (unsigned char*) (src_scratch->imageData + r*src_scratch->widthStep + 3*KERNEL_RAD);
         
-        for (int c = kernel_rad; c < ds_scratch_3->width-kernel_rad; c++) {
+        for (int c = KERNEL_RAD; c < ds_scratch_3->width-KERNEL_RAD; c++) {
+            // skip pixel if already visited
+            if (resPtr[1] != 0) {
+                imgPtr += 3;
+                resPtr += 3;
+                continue;
+            }
+
             unsigned char H = *imgPtr;
             unsigned char S = *(imgPtr+1);
             unsigned char V = *(imgPtr+2);
@@ -436,7 +471,7 @@ void mvMeanShift::mvMeanShift_internal(IplImage* src_scratch) {
                 unsigned char good_pixels = 1, total_pixels = 1;
 
                 // go thru each pixel in the kernel
-                for (int i = 0; i < kernel_area; i++) {
+                for (int i = 0; i < KERNEL_AREA; i++) {
                     tempPtr = imgPtr + 3*kernel_point_array[i];
 
                     if (abs(S-tempPtr[1]) <= S_DIST && 
@@ -462,10 +497,14 @@ void mvMeanShift::mvMeanShift_internal(IplImage* src_scratch) {
                     total_pixels++;
                 }
 
+                // if good enough, visit every pixel in the kernel and set value equal to average
                 if (GOOD_PIXELS_FACTOR*good_pixels >= total_pixels) {
-                    resPtr[0] = (unsigned char)(H2 / good_pixels);
-                    resPtr[1] = (unsigned char)(S2 / good_pixels);
-                    resPtr[2] = (unsigned char)(V2 / good_pixels);
+                    for (int i = 0; i < KERNEL_AREA; i++) {
+                        tempPtr = resPtr + 3*kernel_point_array[i];
+                        tempPtr[0] = (unsigned char)(H2 / good_pixels);
+                        tempPtr[1] = (unsigned char)(S2 / good_pixels);
+                        tempPtr[2] = (unsigned char)(V2 / good_pixels);
+                    }
                 }
             }
             

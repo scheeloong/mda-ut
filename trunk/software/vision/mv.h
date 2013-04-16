@@ -371,6 +371,9 @@ private:
     int S_DIST;
     int V_DIST;
 
+    int KERNEL_AREA;
+    int KERNEL_RAD;
+
     // internal data
     Hue_Box* hue_box[NUM_BOXES]; // array of pointers to boxes
     int* kernel_point_array;
