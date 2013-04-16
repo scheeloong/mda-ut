@@ -62,6 +62,11 @@ void ManualOperation::display_start_message()
 
 void ManualOperation::work()
 {
+  // Turn off display by default
+  if (image_input->can_display()) {
+    mvWindow::setShowImage(show_raw_images);
+  }
+
   display_start_message();
 
   // Take keyboard commands
@@ -96,6 +101,7 @@ void ManualOperation::work()
       case 'y':
          if (image_input->can_display()) {
            show_raw_images = !show_raw_images;
+           mvWindow::setShowImage(show_raw_images);
          } else {
            message_hold("Image stream should already be displayed");
          }
@@ -410,26 +416,17 @@ void ManualOperation::process_image()
       message_hold("Image stream over");
     }
 #ifndef DISABLE_DOUBLE_WEBCAM
-    if (show_raw_images) {
-      // show the other image by getting it
-      image_input->get_image(use_fwd_img?DWN_IMG:FWD_IMG);
-    } else {
-      image_input->ready_image(use_fwd_img?DWN_IMG:FWD_IMG);
-    }
+    // show the other image by getting it
+    image_input->get_image(use_fwd_img?DWN_IMG:FWD_IMG);
 #endif
   } else {
     // needs to be called periodically for highgui event-processing
-    if (show_raw_images) {
 #ifndef DISABLE_DOUBLE_WEBCAM
-      image_input->get_image(FWD_IMG);
-      image_input->get_image(DWN_IMG);
+    image_input->get_image(FWD_IMG);
+    image_input->get_image(DWN_IMG);
 #else
-      image_input->get_image(use_fwd_img?FWD_IMG:DWN_IMG);
+    image_input->get_image(use_fwd_img?FWD_IMG:DWN_IMG);
 #endif
-    } else {
-      image_input->ready_image(FWD_IMG);
-      image_input->ready_image(DWN_IMG);
-    }
     char ch = cvWaitKey(3);
     if (ch) {
       CharacterStreamSingleton::get_instance().write_char(ch);
