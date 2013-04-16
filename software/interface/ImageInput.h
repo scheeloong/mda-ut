@@ -18,7 +18,7 @@
 #include <sstream>
 #include "mgui.h"
 
-#define DISABLE_DOUBLE_WEBCAM  // define this if computer can't support 2 webcams at the same time 
+//#define DISABLE_DOUBLE_WEBCAM  // define this if computer can't support 2 webcams at the same time 
 
 enum ImageDirection {
   FWD_IMG,

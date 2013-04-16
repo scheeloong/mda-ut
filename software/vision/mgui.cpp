@@ -66,6 +66,8 @@ mvCamera:: mvCamera (unsigned cam_number) :
     //read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
 
     _capture = cvCreateCameraCapture (cam_number);
+    cvSetCaptureProperty(_capture, CV_CAP_PROP_FRAME_WIDTH, 400);
+    cvSetCaptureProperty(_capture, CV_CAP_PROP_FRAME_HEIGHT, 300);
     _imgResized = mvGetScratchImage_Color();
 }
 
