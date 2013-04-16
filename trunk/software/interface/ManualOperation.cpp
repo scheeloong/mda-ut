@@ -53,7 +53,7 @@ void ManualOperation::display_start_message()
   refresh();
 }
 
-#define SPEED_CHG 5
+#define SPEED_CHG 3
 #define YAW_CHG_IN_DEG 10
 #define DEPTH_CHG_IN_CM 200
 
