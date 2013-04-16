@@ -36,15 +36,15 @@
  * Alpha is the decay rate for Integral term
  */
 
-#define ROLL_CONST_P 18.0 /* NOT CALIBRATED */
+#define ROLL_CONST_P 18.0
 #define ROLL_CONST_I 0.0 /* NOT CALIBRATED */
 #define ROLL_CONST_D 0.0 /* NOT CALIBRATED */
 #define ROLL_ALPHA 0.0
-#define PITCH_CONST_P 24.0 /* NOT CALIBRATED */
+#define PITCH_CONST_P 24.0
 #define PITCH_CONST_I 0.0 /* NOT CALIBRATED */
 #define PITCH_CONST_D 0.0 /* NOT CALIBRATED */
 #define PITCH_ALPHA 0.0
-#define YAW_CONST_P 12.0 /* NOT CALIBRATED */
+#define YAW_CONST_P 12.0
 #define YAW_CONST_I 0.0 /* NOT CALIBRATED */
 #define YAW_CONST_D 0.0 /* NOT CALIBRATED */
 #define YAW_ALPHA 0.0
