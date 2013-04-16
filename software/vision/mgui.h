@@ -52,10 +52,16 @@ class mvWindow {
     ~mvWindow (); 
     void showImage (const CvArr* image) {
         bin_showImage.start();
-      cvShowImage(_name, image);
+      if (mvWindow::show_image_val) cvShowImage(_name, image);
         bin_showImage.stop();
     }
+    static void setShowImage (bool val) {
+        show_image_val = val;
+    }
     void move (unsigned x, unsigned y) { cvMoveWindow(_name, x, y); }
+
+    private:
+    static bool show_image_val;
 };
 
 /** mvVideoWriter - class for writing to disk **/

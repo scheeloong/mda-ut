@@ -4,6 +4,8 @@
 /** mvWindow methods **/
 static bool WINDOWS_ARRAY[NUM_SUPPORTED_WINDOWS] = {false,false,false,false};
 
+bool mvWindow::show_image_val = true;
+
 mvWindow:: mvWindow (const char name[]) :
     bin_showImage ("mvWindow - showImage")
 { // this has to be the h file
