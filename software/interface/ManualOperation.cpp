@@ -467,7 +467,7 @@ void ManualOperation::message_hold(const char *msg, int delay_in_s)
     message(msg);
   } else {
     message(msg);
-    count = -delay_in_s * 1000 / WAIT_KEY_IN_MS;
+    count = -75 * delay_in_s; // Estimate
   }
 }
 
