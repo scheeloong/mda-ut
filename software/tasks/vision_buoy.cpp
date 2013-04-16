@@ -26,7 +26,7 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY () :
 MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY (const char* settings_file) :
     _window (mvWindow("Buoy Vision Module")),
     _MeanShift (mvMeanShift(settings_file)),
-    _Morphology5 (mvBinaryMorphology(5, 5, MV_KERN_RECT)),
+    _Morphology5 (mvBinaryMorphology(9, 9, MV_KERN_RECT)),
     _Morphology3 (mvBinaryMorphology(3, 3, MV_KERN_RECT)),
     _AdvancedCircles(MDA_VISION_BUOY_SETTINGS),
     _Rect ("Rect_settings.csv")
@@ -46,7 +46,7 @@ void MDA_VISION_MODULE_BUOY:: primary_filter (IplImage* src) {
     _Rect.find (_filtered_img);
     _Rect.removeFromImage(_filtered_img);
 
-    _Morphology3.gradient(_filtered_img, _filtered_img);
+    _Morphology5.gradient(_filtered_img, _filtered_img);
 
     _AdvancedCircles.find (_filtered_img);
 

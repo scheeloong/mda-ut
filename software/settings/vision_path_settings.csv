@@ -1,10 +1,10 @@
 # H,S,V max and min for the gate task
-HUE_MIN, 150
-HUE_MAX, 30
+HUE_MIN, 140
+HUE_MAX, 190
 SAT_MIN, 80
-SAT_MAX, 255
-VAL_MIN, 50
-VAL_MAX, 255
+SAT_MAX, 135
+VAL_MIN, 80
+VAL_MAX, 135
 
 # this file defines constants used in the Hough Lines algorithm
 PIXEL_RESOLUTION 1 # step size in pixels, > 1 means the line finder skips pixels
