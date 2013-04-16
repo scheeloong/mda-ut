@@ -214,8 +214,8 @@ void calculate_pid()
    double m_front_left, m_front_right, m_rear, m_left, m_right;
    
    stabilizing_motors_force_to_pwm ( // this calculates the pwms for yaw motors
-      0.5*Yaw_Force_Needed + Forward_Force_Needed, // m_left
-      -0.5*Yaw_Force_Needed + Forward_Force_Needed, // m_right
+      0.5*Yaw_Force_Needed - Forward_Force_Needed, // m_left
+      -0.5*Yaw_Force_Needed - Forward_Force_Needed, // m_right
       0, // unused
       &m_left,
       &m_right,
@@ -223,8 +223,8 @@ void calculate_pid()
    );
 
    stabilizing_motors_force_to_pwm ( // this calculates the pwms for pitch and roll motors
-      -0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_left
-      0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_right
+      0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_left
+      -0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_right
       -0.5*Pitch_Force_Needed + 0.5*Depth_Force_Needed, // m_rear
       &m_front_left,
       &m_front_right,

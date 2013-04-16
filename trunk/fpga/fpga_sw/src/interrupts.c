@@ -97,6 +97,8 @@ static void pm_interrupt(void *context, alt_u32 id)
 {
    // Get failing voltage line
    int which_failed = IORD(POWER_MANAGEMENT_SLAVE_0_BASE, 0);
+
+   if (which_failed == 5 || which_failed == 6) return; // ignore 3.3V failures.
    power_failures[which_failed]++;
 
    static const int failure_threshold = 100;
