@@ -2,6 +2,8 @@
 #include "SubmarineSingleton.h"
 #include "../scripts/scripts.h"
 
+#define SPEED_FACTOR 5 /* Tune the submarine speed offset to sort of resemble the simulator */
+
 ActuatorOutputSubmarine::ActuatorOutputSubmarine()
 {
   SubmarineSingleton::get_instance().register_instance();
@@ -44,7 +46,7 @@ void ActuatorOutputSubmarine::set_attitude_absolute(ATTITUDE_DIRECTION dir, int 
 {
   switch (dir) {
     case (SPEED):
-      dyn_set_target_speed(val);
+      dyn_set_target_speed(val * SPEED_FACTOR);
       break;
     case (DEPTH):
       SubmarineSingleton::get_instance().set_target_depth(val);
