@@ -44,9 +44,14 @@ void ActuatorOutputSubmarine::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir,
 
 void ActuatorOutputSubmarine::set_attitude_absolute(ATTITUDE_DIRECTION dir, int val)
 {
+  static int speed_val = 0;
+
   switch (dir) {
     case (SPEED):
-      dyn_set_target_speed(val * SPEED_FACTOR);
+      if (val != speed_val) {
+          dyn_set_target_speed(val * SPEED_FACTOR);
+          speed_val = val;
+      }
       break;
     case (DEPTH):
       SubmarineSingleton::get_instance().set_target_depth(val);

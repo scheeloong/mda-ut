@@ -12,7 +12,7 @@
 
 #define ZERO_DC 512
 #define PWM_FREQ 20
-#define FLUSH_MASK 0x7
+#define FLUSH_MASK 0x3
 
 unsigned cmd_ok = 0;
 
@@ -364,7 +364,7 @@ void dyn_status () {
 void flush_output()
 {
     flush_counter++;
-    if (flush_counter & FLUSH_MASK == 0) {
+    if ((flush_counter & FLUSH_MASK) == 0) {
         write_and_flush_term("gd\n");
     }
 }
