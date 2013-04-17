@@ -87,6 +87,31 @@ void mvSplitImage (IplImage* src, IplImage** plane1, IplImage** plane2) {
     }
 }
 
+void mvDumpPixels (IplImage* img, const char* file_name, char delimiter) {
+    FILE* fp = fopen (file_name, "w");
+    if (fp == NULL)
+        return;
+
+    const char d = delimiter;
+    fprintf (fp, "Height:%c%d%c%cWidth:%c%d%c%cnChannels:%c%d\n\n", d,img->height,d,d,d,img->width,d,d,d,img->nChannels);
+
+    unsigned char* imgPtr;
+    for (int i = 0; i < img->nChannels; i++) {
+        fprintf (fp, "channel %d\n\n", i+1);
+        for (int r = 0; r < img->height; r++) {
+            imgPtr = (unsigned char*) (img->imageData + r*img->widthStep );
+            for (int c = 0; c < img->width; c++) {
+                fprintf (fp, "%d%c", *imgPtr, d);
+                imgPtr += img->nChannels;
+            }
+            fprintf (fp, "\n");
+        }
+        fprintf (fp, "\n\n");
+    }
+        
+    fclose (fp);
+}
+
 void mvHuMoments(IplImage *src, double *hus){
     CvMoments moments;
 

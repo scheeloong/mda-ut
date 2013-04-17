@@ -10,6 +10,15 @@
 #include "mvShapes.h"
 #include "profile_bin.h"
 
+unsigned CAM_NUMBER=0;
+unsigned WRITE=0;
+unsigned TEST=0;
+unsigned CARTOON=0;
+unsigned LINE=0;
+unsigned CIRCLE=0;
+unsigned LOAD=0;
+unsigned BREAK=0;
+
 void show_HSV_call_back (int event, int x, int y, int flags, void* param) {
 // param must be the IplImage* pointer, with HSV color space    
     IplImage* img = (IplImage*) param;
@@ -27,8 +36,6 @@ void show_HSV_call_back (int event, int x, int y, int flags, void* param) {
 }
 
 int main( int argc, char** argv ) {
-    unsigned CAM_NUMBER=0, WRITE=0, TEST=0, CARTOON=0,
-             LINE=0, CIRCLE=0, LOAD=0;
     unsigned long nframes = 0, t_start, t_end;
     
     if (argc == 1) 
@@ -43,6 +50,8 @@ int main( int argc, char** argv ) {
             TEST = 1;
         else if (!strcmp (argv[i], "--write"))
             WRITE = 1;
+        else if (!strcmp (argv[i], "--break"))
+            BREAK = 1;
         else if (!strcmp (argv[i], "--line"))
             LINE = 1;
         else if (!strcmp (argv[i], "--circle"))
@@ -154,8 +163,8 @@ int main( int argc, char** argv ) {
       */
         
         if (TEST) {             
-            //mean_shift.mean_shift(frame, scratch_color);
-            mean_shift.filter(frame, filter_img);
+            mean_shift.mean_shift(frame, scratch_color);
+            mean_shift.filter(scratch_color, filter_img);
 
             win2->showImage (scratch_color);
             win3->showImage (filter_img);
@@ -181,9 +190,15 @@ int main( int argc, char** argv ) {
         
     LOOP_BOTTOM:
         nframes++;
-        c = cvWaitKey(5);
-        if (c == 'q') 
+        if (BREAK)
+            c = cvWaitKey(0);
+        else
+            c = cvWaitKey(5);
+        
+        if (c == 'q')
             break;
+        else if (c == 'w')
+            mvDumpPixels (frame, "webcam_img_dump.csv");
     }
     
     t_end = clock ();
