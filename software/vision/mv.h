@@ -41,6 +41,9 @@ inline std::string color_int_to_string (int color) {
     return std::string("UNKNOWN");
 }
 
+// write the pixel content of an image into a txt file
+void mvDumpPixels (IplImage* img, const char* file_name, char delimiter = ',');
+
 /** mvHuMoments calculates the Hu moments for a bitmap image
  *  It is a wrapper for cvMoments and cvHuMoments
  */
