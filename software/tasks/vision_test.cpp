@@ -46,28 +46,7 @@ void MDA_VISION_MODULE_TEST:: primary_filter (IplImage* src) {
     _MeanShift.mean_shift(src, _color_img);
     //_HSVFilter.filter (src, _filtered_img);
     _filtered_img->origin = src->origin;
- /*   
-    double target[7] = {0.256755, 0.001068, 0.006488, 0.001148, 0.000003, 0.000037, -0.000000};//the plane
 
-    double hu[7];
-    mvHuMoments(_filtered_img, hu);
-
-    double dist = 0;
-
-    for (int i = 0; i < 7; ++i)
-    {
-        printf("%lf, ", hu[i]);
-        dist += fabs(hu[i] - target[i]);
-    }
-    printf("\n");
-
-    printf("%lf\n", dist);
-
-    if (dist < 0.005){
-        printf("it's a plane!\n");
-    }
-
-*/
     bin_test.stop();
 
     // this line displays the img in a window
