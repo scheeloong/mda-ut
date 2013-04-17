@@ -17,6 +17,7 @@ const char MDA_VISION_MODULE_TEST::MDA_VISION_TEST_SETTINGS[] = "vision_test_set
 MDA_VISION_MODULE_TEST:: MDA_VISION_MODULE_TEST () :
 	_window (mvWindow("Test Vision Module")),
 	_HSVFilter (mvHSVFilter(MDA_VISION_TEST_SETTINGS)),
+	_MeanShift (mvMeanShift(MDA_VISION_TEST_SETTINGS)),
 	_HoughLines (mvHoughLines(MDA_VISION_TEST_SETTINGS)),
 	_lines (mvLines()),
     _adaptive ("vision_gate_settings.csv"),
@@ -42,9 +43,10 @@ void MDA_VISION_MODULE_TEST:: primary_filter (IplImage* src) {
     /** YOUR CODE HERE. DO STUFF TO img */
     bin_test.start();
 
-    _HSVFilter.filter (src, _filtered_img);
+    _MeanShift.mean_shift(src, _color_img);
+    //_HSVFilter.filter (src, _filtered_img);
     _filtered_img->origin = src->origin;
-    
+ /*   
     double target[7] = {0.256755, 0.001068, 0.006488, 0.001148, 0.000003, 0.000037, -0.000000};//the plane
 
     double hu[7];
@@ -65,11 +67,11 @@ void MDA_VISION_MODULE_TEST:: primary_filter (IplImage* src) {
         printf("it's a plane!\n");
     }
 
-
+*/
     bin_test.stop();
 
     // this line displays the img in a window
-    _window.showImage (_filtered_img);
+    _window.showImage (_color_img);
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_TEST:: calc_vci () {

@@ -37,6 +37,7 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
     _lines.clearData ();
     _KMeans.clearData ();
     
+    _Morphology.close(_filtered_img, _filtered_img);
     _Morphology.gradient(_filtered_img, _filtered_img);
     _HoughLines.findLines (_filtered_img, &_lines);
     _KMeans.cluster_auto (1, 4, &_lines, 1);
