@@ -93,6 +93,7 @@ class MDA_VISION_MODULE_TEST : public MDA_VISION_MODULE_BASE {
     static const char MDA_VISION_TEST_SETTINGS[];
     mvWindow _window;
     mvHSVFilter _HSVFilter;
+    mvMeanShift _MeanShift;
     mvHoughLines _HoughLines;
     mvKMeans _KMeans;
     mvLines _lines;
