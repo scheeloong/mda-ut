@@ -7,6 +7,9 @@
 
 #define BUF_LEN 16
 
+// Uncomment to debug videos frame by frame
+//#define DEBUG_FRAME_BY_FRAME
+
 void ManualOperation::display_start_message()
 {
   // clear regular I/O
@@ -62,10 +65,12 @@ void ManualOperation::display_start_message()
 
 void ManualOperation::work()
 {
+#ifndef DEBUG_FRAME_BY_FRAME
   // Turn off display by default
   if (image_input->can_display()) {
     mvWindow::setShowImage(show_raw_images);
   }
+#endif
 
   display_start_message();
 
@@ -407,10 +412,16 @@ void ManualOperation::process_image()
     IplImage* frame = image_input->get_image(use_fwd_img?FWD_IMG:DWN_IMG);
     if (frame) {
       vision_module->filter(frame);
+#ifdef DEBUG_FRAME_BY_FRAME
+      char ch = cvWaitKey(0);
+      CharacterStreamSingleton::get_instance().write_char(ch);
+#else
+      // Allow several keys (ie if held) to be read before doing the vision processing loop
       for (int i = 0; i < 3; i++) {
         char ch = cvWaitKey(3);
         CharacterStreamSingleton::get_instance().write_char(ch);
       }
+#endif
       fflush(stdout);
     } else {
       message_hold("Image stream over");
@@ -427,7 +438,11 @@ void ManualOperation::process_image()
 #else
     image_input->get_image(use_fwd_img?FWD_IMG:DWN_IMG);
 #endif
+#ifdef DEBUG_FRAME_BY_FRAME
+    char ch = cvWaitKey(0);
+#else
     char ch = cvWaitKey(3);
+#endif
     if (ch) {
       CharacterStreamSingleton::get_instance().write_char(ch);
     }
