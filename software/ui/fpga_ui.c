@@ -12,11 +12,13 @@
 
 #define ZERO_DC 512
 #define PWM_FREQ 20
+#define FLUSH_MASK 0x7
 
 unsigned cmd_ok = 0;
 
 static unsigned power = 0;
 static int verbose = 1;
+static int flush_counter = 0;
 
 static pid_t child_pid = 0;
 static int p_stdin[2], p_stdout[2];
@@ -358,11 +360,22 @@ void dyn_status () {
     printf("depth: %d\n", d);
 }
 
+// Flush the output every so often so polling remains responsive
+void flush_output()
+{
+    flush_counter++;
+    if (flush_counter & FLUSH_MASK == 0) {
+        write_and_flush_term("gd\n");
+    }
+}
+
 void dyn_set_target_speed (int target_speed) {
     cmd_ok = 1;
     if (verbose) printf("setting target speed to %d.\n", target_speed);
     fprintf(infp, "ss %x\n", target_speed);
     fflush(infp);
+
+    flush_output();
 }
 
 void dyn_set_target_depth (int target_depth) {
@@ -370,6 +383,8 @@ void dyn_set_target_depth (int target_depth) {
     if (verbose) printf("setting target depth to %d.\n", target_depth);
     fprintf(infp, "sd %x\n", target_depth);
     fflush(infp);
+
+    flush_output();
 }
 
 void dyn_set_target_yaw (int target_yaw) {
@@ -377,6 +392,8 @@ void dyn_set_target_yaw (int target_yaw) {
     if (verbose) printf("setting target yaw to %d.\n", target_yaw);
     fprintf(infp, "sh %x\n", target_yaw);
     fflush(infp);
+
+    flush_output();
 }
 
 void set_verbose(int v) {
