@@ -16,7 +16,8 @@ const char MDA_VISION_MODULE_MARKER::MDA_VISION_MARKER_SETTINGS[] = "vision_mark
 /// ########################################################################
 MDA_VISION_MODULE_MARKER:: MDA_VISION_MODULE_MARKER () :
 	_window (mvWindow("Marker Vision Module")),
-	_HSVFilter (mvHSVFilter(MDA_VISION_MARKER_SETTINGS))
+	_HSVFilter (mvHSVFilter(MDA_VISION_MARKER_SETTINGS)),
+        targets_found({false, false})
 {
     _filtered_img = mvGetScratchImage();
     //_filtered_img->origin = 1;
@@ -67,6 +68,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_MARKER:: calc_vci () {
         if (dist < HU_THRESH){
             retval = FULL_DETECT;
             printf("Match found!! :)\n");
+            targets_found[j] = true;
         }
         dist = 0;
     }

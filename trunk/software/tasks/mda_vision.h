@@ -167,6 +167,10 @@ public:
     void primary_filter (IplImage* src);
     MDA_VISION_RETURN_CODE calc_vci ();
 
+    bool* getFound() { return targets_found; }
+
+private:
+    bool targets_found[2];
 };
 
 
