@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #include "mgui.h"
 #include "mv.h"
 
@@ -88,3 +90,23 @@ mvCamera:: ~mvCamera () {
     mvReleaseScratchImage_Color();
 }
 
+void show_HSV_call_back (int event, int x, int y, int flags, void* param) {
+// param must be the IplImage* pointer, with HSV color space    
+    IplImage* img = (IplImage*) param;
+    unsigned char * imgPtr;
+    
+    if (event == CV_EVENT_LBUTTONDOWN || event == CV_EVENT_RBUTTONDOWN) {
+        // print the HSV values at x,y
+        imgPtr = (unsigned char*) img->imageData + y*img->widthStep + x*img->nChannels;
+        unsigned char b = imgPtr[0];
+        unsigned char g = imgPtr[1];
+        unsigned char r = imgPtr[2];
+        unsigned char h, s, v;
+        tripletBRG2HSV(b, g, r, h, s, v);
+        printf ("(%d,%d): HSV:  %hhu  %hhu  %hhu RGB:  %hhu  %hhu  %hhu\n", x,y,h,s,v,r,g,b);
+    }
+
+    if (event == CV_EVENT_RBUTTONDOWN) {
+        usleep (500000);
+    }
+}

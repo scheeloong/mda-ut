@@ -17,6 +17,9 @@
 #define MDA_BACKUP_SETTINGS_DIR "../settings/"
 #define COMMON_SETTINGS_FILE "common_settings.csv"
 
+// Call back to show HSV when an image pixel is clicked
+void show_HSV_call_back (int event, int x, int y, int flags, void* param);
+
 /** read_mv_setting and co. - Functions to read settings from .csv files **/
 // This function searches through the file and looks for the setting, getting
 //   its value if found. Template allow for int,unsigned,float versions 
@@ -52,7 +55,10 @@ class mvWindow {
     ~mvWindow (); 
     void showImage (const CvArr* image) {
         bin_showImage.start();
-      if (mvWindow::show_image_val) cvShowImage(_name, image);
+      if (mvWindow::show_image_val) {
+        cvShowImage(_name, image);
+        cvSetMouseCallback(_name, show_HSV_call_back, const_cast<void *>(image));
+      }
         bin_showImage.stop();
     }
     static void setShowImage (bool val) {

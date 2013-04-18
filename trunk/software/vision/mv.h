@@ -41,8 +41,6 @@ inline std::string color_int_to_string (int color) {
     return std::string("UNKNOWN");
 }
 
-void show_HSV_call_back (int event, int x, int y, int flags, void* param);
-
 // write the pixel content of an image into a txt file
 void mvDumpPixels (IplImage* img, const char* file_name, char delimiter = ',');
 
@@ -420,5 +418,8 @@ public:
     void filter(IplImage *src, IplImage* dst);
     void combined_filter(IplImage *src, IplImage* dst);
 };
+
+// Helper function for HSV conversion
+void tripletBRG2HSV (uchar Blue, uchar Green, uchar Red, uchar &Hue, uchar &Sat, uchar &Val);
 
 #endif

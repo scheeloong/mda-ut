@@ -90,8 +90,6 @@ int main( int argc, char** argv ) {
     IplImage* filter_img = mvCreateImage ();
     //IplImage* filter_img2 = mvCreateImage ();
  
-    cvSetMouseCallback ("webcam", show_HSV_call_back, HSV_img);
-
     /// execution
     char c;
     IplImage* frame;
