@@ -402,12 +402,13 @@ void tripletBRG2HSV (uchar Blue, uchar Green, uchar Red, uchar &Hue, uchar &Sat,
         Val = M;
         return;
     }
-    else if (M == Red)
-        Hue = 30 *(((Green - Blue) / Chroma) % 6);
+
+    if (M == Red)
+        Hue = 30 * (Green - Blue) / Chroma;
     else if (M == Green)
-        Hue = 30 * ((Blue - Red) / Chroma + 2);
+        Hue = 60 + 30 * (Blue - Red) / Chroma;
     else
-        Hue = 30 * ((Red - Green) / Chroma + 4);
+        Hue = 120 + 30 * (Red - Green) / Chroma;
 
     Val = M;
     Sat = 255 *Chroma / Val;
