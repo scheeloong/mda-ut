@@ -1,6 +1,5 @@
 #include "mv.h"
 #include <stdlib.h>
-#include <unistd.h>
 
 #define MV_DEBUG
 #ifdef MV_DEBUG
@@ -438,20 +437,4 @@ void mvBRG2HSV(IplImage* src, IplImage* dst) {
     
   return;
   
-}
-
-void show_HSV_call_back (int event, int x, int y, int flags, void* param) {
-// param must be the IplImage* pointer, with HSV color space    
-    IplImage* img = (IplImage*) param;
-    unsigned char * imgPtr;
-    
-    if (event == CV_EVENT_LBUTTONDOWN || event == CV_EVENT_RBUTTONDOWN) {
-        // print the HSV values at x,y
-        imgPtr = (unsigned char*) img->imageData + y*img->widthStep + x*img->nChannels;
-        printf ("(%d,%d):  %u  %u  %u\n", x,y,imgPtr[0],imgPtr[1],imgPtr[2]);
-    }
-
-    if (event == CV_EVENT_RBUTTONDOWN) {
-        usleep (500000);
-    }
 }
