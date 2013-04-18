@@ -103,7 +103,7 @@ void show_HSV_call_back (int event, int x, int y, int flags, void* param) {
         unsigned char r = imgPtr[2];
         unsigned char h, s, v;
         tripletBRG2HSV(b, g, r, h, s, v);
-        printf ("(%d,%d): HSV:  %hhu  %hhu  %hhu RGB:  %hhu  %hhu  %hhu\n", x,y,h,s,v,r,g,b);
+        printf ("(%3d,%3d): HSV: %3hhu %3hhu %3hhu RGB: %3hhu %3hhu %3hhu\n", x,y,h,s,v,r,g,b);
     }
 
     if (event == CV_EVENT_RBUTTONDOWN) {
