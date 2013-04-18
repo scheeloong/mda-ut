@@ -349,13 +349,13 @@ void ManualOperation::work()
 
            switch(ret_code) {
              case TASK_DONE:
-                message_hold("Frame task completed successfully");
+                message_hold("Marker task completed successfully");
                 break;
              case TASK_QUIT:
-                message_hold("Frame task quit by user");
+                message_hold("Marker task quit by user");
                 break;
              default:
-                message_hold("Frame task errored out");
+                message_hold("Marker task errored out");
                 break;
            }
            break;
