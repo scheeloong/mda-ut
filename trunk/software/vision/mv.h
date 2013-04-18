@@ -41,6 +41,8 @@ inline std::string color_int_to_string (int color) {
     return std::string("UNKNOWN");
 }
 
+void show_HSV_call_back (int event, int x, int y, int flags, void* param);
+
 // write the pixel content of an image into a txt file
 void mvDumpPixels (IplImage* img, const char* file_name, char delimiter = ',');
 
