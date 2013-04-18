@@ -208,7 +208,7 @@ void ManualOperation::work()
          delete vision_module;
          message_hold("Selected test vision module\n");
          vision_module = new MDA_VISION_MODULE_TEST();
-         use_fwd_img = false;
+         use_fwd_img = true;
          break;
       case '1':
          if (mode != VISION) {
