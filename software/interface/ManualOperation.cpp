@@ -377,7 +377,8 @@ void ManualOperation::work()
          break;
       case 'v':
          if (mode == VISION) {
-           break;
+           delete vision_module;
+           vision_module = NULL;
          }
          endwin();
          mode = VISION;
@@ -390,6 +391,7 @@ void ManualOperation::work()
            "  4    - frame vision\n"
            "  5    - marker dropper vision\n"
            "\n"
+           "  v    - cancel current vision selection\n"
            "  x    - exit vision mode\n"
            "  q    - exit simulator\n"
          );
