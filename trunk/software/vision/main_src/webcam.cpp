@@ -48,8 +48,10 @@ int main( int argc, char** argv ) {
             printf ("OpenCV based webcam program. Hit 'q' to exit. Defaults to cam0, writes to \"webcam.avi\"\n");
             printf ("Put any integer as an argument (without --) to use that as camera number\n\n");
             printf ("  --write\n    Write captured video to file.\n\n");
+            printf ("  --load\n    Use a video file (following --load) instead of a webcam.\n\n");
             printf ("  --line\n    Run line finding code.\n\n");
-            printf ("  --show-hsv\n    Press L/R mouse button on main window to show HSV value.\n\n");
+            printf ("  --circle\n    Run circle finding code.\n\n");
+            printf ("  --break\n    Pause the input (press any key to go to the next frame).\n\n");
             printf ("  Example: `./webcam 1 --write` will use cam1, and will write to disk\n\n");
             return 0;
         }
