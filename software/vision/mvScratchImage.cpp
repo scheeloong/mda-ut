@@ -14,14 +14,8 @@ IplImage* mvGetScratchImage() {
     if (instances_1channel == 0) {
         instances_1channel++;
 
-        // For this one, we are going to use the first 1/3 of the 3 channel image's data array
         mvGetScratchImage_Color();
-        scratch_img_1channel = cvCreateImageHeader(
-            cvGetSize(scratch_img_3channel),
-            IPL_DEPTH_8U,
-            1
-        );
-        scratch_img_1channel->imageData = scratch_img_3channel->imageData;
+        scratch_img_1channel = mvCreateImage();
 
         return scratch_img_1channel;
     }

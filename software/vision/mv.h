@@ -349,7 +349,40 @@ public:
     bool is_enabled () {
         return BOX_ENABLED;
     }
+};
 
+class Color_Box {
+public:
+    unsigned hue;
+    unsigned sat;
+    unsigned val;
+    unsigned hue_variance;
+    unsigned n_pixels;
+    unsigned box_number;
+
+    Color_Box(){
+        hue = sat = val = hue_variance = n_pixels = box_number = 0;
+    }
+    Color_Box(unsigned Hue, unsigned Sat, unsigned Val, unsigned Box_Num){
+        hue = Hue; 
+        sat = Sat;
+        val = Val;
+        hue_variance = 0;
+        n_pixels = 1;
+        box_number = Box_Num;
+    }
+    void calc_average () {
+        hue /= n_pixels;
+        sat /= n_pixels;
+        val /= n_pixels;
+    }
+    void merge (Color_Box B) {
+        unsigned total = n_pixels + B.n_pixels;
+        hue = (hue*n_pixels + B.hue*B.n_pixels) / total;
+        sat = (sat*n_pixels + B.sat*B.n_pixels) / total;
+        val = (val*n_pixels + B.val*B.n_pixels) / total;
+        n_pixels = total;
+    }
 };
 
 /** mvMeanShift:
@@ -361,9 +394,10 @@ class mvMeanShift {
     //declare constants here
     static const int DS_FACTOR = 1; // downsampling
     static const int GOOD_PIXELS_FACTOR = 6;
-    static const int KERNEL_SIZE = 5;
+    static const int KERNEL_SIZE = 7;
     static const int S_MIN = 60;
     static const int V_MIN = 30;
+    static const unsigned char GOOD_PIXEL = 255;
 
 public:
     static const int NUM_BOXES = 3;
@@ -382,6 +416,8 @@ private:
     int* kernel_point_array;
     IplImage* ds_scratch_3;   // downsampled scratch image 3 channel
     IplImage* ds_scratch;   // 1 channel
+
+    std::vector<Color_Box> color_box_vector;
 
     // profile bins
     PROFILE_BIN bin_Resize;
@@ -406,15 +442,21 @@ private:
           cvResize (ds_scratch, dst, CV_INTER_NN);
         bin_Resize.stop();
     }
-
-    void mvMeanShift_internal(IplImage* scratch);
+    bool add_pixel_if_within_range (unsigned char* pixel_to_add, unsigned char* ref_pixel,
+                                    unsigned &h_sum, unsigned &s_sum, unsigned &v_sum,
+                                    unsigned &num_pixels);
+    
+    void meanshift_internal(IplImage* scratch);
     void colorFilter_internal();
     void colorFilter_internal_adaptive_hue();
+    void flood_from_pixel(int r, int c, unsigned box_number);
 
 public: 
     mvMeanShift (const char* settings_file); //constructor
     ~mvMeanShift(); // destructor
     void mean_shift(IplImage* src, IplImage* dst);
+    void flood_image(IplImage* src, IplImage* dst);
+    void watershed(IplImage* src, IplImage* dst);
     void filter(IplImage *src, IplImage* dst);
     void combined_filter(IplImage *src, IplImage* dst);
 };
