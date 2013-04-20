@@ -355,8 +355,9 @@ mvMeanShift::mvMeanShift (const char* settings_file) :
 
     // create downsampled scratch images. The 1 channel image shares data with the 3 channel
     ds_scratch_3 = cvCreateImage(cvSize(width/DS_FACTOR, height/DS_FACTOR), IPL_DEPTH_8U, 3);
-    ds_scratch = cvCreateImageHeader(cvSize(width/DS_FACTOR, height/DS_FACTOR), IPL_DEPTH_8U, 1);
-    ds_scratch->imageData = ds_scratch_3->imageData;
+    ds_scratch = cvCreateImage(cvSize(width/DS_FACTOR, height/DS_FACTOR), IPL_DEPTH_8U, 1);
+    //ds_scratch = cvCreateImageHeader(cvSize(width/DS_FACTOR, height/DS_FACTOR), IPL_DEPTH_8U, 1);
+    //ds_scratch->imageData = ds_scratch_3->imageData;
 
     // generate kernel point array
     KERNEL_AREA = KERNEL_SIZE * KERNEL_SIZE;
@@ -414,7 +415,7 @@ void mvMeanShift::mean_shift(IplImage* src, IplImage* dst) {
       downsample_from (src);
       cvCvtColor(ds_scratch_3, ds_scratch_3, CV_BGR2HSV);
 
-      mvMeanShift_internal(src);
+      meanshift_internal(src);
 
       cvCvtColor(ds_scratch_3, ds_scratch_3, CV_HSV2BGR);
       upsample_to_3 (dst);
@@ -433,26 +434,67 @@ void mvMeanShift::combined_filter(IplImage* src, IplImage* dst) {
       downsample_from (src);
       cvCvtColor(ds_scratch_3, ds_scratch_3, CV_BGR2HSV);
 
-      mvMeanShift_internal(src);
+      meanshift_internal(src);
       colorFilter_internal();
 
       upsample_to (dst);
 }
+ 
+bool mvMeanShift::add_pixel_if_within_range (unsigned char* pixel_to_add, unsigned char* ref_pixel,
+                                unsigned &h_sum, unsigned &s_sum, unsigned &v_sum,
+                                unsigned &num_pixels)
+{
+    int H = pixel_to_add[0];
+    int S = pixel_to_add[1];
+    int V = pixel_to_add[2];
+    int Href = ref_pixel[0];
+    int Sref = ref_pixel[1];
+    int Vref = ref_pixel[2];
 
-void mvMeanShift::mvMeanShift_internal(IplImage* src_scratch) {
+    if (abs(S-Sref) <= S_DIST && abs(V-Vref) <= V_DIST &&
+        std::min(abs(H-Href),180-abs(H-Href)) <= H_DIST)
+    {
+        // Circular red case is hard, let's just use 0 if we're looking for red and see > 90,
+        // and use 179 if we're looking for red >= 0
+        if (H <= H_DIST && abs(H-Href) > 90)
+            h_sum += 0;
+        else if (H >= 180 - H_DIST && abs(H-Href) > 90)
+            h_sum += 179;
+        else
+            h_sum += (unsigned)H;
+                
+        s_sum += (unsigned)S;
+        v_sum += (unsigned)V;
+        num_pixels++;
+
+        return true;
+    }
+    return false;
+}
+
+void mvMeanShift::meanshift_internal(IplImage* src_scratch) {
 // note this will treat the image as if it was in HSV format
 // src_scratch is the src image passed in by the user, which will now be used as a scratch
-    bin_MeanShift.start();
+#ifdef M_DEBUG
+    cvNamedWindow("mvMeanShift debug", CV_WINDOW_AUTOSIZE);
+#endif
 
+    bin_MeanShift.start();
+    
     cvZero (src_scratch);
 
     // we will be filtering ds_scratch_3 to src_scratch, then copying the data back to ds_scratch_3
     unsigned char* imgPtr, *resPtr;
-    for (int r = KERNEL_RAD; r < ds_scratch_3->height-KERNEL_RAD; r++) {                         
-        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep + 3*KERNEL_RAD); // imgPtr = first pixel of rth's row
-        resPtr = (unsigned char*) (src_scratch->imageData + r*src_scratch->widthStep + 3*KERNEL_RAD);
+    unsigned char* imgLast = (unsigned char*) (ds_scratch_3->imageData+ds_scratch_3->height*ds_scratch_3->widthStep);
+
+    for (int r = 1; r < ds_scratch_3->height-1; r++) {                         
+        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*KERNEL_RAD*ds_scratch_3->widthStep + 3*KERNEL_RAD); // imgPtr = first pixel of rth's row
+        resPtr = (unsigned char*) (src_scratch->imageData + r*KERNEL_RAD*src_scratch->widthStep + 3*KERNEL_RAD);
         
-        for (int c = KERNEL_RAD; c < ds_scratch_3->width-KERNEL_RAD; c++) {
+        if (imgPtr >= imgLast)
+            break;
+
+        for (int c = 3*KERNEL_RAD; c < ds_scratch_3->width; c++) {
             // skip pixel if already visited
             if (resPtr[1] != 0) {
                 imgPtr += 3;
@@ -460,56 +502,43 @@ void mvMeanShift::mvMeanShift_internal(IplImage* src_scratch) {
                 continue;
             }
 
-            unsigned char H = *imgPtr;
-            unsigned char S = *(imgPtr+1);
-            unsigned char V = *(imgPtr+2);
-            
             // check if the src pixel meats S,V min reqs
-            if (S >= S_MIN && V >= V_MIN) {
+            if (imgPtr[1] >= S_MIN && imgPtr[2] >= V_MIN) {
                 unsigned char* tempPtr;
-                unsigned H2 = H, S2 = S, V2 = V;
-                unsigned char good_pixels = 1, total_pixels = 1;
+                unsigned H2 = imgPtr[0], S2 = imgPtr[1], V2 = imgPtr[2];
+                unsigned good_pixels = 1, total_pixels = 1;
 
                 // go thru each pixel in the kernel
                 for (int i = 0; i < KERNEL_AREA; i++) {
                     tempPtr = imgPtr + 3*kernel_point_array[i];
 
-                    if (abs(S-tempPtr[1]) <= S_DIST && 
-                        abs(V-tempPtr[2]) <= V_DIST &&
-                        std::min(abs(H-tempPtr[0]),180-abs(H-tempPtr[0])) <= H_DIST
-                        ) 
-                    {
-                        // Circular red case is hard, let's just use 0 if we're looking for red and see > 90,
-                        // and use 179 if we're looking for red >= 0
-                        // RZ: I'm still confused
-                        if (H <= H_DIST && abs(H-tempPtr[0]) > 90) {
-                            H2 += 0;
-                        } else if (H >= 180 - H_DIST && abs(H-tempPtr[0]) > 90) {
-                            H2 += 179;
-                        } else {
-                            H2 += (unsigned)tempPtr[0];
-                        }
-                        S2 += (unsigned)tempPtr[1];
-                        V2 += (unsigned)tempPtr[2];
-                        good_pixels++;
-                    }
+                    add_pixel_if_within_range (tempPtr, imgPtr, H2, S2, V2, good_pixels);
 
                     total_pixels++;
                 }
 
                 // if good enough, visit every pixel in the kernel and set value equal to average
                 if (GOOD_PIXELS_FACTOR*good_pixels >= total_pixels) {
+                    unsigned char Hnew = H2 / good_pixels;
+                    unsigned char Snew = S2 / good_pixels;
+                    unsigned char Vnew = V2 / good_pixels;
+
                     for (int i = 0; i < KERNEL_AREA; i++) {
                         tempPtr = resPtr + 3*kernel_point_array[i];
-                        tempPtr[0] = (unsigned char)(H2 / good_pixels);
-                        tempPtr[1] = (unsigned char)(S2 / good_pixels);
-                        tempPtr[2] = (unsigned char)(V2 / good_pixels);
+                        tempPtr[0] = Hnew;
+                        tempPtr[1] = Snew;
+                        tempPtr[2] = Vnew;
                     }
                 }
             }
             
             imgPtr += 3;
             resPtr += 3;
+
+#ifdef M_DEBUG
+            cvShowImage("mvMeanShift debug", src_scratch);
+            cvWaitKey(2);
+#endif
         }
     }
 
@@ -525,11 +554,6 @@ void mvMeanShift::mvMeanShift_internal(IplImage* src_scratch) {
             resPtr++;
         }*/
     }
-
-#ifdef M_DEBUG
-    cvNamedWindow("mvMeanShift debug", CV_WINDOW_AUTOSIZE);
-    cvShowImage("mvMeanShift debug", ds_scratch_3);
-#endif
 
     bin_MeanShift.stop();
 }
@@ -588,6 +612,196 @@ void mvMeanShift::colorFilter_internal_adaptive_hue() {
     for (int i = 0; i < NUM_BOXES; i++) {
         hue_box[i]->update_hue();
     }
+}
+
+
+void mvMeanShift::watershed(IplImage* src, IplImage* dst) {
+    downsample_from (src);
+    cvCvtColor(ds_scratch_3, ds_scratch_3, CV_BGR2HSV);
+
+    meanshift_internal(src);  
+
+    IplImage* hue_img = cvCreateImage(cvGetSize(ds_scratch), IPL_DEPTH_8U, 1);
+    IplImage* sat_img = cvCreateImage(cvGetSize(ds_scratch), IPL_DEPTH_8U, 1);
+    unsigned char *imgPtr, *huePtr, *satPtr;
+    for (int r = 0; r < ds_scratch_3->height; r++) {                         
+        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep);
+        huePtr = (unsigned char*) (hue_img->imageData + r*hue_img->widthStep);
+        satPtr = (unsigned char*) (sat_img->imageData + r*sat_img->widthStep);
+        for (int c = 0; c < ds_scratch_3->width; c++) {
+            // copy hue and sat over if S/V min fulfilled
+            //if (imgPtr[1] >= S_MIN && imgPtr[2] >= V_MIN) {
+                *huePtr = imgPtr[0];
+                *satPtr = imgPtr[1];
+            //}
+            
+            imgPtr += 3;
+            huePtr++;
+            satPtr++;
+        }
+    }
+
+    IplImage* hue_derivative = cvCreateImage(cvGetSize(hue_img), IPL_DEPTH_16S, 1);
+    IplImage* sat_derivative = cvCreateImage(cvGetSize(hue_img), IPL_DEPTH_16S, 1);
+    cvZero(hue_derivative);
+
+    cvSobel (hue_img, hue_derivative, 1,1, 3);
+    cvAbs(hue_derivative,hue_derivative);
+    cvSobel (sat_img, sat_derivative, 1,1, 3);
+    cvAbs(sat_derivative, sat_derivative);
+    cvAdd(hue_derivative,sat_derivative,hue_derivative);
+    //cvCopy(sat_derivative,hue_derivative);
+
+    CvScalar avg_s, stdev_s;
+    cvAvgSdv(hue_derivative, &avg_s, &stdev_s);
+    short avg = avg_s.val[0];
+    short stdev = stdev_s.val[0];
+    short thresh = avg+stdev;
+    
+    short* shortPtr;
+    for (int r = 0; r < hue_derivative->height; r++) {                         
+        shortPtr = (short*) (hue_derivative->imageData + r*hue_derivative->widthStep);
+        satPtr = (unsigned char*) (sat_img->imageData + r*sat_img->widthStep);
+        for (int c = 0; c < hue_derivative->width; c++) {
+            if (*shortPtr > thresh)
+                *satPtr = 255;
+            else 
+                *satPtr = 0; //(unsigned char) (*shortPtr *127 / thresh);
+            shortPtr++;
+            satPtr++;
+        }
+    }
+
+    cvNamedWindow("mvMeanShift",CV_WINDOW_AUTOSIZE);
+    cvShowImage("mvMeanShift", sat_img);
+    
+    cvReleaseImage(&hue_derivative);
+    cvReleaseImage(&sat_derivative);
+    cvReleaseImage(&hue_img);
+    cvReleaseImage(&sat_img);
+    upsample_to_3 (dst);
+}
+
+void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
+    downsample_from (src);
+    cvCvtColor(ds_scratch_3, ds_scratch_3, CV_BGR2HSV);
+
+    //meanshift_internal (src);
+        
+    cvZero (ds_scratch);
+    unsigned box_num = 1;
+    for (int r = 0; r < ds_scratch->height; r+=10) {                         
+        for (int c = 0; c < ds_scratch->width; c+=10) {
+            flood_from_pixel (r,c, box_num++);
+        }
+    }
+    printf ("\n");
+
+    unsigned char *imgPtr, *resPtr;
+    for (int r = 0; r < ds_scratch->height; r++) {                         
+        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep);
+        resPtr = (unsigned char*) (ds_scratch->imageData + r*ds_scratch->widthStep);
+        for (int c = 0; c < ds_scratch->width; c++) {
+            *imgPtr = *resPtr;
+            imgPtr += 3;
+            resPtr++;
+        }
+    }
+
+    std::vector<Color_Box>::iterator iter_end = color_box_vector.end();
+    for (std::vector<Color_Box>::iterator iter = color_box_vector.begin(); iter != iter_end; ++iter)
+        printf ("color_box (%d): %d %d %d\n", iter->n_pixels, iter->hue, iter->sat, iter->val);
+    printf ("\n");
+    color_box_vector.clear();
+
+    cvCvtColor(ds_scratch_3, ds_scratch_3, CV_HSV2BGR);
+    upsample_to_3 (dst);
+}
+
+void mvMeanShift::flood_from_pixel(int R, int C, unsigned box_number) {
+// assumes ds_scratch is zeroed as needed and does not use profile bin
+//#define FLOOD_DEBUG
+#ifdef FLOOD_DEBUG
+     cvNamedWindow("mvMeanShift debug");
+#endif
+
+    unsigned char* imgPtr = (unsigned char*) (ds_scratch_3->imageData + R*ds_scratch_3->widthStep+C*3);
+    unsigned char* resPtr = (unsigned char*) (ds_scratch->imageData + R*ds_scratch->widthStep+C);
+
+    unsigned char* imgPtrOrig = imgPtr;
+
+    if (*imgPtr == 0 || *resPtr != 0)
+        return;
+
+    // create a color model
+    Color_Box color_box(imgPtr[0],imgPtr[1],imgPtr[2],box_number); 
+
+    // use a queue, each time we visit a new pixel, check if its a "good" pixel and queue
+    // visits to neighbours. Good pixels are marked with GOOD_PIXEL
+    // loop until queue empty
+    std::vector < std::pair<int,int> > Point_Array;
+    Point_Array.push_back(make_pair(R,C));
+
+    do {
+        // dequeue the front pixel
+        int r = Point_Array.back().first;
+        int c = Point_Array.back().second;
+        resPtr = (unsigned char*) (ds_scratch->imageData + r*ds_scratch->widthStep+c);
+        Point_Array.pop_back();
+        
+        // check if we've visited this pixel before
+        if (*resPtr != 0)
+            continue;
+
+        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep+c*3);
+        bool pixel_good = add_pixel_if_within_range (imgPtr, imgPtrOrig, color_box.hue, color_box.sat, color_box.val, color_box.n_pixels);
+        if (pixel_good) {
+            // mark pixel as visited
+            *resPtr = GOOD_PIXEL;
+
+            // queue neighbours
+            if (c > 0 && resPtr[-1] == 0)
+                Point_Array.push_back(make_pair(r,c-1));
+            if (c < ds_scratch->width-1 && resPtr[1] == 0)
+                Point_Array.push_back(make_pair(r,c+1));
+            if (r > 0 && resPtr[-ds_scratch->widthStep] == 0)
+                Point_Array.push_back(make_pair(r-1,c));
+            if (r < ds_scratch->height-1 && resPtr[ds_scratch->widthStep] == 0)
+                Point_Array.push_back(make_pair(r+1,c));
+        }
+    } while (!Point_Array.empty());
+
+    if (color_box.n_pixels < (unsigned)ds_scratch->width*ds_scratch->height/200)
+        return;
+
+    color_box.calc_average();
+
+    bool merge_success = false;
+    std::vector<Color_Box>::iterator iter_end = color_box_vector.end();
+    for (std::vector<Color_Box>::iterator iter = color_box_vector.begin(); iter != iter_end; ++iter) {
+        if (abs((int)iter->hue-(int)color_box.hue) <= H_DIST && abs((int)iter->sat-(int)color_box.sat) <= S_DIST) {
+            iter->merge(color_box);
+            merge_success = true;
+            break;
+        }
+    }
+
+    if (!merge_success)
+        color_box_vector.push_back(color_box);
+    
+    for (int r = 0; r < ds_scratch->height; r++) {                         
+        resPtr = (unsigned char*) (ds_scratch->imageData + r*ds_scratch->widthStep);
+        for (int c = 0; c < ds_scratch->width; c++) {
+            if (*resPtr == GOOD_PIXEL)
+                *resPtr = color_box.box_number;
+            resPtr++;
+        }
+    }
+
+#ifdef FLOOD_DEBUG
+    cvShowImage("mvMeanShift debug", ds_scratch);
+    cvWaitKey(100);
+#endif
 }
 
 //#########################################################################
