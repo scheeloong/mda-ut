@@ -740,7 +740,7 @@ void mvMeanShift::flood_from_pixel(int R, int C, unsigned box_number) {
     // visits to neighbours. Good pixels are marked with GOOD_PIXEL
     // loop until queue empty
     std::vector < std::pair<int,int> > Point_Array;
-    Point_Array.push_back(make_pair(R,C));
+    Point_Array.push_back(std::make_pair(R,C));
 
     do {
         // dequeue the front pixel
@@ -761,13 +761,13 @@ void mvMeanShift::flood_from_pixel(int R, int C, unsigned box_number) {
 
             // queue neighbours
             if (c > 0 && resPtr[-1] == 0)
-                Point_Array.push_back(make_pair(r,c-1));
+                Point_Array.push_back(std::make_pair(r,c-1));
             if (c < ds_scratch->width-1 && resPtr[1] == 0)
-                Point_Array.push_back(make_pair(r,c+1));
+                Point_Array.push_back(std::make_pair(r,c+1));
             if (r > 0 && resPtr[-ds_scratch->widthStep] == 0)
-                Point_Array.push_back(make_pair(r-1,c));
+                Point_Array.push_back(std::make_pair(r-1,c));
             if (r < ds_scratch->height-1 && resPtr[ds_scratch->widthStep] == 0)
-                Point_Array.push_back(make_pair(r+1,c));
+                Point_Array.push_back(std::make_pair(r+1,c));
         }
     } while (!Point_Array.empty());
 
