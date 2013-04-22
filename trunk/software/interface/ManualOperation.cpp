@@ -70,6 +70,9 @@ void ManualOperation::work()
   if (image_input->can_display()) {
     mvWindow::setShowImage(show_raw_images);
   }
+#else
+  // Show first image
+  process_image();
 #endif
 
   display_start_message();
@@ -155,6 +158,9 @@ void ManualOperation::work()
          break;
       case ' ':
          actuator_output->special_cmd(SIM_ACCEL_ZERO);
+#ifdef DEBUG_FRAME_BY_FRAME
+         process_image();
+#endif
          break;
       case '^':
          actuator_output->special_cmd(SUB_POWER_ON);
@@ -397,7 +403,14 @@ void ManualOperation::work()
          );
          break;
       case '\0': // timeout
+#ifndef DEBUG_FRAME_BY_FRAME
         process_image();
+#else
+        char ch = cvWaitKey(3);
+        if (ch != -1) {
+          CharacterStreamSingleton::get_instance().write_char(ch);
+        }
+#endif
         break;
     }
   }
@@ -414,16 +427,11 @@ void ManualOperation::process_image()
     IplImage* frame = image_input->get_image(use_fwd_img?FWD_IMG:DWN_IMG);
     if (frame) {
       vision_module->filter(frame);
-#ifdef DEBUG_FRAME_BY_FRAME
-      char ch = cvWaitKey(0);
-      CharacterStreamSingleton::get_instance().write_char(ch);
-#else
       // Allow several keys (ie if held) to be read before doing the vision processing loop
       for (int i = 0; i < 3; i++) {
         char ch = cvWaitKey(3);
         CharacterStreamSingleton::get_instance().write_char(ch);
       }
-#endif
       fflush(stdout);
     } else {
       message_hold("Image stream over");
@@ -440,11 +448,7 @@ void ManualOperation::process_image()
 #else
     image_input->get_image(use_fwd_img?FWD_IMG:DWN_IMG);
 #endif
-#ifdef DEBUG_FRAME_BY_FRAME
-    char ch = cvWaitKey(0);
-#else
     char ch = cvWaitKey(3);
-#endif
     if (ch) {
       CharacterStreamSingleton::get_instance().write_char(ch);
     }
