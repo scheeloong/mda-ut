@@ -43,11 +43,15 @@ class ActuatorOutput {
     virtual ~ActuatorOutput() {}
 
     // some methods to actuate the output
-    virtual void set_attitude_change(ATTITUDE_CHANGE_DIRECTION, int) = 0;
+    virtual bool set_attitude_change(ATTITUDE_CHANGE_DIRECTION, int) = 0; // return if attitude was actually changed (won't change unless the attitude is stable)
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION, int) = 0;
-    virtual void set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir) {set_attitude_change(dir, DEFAULT_ATTITUDE_CHANGE);}
     virtual void stop() = 0;
     virtual void special_cmd(SPECIAL_COMMAND) = 0;
+
+    bool set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir) { return set_attitude_change(dir, DEFAULT_ATTITUDE_CHANGE); }
+  protected:
+    static const int stable_yaw_threshold = 3;
+    static const int stable_depth_threshold = 8;
 };
 
 /* A don't care implementation */
@@ -55,7 +59,7 @@ class ActuatorOutputNull : public ActuatorOutput {
   public:
     virtual ~ActuatorOutputNull() {}
 
-    virtual void set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir, int delta) {}
+    virtual bool set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir, int delta) { return false; }
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION dir, int val) {}
     virtual void stop() {}
     virtual void special_cmd(SPECIAL_COMMAND cmd) {}
@@ -67,7 +71,7 @@ class ActuatorOutputSimulator : public ActuatorOutput {
     ActuatorOutputSimulator();
     virtual ~ActuatorOutputSimulator();
 
-    virtual void set_attitude_change(ATTITUDE_CHANGE_DIRECTION, int);
+    virtual bool set_attitude_change(ATTITUDE_CHANGE_DIRECTION, int);
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION, int);
     virtual void stop();
     virtual void special_cmd(SPECIAL_COMMAND);
@@ -79,7 +83,7 @@ class ActuatorOutputSubmarine : public ActuatorOutput {
     ActuatorOutputSubmarine();
     virtual ~ActuatorOutputSubmarine();
 
-    virtual void set_attitude_change(ATTITUDE_CHANGE_DIRECTION, int);
+    virtual bool set_attitude_change(ATTITUDE_CHANGE_DIRECTION, int);
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION, int);
     virtual void stop();
     virtual void special_cmd(SPECIAL_COMMAND);
