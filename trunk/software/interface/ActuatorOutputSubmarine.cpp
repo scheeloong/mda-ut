@@ -13,7 +13,7 @@ ActuatorOutputSubmarine::~ActuatorOutputSubmarine()
 {
 }
 
-void ActuatorOutputSubmarine::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir, int delta)
+bool ActuatorOutputSubmarine::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir, int delta)
 {
   switch(dir) {
     case REVERSE:
@@ -24,21 +24,38 @@ void ActuatorOutputSubmarine::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir,
     default:
       break;
   }
+  int current_yaw, target_yaw, current_depth, target_depth;
   switch(dir) {
     case FORWARD:
     case REVERSE:
       set_attitude_absolute(SPEED, delta); // doesn't make sense to change the speed, set absolute
-      break;
+      return true;
     case RIGHT:
     case LEFT:
       set_attitude_absolute(SPEED, 0); // stop forward speed
-      set_attitude_absolute(YAW, get_yaw() + delta);
-      break;
+      // Only set yaw change if yaw is stable
+      current_yaw = get_yaw();
+      target_yaw = SubmarineSingleton::get_instance().get_target_yaw();
+      if (abs(current_yaw - target_yaw) <= stable_yaw_threshold || abs(current_yaw - target_yaw) >= 360 - stable_yaw_threshold) {
+        set_attitude_absolute(YAW, current_yaw + delta);
+        return true;
+      } else {
+        return false;
+      }
     case RISE:
     case SINK:
       set_attitude_absolute(SPEED, 0); // stop forward speed
-      set_attitude_absolute(DEPTH, get_depth() + delta);
-      break;
+      // Only set depth change if depth is stable
+      current_depth = get_depth();
+      target_depth = SubmarineSingleton::get_instance().get_target_depth();
+      if (abs(current_depth - target_depth) <= stable_depth_threshold) {
+        set_attitude_absolute(YAW, current_depth + delta);
+        return true;
+      } else {
+        return false;
+      }
+    default:
+      return false;
   }
 }
 
