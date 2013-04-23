@@ -16,12 +16,12 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
 
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
-    const int sink_depth = 600;
+    const int sink_depth = 450;
     const int rise_depth = 300;
     const int depth_threshold = 10;
     const int yaw_threshold = 5;
-    const int fwd_timesteps = 250;
-    const int speed = 3;
+    const int fwd_timesteps = 25;
+    const int speed = 2;
 
     enum state {FWD_STATE, SINK_STATE, REV_STATE, RISE_STATE};
     enum state cur_state = SINK_STATE;
