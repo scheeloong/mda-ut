@@ -145,16 +145,24 @@ void ManualOperation::work()
          actuator_output->set_attitude_change(REVERSE, SPEED_CHG);
          break;
       case 'a':
-         actuator_output->set_attitude_change(LEFT, YAW_CHG_IN_DEG);
+         if (!actuator_output->set_attitude_change(LEFT, YAW_CHG_IN_DEG)) {
+           message_hold("Yaw not stable, not turning left");
+         }
          break;
       case 'd':
-         actuator_output->set_attitude_change(RIGHT, YAW_CHG_IN_DEG);
+         if (!actuator_output->set_attitude_change(RIGHT, YAW_CHG_IN_DEG)) {
+           message_hold("Yaw not stable, not turning right");
+         }
          break;
       case 'r':
-         actuator_output->set_attitude_change(RISE, DEPTH_CHG_IN_CM);
+         if (!actuator_output->set_attitude_change(RISE, DEPTH_CHG_IN_CM)) {
+           message_hold("Depth not stable, not rising");
+         }
          break;
       case 'f':
-         actuator_output->set_attitude_change(SINK, DEPTH_CHG_IN_CM);
+         if (!actuator_output->set_attitude_change(SINK, DEPTH_CHG_IN_CM)) {
+           message_hold("Depth not stable, not sinking");
+         }
          break;
       case ' ':
          actuator_output->special_cmd(SIM_ACCEL_ZERO);
@@ -485,7 +493,7 @@ void ManualOperation::message_hold(const char *msg, int delay_in_s)
     message(msg);
   } else {
     message(msg);
-    count = -75 * delay_in_s; // Estimate
+    count = -5 * delay_in_s; // Estimate
   }
 }
 
@@ -562,8 +570,11 @@ void ManualOperation::long_input()
     int target_yaw_change;
     sscanf(buf, "left %d", &target_yaw_change);
     if (target_yaw_change >= 0 && target_yaw_change <= 180) {
-      actuator_output->set_attitude_change(LEFT, target_yaw_change);
-      message_hold("Turning left");
+      if (actuator_output->set_attitude_change(LEFT, target_yaw_change)) {
+        message_hold("Turning left");
+      } else {
+        message_hold("Yaw not stable, not turning left");
+      }
     } else {
       message_hold("Invalid left turn, must be [0, 180]");
     }
@@ -571,8 +582,11 @@ void ManualOperation::long_input()
     int target_yaw_change;
     sscanf(buf, "right %d", &target_yaw_change);
     if (target_yaw_change >= 0 && target_yaw_change <= 180) {
-      actuator_output->set_attitude_change(RIGHT, target_yaw_change);
-      message_hold("Turning left");
+      if (actuator_output->set_attitude_change(RIGHT, target_yaw_change)) {
+        message_hold("Turning left");
+      } else {
+        message_hold("Yaw not stable, not turning right");
+      }
     } else {
       message_hold("Invalid left turn, must be [0, 180]");
     }
@@ -589,8 +603,11 @@ void ManualOperation::long_input()
     int target_depth_change;
     sscanf(buf, "up %d", &target_depth_change);
     if (target_depth_change >= 0) {
-      actuator_output->set_attitude_change(RISE, target_depth_change);
-      message_hold("Rising up");
+      if (actuator_output->set_attitude_change(RISE, target_depth_change)) {
+        message_hold("Rising up");
+      } else {
+        message_hold("Depth not stable, not rising");
+      }
     } else {
       message_hold("Invalid up command, must be >= 0");
     }
@@ -598,8 +615,11 @@ void ManualOperation::long_input()
     int target_depth_change;
     sscanf(buf, "down %d", &target_depth_change);
     if (target_depth_change >= 0) {
-      actuator_output->set_attitude_change(SINK, target_depth_change);
-      message_hold("Sinking down");
+      if (actuator_output->set_attitude_change(SINK, target_depth_change)) {
+        message_hold("Sinking down");
+      } else {
+        message_hold("Depth not stable, not sinking");
+      }
     } else {
       message_hold("Invalid down command, must be >= 0");
     }
