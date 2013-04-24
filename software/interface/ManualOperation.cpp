@@ -58,7 +58,7 @@ void ManualOperation::display_start_message()
 
 #define SPEED_CHG 3
 #define YAW_CHG_IN_DEG 10
-#define DEPTH_CHG_IN_CM 200
+#define DEPTH_CHG_IN_CM 50
 
 #define REFRESH_RATE_IN_HZ 10
 #define WAIT_KEY_IN_MS 5
