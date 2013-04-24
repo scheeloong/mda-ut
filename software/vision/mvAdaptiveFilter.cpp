@@ -492,8 +492,8 @@ void mvMeanShift::meanshift_internal(IplImage* src_scratch) {
     unsigned char* imgLast = (unsigned char*) (ds_scratch_3->imageData+ds_scratch_3->height*ds_scratch_3->widthStep);
 
     for (int r = KERNEL_RAD; r < ds_scratch_3->height-KERNEL_RAD; r++) {                         
-        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*KERNEL_RAD*ds_scratch_3->widthStep + 3*KERNEL_RAD); // imgPtr = first pixel of rth's row
-        resPtr = (unsigned char*) (src_scratch->imageData + r*KERNEL_RAD*src_scratch->widthStep + 3*KERNEL_RAD);
+        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep); // imgPtr = first pixel of rth's row
+        resPtr = (unsigned char*) (src_scratch->imageData + r*src_scratch->widthStep);
         
         if (imgPtr >= imgLast)
             break;
