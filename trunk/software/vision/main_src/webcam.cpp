@@ -149,7 +149,7 @@ int main( int argc, char** argv ) {
         if (TEST) {             
             //mean_shift.mean_shift(frame, scratch_color);
             //mean_shift.watershed(frame, scratch_color);
-            mean_shift.flood_image(frame, scratch_color);
+            mean_shift.flood_image(frame, filter_img);
             //mean_shift.filter(scratch_color, filter_img);
 
             win2->showImage (scratch_color);
