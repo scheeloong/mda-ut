@@ -330,7 +330,7 @@ public:
     int min_inside_count, max_inside_count;     // num of pixels within the normal box
     int min_outside_count, max_outside_count;   // num of pixels within the outside box
 
-    Hue_Box (const char* settings_file, int box_number);
+    Hue_Box (const char* settings_file, int index_number);
 
     bool check_hsv (unsigned char hue, unsigned char sat, unsigned char val) {
         // shifting logic goes here
@@ -351,32 +351,32 @@ public:
     }
 };
 
-class Color_Box {
+class Color_Triple {
 public:
     unsigned hue;
     unsigned sat;
     unsigned val;
-    unsigned hue_variance;
+    unsigned hue_variance; // not used for now
     unsigned n_pixels;
-    unsigned box_number;
+    unsigned index_number;
 
-    Color_Box(){
-        hue = sat = val = hue_variance = n_pixels = box_number = 0;
+    Color_Triple(){
+        hue = sat = val = hue_variance = n_pixels = index_number = 0;
     }
-    Color_Box(unsigned Hue, unsigned Sat, unsigned Val, unsigned Box_Num){
+    Color_Triple(unsigned Hue, unsigned Sat, unsigned Val, unsigned Box_Num){
         hue = Hue; 
         sat = Sat;
         val = Val;
         hue_variance = 0;
         n_pixels = 1;
-        box_number = Box_Num;
+        index_number = Box_Num;
     }
     void calc_average () {
         hue /= n_pixels;
         sat /= n_pixels;
         val /= n_pixels;
     }
-    void merge (Color_Box B) {
+    void merge (Color_Triple B) {
         unsigned total = n_pixels + B.n_pixels;
         hue = (hue*n_pixels + B.hue*B.n_pixels) / total;
         sat = (sat*n_pixels + B.sat*B.n_pixels) / total;
@@ -397,7 +397,8 @@ class mvMeanShift {
     static const int KERNEL_SIZE = 7;
     static const int S_MIN = 60;
     static const int V_MIN = 30;
-    static const unsigned char GOOD_PIXEL = 255;
+    static const unsigned char BAD_PIXEL = 47;
+    static const unsigned char TEMP_PIXEL = 253;
 
 public:
     static const int NUM_BOXES = 3;
@@ -413,11 +414,10 @@ private:
 
     // internal data
     Hue_Box* hue_box[NUM_BOXES]; // array of pointers to boxes
+    std::vector<Color_Triple> color_triple_vector;
     int* kernel_point_array;
     IplImage* ds_scratch_3;   // downsampled scratch image 3 channel
     IplImage* ds_scratch;   // 1 channel
-
-    std::vector<Color_Box> color_box_vector;
 
     // profile bins
     PROFILE_BIN bin_Resize;
@@ -449,7 +449,7 @@ private:
     void meanshift_internal(IplImage* scratch);
     void colorFilter_internal();
     void colorFilter_internal_adaptive_hue();
-    void flood_from_pixel(int r, int c, unsigned box_number);
+    void flood_from_pixel(int r, int c, unsigned index_number);
 
 public: 
     mvMeanShift (const char* settings_file); //constructor

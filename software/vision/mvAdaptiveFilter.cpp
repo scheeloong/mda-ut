@@ -451,14 +451,18 @@ bool mvMeanShift::add_pixel_if_within_range (unsigned char* pixel_to_add, unsign
     int Sref = ref_pixel[1];
     int Vref = ref_pixel[2];
 
-    if (abs(S-Sref) <= S_DIST && abs(V-Vref) <= V_DIST &&
-        std::min(abs(H-Href),180-abs(H-Href)) <= H_DIST)
+    int Sdelta = abs(S - Sref);
+    int Hdelta = abs(H - Href);
+
+    if (Sdelta <= S_DIST && 
+        //abs(V-Vref) <= V_DIST &&
+        std::min(Hdelta,180-Hdelta) <= H_DIST)
     {
         // Circular red case is hard, let's just use 0 if we're looking for red and see > 90,
         // and use 179 if we're looking for red >= 0
-        if (H <= H_DIST && abs(H-Href) > 90)
+        if (H <= H_DIST && Hdelta > 90)
             h_sum += 0;
-        else if (H >= 180 - H_DIST && abs(H-Href) > 90)
+        else if (H >= 180 - H_DIST && Hdelta > 90)
             h_sum += 179;
         else
             h_sum += (unsigned)H;
@@ -683,121 +687,211 @@ void mvMeanShift::watershed(IplImage* src, IplImage* dst) {
 }
 
 void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
+    bin_Resize.start();
     downsample_from (src);
+    bin_Resize.stop();
+    bin_MeanShift.start();
     cvCvtColor(ds_scratch_3, ds_scratch_3, CV_BGR2HSV);
 
-    //meanshift_internal (src);
-        
+    // we use ds_scratch as a mask image. If something is marked nonzero in ds_scratch the algorithm will usually
+    // skip it.
+
+    int widthStep = ds_scratch->widthStep;
+    int widthStep3 = ds_scratch_3->widthStep;
+
+    // mark all pixels below S/V threshold as bad
+    unsigned sat_min = hue_box[0]->SAT_MIN;
+    unsigned val_min = hue_box[0]->VAL_MIN;
     cvZero (ds_scratch);
-    unsigned box_num = 1;
-    for (int r = 0; r < ds_scratch->height; r+=10) {                         
-        for (int c = 0; c < ds_scratch->width; c+=10) {
-            flood_from_pixel (r,c, box_num++);
-        }
-    }
-    printf ("\n");
-
-    unsigned char *imgPtr, *resPtr;
     for (int r = 0; r < ds_scratch->height; r++) {                         
-        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep);
-        resPtr = (unsigned char*) (ds_scratch->imageData + r*ds_scratch->widthStep);
+        unsigned char* scrPtr = (unsigned char*)(ds_scratch->imageData + r*widthStep);
+        unsigned char* imgPtr = (unsigned char*)(ds_scratch_3->imageData + r*widthStep3);
         for (int c = 0; c < ds_scratch->width; c++) {
-            *imgPtr = *resPtr;
+            if (imgPtr[1] < sat_min || imgPtr[2] < val_min)
+                *scrPtr = BAD_PIXEL;
             imgPtr += 3;
-            resPtr++;
+            scrPtr ++;
         }
     }
 
-    std::vector<Color_Box>::iterator iter_end = color_box_vector.end();
-    for (std::vector<Color_Box>::iterator iter = color_box_vector.begin(); iter != iter_end; ++iter)
-        printf ("color_box (%d): %d %d %d\n", iter->n_pixels, iter->hue, iter->sat, iter->val);
-    printf ("\n");
-    color_box_vector.clear();
+    //meanshift_internal (src);
 
-    cvCvtColor(ds_scratch_3, ds_scratch_3, CV_HSV2BGR);
-    upsample_to_3 (dst);
+    // estimate the avg difference between a pixel and its neighbours in terms of H and S
+    int hue_pixel_diff = 0;
+    int sat_pixel_diff = 0;
+    //int val_pixel_diff = 0;
+    int n_pixels_counted = 0;
+    for (int r = 2; r < ds_scratch_3->height-2; r+=1) {                         
+        unsigned char* scrPtr = (unsigned char*)(ds_scratch->imageData + r*widthStep);
+        unsigned char* imgPtr = (unsigned char*)(ds_scratch_3->imageData + r*widthStep3);
+        
+        for (int c = 2; c < ds_scratch_3->width-2; c+=3) {
+            if (*scrPtr == 0) {
+                hue_pixel_diff += abs(imgPtr[0] - imgPtr[-3]);
+                hue_pixel_diff += abs(imgPtr[0] - imgPtr[3]);
+                hue_pixel_diff += abs(imgPtr[0] - imgPtr[-widthStep3]);
+                hue_pixel_diff += abs(imgPtr[0] - imgPtr[widthStep3]);
+
+                sat_pixel_diff += abs(imgPtr[1] - imgPtr[-3+1]);
+                sat_pixel_diff += abs(imgPtr[1] - imgPtr[3+1]);
+                sat_pixel_diff += abs(imgPtr[1] - imgPtr[-widthStep3+1]);
+                sat_pixel_diff += abs(imgPtr[1] - imgPtr[widthStep3+1]);
+                
+                n_pixels_counted += 4;
+            }
+            imgPtr += 3;
+            scrPtr ++;
+        }
+    }
+
+    assert (n_pixels_counted > 0);
+    H_DIST = hue_pixel_diff / n_pixels_counted + 4;
+    S_DIST = sat_pixel_diff / n_pixels_counted + 6;
+    printf ("H_DIST=%d, S_DIST=%d based on %d pixels\n", H_DIST, S_DIST, n_pixels_counted);
+
+    // now perform image flooding to paint the pixels and extract color triplets    
+    unsigned index_number = 20;
+    for (int r = 3; r < ds_scratch->height-3; r+=5) {                         
+        for (int c = 3; c < ds_scratch->width-3; c+=5) {
+            flood_from_pixel (r,c, index_number);
+            index_number += 10;
+        }
+    }
+
+    std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
+    for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter)
+        printf ("color_triplet (%d): %d %d %d\n", iter->n_pixels, iter->hue, iter->sat, iter->val);
+    printf ("\n");
+    color_triple_vector.clear();
+
+    bin_MeanShift.stop();
 }
 
-void mvMeanShift::flood_from_pixel(int R, int C, unsigned box_number) {
+void mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
 // assumes ds_scratch is zeroed as needed and does not use profile bin
 //#define FLOOD_DEBUG
 #ifdef FLOOD_DEBUG
      cvNamedWindow("mvMeanShift debug");
 #endif
 
-    unsigned char* imgPtr = (unsigned char*) (ds_scratch_3->imageData + R*ds_scratch_3->widthStep+C*3);
-    unsigned char* resPtr = (unsigned char*) (ds_scratch->imageData + R*ds_scratch->widthStep+C);
-
-    unsigned char* imgPtrOrig = imgPtr;
-
+    int widthStep = ds_scratch->widthStep;
+    int widthStep3 = ds_scratch_3->widthStep;
+    unsigned char* imgPtr = (unsigned char*) (ds_scratch_3->imageData + R*widthStep3+C*3);
+    unsigned char* resPtr = (unsigned char*) (ds_scratch->imageData + R*widthStep+C);
+    
     if (*imgPtr == 0 || *resPtr != 0)
         return;
 
     // create a color model
-    Color_Box color_box(imgPtr[0],imgPtr[1],imgPtr[2],box_number); 
+    Color_Triple color_triple(imgPtr[0],imgPtr[1],imgPtr[2],index_number); 
 
     // use a queue, each time we visit a new pixel, check if its a "good" pixel and queue
-    // visits to neighbours. Good pixels are marked with GOOD_PIXEL
+    // visits to neighbours. Good pixels are marked with TEMP_PIXEL
     // loop until queue empty
     std::vector < std::pair<int,int> > Point_Array;
     Point_Array.push_back(std::make_pair(R,C));
 
+#ifdef FLOOD_FROM_PIXEL_COMPARE_WITH_SOURCE_PIXEL
+    *resPtr = TEMP_PIXEL;
+    unsigned char* imgPtrOrig = imgPtr;
     do {
         // dequeue the front pixel
         int r = Point_Array.back().first;
         int c = Point_Array.back().second;
-        resPtr = (unsigned char*) (ds_scratch->imageData + r*ds_scratch->widthStep+c);
         Point_Array.pop_back();
-        
+        resPtr = (unsigned char*) (ds_scratch->imageData + r*widthStep+c);
         // check if we've visited this pixel before
         if (*resPtr != 0)
             continue;
 
-        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep+c*3);
-        bool pixel_good = add_pixel_if_within_range (imgPtr, imgPtrOrig, color_box.hue, color_box.sat, color_box.val, color_box.n_pixels);
+        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*widthStep3+c*3);
+        bool pixel_good = add_pixel_if_within_range (imgPtr, imgPtrOrig, color_triple.hue, color_triple.sat, color_triple.val, color_triple.n_pixels);
         if (pixel_good) {
             // mark pixel as visited
-            *resPtr = GOOD_PIXEL;
+            *resPtr = TEMP_PIXEL;
 
             // queue neighbours
             if (c > 0 && resPtr[-1] == 0)
                 Point_Array.push_back(std::make_pair(r,c-1));
             if (c < ds_scratch->width-1 && resPtr[1] == 0)
                 Point_Array.push_back(std::make_pair(r,c+1));
-            if (r > 0 && resPtr[-ds_scratch->widthStep] == 0)
+            if (r > 0 && resPtr[-widthStep] == 0)
                 Point_Array.push_back(std::make_pair(r-1,c));
-            if (r < ds_scratch->height-1 && resPtr[ds_scratch->widthStep] == 0)
+            if (r < ds_scratch->height-1 && resPtr[widthStep] == 0)
                 Point_Array.push_back(std::make_pair(r+1,c));
         }
     } while (!Point_Array.empty());
+#else
+    do {
+        // dequeue the front pixel
+        int r = Point_Array.back().first;
+        int c = Point_Array.back().second;
+        Point_Array.pop_back();
+        resPtr = (unsigned char*) (ds_scratch->imageData + r*widthStep + c);
+        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*widthStep3 + c*3);
 
-    if (color_box.n_pixels < (unsigned)ds_scratch->width*ds_scratch->height/200)
+        // check each pixel around it
+        if (c > 0 && resPtr[-1] == 0) { // left
+            if (add_pixel_if_within_range (imgPtr-3, imgPtr, color_triple.hue, color_triple.sat, color_triple.val, color_triple.n_pixels)) {
+                resPtr[-1] = TEMP_PIXEL;
+                Point_Array.push_back(make_pair(r,c-1));
+            }
+        }
+        if (c < ds_scratch->width-1 && resPtr[1] == 0) { // right
+            if (add_pixel_if_within_range (imgPtr+3, imgPtr, color_triple.hue, color_triple.sat, color_triple.val, color_triple.n_pixels)) {
+                resPtr[1] = TEMP_PIXEL;
+                Point_Array.push_back(make_pair(r,c+1));
+            }
+        }
+        if (r > 0 && resPtr[-widthStep] == 0) { // above
+            if (add_pixel_if_within_range (imgPtr-widthStep3, imgPtr, color_triple.hue, color_triple.sat, color_triple.val, color_triple.n_pixels)) {
+                resPtr[-widthStep] = TEMP_PIXEL;
+                Point_Array.push_back(make_pair(r-1,c));
+            }
+        }
+        if (r < ds_scratch->height-1 && resPtr[widthStep] == 0) { // below
+            if (add_pixel_if_within_range (imgPtr+widthStep3, imgPtr, color_triple.hue, color_triple.sat, color_triple.val, color_triple.n_pixels)) {
+                resPtr[widthStep] = TEMP_PIXEL;
+                Point_Array.push_back(make_pair(r+1,c));
+            }
+        }
+    } while (!Point_Array.empty());
+#endif
+
+    // if the box doesnt contain enough pixels, throw it out
+    if (color_triple.n_pixels < (unsigned)ds_scratch->width*ds_scratch->height/100)
         return;
 
-    color_box.calc_average();
+    color_triple.calc_average();
 
-    bool merge_success = false;
-    std::vector<Color_Box>::iterator iter_end = color_box_vector.end();
-    for (std::vector<Color_Box>::iterator iter = color_box_vector.begin(); iter != iter_end; ++iter) {
-        if (abs((int)iter->hue-(int)color_box.hue) <= H_DIST && abs((int)iter->sat-(int)color_box.sat) <= S_DIST) {
-            iter->merge(color_box);
-            merge_success = true;
-            break;
+    // attempt to merge the box with an existing box. This is if the boxes are very similar
+    std::vector<Color_Triple>::iterator min_diff_iter;
+    int min_diff = 9000;
+    
+    std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
+    for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
+        int diff = 2*abs((int)iter->hue-(int)color_triple.hue) + abs((int)iter->sat-(int)color_triple.sat);
+        if (diff < min_diff) {
+            min_diff = diff;
+            min_diff_iter = iter;
         }
     }
-
-    if (!merge_success)
-        color_box_vector.push_back(color_box);
+    // if could not merge, add the new box to the vector
+    if (min_diff < 2*5+10)
+        min_diff_iter->merge(color_triple);
+    else
+        color_triple_vector.push_back(color_triple);
     
+    // paint the pixels with the appropriate index number
     for (int r = 0; r < ds_scratch->height; r++) {                         
-        resPtr = (unsigned char*) (ds_scratch->imageData + r*ds_scratch->widthStep);
+        resPtr = (unsigned char*) (ds_scratch->imageData + r*widthStep);
         for (int c = 0; c < ds_scratch->width; c++) {
-            if (*resPtr == GOOD_PIXEL)
-                *resPtr = color_box.box_number;
+            if (*resPtr == TEMP_PIXEL)
+                *resPtr = color_triple.index_number;
             resPtr++;
         }
     }
-
+  
 #ifdef FLOOD_DEBUG
     cvShowImage("mvMeanShift debug", ds_scratch);
     cvWaitKey(100);
