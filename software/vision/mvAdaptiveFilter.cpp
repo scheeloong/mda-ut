@@ -686,7 +686,14 @@ void mvMeanShift::watershed(IplImage* src, IplImage* dst) {
     upsample_to_3 (dst);
 }
 
+#define FLOOD_IMAGE_ALGORITHM_ONE
+
 void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
+    // this assert should be removed once scratch images in the last step is worked out
+    assert (ds_scratch->width == dst->width && ds_scratch->height == dst->height);
+    assert (src->nChannels == 3);
+    assert (dst->nChannels == 1);
+
     bin_Resize.start();
     downsample_from (src);
     bin_Resize.stop();
@@ -714,8 +721,9 @@ void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
         }
     }
 
-    //meanshift_internal (src);
-
+#ifdef FLOOD_IMAGE_ALGORITHM_ONE 
+    meanshift_internal (src);
+#else
     // estimate the avg difference between a pixel and its neighbours in terms of H and S
     int hue_pixel_diff = 0;
     int sat_pixel_diff = 0;
@@ -748,13 +756,14 @@ void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
     H_DIST = hue_pixel_diff / n_pixels_counted + 4;
     S_DIST = sat_pixel_diff / n_pixels_counted + 6;
     printf ("H_DIST=%d, S_DIST=%d based on %d pixels\n", H_DIST, S_DIST, n_pixels_counted);
+#endif
 
     // now perform image flooding to paint the pixels and extract color triplets    
-    unsigned index_number = 20;
-    for (int r = 3; r < ds_scratch->height-3; r+=5) {                         
-        for (int c = 3; c < ds_scratch->width-3; c+=5) {
-            flood_from_pixel (r,c, index_number);
-            index_number += 10;
+    unsigned index_number = 100;
+    for (int r = 3; r < ds_scratch->height - 3; r+=15) {                         
+        for (int c = 3; c < ds_scratch->width - 3; c+=15) {
+            if (flood_from_pixel (r,c, index_number))
+                index_number++;
         }
     }
 
@@ -762,14 +771,47 @@ void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
     for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter)
         printf ("color_triplet (%d): %d %d %d\n", iter->n_pixels, iter->hue, iter->sat, iter->val);
     printf ("\n");
+
+    // go thru each active hue box and check if any of the models fit within the hue box
+    // if so paint the pixels marked as those models to be the BOX number of that hue box
+    int last = 0;
+    
+    cvZero(dst);
+    for (int i = 0; i < NUM_BOXES; i++) {
+        if (!hue_box[i]->BOX_ENABLED)
+            continue;
+
+        for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
+            if (hue_box[i]->check_hsv(iter->hue, 250,250)) {
+                
+                for (int k = 0; k < dst->height; k++) {
+                    unsigned char* scrPtr = (unsigned char*)(ds_scratch->imageData + k*widthStep);
+                    unsigned char* dstPtr = (unsigned char*)(dst->imageData + k*dst->widthStep);
+                    for (int l = 0; l < dst->width; l++) {
+                        if (*scrPtr != last) {
+                            last = *scrPtr;
+                            //printf ("%d\n",*scrPtr);
+                        }
+
+                        if (*scrPtr == iter->index_number)
+                            *dstPtr = 255;//hue_box[i]->BOX_NUMBER;
+                        scrPtr++;
+                        dstPtr++;
+                    }
+                }
+
+            }
+        }
+    }
+
     color_triple_vector.clear();
 
     bin_MeanShift.stop();
 }
 
-void mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
+bool mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
 // assumes ds_scratch is zeroed as needed and does not use profile bin
-//#define FLOOD_DEBUG
+#define FLOOD_DEBUG
 #ifdef FLOOD_DEBUG
      cvNamedWindow("mvMeanShift debug");
 #endif
@@ -780,7 +822,7 @@ void mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
     unsigned char* resPtr = (unsigned char*) (ds_scratch->imageData + R*widthStep+C);
     
     if (*imgPtr == 0 || *resPtr != 0)
-        return;
+        return false;
 
     // create a color model
     Color_Triple color_triple(imgPtr[0],imgPtr[1],imgPtr[2],index_number); 
@@ -791,8 +833,7 @@ void mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
     std::vector < std::pair<int,int> > Point_Array;
     Point_Array.push_back(std::make_pair(R,C));
 
-#ifdef FLOOD_FROM_PIXEL_COMPARE_WITH_SOURCE_PIXEL
-    *resPtr = TEMP_PIXEL;
+#ifdef FLOOD_IMAGE_ALGORITHM_ONE
     unsigned char* imgPtrOrig = imgPtr;
     do {
         // dequeue the front pixel
@@ -805,6 +846,7 @@ void mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
             continue;
 
         imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*widthStep3+c*3);
+        //printf ("%d %d %d   %d %d %d\n", imgPtr[0],imgPtr[1],imgPtr[2],imgPtrOrig[0],imgPtrOrig[1],imgPtrOrig[2]);
         bool pixel_good = add_pixel_if_within_range (imgPtr, imgPtrOrig, color_triple.hue, color_triple.sat, color_triple.val, color_triple.n_pixels);
         if (pixel_good) {
             // mark pixel as visited
@@ -858,36 +900,44 @@ void mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
     } while (!Point_Array.empty());
 #endif
 
-    // if the box doesnt contain enough pixels, throw it out
-    if (color_triple.n_pixels < (unsigned)ds_scratch->width*ds_scratch->height/100)
-        return;
-
-    color_triple.calc_average();
-
-    // attempt to merge the box with an existing box. This is if the boxes are very similar
-    std::vector<Color_Triple>::iterator min_diff_iter;
-    int min_diff = 9000;
+    int final_index_number;
     
-    std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
-    for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
-        int diff = 2*abs((int)iter->hue-(int)color_triple.hue) + abs((int)iter->sat-(int)color_triple.sat);
-        if (diff < min_diff) {
-            min_diff = diff;
-            min_diff_iter = iter;
+    // if the box doesnt contain enough pixels, throw it out
+    if (color_triple.n_pixels < 100) {//(unsigned)ds_scratch->width*ds_scratch->height/300) {
+        final_index_number = 0;
+    }
+    else {
+        color_triple.calc_average();
+
+        // attempt to merge the box with an existing box. This is if the boxes are very similar
+        std::vector<Color_Triple>::iterator min_diff_iter;
+        int min_diff = 9000;
+        
+        std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
+        for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
+            int diff = 2*abs((int)iter->hue-(int)color_triple.hue) + abs((int)iter->sat-(int)color_triple.sat);
+            if (diff < min_diff) {
+                min_diff = diff;
+                min_diff_iter = iter;
+            }
+        }
+        // if could not merge, add the new box to the vector
+        if (min_diff < 20) {
+            min_diff_iter->merge(color_triple);
+            final_index_number = min_diff_iter->index_number;
+        }
+        else {
+            color_triple_vector.push_back(color_triple);
+            final_index_number = color_triple.index_number;
         }
     }
-    // if could not merge, add the new box to the vector
-    if (min_diff < 2*5+10)
-        min_diff_iter->merge(color_triple);
-    else
-        color_triple_vector.push_back(color_triple);
-    
+
     // paint the pixels with the appropriate index number
     for (int r = 0; r < ds_scratch->height; r++) {                         
         resPtr = (unsigned char*) (ds_scratch->imageData + r*widthStep);
         for (int c = 0; c < ds_scratch->width; c++) {
             if (*resPtr == TEMP_PIXEL)
-                *resPtr = color_triple.index_number;
+                *resPtr = index_number;
             resPtr++;
         }
     }
@@ -896,6 +946,8 @@ void mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
     cvShowImage("mvMeanShift debug", ds_scratch);
     cvWaitKey(100);
 #endif
+
+    return (final_index_number != 0);
 }
 
 //#########################################################################

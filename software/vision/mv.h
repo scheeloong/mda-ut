@@ -319,7 +319,6 @@ public:
     int BOX_COLOR;
     bool BOX_ENABLED; // whether the box is being used or not
 
-    
     static const int HUE_GUTTER_LEN = 6;
     static const int HUE_ADP_LEN = 2;
     static const float RESET_THRESHOLD_FRACTION = 0.0005;
@@ -330,7 +329,7 @@ public:
     int min_inside_count, max_inside_count;     // num of pixels within the normal box
     int min_outside_count, max_outside_count;   // num of pixels within the outside box
 
-    Hue_Box (const char* settings_file, int index_number);
+    Hue_Box (const char* settings_file, int box_number);
 
     bool check_hsv (unsigned char hue, unsigned char sat, unsigned char val) {
         // shifting logic goes here
@@ -363,13 +362,13 @@ public:
     Color_Triple(){
         hue = sat = val = hue_variance = n_pixels = index_number = 0;
     }
-    Color_Triple(unsigned Hue, unsigned Sat, unsigned Val, unsigned Box_Num){
+    Color_Triple(unsigned Hue, unsigned Sat, unsigned Val, unsigned Index_Number){
         hue = Hue; 
         sat = Sat;
         val = Val;
         hue_variance = 0;
         n_pixels = 1;
-        index_number = Box_Num;
+        index_number = Index_Number;
     }
     void calc_average () {
         hue /= n_pixels;
@@ -397,8 +396,8 @@ class mvMeanShift {
     static const int KERNEL_SIZE = 7;
     static const int S_MIN = 60;
     static const int V_MIN = 30;
-    static const unsigned char BAD_PIXEL = 47;
-    static const unsigned char TEMP_PIXEL = 253;
+    static const unsigned char BAD_PIXEL = 253;
+    static const unsigned char TEMP_PIXEL = 251;
 
 public:
     static const int NUM_BOXES = 3;
@@ -449,7 +448,7 @@ private:
     void meanshift_internal(IplImage* scratch);
     void colorFilter_internal();
     void colorFilter_internal_adaptive_hue();
-    void flood_from_pixel(int r, int c, unsigned index_number);
+    bool flood_from_pixel(int r, int c, unsigned index_number);
 
 public: 
     mvMeanShift (const char* settings_file); //constructor
