@@ -76,8 +76,8 @@ int main( int argc, char** argv ) {
 
     // declare filters we need
     mvHSVFilter HSVFilter ("test_settings.csv"); // color filter
-    mvBinaryMorphology Morphology7 (7,7, MV_KERN_ELLIPSE);
-    mvBinaryMorphology Morphology5 (5,5, MV_KERN_ELLIPSE);
+    mvBinaryMorphology Morphology7 (19,19, MV_KERN_ELLIPSE);
+    mvBinaryMorphology Morphology5 (7,7, MV_KERN_ELLIPSE);
     mvHoughLines HoughLines ("test_settings.csv");
     mvLines lines; // data struct to store lines
     mvAdvancedCircles circles ("test_settings.csv");
@@ -150,12 +150,16 @@ int main( int argc, char** argv ) {
             //mean_shift.mean_shift(frame, scratch_color);
             //mean_shift.watershed(frame, scratch_color);
             mean_shift.flood_image(frame, filter_img);
+            Morphology5.open(filter_img, filter_img);
+            Morphology7.close(filter_img, filter_img);
+            Morphology5.gradient(filter_img, filter_img);
+            //cvWaitKey(200);
             //mean_shift.filter(scratch_color, filter_img);
 
             win2->showImage (scratch_color);
             win3->showImage (filter_img);
         }
-        else if (LINE) {
+        if (LINE) {
             HoughLines.findLines (filter_img, &lines);
             kmeans.cluster_auto (1, 8, &lines, 1);
         
