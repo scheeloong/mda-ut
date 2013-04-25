@@ -45,6 +45,7 @@ class ActuatorOutput {
     // some methods to actuate the output
     virtual bool set_attitude_change(ATTITUDE_CHANGE_DIRECTION, int) = 0; // return if attitude was actually changed (won't change unless the attitude is stable)
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION, int) = 0;
+    virtual int get_target_attitude(ATTITUDE_DIRECTION) = 0;
     virtual void stop() = 0;
     virtual void special_cmd(SPECIAL_COMMAND) = 0;
 
@@ -61,6 +62,7 @@ class ActuatorOutputNull : public ActuatorOutput {
 
     virtual bool set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir, int delta) { return false; }
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION dir, int val) {}
+    virtual int get_target_attitude(ATTITUDE_DIRECTION) { return 0; }
     virtual void stop() {}
     virtual void special_cmd(SPECIAL_COMMAND cmd) {}
 };
@@ -73,6 +75,7 @@ class ActuatorOutputSimulator : public ActuatorOutput {
 
     virtual bool set_attitude_change(ATTITUDE_CHANGE_DIRECTION, int);
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION, int);
+    virtual int get_target_attitude(ATTITUDE_DIRECTION);
     virtual void stop();
     virtual void special_cmd(SPECIAL_COMMAND);
 };
@@ -85,6 +88,7 @@ class ActuatorOutputSubmarine : public ActuatorOutput {
 
     virtual bool set_attitude_change(ATTITUDE_CHANGE_DIRECTION, int);
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION, int);
+    virtual int get_target_attitude(ATTITUDE_DIRECTION);
     virtual void stop();
     virtual void special_cmd(SPECIAL_COMMAND);
 };

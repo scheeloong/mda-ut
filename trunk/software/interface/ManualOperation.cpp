@@ -99,6 +99,9 @@ void ManualOperation::work()
       }
     }
 
+    // variables for switch statement
+    int target_yaw = 0, target_depth = 0;
+
     switch(c) {
       case 'q':
          loop = false;
@@ -145,24 +148,26 @@ void ManualOperation::work()
          actuator_output->set_attitude_change(REVERSE, SPEED_CHG);
          break;
       case 'a':
-         if (!actuator_output->set_attitude_change(LEFT, YAW_CHG_IN_DEG)) {
-           message_hold("Yaw not stable, not turning left");
-         }
+         target_yaw = actuator_output->get_target_attitude(YAW);
+         target_yaw -= YAW_CHG_IN_DEG;
+         if (target_yaw < -180) target_yaw += 360;
+         actuator_output->set_attitude_absolute(YAW, target_yaw);
          break;
       case 'd':
-         if (!actuator_output->set_attitude_change(RIGHT, YAW_CHG_IN_DEG)) {
-           message_hold("Yaw not stable, not turning right");
-         }
+         target_yaw = actuator_output->get_target_attitude(YAW);
+         target_yaw += YAW_CHG_IN_DEG;
+         if (target_yaw > 180) target_yaw -= 360;
+         actuator_output->set_attitude_absolute(YAW, target_yaw);
          break;
       case 'r':
-         if (!actuator_output->set_attitude_change(RISE, DEPTH_CHG_IN_CM)) {
-           message_hold("Depth not stable, not rising");
-         }
+         target_depth = actuator_output->get_target_attitude(DEPTH);
+         target_depth -= DEPTH_CHG_IN_CM;
+         actuator_output->set_attitude_absolute(DEPTH, target_depth);
          break;
       case 'f':
-         if (!actuator_output->set_attitude_change(SINK, DEPTH_CHG_IN_CM)) {
-           message_hold("Depth not stable, not sinking");
-         }
+         target_depth = actuator_output->get_target_attitude(DEPTH);
+         target_depth += DEPTH_CHG_IN_CM;
+         actuator_output->set_attitude_absolute(DEPTH, target_depth);
          break;
       case ' ':
          actuator_output->special_cmd(SIM_ACCEL_ZERO);
@@ -174,6 +179,7 @@ void ManualOperation::work()
          actuator_output->special_cmd(SUB_POWER_ON);
          break;
       case '%':
+         actuator_output->stop();
          actuator_output->special_cmd(SUB_STARTUP_SEQUENCE);
          break;
       case '$':
@@ -493,7 +499,7 @@ void ManualOperation::message_hold(const char *msg, int delay_in_s)
     message(msg);
   } else {
     message(msg);
-    count = -5 * delay_in_s; // Estimate
+    count = -1 * delay_in_s; // Estimate
   }
 }
 
