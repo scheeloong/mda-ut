@@ -201,6 +201,7 @@ class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
     mvBinaryMorphology _Morphology;
     mvHoughLines _HoughLines;
     mvKMeans _KMeans;
+    mvMeanShift _MeanShift;
 
     mvLines _lines;
     

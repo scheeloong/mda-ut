@@ -455,7 +455,7 @@ bool mvMeanShift::add_pixel_if_within_range (unsigned char* pixel_to_add, unsign
     int Hdelta = abs(H - Href);
 
     if (Sdelta <= S_DIST && 
-        //abs(V-Vref) <= V_DIST &&
+        abs(V-Vref) <= V_DIST &&
         std::min(Hdelta,180-Hdelta) <= H_DIST)
     {
         // Circular red case is hard, let's just use 0 if we're looking for red and see > 90,
@@ -686,7 +686,11 @@ void mvMeanShift::watershed(IplImage* src, IplImage* dst) {
     upsample_to_3 (dst);
 }
 
-#define FLOOD_IMAGE_ALGORITHM_ONE
+bool triple_has_more_pixels (Color_Triple t1, Color_Triple t2) {
+    return (t1.n_pixels > t2.n_pixels);
+}
+
+//#define FLOOD_IMAGE_ALGORITHM_ONE
 
 void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
     // this assert should be removed once scratch images in the last step is worked out
@@ -724,10 +728,11 @@ void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
 #ifdef FLOOD_IMAGE_ALGORITHM_ONE 
     meanshift_internal (src);
 #else
+    meanshift_internal (src);  
     // estimate the avg difference between a pixel and its neighbours in terms of H and S
     int hue_pixel_diff = 0;
     int sat_pixel_diff = 0;
-    //int val_pixel_diff = 0;
+    int val_pixel_diff = 0;
     int n_pixels_counted = 0;
     for (int r = 2; r < ds_scratch_3->height-2; r+=1) {                         
         unsigned char* scrPtr = (unsigned char*)(ds_scratch->imageData + r*widthStep);
@@ -745,6 +750,11 @@ void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
                 sat_pixel_diff += abs(imgPtr[1] - imgPtr[-widthStep3+1]);
                 sat_pixel_diff += abs(imgPtr[1] - imgPtr[widthStep3+1]);
                 
+                val_pixel_diff += abs(imgPtr[2] - imgPtr[-3+2]);
+                val_pixel_diff += abs(imgPtr[2] - imgPtr[3+2]);
+                val_pixel_diff += abs(imgPtr[2] - imgPtr[-widthStep3+2]);
+                val_pixel_diff += abs(imgPtr[2] - imgPtr[widthStep3+2]);
+
                 n_pixels_counted += 4;
             }
             imgPtr += 3;
@@ -752,20 +762,24 @@ void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
         }
     }
 
-    assert (n_pixels_counted > 0);
-    H_DIST = hue_pixel_diff / n_pixels_counted + 4;
+    if (n_pixels_counted < 0)
+        return;
+    H_DIST = hue_pixel_diff / n_pixels_counted + 5;
     S_DIST = sat_pixel_diff / n_pixels_counted + 6;
-    printf ("H_DIST=%d, S_DIST=%d based on %d pixels\n", H_DIST, S_DIST, n_pixels_counted);
+    V_DIST = val_pixel_diff / n_pixels_counted + 6;
+    printf ("H_DIST=%d, S_DIST=%d, V_DIST=%d based on %d pixels\n", H_DIST, S_DIST, V_DIST, n_pixels_counted);
 #endif
 
     // now perform image flooding to paint the pixels and extract color triplets    
     unsigned index_number = 100;
-    for (int r = 3; r < ds_scratch->height - 3; r+=15) {                         
-        for (int c = 3; c < ds_scratch->width - 3; c+=15) {
+    for (int r = 3; r < ds_scratch->height - 3; r+=20) {                         
+        for (int c = 3; c < ds_scratch->width - 3; c+=20) {
             if (flood_from_pixel (r,c, index_number))
                 index_number++;
         }
     }
+
+    std::sort (color_triple_vector.begin(), color_triple_vector.end(), triple_has_more_pixels);
 
     std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
     for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter)
@@ -811,7 +825,7 @@ void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
 
 bool mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
 // assumes ds_scratch is zeroed as needed and does not use profile bin
-#define FLOOD_DEBUG
+//#define FLOOD_DEBUG
 #ifdef FLOOD_DEBUG
      cvNamedWindow("mvMeanShift debug");
 #endif
@@ -903,7 +917,7 @@ bool mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
     int final_index_number;
     
     // if the box doesnt contain enough pixels, throw it out
-    if (color_triple.n_pixels < 100) {//(unsigned)ds_scratch->width*ds_scratch->height/300) {
+    if (color_triple.n_pixels < 400) {//(unsigned)ds_scratch->width*ds_scratch->height/300) {
         final_index_number = 0;
     }
     else {
@@ -915,7 +929,7 @@ bool mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
         
         std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
         for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
-            int diff = 2*abs((int)iter->hue-(int)color_triple.hue) + abs((int)iter->sat-(int)color_triple.sat);
+            int diff = 2*abs((int)iter->hue-(int)color_triple.hue) + abs((int)iter->sat-(int)color_triple.sat) + abs((int)iter->val-(int)color_triple.val);
             if (diff < min_diff) {
                 min_diff = diff;
                 min_diff_iter = iter;
