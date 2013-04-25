@@ -20,6 +20,7 @@ const char MDA_VISION_MODULE_PATH::MDA_VISION_PATH_SETTINGS[] = "vision_path_set
 MDA_VISION_MODULE_PATH:: MDA_VISION_MODULE_PATH () :
 	_window (mvWindow("Path Vision Module")),
 	_HSVFilter (mvHSVFilter(MDA_VISION_PATH_SETTINGS)),
+    _MeanShift (mvMeanShift("test_settings.csv")),
 	_Morphology (mvBinaryMorphology(5, 5, MV_KERN_RECT)),
 	_HoughLines (mvHoughLines(MDA_VISION_PATH_SETTINGS)),
 	_lines (mvLines())
@@ -32,11 +33,13 @@ MDA_VISION_MODULE_PATH:: ~MDA_VISION_MODULE_PATH () {
 }
 
 void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
-    _HSVFilter.filter (src, _filtered_img);
+    //_HSVFilter.filter (src, _filtered_img);
+    _MeanShift.flood_image(src, _filtered_img);
     _filtered_img->origin = src->origin;
     _lines.clearData ();
     _KMeans.clearData ();
     
+    _Morphology.open(_filtered_img, _filtered_img);
     _Morphology.close(_filtered_img, _filtered_img);
     _Morphology.gradient(_filtered_img, _filtered_img);
     _HoughLines.findLines (_filtered_img, &_lines);
