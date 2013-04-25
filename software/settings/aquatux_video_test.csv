@@ -1,8 +1,8 @@
 # Test video input
 
 IMAGE_INPUT VIDEO
-VIDEO_FWD sub.avi
-VIDEO_DWN sub_dwn.avi
+VIDEO_FWD ../watertest1/buoy_11_40.avi
+VIDEO_DWN ../watertest1/path_11_43.avi
 IMAGE_SHOW_RAW 1
 WRITE_TO_VIDEO 0
 

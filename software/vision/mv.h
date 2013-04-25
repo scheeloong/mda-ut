@@ -314,7 +314,9 @@ public:
     unsigned char HUE_MIN;
     unsigned char HUE_MAX;
     unsigned char SAT_MIN;
+    unsigned char SAT_MAX;
     unsigned char VAL_MIN;
+    unsigned char VAL_MAX;
     int BOX_NUMBER;
     int BOX_COLOR;
     bool BOX_ENABLED; // whether the box is being used or not
@@ -333,7 +335,7 @@ public:
 
     bool check_hsv (unsigned char hue, unsigned char sat, unsigned char val) {
         // shifting logic goes here
-        if (sat >= SAT_MIN && val >= VAL_MIN) {
+        if (sat >= SAT_MIN && sat <= SAT_MAX && val >= VAL_MIN && val <= VAL_MAX) {
             if (HUE_MAX >= HUE_MIN) 
                 return (hue >= HUE_MIN && hue <= HUE_MAX);
             else

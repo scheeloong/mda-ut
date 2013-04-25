@@ -728,7 +728,7 @@ void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
 #ifdef FLOOD_IMAGE_ALGORITHM_ONE 
     meanshift_internal (src);
 #else
-    meanshift_internal (src);  
+    //meanshift_internal (src);  
     // estimate the avg difference between a pixel and its neighbours in terms of H and S
     int hue_pixel_diff = 0;
     int sat_pixel_diff = 0;
@@ -764,9 +764,9 @@ void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
 
     if (n_pixels_counted < 0)
         return;
-    H_DIST = hue_pixel_diff / n_pixels_counted + 5;
+    H_DIST = hue_pixel_diff / n_pixels_counted + 20;
     S_DIST = sat_pixel_diff / n_pixels_counted + 6;
-    V_DIST = val_pixel_diff / n_pixels_counted + 6;
+    V_DIST = val_pixel_diff / n_pixels_counted + 9;
     printf ("H_DIST=%d, S_DIST=%d, V_DIST=%d based on %d pixels\n", H_DIST, S_DIST, V_DIST, n_pixels_counted);
 #endif
 
@@ -796,19 +796,19 @@ void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
             continue;
 
         for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
-            if (hue_box[i]->check_hsv(iter->hue, 250,250)) {
+            if (hue_box[i]->check_hsv(iter->hue, iter->sat,iter->val)) {
                 
                 for (int k = 0; k < dst->height; k++) {
                     unsigned char* scrPtr = (unsigned char*)(ds_scratch->imageData + k*widthStep);
                     unsigned char* dstPtr = (unsigned char*)(dst->imageData + k*dst->widthStep);
                     for (int l = 0; l < dst->width; l++) {
-                        if (*scrPtr != last) {
+                        /*if (*scrPtr != last) {
                             last = *scrPtr;
-                            //printf ("%d\n",*scrPtr);
-                        }
+                            printf ("%d\n",*scrPtr);
+                        }*/
 
                         if (*scrPtr == iter->index_number)
-                            *dstPtr = 255;//hue_box[i]->BOX_NUMBER;
+                            *dstPtr = 255;//hue_box[i]->BOX_NUMBER*50;
                         scrPtr++;
                         dstPtr++;
                     }
@@ -825,7 +825,7 @@ void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
 
 bool mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
 // assumes ds_scratch is zeroed as needed and does not use profile bin
-//#define FLOOD_DEBUG
+#define FLOOD_DEBUG
 #ifdef FLOOD_DEBUG
      cvNamedWindow("mvMeanShift debug");
 #endif
@@ -936,7 +936,7 @@ bool mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
             }
         }
         // if could not merge, add the new box to the vector
-        if (min_diff < 20) {
+        if (min_diff < 40) {
             min_diff_iter->merge(color_triple);
             final_index_number = min_diff_iter->index_number;
         }
@@ -958,7 +958,7 @@ bool mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
   
 #ifdef FLOOD_DEBUG
     cvShowImage("mvMeanShift debug", ds_scratch);
-    cvWaitKey(100);
+    cvWaitKey(20);
 #endif
 
     return (final_index_number != 0);
@@ -997,13 +997,17 @@ Hue_Box::Hue_Box (const char* settings_file, int box_number) {
 
     std::string hue_min_str = std::string("HUE_MIN") + box_number_str;        
     std::string hue_max_str = std::string("HUE_MAX") + box_number_str;
-    std::string sat_min_str = std::string("SAT_MIN") + box_number_str;        
-    std::string val_min_str = std::string("VAL_MIN") + box_number_str;
+    std::string sat_min_str = std::string("SAT_MIN") + box_number_str;
+    std::string sat_max_str = std::string("SAT_MAX") + box_number_str;        
+    std::string val_min_str = std::string("VAL_MIN") + box_number_str;        
+    std::string val_max_str = std::string("VAL_MAX") + box_number_str;
 
     read_mv_setting (settings_file, hue_min_str.c_str(), HUE_MIN);
     read_mv_setting (settings_file, hue_max_str.c_str(), HUE_MAX);
     read_mv_setting (settings_file, sat_min_str.c_str(), SAT_MIN);
+    read_mv_setting (settings_file, sat_max_str.c_str(), SAT_MAX);
     read_mv_setting (settings_file, val_min_str.c_str(), VAL_MIN);
+    read_mv_setting (settings_file, val_max_str.c_str(), VAL_MAX);
 
     HUE_MIN_OUT = (HUE_MIN < HUE_GUTTER_LEN) ? 180+HUE_MIN-HUE_GUTTER_LEN : HUE_MIN-HUE_GUTTER_LEN;
     HUE_MAX_OUT = (HUE_MAX + HUE_GUTTER_LEN >= 180) ? HUE_MAX+HUE_GUTTER_LEN-180 : HUE_MAX+HUE_GUTTER_LEN;
