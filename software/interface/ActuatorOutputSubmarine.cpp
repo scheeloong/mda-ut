@@ -81,6 +81,20 @@ void ActuatorOutputSubmarine::set_attitude_absolute(ATTITUDE_DIRECTION dir, int 
   }
 }
 
+int ActuatorOutputSubmarine::get_target_attitude(ATTITUDE_DIRECTION dir)
+{
+  switch(dir) {
+    case YAW:
+      return SubmarineSingleton::get_instance().get_target_yaw();
+    case DEPTH:
+      return SubmarineSingleton::get_instance().get_target_depth();
+      break;
+    default:
+      puts("Unsupported functionality, returning 0\n");
+      return 0;
+  }
+}
+
 void ActuatorOutputSubmarine::stop()
 {
   set_attitude_absolute(SPEED, 0);

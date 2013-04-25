@@ -72,6 +72,20 @@ void ActuatorOutputSimulator::set_attitude_absolute(ATTITUDE_DIRECTION dir, int 
   }
 }
 
+int ActuatorOutputSimulator::get_target_attitude(ATTITUDE_DIRECTION dir)
+{
+  switch(dir) {
+    case YAW:
+      return SimulatorSingleton::get_instance().target_yaw();
+    case DEPTH:
+      return SimulatorSingleton::get_instance().target_depth();
+      break;
+    default:
+      puts("Unsupported functionality, returning 0\n");
+      return 0;
+  }
+}
+
 void ActuatorOutputSimulator::stop()
 {
   set_attitude_absolute(SPEED, 0);
