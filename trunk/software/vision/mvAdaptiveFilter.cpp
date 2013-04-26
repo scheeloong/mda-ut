@@ -890,25 +890,25 @@ bool mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
         if (c > 0 && resPtr[-1] == 0) { // left
             if (add_pixel_if_within_range (imgPtr-3, imgPtr, color_triple.hue, color_triple.sat, color_triple.val, color_triple.n_pixels)) {
                 resPtr[-1] = TEMP_PIXEL;
-                Point_Array.push_back(make_pair(r,c-1));
+                Point_Array.push_back(std::make_pair(r,c-1));
             }
         }
         if (c < ds_scratch->width-1 && resPtr[1] == 0) { // right
             if (add_pixel_if_within_range (imgPtr+3, imgPtr, color_triple.hue, color_triple.sat, color_triple.val, color_triple.n_pixels)) {
                 resPtr[1] = TEMP_PIXEL;
-                Point_Array.push_back(make_pair(r,c+1));
+                Point_Array.push_back(std::make_pair(r,c+1));
             }
         }
         if (r > 0 && resPtr[-widthStep] == 0) { // above
             if (add_pixel_if_within_range (imgPtr-widthStep3, imgPtr, color_triple.hue, color_triple.sat, color_triple.val, color_triple.n_pixels)) {
                 resPtr[-widthStep] = TEMP_PIXEL;
-                Point_Array.push_back(make_pair(r-1,c));
+                Point_Array.push_back(std::make_pair(r-1,c));
             }
         }
         if (r < ds_scratch->height-1 && resPtr[widthStep] == 0) { // below
             if (add_pixel_if_within_range (imgPtr+widthStep3, imgPtr, color_triple.hue, color_triple.sat, color_triple.val, color_triple.n_pixels)) {
                 resPtr[widthStep] = TEMP_PIXEL;
-                Point_Array.push_back(make_pair(r+1,c));
+                Point_Array.push_back(std::make_pair(r+1,c));
             }
         }
     } while (!Point_Array.empty());
