@@ -48,5 +48,9 @@ void controller_output(int pitch_setting, int roll_setting, int heading, int spe
 void print_debug_controller();
 
 void pid_init();
+void set_pid_constants_pitch(double P, double I, double D, double Alpha);
+void set_pid_constants_roll(double P, double I, double D, double Alpha);
+void set_pid_constants_yaw(double P, double I, double D, double Alpha);
+void set_pid_constants_depth(double P, double I, double D, double Alpha);
 
 #endif
