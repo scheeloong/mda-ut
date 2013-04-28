@@ -8,7 +8,6 @@ cd ../..
 
 dir=tests/`date +%H_%M`
 mkdir -p $dir
-cp  fpga/fpga_sw/inc/settings.h $dir
 cp  software/interface/aquatux.txt $dir
 cp  software/interface/log.txt $dir
 cp  software/interface/sub.avi $dir
