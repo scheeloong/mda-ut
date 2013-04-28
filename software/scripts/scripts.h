@@ -52,6 +52,10 @@ inline void init_fpga()
 
   // Call int_handler on SIGINT (Ctrl+C)
   signal(SIGINT, int_handler);
+  // Call on segmentations faults, broken pipes or hangups too
+  signal(SIGSEGV, int_handler);
+  signal(SIGHUP, int_handler);
+  signal(SIGPIPE, int_handler);
   // Call int_handler on SIGCHLD as well
   signal(SIGCHLD, int_handler);
 
