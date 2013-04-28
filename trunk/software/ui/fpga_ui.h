@@ -55,6 +55,11 @@ void get_accel(int *, int *, int *);
 int get_yaw();
 int get_depth();
 
+void set_pid_depth(double, double, double, double);
+void set_pid_pitch(double, double, double, double);
+void set_pid_roll(double, double, double, double);
+void set_pid_yaw(double, double, double, double);
+
 void set_verbose(int);
 
 #ifdef __cplusplus

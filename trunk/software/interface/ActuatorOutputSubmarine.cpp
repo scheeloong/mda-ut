@@ -120,3 +120,23 @@ void ActuatorOutputSubmarine::special_cmd(SPECIAL_COMMAND cmd)
       break;
   }
 }
+
+void ActuatorOutputSubmarine::set_depth_constants(double P, double I, double D, double Alpha)
+{
+  set_pid_depth(P, I, D, Alpha);
+}
+
+void ActuatorOutputSubmarine::set_pitch_constants(double P, double I, double D, double Alpha)
+{
+  set_pid_pitch(P, I, D, Alpha);
+}
+
+void ActuatorOutputSubmarine::set_roll_constants(double P, double I, double D, double Alpha)
+{
+  set_pid_roll(P, I, D, Alpha);
+}
+
+void ActuatorOutputSubmarine::set_yaw_constants(double P, double I, double D, double Alpha)
+{
+  set_pid_yaw(P, I, D, Alpha);
+}

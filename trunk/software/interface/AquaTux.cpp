@@ -47,7 +47,35 @@ AquaTux::AquaTux(const char *settings_file) : m_attitude_input(NULL)
   if (actuator_output == "SIMULATOR") {
     m_actuator_output = new ActuatorOutputSimulator();
   } else if (actuator_output == "SUBMARINE") {
-    m_actuator_output = new ActuatorOutputSubmarine();
+    ActuatorOutputSubmarine *aos = new ActuatorOutputSubmarine();
+
+    // Set PID constants
+    double P, I, D, Alpha;
+    read_mv_setting(settings_file, "DEPTH_P", P);
+    read_mv_setting(settings_file, "DEPTH_I", I);
+    read_mv_setting(settings_file, "DEPTH_D", D);
+    read_mv_setting(settings_file, "DEPTH_ALPHA", Alpha);
+    aos->set_depth_constants(P, I, D, Alpha);
+
+    read_mv_setting(settings_file, "PITCH_P", P);
+    read_mv_setting(settings_file, "PITCH_I", I);
+    read_mv_setting(settings_file, "PITCH_D", D);
+    read_mv_setting(settings_file, "PITCH_ALPHA", Alpha);
+    aos->set_pitch_constants(P, I, D, Alpha);
+
+    read_mv_setting(settings_file, "ROLL_P", P);
+    read_mv_setting(settings_file, "ROLL_I", I);
+    read_mv_setting(settings_file, "ROLL_D", D);
+    read_mv_setting(settings_file, "ROLL_ALPHA", Alpha);
+    aos->set_roll_constants(P, I, D, Alpha);
+
+    read_mv_setting(settings_file, "YAW_P", P);
+    read_mv_setting(settings_file, "YAW_I", I);
+    read_mv_setting(settings_file, "YAW_D", D);
+    read_mv_setting(settings_file, "YAW_ALPHA", Alpha);
+    aos->set_yaw_constants(P, I, D, Alpha);
+
+    m_actuator_output = aos;
   } else {
     if (actuator_output != "NULL") {
       cout << "Warning: unrecognized actuator output " << actuator_output << ", defaulting to no actuator output\n";
