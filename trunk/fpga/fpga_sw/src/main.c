@@ -33,6 +33,7 @@ struct command_struct my_cmds[] = {
   {"h", COMMAND_HELP, "h - help\n  Usage: h <cmd>\n\n  Print the help message for all commands that start with cmd, leave empty to print all help messages\n"},
   {"imu\n", COMMAND_IMU_SHELL, "imu - enter IMU shell\n  Usage: imu\n\n  Enters a shell where stdin goes to the IMU\n  Type quit to exit the IMU shell\n"},
   {"p", COMMAND_POW, "p - power off/on\n  Usage: p (0|1)\n\n  Turn off/on power to all the voltage rails\n"},
+  {"sc", COMMAND_CONTROLLER, "sc - set controller off/on\n  Usage: sc (0|1)\n\n  Turn off/on controller\n"},
   {"sd", COMMAND_SET_DEPTH, "sd - set depth of submarine\n"},
   {"sh", COMMAND_HEADING, "sh - set heading of motor positive or negative\n"},
   {"smb", COMMAND_BRAKE, "smb - set motor brake\n  Usage: smb <n>\n\n  Turn the nth motor off\n"},
@@ -40,10 +41,13 @@ struct command_struct my_cmds[] = {
   {"smf", COMMAND_FORWARD, "smf - set motor forward\n  Usage: smf <n>\n\n  Turn on the nth motor in the forward direction\n"},
   {"smr", COMMAND_REVERSE, "smr - set motor reverse\n  Usage: smr <n>\n\n  Turn on the nth motor in the reverse direction\n"},
   {"sms", COMMAND_STOP, "sms - set motor stop\n  Usage: sms <n>\n\n  Turn the nth motor off\n"},
+  {"spcd", COMMAND_PID_DEPTH, "spcd - set PID constants for depth\n  Usage: spcd P I D Alpha (all in double)\n\n"},
+  {"spcp", COMMAND_PID_PITCH, "spcp - set PID constants for pitch\n  Usage: spcd P I D Alpha (all in double)\n\n"},
+  {"spcr", COMMAND_PID_ROLL, "spcr - set PID constants for roll\n  Usage: spcd P I D Alpha (all in double)\n\n"},
+  {"spcy", COMMAND_PID_YAW, "spcy - set PID constants for yaw\n  Usage: spcd P I D Alpha (all in double)\n\n"},
   {"spf", COMMAND_FREQ, "spf - set PWM frequency\n  Usage: spf <0xn>\n\n  Set the PWM frequency to n in kilohertz\nNote: the frequency is inputted in hex\n"},
-  {"stop\n", COMMAND_STOP_ALL, "stop\n  Usage: stop\n\n  Stop all motors\n"},
   {"ss", COMMAND_SPEED, "ss - set forward or backward speed of motor positive or negative\n"},
-  {"sc", COMMAND_CONTROLLER, "sc - set controller off/on\n  Usage: sc (0|1)\n\n  Turn off/on controller\n"},
+  {"stop\n", COMMAND_STOP_ALL, "stop\n  Usage: stop\n\n  Stop all motors\n"},
 };
 
 // the size of the above array
@@ -87,6 +91,7 @@ void process_command(char *st)
   struct orientation orientation;
   int c, dc;
   const int ALL = 10; // 10 is 'a' in hex
+  double P, I, D, Alpha;
 
   switch (cid) {
     case COMMAND_INVALID:
@@ -269,6 +274,22 @@ void process_command(char *st)
     case COMMAND_IMU_SHELL:
       printf("type quit to exit IMU shell\n");
       rs232_shell();
+      break;
+    case COMMAND_PID_DEPTH:
+      sscanf(st, " %lf %lf %lf %lf", &P, &I, &D, &Alpha);
+      set_pid_constants_depth(P, I, D, Alpha);
+      break;
+    case COMMAND_PID_PITCH:
+      sscanf(st, " %lf %lf %lf %lf", &P, &I, &D, &Alpha);
+      set_pid_constants_pitch(P, I, D, Alpha);
+      break;
+    case COMMAND_PID_ROLL:
+      sscanf(st, " %lf %lf %lf %lf", &P, &I, &D, &Alpha);
+      set_pid_constants_roll(P, I, D, Alpha);
+      break;
+    case COMMAND_PID_YAW:
+      sscanf(st, " %lf %lf %lf %lf", &P, &I, &D, &Alpha);
+      set_pid_constants_yaw(P, I, D, Alpha);
       break;
   }
 }
