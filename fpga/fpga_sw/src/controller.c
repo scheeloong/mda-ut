@@ -25,10 +25,6 @@
 // Structures used by the PD controller for stabilization
 struct orientation target_orientation = {};
 struct orientation current_orientation = {};
-// Structure containing various PD parameters
-struct PD_controller_inputs PD_controller_inputs = {};
-// Structure containing PD controller feedback values
-struct PD_controller_error_values PD_controller_error_values = {};
 
 // Data to average depth readings
 int depth_values[NUM_DEPTH_VALUES] = {};
@@ -94,32 +90,23 @@ static Controller_PID PID_Pitch;
 static Controller_PID PID_Yaw;
 static Controller_PID PID_Depth;
 
+// Set constants, given PID controller
+void set_pid_constants(double P, double I, double D, double Alpha, Controller_PID *pid)
+{
+    PID_Reset(pid);
+    pid->Const_P = P;
+    pid->Const_I = I;
+    pid->Const_D = D;
+    pid->Alpha = Alpha;
+}
+
 void pid_init () // call this anytime before calling calculate_pid
 {
     // set up PID values
-    PID_Reset (&PID_Roll);
-    PID_Roll.Const_P = ROLL_CONST_P;
-    PID_Roll.Const_I = ROLL_CONST_I;
-    PID_Roll.Const_D = ROLL_CONST_D;
-    PID_Roll.Alpha = ROLL_ALPHA;
-    
-    PID_Reset (&PID_Pitch);
-    PID_Pitch.Const_P = PITCH_CONST_P;
-    PID_Pitch.Const_I = PITCH_CONST_I;
-    PID_Pitch.Const_D = PITCH_CONST_D;
-    PID_Pitch.Alpha = PITCH_ALPHA;
-    
-    PID_Reset (&PID_Yaw);
-    PID_Yaw.Const_P = YAW_CONST_P;
-    PID_Yaw.Const_I = YAW_CONST_I;
-    PID_Yaw.Const_D = YAW_CONST_D;
-    PID_Yaw.Alpha = YAW_ALPHA;
-    
-    PID_Reset (&PID_Depth);
-    PID_Depth.Const_P = DEPTH_CONST_P;
-    PID_Depth.Const_I = DEPTH_CONST_I;
-    PID_Depth.Const_D = DEPTH_CONST_D;
-    PID_Depth.Alpha = DEPTH_ALPHA;
+    set_pid_constants_pitch(PITCH_CONST_P, PITCH_CONST_I, PITCH_CONST_D, PITCH_ALPHA);
+    set_pid_constants_roll(ROLL_CONST_P, ROLL_CONST_I, ROLL_CONST_D, ROLL_ALPHA);
+    set_pid_constants_yaw(YAW_CONST_P, YAW_CONST_I, YAW_CONST_D, YAW_ALPHA);
+    set_pid_constants_depth(DEPTH_CONST_P, DEPTH_CONST_I, DEPTH_CONST_D, DEPTH_ALPHA);
 
     // Initialize target orientation
     set_target_depth(0);
@@ -128,6 +115,26 @@ void pid_init () // call this anytime before calling calculate_pid
 
     // Initialize motor linearization lookup table
     init_lookup();
+}
+
+void set_pid_constants_pitch(double P, double I, double D, double Alpha)
+{
+    set_pid_constants(P, I, D, Alpha, &PID_Pitch);
+}
+
+void set_pid_constants_roll(double P, double I, double D, double Alpha)
+{
+    set_pid_constants(P, I, D, Alpha, &PID_Roll);
+}
+
+void set_pid_constants_yaw(double P, double I, double D, double Alpha)
+{
+    set_pid_constants(P, I, D, Alpha, &PID_Yaw);
+}
+
+void set_pid_constants_depth(double P, double I, double D, double Alpha)
+{
+    set_pid_constants(P, I, D, Alpha, &PID_Depth);
 }
 
 double motor_force_to_pwm (double force) {

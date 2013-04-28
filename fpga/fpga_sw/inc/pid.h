@@ -1,4 +1,4 @@
-// controller_new.h - temporary header for embedded control code
+// controller.h - header for embedded control code
 #ifndef _PID_H
 #define _PID_H
 
@@ -8,7 +8,7 @@ typedef struct {
     // but for setting up the constants we'll access the members directly
     double P, I, D;
     double Const_P, Const_I, Const_D;
-    float Alpha; // decay constant for integral term
+    double Alpha; // decay constant for integral term
     
     int num_values; // number of values read
     double old_values[PID_NUM_OLD_VALUES];

@@ -59,28 +59,4 @@ struct command_struct {
   char *help_string;
 };
 
-struct PD_controller_error_values{
-    int pitch_P;
-	int roll_P;
-	int depth_P;
-	int heading_P;
-	
-	int pitch_D;
-	int roll_D;
-	int depth_D;
-	int heading_D;
-};
-
-struct PD_controller_inputs{
-    int pitch_P;
-	int roll_P;
-	int depth_P;
-	int heading_P;
-	
-	int pitch_D;
-	int roll_D;
-	int depth_D;
-	int heading_D;
-};
-
 #endif
