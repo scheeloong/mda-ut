@@ -396,6 +396,30 @@ void dyn_set_target_yaw (int target_yaw) {
     flush_output();
 }
 
+void set_pid_depth(double P, double I, double D, double Alpha) {
+    cmd_ok = 1;
+    fprintf(infp, "spcd %lf %lf %lf %lf\n", P, I, D, Alpha);
+    fflush(infp);
+}
+
+void set_pid_pitch(double P, double I, double D, double Alpha) {
+    cmd_ok = 1;
+    fprintf(infp, "spcp %lf %lf %lf %lf\n", P, I, D, Alpha);
+    fflush(infp);
+}
+
+void set_pid_roll(double P, double I, double D, double Alpha) {
+    cmd_ok = 1;
+    fprintf(infp, "spcr %lf %lf %lf %lf\n", P, I, D, Alpha);
+    fflush(infp);
+}
+
+void set_pid_yaw(double P, double I, double D, double Alpha) {
+    cmd_ok = 1;
+    fprintf(infp, "spcy %lf %lf %lf %lf\n", P, I, D, Alpha);
+    fflush(infp);
+}
+
 void set_verbose(int v) {
     verbose = v;
 }

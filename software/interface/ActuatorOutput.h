@@ -91,6 +91,12 @@ class ActuatorOutputSubmarine : public ActuatorOutput {
     virtual int get_target_attitude(ATTITUDE_DIRECTION);
     virtual void stop();
     virtual void special_cmd(SPECIAL_COMMAND);
+
+    // Specific commands
+    void set_depth_constants(double, double, double, double);
+    void set_pitch_constants(double, double, double, double);
+    void set_roll_constants(double, double, double, double);
+    void set_yaw_constants(double, double, double, double);
 };
 
 #endif
