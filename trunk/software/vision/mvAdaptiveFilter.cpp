@@ -825,7 +825,7 @@ void mvMeanShift::flood_image(IplImage* src, IplImage* dst) {
 
 bool mvMeanShift::flood_from_pixel(int R, int C, unsigned index_number) {
 // assumes ds_scratch is zeroed as needed and does not use profile bin
-#define FLOOD_DEBUG
+//#define FLOOD_DEBUG
 #ifdef FLOOD_DEBUG
      cvNamedWindow("mvMeanShift debug");
 #endif

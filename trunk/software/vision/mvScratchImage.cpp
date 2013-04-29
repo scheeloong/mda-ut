@@ -1,5 +1,8 @@
 #include "mv.h"
 
+// Comment out to disable scratch images (more memory usage, but better for debugging)
+#define ENABLE_SCRATCH_IMAGE
+
 static IplImage* scratch_img_1channel = NULL;
 static int instances_1channel = 0;
 static IplImage* scratch_img_1channel_2 = NULL;
@@ -11,26 +14,33 @@ static IplImage* scratch_img_3channel = NULL;
 static int instances_3channel = 0;
 
 IplImage* mvGetScratchImage() {
+#ifdef ENABLE_SCRATCH_IMAGE
     if (instances_1channel == 0) {
+#endif
         instances_1channel++;
 
         mvGetScratchImage_Color();
         scratch_img_1channel = mvCreateImage();
 
         return scratch_img_1channel;
+#ifdef ENABLE_SCRATCH_IMAGE
     }
     else {
         instances_1channel++;
         scratch_img_1channel->imageData = scratch_img_3channel->imageData;
         return scratch_img_1channel;
     }
+#endif
 }
 
 void mvReleaseScratchImage() {
+#ifdef ENABLE_SCRATCH_IMAGE
     if (instances_1channel == 1) {
+#endif
         mvReleaseScratchImage_Color();
         cvReleaseImageHeader(&scratch_img_1channel);
         instances_1channel = 0;
+#ifdef ENABLE_SCRATCH_IMAGE
     }
     else if (instances_1channel >= 1) {
         instances_1channel--;
@@ -39,10 +49,13 @@ void mvReleaseScratchImage() {
         fprintf (stderr, "Tried to release 1 channel image #2 without getting it first\n");
         exit (1);
     }
+#endif
 }
 
 IplImage* mvGetScratchImage2() {
+#ifdef ENABLE_SCRATCH_IMAGE
     if (instances_1channel_2 == 0) {
+#endif
         instances_1channel_2++;
 
         // For this one, we are going to use the middle 1/3 of the 3 channel image's data array
@@ -56,6 +69,7 @@ IplImage* mvGetScratchImage2() {
                                             scratch_img_1channel_2->height * scratch_img_1channel_2->widthStep;
 
         return scratch_img_1channel_2;
+#ifdef ENABLE_SCRATCH_IMAGE
     }
     else {
         instances_1channel_2++;
@@ -63,13 +77,17 @@ IplImage* mvGetScratchImage2() {
                                             scratch_img_1channel_2->height * scratch_img_1channel_2->widthStep;
         return scratch_img_1channel_2;
     }
+#endif
 }
 
 void mvReleaseScratchImage2() {
+#ifdef ENABLE_SCRATCH_IMAGE
     if (instances_1channel_2 == 1) {
+#endif
         mvReleaseScratchImage_Color();
         cvReleaseImageHeader(&scratch_img_1channel_2);
         instances_1channel_2 = 0;
+#ifdef ENABLE_SCRATCH_IMAGE
     }
     else if (instances_1channel_2 >= 1) {
         instances_1channel_2--;
@@ -78,10 +96,13 @@ void mvReleaseScratchImage2() {
         fprintf (stderr, "Tried to release 1 channel image #2 without getting it first\n");
         exit (1);
     }
+#endif
 }
 
 IplImage* mvGetScratchImage3() {
+#ifdef ENABLE_SCRATCH_IMAGE
     if (instances_1channel_3 == 0) {
+#endif
         instances_1channel_3++;
 
         // For this one, we are going to use the last 1/3 of the 3 channel image's data array
@@ -95,6 +116,7 @@ IplImage* mvGetScratchImage3() {
                                             2*scratch_img_1channel_3->height * scratch_img_1channel_3->widthStep;
 
         return scratch_img_1channel_3;
+#ifdef ENABLE_SCRATCH_IMAGE
     }
     else {
         instances_1channel_3++;
@@ -102,13 +124,17 @@ IplImage* mvGetScratchImage3() {
                                             2*scratch_img_1channel_3->height * scratch_img_1channel_3->widthStep;
         return scratch_img_1channel_3;
     }
+#endif
 }
 
 void mvReleaseScratchImage3() {
+#ifdef ENABLE_SCRATCH_IMAGE
     if (instances_1channel_3 == 1) {
+#endif
         mvReleaseScratchImage_Color();
         cvReleaseImageHeader(&scratch_img_1channel_3);
         instances_1channel_3 = 0;
+#ifdef ENABLE_SCRATCH_IMAGE
     }
     else if (instances_1channel_3 >= 1) {
         instances_1channel_3--;
@@ -117,26 +143,33 @@ void mvReleaseScratchImage3() {
         fprintf (stderr, "Tried to release 1 channel image #3 without getting it first\n");
         exit (1);
     }
+#endif
 }
 
 IplImage* mvGetScratchImage_Color() {
+#ifdef ENABLE_SCRATCH_IMAGE
     if (instances_3channel == 0) {
         assert (scratch_img_3channel == NULL);
+#endif
         instances_3channel++;
         scratch_img_3channel = mvCreateImage_Color();
         return scratch_img_3channel;
+#ifdef ENABLE_SCRATCH_IMAGE
     }
     else {
         instances_3channel++;
         return scratch_img_3channel;
     }
+#endif
 }
 
 void mvReleaseScratchImage_Color() {
+#ifdef ENABLE_SCRATCH_IMAGE
     if (instances_3channel == 1) {
-        //printf ("Released 3channel Scratch Image\n");
+#endif
         cvReleaseImage (&scratch_img_3channel);
         instances_3channel = 0;
+#ifdef ENABLE_SCRATCH_IMAGE
     }
     else if (instances_3channel > 1) {
         instances_3channel--;
@@ -145,4 +178,5 @@ void mvReleaseScratchImage_Color() {
         fprintf (stderr, "Tried to release 1 channel image without getting it first\n");
         exit (1);
     }
+#endif
 }
