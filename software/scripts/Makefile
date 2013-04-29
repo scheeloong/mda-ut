@@ -8,4 +8,4 @@ include Makefile.deps
 %.out: %.o $(LIB)
 	$(CC) -o $@ $< $(CXXFLAGS)
 
-.PHONY: parallel all deps clean
+.PHONY: $(PHONY_TARGETS)

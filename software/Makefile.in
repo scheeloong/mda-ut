@@ -13,6 +13,8 @@ COMPILE_FLAGS+=-O3 -Wall -g
 
 CXXFLAGS=$(I_FLAGS) $(COMPILE_FLAGS) $(L_FLAGS) $(GL_LIBS) $(CV_LIBS)
 CFLAGS=$(CXXFLAGS)
+
+DEBUG_FLAGS=-DDEBUG_FRAME_BY_FRAME -DDISABLE_SCRATCH_IMAGE -DFLOOD_DEBUG -DM_DEBUG
 # End compile flags
 
 # Begin files
@@ -37,6 +39,9 @@ parallel:
 all: $(LIB) $(A)
 	$(MAKE) $(EXES)
 
+debug:
+	$(MAKE) all CXXFLAGS="$(CXXFLAGS) $(DEBUG_FLAGS)" CFLAGS="$(CFLAGS) $(DEBUG_FLAGS)"
+
 ifdef A
 $(A): $(OBJ)
 	rm -f $@
@@ -48,6 +53,8 @@ deps:
 
 clean:
 	rm -rf $(OBJ) $(EXES) $(A) ./*~
+
+PHONY_TARGETS=parallel all debug deps clean
 
 $(LIBVISION):
 	+$(MAKE) -C `dirname $@` `basename $@`

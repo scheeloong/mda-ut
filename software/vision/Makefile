@@ -21,4 +21,4 @@ $(WEBCAM): $(OBJ) $(WEBCAM_SRC) $(LIB)
 $(HU): $(OBJ) $(HU_SRC) $(LIB)
 	$(CXX) -o $@ $(OBJ) $(HU_SRC) $(CXXFLAGS) -I .
 
-.PHONY: parallel all deps clean
+.PHONY: $(PHONY_TARGETS)

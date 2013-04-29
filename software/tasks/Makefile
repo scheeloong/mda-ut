@@ -10,5 +10,4 @@ MAIN_SRC=main_src/main.cpp
 $(MAIN): $(OBJ) $(MAIN_SRC) $(LIB)
 	$(CXX) -o $@ $(OBJ) $(MAIN_SRC) $(LIB) $(CXXFLAGS) -I .
 
-.PHONY: parallel all deps clean
-
+.PHONY: $(PHONY_TARGETS)
