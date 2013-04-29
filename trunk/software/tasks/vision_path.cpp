@@ -42,13 +42,13 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
     
     _Morphology2.open(_filtered_img, _filtered_img);
     _Morphology.close(_filtered_img, _filtered_img);
-    _window.showImage (_filtered_img);
     _Morphology2.gradient(_filtered_img, _filtered_img);
     _HoughLines.findLines (_filtered_img, &_lines);
     _KMeans.cluster_auto (1, 4, &_lines, 1);
 
     _KMeans.drawOntoImage (_filtered_img);
 
+    _window.showImage (_filtered_img);
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
