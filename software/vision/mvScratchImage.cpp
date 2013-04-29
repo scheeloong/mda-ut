@@ -14,7 +14,7 @@ static IplImage* scratch_img_3channel = NULL;
 static int instances_3channel = 0;
 
 IplImage* mvGetScratchImage() {
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     if (instances_1channel == 0) {
 #endif
         instances_1channel++;
@@ -23,7 +23,7 @@ IplImage* mvGetScratchImage() {
         scratch_img_1channel = mvCreateImage();
 
         return scratch_img_1channel;
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     }
     else {
         instances_1channel++;
@@ -34,13 +34,13 @@ IplImage* mvGetScratchImage() {
 }
 
 void mvReleaseScratchImage() {
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     if (instances_1channel == 1) {
 #endif
         mvReleaseScratchImage_Color();
         cvReleaseImageHeader(&scratch_img_1channel);
         instances_1channel = 0;
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     }
     else if (instances_1channel >= 1) {
         instances_1channel--;
@@ -53,7 +53,7 @@ void mvReleaseScratchImage() {
 }
 
 IplImage* mvGetScratchImage2() {
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     if (instances_1channel_2 == 0) {
 #endif
         instances_1channel_2++;
@@ -69,7 +69,7 @@ IplImage* mvGetScratchImage2() {
                                             scratch_img_1channel_2->height * scratch_img_1channel_2->widthStep;
 
         return scratch_img_1channel_2;
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     }
     else {
         instances_1channel_2++;
@@ -81,13 +81,13 @@ IplImage* mvGetScratchImage2() {
 }
 
 void mvReleaseScratchImage2() {
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     if (instances_1channel_2 == 1) {
 #endif
         mvReleaseScratchImage_Color();
         cvReleaseImageHeader(&scratch_img_1channel_2);
         instances_1channel_2 = 0;
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     }
     else if (instances_1channel_2 >= 1) {
         instances_1channel_2--;
@@ -100,7 +100,7 @@ void mvReleaseScratchImage2() {
 }
 
 IplImage* mvGetScratchImage3() {
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     if (instances_1channel_3 == 0) {
 #endif
         instances_1channel_3++;
@@ -116,7 +116,7 @@ IplImage* mvGetScratchImage3() {
                                             2*scratch_img_1channel_3->height * scratch_img_1channel_3->widthStep;
 
         return scratch_img_1channel_3;
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     }
     else {
         instances_1channel_3++;
@@ -128,13 +128,13 @@ IplImage* mvGetScratchImage3() {
 }
 
 void mvReleaseScratchImage3() {
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     if (instances_1channel_3 == 1) {
 #endif
         mvReleaseScratchImage_Color();
         cvReleaseImageHeader(&scratch_img_1channel_3);
         instances_1channel_3 = 0;
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     }
     else if (instances_1channel_3 >= 1) {
         instances_1channel_3--;
@@ -147,14 +147,14 @@ void mvReleaseScratchImage3() {
 }
 
 IplImage* mvGetScratchImage_Color() {
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     if (instances_3channel == 0) {
         assert (scratch_img_3channel == NULL);
 #endif
         instances_3channel++;
         scratch_img_3channel = mvCreateImage_Color();
         return scratch_img_3channel;
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     }
     else {
         instances_3channel++;
@@ -164,12 +164,12 @@ IplImage* mvGetScratchImage_Color() {
 }
 
 void mvReleaseScratchImage_Color() {
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     if (instances_3channel == 1) {
 #endif
         cvReleaseImage (&scratch_img_3channel);
         instances_3channel = 0;
-#ifdef DISABLE_SCRATCH_IMAGE
+#ifndef DISABLE_SCRATCH_IMAGE
     }
     else if (instances_3channel > 1) {
         instances_3channel--;
