@@ -12,4 +12,4 @@ MAIN_SRC=main_src/main.c
 $(UI): $(OBJ) $(MAIN_SRC)
 	$(CC) -o $@ $(MAIN_SRC) $(OBJ) $(CXXFLAGS) -I .
 
-.PHONY: parallel all deps clean
+.PHONY: $(PHONY_TARGETS)
