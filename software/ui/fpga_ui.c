@@ -168,7 +168,7 @@ void help_motor () {
     printf ("\t\t%-10s - %s","<N> <pwm>","set motor N to PWM value pwm. For example \"motor 3 -55\".\n");
     printf ("\t\t%-10s - %s","all stop","stop all motors.\n");
     printf ("\t\t%-10s - %s","fwd <pwm>","set the 2 horizontal motors to pwm.\n");
-    printf ("\t\t%-10s - %s","rise <pwm>","set the 3 veritcal motors to pwm.\n\n");
+    printf ("\t\t%-10s - %s","rise <pwm>","set the 3 vertical motors to pwm.\n\n");
 }
 
 void help_dyn () {
@@ -183,6 +183,7 @@ void help_power () {
     printf ("\n\tpower / p\n");
     printf ("\t\t%-10s - %s","status","prints power status.\n");
     printf ("\t\t%-10s - %s","on / 1","turns power on.\n");
+    printf ("\t\t%-10s - %s","start / 2","turns power on and turns on controllers.\n");
     printf ("\t\t%-10s - %s","off / 0","turns power off.\n\n");
 }
 
