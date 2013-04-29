@@ -83,10 +83,13 @@ int main (int argc, char *argv[]) {
             if (token[1] == NULL || !strcmp (token[1], "status"))
                 power_status();
             else if (!strcmp (token[1], "on") || !strcmp (token[1], "1")) {
-                startup_sequence();              
+                power_on();
+            }
+            else if (!strcmp (token[1], "start") || !strcmp (token[1], "2")) {
+                startup_sequence();
             }
             else if (!strcmp (token[1], "off") || !strcmp (token[1], "0")) {
-                power_off();                    
+                power_off();
             }
         }
         else if (!strcmp(token[0], "dyn") || !strcmp(token[0], "d")) {
