@@ -146,7 +146,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
         // Ensure debug messages are printed
         fflush(stdout);
         // Exit if instructed to
-        char c = cvWaitKey(3);
+        char c = cvWaitKey(TASK_WK);
         if (c != -1) {
             CharacterStreamSingleton::get_instance().write_char(c);
         }
