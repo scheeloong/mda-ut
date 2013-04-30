@@ -34,6 +34,13 @@ protected:
 	void move (ATTITUDE_CHANGE_DIRECTION direction, int delta_accel) {
 		actuator_output->set_attitude_change(direction, delta_accel);	
 	}
+
+// Wait for user to press a key
+#ifdef DEBUG_FRAME_BY_FRAME
+	static const int TASK_WK = 0;
+#else
+	static const int TASK_WK = 5;
+#endif
 	
 public:
 	MDA_TASK_BASE (AttitudeInput* a, ImageInput* i, ActuatorOutput * o) :
