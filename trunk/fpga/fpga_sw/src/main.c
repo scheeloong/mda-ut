@@ -18,9 +18,6 @@
 #include "settings.h"
 #include "utils.h"
 
-/* Uncomment to print out PID controller debug messages */
-//#define DEBUG_CTRL
-
 // This is the list of all the commands
 // Note: end the first string with a \n to ensure an exact match if no arguments are used
 struct command_struct my_cmds[] = {
@@ -213,9 +210,6 @@ void process_command(char *st)
       alt_putchar(',');
       print_int(orientation.roll);
       alt_putchar('\n');
-#ifdef DEBUG_CTRL
-      print_debug_controller();
-#endif
       break;
     case COMMAND_ACCEL_X:
       get_accel(&accel_data);

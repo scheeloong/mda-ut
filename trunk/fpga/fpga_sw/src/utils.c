@@ -79,12 +79,18 @@ void alt_getline(char *st, int len)
   *st = '\0';
 }
 
+/* Uncomment to print out PID controller debug messages */
+//#define DEBUG_CTRL
+
 // with non-blocking stdin, you can use this function to schedule commands that should not run in interrupt handlers
 void service_main_loop()
 {
   if (update_pid) {
     update_pid = 0;
     calculate_pid();
+#ifdef DEBUG_CTRL
+    print_debug_controller();
+#endif
   }
 }
 
