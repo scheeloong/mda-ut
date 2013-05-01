@@ -39,6 +39,10 @@ void SubmarineSingleton::set_target_yaw(int target_yaw)
 
 void SubmarineSingleton::set_target_depth(int target_depth)
 {
+  if (target_depth > 500) {
+    printf("Unsafe depth, setting to 500\n");
+    target_depth = 500;
+  }
   this->target_depth = target_depth;
   dyn_set_target_depth(target_depth);
 }
