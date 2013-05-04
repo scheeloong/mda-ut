@@ -9,6 +9,7 @@
 
 #include "mv.h"
 #include "mgui.h"
+#include "mvColorFilter.h"
 #include "mvLines.h"
 #include "mvShapes.h"
 

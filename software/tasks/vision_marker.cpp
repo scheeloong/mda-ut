@@ -1,11 +1,6 @@
 #include "mda_vision.h"
 
-#define VISION_DEBUG
-#ifdef VISION_DEBUG
-    #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
-#else
-    #define DEBUG_PRINT(format, ...)
-#endif
+#define M_DEBUG
 
 #define ABS(X) (((X)>0) ? (X) : (-(X)))
 
@@ -15,11 +10,11 @@ const char MDA_VISION_MODULE_MARKER::MDA_VISION_MARKER_SETTINGS[] = "vision_mark
 /// MODULE_MARKER methods
 /// ########################################################################
 MDA_VISION_MODULE_MARKER:: MDA_VISION_MODULE_MARKER () :
-	_window (mvWindow("Marker Vision Module")),
-	_HSVFilter (mvHSVFilter(MDA_VISION_MARKER_SETTINGS)),
-        targets_found({false, false})
+	window (mvWindow("Marker Vision Module")),
+	HSVFilter (mvHSVFilter(MDA_VISION_MARKER_SETTINGS))
 {
-    _filtered_img = mvGetScratchImage();
+    targets_found = {false, false};
+    filtered_img = mvGetScratchImage();
     //_filtered_img->origin = 1;
 }
 
@@ -36,11 +31,11 @@ void MDA_VISION_MODULE_MARKER:: primary_filter (IplImage* src) {
 
     /** YOUR CODE HERE. DO STUFF TO img */
 
-    _HSVFilter.filter (src, _filtered_img);
-    _filtered_img->origin = src->origin;
+    HSVFilter.filter (src, filtered_img);
+    filtered_img->origin = src->origin;
 
     // this line displays the img in a window
-    _window.showImage (_filtered_img);
+    window.showImage (filtered_img);
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_MARKER:: calc_vci () {
@@ -51,7 +46,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_MARKER:: calc_vci () {
                           };
     
     double hu[7];
-    mvHuMoments(_filtered_img, hu);
+    mvHuMoments(filtered_img, hu);
 
     double dist = 0;
 

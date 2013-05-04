@@ -2,6 +2,7 @@
 #include <cv.h>
 
 #include "mgui.h"
+#include "mvColorFilter.h"
 #include "mv.h"
 
 int main(int argc, char** argv)

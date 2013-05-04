@@ -6,6 +6,7 @@
 
 #include "mgui.h"
 #include "mv.h"
+#include "mvColorFilter.h"
 #include "mvLines.h"
 #include "mvShapes.h"
 #include "profile_bin.h"
@@ -82,9 +83,8 @@ int main( int argc, char** argv ) {
     mvLines lines; // data struct to store lines
     mvAdvancedCircles circles ("test_settings.csv");
     mvKMeans kmeans;
-    mvMeanShift mean_shift("test_settings.csv");
-
-    mvAdaptiveFilter adaptive ("test_settings.csv");
+    mvHistogramFilter histogram_filter ("test_settings.csv");
+    mvAdvancedColorFilter advanced_filter("test_settings.csv");
 
     // declare images we need
     IplImage* scratch_color = mvCreateImage_Color();
@@ -147,14 +147,14 @@ int main( int argc, char** argv ) {
       */
         
         if (TEST) {             
-            //mean_shift.mean_shift(frame, scratch_color);
-            //mean_shift.watershed(frame, scratch_color);
-            mean_shift.flood_image(frame, filter_img);
+            //advanced_filter.advanced_filter(frame, scratch_color);
+            //advanced_filter.watershed(frame, scratch_color);
+            advanced_filter.flood_image(frame, filter_img);
             Morphology5.open(filter_img, filter_img);
             Morphology7.close(filter_img, filter_img);
             Morphology5.gradient(filter_img, filter_img);
             //cvWaitKey(200);
-            //mean_shift.filter(scratch_color, filter_img);
+            //advanced_filter.filter(scratch_color, filter_img);
 
             win2->showImage (scratch_color);
             win3->showImage (filter_img);
