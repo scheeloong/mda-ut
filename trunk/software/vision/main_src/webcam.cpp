@@ -14,7 +14,9 @@
 unsigned CAM_NUMBER=0;
 unsigned WRITE=0;
 unsigned TEST=0;
-unsigned CARTOON=0;
+unsigned GRAD=0;
+unsigned FLOOD=0;
+unsigned WATERSHED=0;
 unsigned LINE=0;
 unsigned CIRCLE=0;
 unsigned LOAD=0;
@@ -29,10 +31,14 @@ int main( int argc, char** argv ) {
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i],"1") || !strcmp(argv[i],"2"))
             CAM_NUMBER = atoi (argv[i]);
-        else if (!strcmp (argv[i], "--cartoon"))
-            CARTOON = 1;
         else if (!strcmp (argv[i], "--test"))
             TEST = 1;
+        else if (!strcmp (argv[i], "--grad"))
+            GRAD = 1;
+        else if (!strcmp (argv[i], "--flood"))
+            FLOOD = 1;
+        else if (!strcmp (argv[i], "--watershed"))
+            WATERSHED = 1;
         else if (!strcmp (argv[i], "--write"))
             WRITE = 1;
         else if (!strcmp (argv[i], "--break"))
@@ -88,9 +94,9 @@ int main( int argc, char** argv ) {
 
     // declare images we need
     IplImage* scratch_color = mvCreateImage_Color();
-    IplImage* HSV_img = mvCreateImage_Color();
+    IplImage* scratch_color_2 = mvCreateImage_Color();
     IplImage* filter_img = mvCreateImage ();
-    //IplImage* filter_img2 = mvCreateImage ();
+    IplImage* filter_img_2 = mvCreateImage ();
  
     /// execution
     char c;
@@ -109,7 +115,7 @@ int main( int argc, char** argv ) {
             break;
         }
         
-        if (nframes < 10) {// || nframes % 2 != 0) {
+        if (nframes < 10) {
             nframes++;
             continue;
         }
@@ -118,47 +124,28 @@ int main( int argc, char** argv ) {
             writer->writeFrame (frame);
         }
 
-        cvCvtColor (frame, HSV_img, CV_BGR2HSV);
-
-        if (CARTOON) {
-            win1->showImage (frame);
-
-            for (int i = 0; i < frame->height; i+=40) {
-                for (int j = 0; j < frame->width; j+=40) {
-                    unsigned char* pixel = (unsigned char*) (frame->imageData + i*frame->widthStep + j*3);
-                    CvScalar mycolor = cvScalar(*(pixel+0), *(pixel+1), *(pixel+2));
-                    
-                    cvFloodFill(frame, cvPoint(j,i), mycolor, cvScalar(20,20,20), cvScalar(20,20,20), NULL, CV_FLOODFILL_FIXED_RANGE);
-                }    
-            }
-
-            win2->showImage (frame);
-            goto LOOP_BOTTOM;
-        }
-
         cvCopy (frame, scratch_color);
         win1->showImage (scratch_color);
         
-        /*HSVFilter.filter (frame, filter_img); // process it
-        win2->showImage (filter_img);
-           
-        Morphology7.open (filter_img, filter_img);
-        Morphology5.gradient (filter_img, filter_img);
-        win3->showImage (filter_img);
-      */
-        
         if (TEST) {             
-            //advanced_filter.watershed(frame, scratch_color);
+        }
+        else if (FLOOD) {
             advanced_filter.flood_image(frame, filter_img);
             Morphology5.open(filter_img, filter_img);
             Morphology7.close(filter_img, filter_img);
-            //Morphology5.gradient(filter_img, filter_img);
-            //cvWaitKey(200);
-            //advanced_filter.filter(scratch_color, filter_img);
 
-            //win2->showImage (scratch_color);
-            win3->showImage (filter_img);
+            win2->showImage (filter_img);
         }
+        else if (WATERSHED) {
+            advanced_filter.watershed(frame, scratch_color_2);
+            
+            win2->showImage (scratch_color_2);   
+        }
+
+        if (GRAD) {
+            Morphology5.gradient(filter_img, filter_img);
+        }
+
         if (LINE) {
             HoughLines.findLines (filter_img, &lines);
             kmeans.cluster_auto (1, 8, &lines, 1);
@@ -178,7 +165,6 @@ int main( int argc, char** argv ) {
             win3->showImage (filter_img);
         }
         
-    LOOP_BOTTOM:
         nframes++;
         if (BREAK)
             c = cvWaitKey(0);
@@ -194,9 +180,10 @@ int main( int argc, char** argv ) {
     t_end = clock ();
     printf ("\nAverage Framerate = %f\n", (float)nframes/(t_end - t_start)*CLOCKS_PER_SEC);
     
-    cvReleaseImage (&HSV_img);
     cvReleaseImage (&scratch_color);
+    cvReleaseImage (&scratch_color_2);
     cvReleaseImage (&filter_img);
+    cvReleaseImage (&filter_img_2);
     delete camera;
     if (writer)
         delete writer;
