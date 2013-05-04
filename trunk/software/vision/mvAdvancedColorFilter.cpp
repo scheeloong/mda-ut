@@ -2,9 +2,9 @@
 #include <math.h>
 
 mvAdvancedColorFilter::mvAdvancedColorFilter (const char* settings_file) : 
-    bin_Resize ("mvAdvancedColorFilter - Resize"),
-    bin_MeanShift ("mvAdvancedColorFilter - MeanShift"),
-    bin_Filter ("mvAdvancedColorFilter - Filter")
+    bin_Resize ("mvAdvanced - Resize"),
+    bin_MeanShift ("mvAdvanced - MeanShift"),
+    bin_Filter ("mvAdvanced - Filter")
 {
     assert (KERNEL_SIZE % 2 == 1);
     
@@ -375,7 +375,7 @@ void mvAdvancedColorFilter::flood_image(IplImage* src, IplImage* dst) {
     bin_Resize.start();
     downsample_from (src);
     bin_Resize.stop();
-    bin_MeanShift.start();
+    bin_Filter.start();
     cvCvtColor(ds_scratch_3, ds_scratch_3, CV_BGR2HSV);
 
     // we use ds_scratch as a mask image. If something is marked nonzero in ds_scratch the algorithm will usually
@@ -494,7 +494,7 @@ void mvAdvancedColorFilter::flood_image(IplImage* src, IplImage* dst) {
 
     color_triple_vector.clear();
 
-    bin_MeanShift.stop();
+    bin_Filter.stop();
 }
 
 bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number) {
