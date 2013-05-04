@@ -1,6 +1,11 @@
 #include "mda_vision.h"
 
 #define M_DEBUG
+#ifdef M_DEBUG
+    #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
+#else
+    #define DEBUG_PRINT(format, ...)
+#endif
 
 float absf(float f){
     if(f < 0) return f*-1;

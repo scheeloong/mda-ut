@@ -4,6 +4,12 @@
 #define DISPLAY_HIST 1
 #define HIST_PIXEL_SCALE 10
 
+#ifdef M_DEBUG
+    #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
+#else
+    #define DEBUG_PRINT(format, ...)
+#endif
+
 //####################################################################################
 //####################################################################################
 //####################################################################################
@@ -82,7 +88,6 @@ int mvHistogramFilter::getQuadAvgCount (Quad Q) {
 }
 
 void mvHistogramFilter::filter (IplImage* src, IplImage* dst) {
-    #define M_DEBUG
     assert (src != NULL);
     assert (dst != NULL);
     assert (src->nChannels == 3);
@@ -122,7 +127,7 @@ void mvHistogramFilter::filter (IplImage* src, IplImage* dst) {
 
     cvNormalizeHist (hist, HISTOGRAM_NORM_FACTOR);
     
-    #ifdef FILTER_DEBUG
+    #ifdef M_DEBUG
         print_histogram();
         show_histogram();
     #endif

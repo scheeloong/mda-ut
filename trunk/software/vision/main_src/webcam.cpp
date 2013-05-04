@@ -152,7 +152,7 @@ int main( int argc, char** argv ) {
             advanced_filter.flood_image(frame, filter_img);
             Morphology5.open(filter_img, filter_img);
             Morphology7.close(filter_img, filter_img);
-            Morphology5.gradient(filter_img, filter_img);
+            //Morphology5.gradient(filter_img, filter_img);
             //cvWaitKey(200);
             //advanced_filter.filter(scratch_color, filter_img);
 
