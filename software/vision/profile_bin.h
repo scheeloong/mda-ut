@@ -9,7 +9,7 @@
 class PROFILE_BIN {
 
 #ifdef PROFILE_ON    
-    char binName[30];
+    char binName[50];
     unsigned startTime, nCalls;
     float totalTime;
     bool on;
@@ -17,7 +17,7 @@ class PROFILE_BIN {
     public:
     
     PROFILE_BIN (const char* Name, bool On=true) {
-	assert(strlen(Name) < 30);
+	assert(strlen(Name) < 50);
       
         on = On;
         startTime = 0;
