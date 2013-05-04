@@ -1,6 +1,11 @@
 #include "mda_vision.h"
 
 #define M_DEBUG
+#ifdef M_DEBUG
+    #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
+#else
+    #define DEBUG_PRINT(format, ...)
+#endif
 
 const char MDA_VISION_MODULE_FRAME::MDA_VISION_FRAME_SETTINGS[] = "vision_frame_settings.csv";
 

@@ -5,12 +5,6 @@
 #include "mv.h"
 #include "mgui.h"
 
-#ifdef M_DEBUG
-    #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
-#else
-    #define DEBUG_PRINT(format, ...)
-#endif
-
 // ##################################################################################################
 //  Utility Functions and Filters that are not classes
 // ##################################################################################################
@@ -209,6 +203,7 @@ public:
 //  mvAdvancedColorFilter - mean_shift, flood_fill, and other more complicated algorithms
 // ##################################################################################################
 class mvAdvancedColorFilter {
+
     //declare constants here
     static const int DS_FACTOR = 1; // downsampling
     static const int GOOD_PIXELS_FACTOR = 6;
@@ -223,10 +218,9 @@ public:
 
 private:
     // parameters read from settings file
-    int H_DIST;
-    int S_DIST;
-    int V_DIST;
+    int COLOR_DIST;
 
+    // calculated parameters
     int KERNEL_AREA;
     int KERNEL_RAD;
 
@@ -260,13 +254,21 @@ private:
           cvResize (ds_scratch, dst, CV_INTER_NN);
         bin_Resize.stop();
     }
-    bool add_pixel_if_within_range (unsigned char* pixel_to_add, unsigned char* ref_pixel,
+
+    bool check_and_accumulate_pixel (unsigned char* pixel, unsigned char* ref_pixel,
+                                    unsigned &b_sum, unsigned &g_sum, unsigned &r_sum,
+                                    unsigned &num_pixels);
+    bool check_and_accumulate_pixel_BGR (unsigned char* pixel, unsigned char* ref_pixel,
+                                    unsigned &b_sum, unsigned &g_sum, unsigned &r_sum,
+                                    unsigned &num_pixels);
+    bool check_and_accumulate_pixel_HSV (unsigned char* pixel, unsigned char* ref_pixel,
                                     unsigned &h_sum, unsigned &s_sum, unsigned &v_sum,
                                     unsigned &num_pixels);
     
     void meanshift_internal(IplImage* scratch);
-    void colorFilter_internal();
-    void colorFilter_internal_adaptive_hue();
+    void colorfilter_internal();
+    void colorfilter_internal_adaptive_hue();
+    void flood_image_internal ();
     bool flood_from_pixel(int r, int c, unsigned index_number);
 
 public: 

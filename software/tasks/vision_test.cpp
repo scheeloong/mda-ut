@@ -1,6 +1,11 @@
 #include "mda_vision.h"
 
 #define ABS(X) (((X)>0) ? (X) : (-(X)))
+#ifdef M_DEBUG
+    #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
+#else
+    #define DEBUG_PRINT(format, ...)
+#endif
 
 const char MDA_VISION_MODULE_TEST::MDA_VISION_TEST_SETTINGS[] = "vision_test_settings.csv";
 
