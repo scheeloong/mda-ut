@@ -204,7 +204,8 @@ bool mvAdvancedColorFilter::check_and_accumulate_pixel_BGR (unsigned char* pixel
     int G = pixel[1];
     int R = pixel[2];
 
-    if (abs(B-ref_pixel[0]) + abs(G-ref_pixel[1]) + abs(R-ref_pixel[2]) < COLOR_DIST)
+    //if (abs(B-ref_pixel[0]) + abs(G-ref_pixel[1]) + abs(R-ref_pixel[2]) < COLOR_DIST)
+    if (abs(B-ref_pixel[0]) < H_DIST && abs(G-ref_pixel[1]) < S_DIST && abs(R-ref_pixel[2]) < V_DIST)
     {
         b_sum += (unsigned)B;           
         g_sum += (unsigned)G;
@@ -468,7 +469,7 @@ void mvAdvancedColorFilter::flood_image_internal() {
     for (int r = 3; r < ds_scratch->height - 3; r+=20) {                         
         for (int c = 3; c < ds_scratch->width - 3; c+=20) {
             if (flood_from_pixel (r,c, index_number))
-                index_number += 5;
+                index_number += 15;
         }
 
         if (index_number > 255) {
@@ -480,8 +481,9 @@ void mvAdvancedColorFilter::flood_image_internal() {
     std::sort (color_triple_vector.begin(), color_triple_vector.end(), triple_has_more_pixels);
 
     std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
-    for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter)
+    for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
         DEBUG_PRINT ("color_triplet #%2d (%dpix): %d %d %d\n", iter->index_number, iter->n_pixels, iter->hue, iter->sat, iter->val);
+    }
     DEBUG_PRINT ("\n");
 }
 
@@ -542,7 +544,7 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
             //DEBUG_PRINT ("failed %d,%d,%d vs %d,%d,%d\n",imgPtr[0],imgPtr[1],imgPtr[2],imgPtrOrig[0],imgPtrOrig[1],imgPtrOrig[2]);
         }
     } while (!Point_Array.empty());
-#else
+#else 
     do {
         // dequeue the front pixel
         int r = Point_Array.back().first;
@@ -576,36 +578,69 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
                 Point_Array.push_back(std::make_pair(r+1,c));
             }
         }
-    } while (!Point_Array.empty());
+    } while (!Point_Array.empty());    
 #endif
 
     int final_index_number;
     
     // if the box doesnt contain enough pixels, throw it out
-    if (color_triple.n_pixels < 100) {//(unsigned)ds_scratch->width*ds_scratch->height/300) {
+    if (color_triple.n_pixels < 50) {//(unsigned)ds_scratch->width*ds_scratch->height/300) {
         final_index_number = 0;
     }
     else {
         color_triple.calc_average();
-
-        // attempt to merge the box with an existing box. This is if the boxes are very similar
+        
+        /*// attempt to merge the box with an existing box. This is if the boxes are very similar
         std::vector<Color_Triple>::iterator min_diff_iter;
         int min_diff = 9000;
         
         std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
         for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
-            int diff = abs((int)iter->hue-(int)color_triple.hue) + abs((int)iter->sat-(int)color_triple.sat) + abs((int)iter->val-(int)color_triple.val);
+            int diff =  abs((int)iter->hue-(int)color_triple.hue) + 
+                        abs((int)iter->sat-(int)color_triple.sat) + 
+                        abs((int)iter->val-(int)color_triple.val);
             if (diff < min_diff) {
                 min_diff = diff;
                 min_diff_iter = iter;
             }
         }
         // if could not merge, add the new box to the vector
-        if (min_diff < 30) {
+        if (min_diff < 0.8*COLOR_DIST) {
+            printf ("merging BGR triplet #%d (%d %d %d) with #%d (%d %d %d)\n", 
+                    min_diff_iter->index_number, min_diff_iter->hue, min_diff_iter->sat, min_diff_iter->val, 
+                    color_triple.index_number, color_triple.hue, color_triple.sat, color_triple.val
+                    );
             min_diff_iter->merge(color_triple);
             final_index_number = min_diff_iter->index_number;
         }
         else {
+            color_triple_vector.push_back(color_triple);
+            final_index_number = color_triple.index_number;
+        }*/
+#ifdef USE_BGR_COLOR_SPACE
+#else
+        color_triple.BGR_to_HSV();
+#endif
+        bool merged = false;
+        std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
+        for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
+            if (abs((int)iter->hue - (int)color_triple.hue) < H_DIST &&
+                abs((int)iter->sat - (int)color_triple.sat) < S_DIST &&
+                abs((int)iter->val - (int)color_triple.val) < V_DIST
+                )
+            {
+                printf ("merging HSV triplet #%d (%d %d %d) with #%d (%d %d %d)\n", 
+                    iter->index_number, iter->hue, iter->sat, iter->val, 
+                    color_triple.index_number, color_triple.hue, color_triple.sat, color_triple.val
+                    );
+
+                iter->merge(color_triple);
+                final_index_number = iter->index_number;
+                merged = true;
+                break;
+            }
+        }
+        if (!merged) {
             color_triple_vector.push_back(color_triple);
             final_index_number = color_triple.index_number;
         }
@@ -616,14 +651,14 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
         resPtr = (unsigned char*) (ds_scratch->imageData + r*widthStep);
         for (int c = 0; c < ds_scratch->width; c++) {
             if (*resPtr == TEMP_PIXEL)
-                *resPtr = index_number;
+                *resPtr = final_index_number;
             resPtr++;
         }
     }
   
 #ifdef FLOOD_DEBUG
     cvShowImage("mvAdvancedColorFilter debug", ds_scratch);
-    cvWaitKey(50);
+    cvWaitKey(40);
 #endif
 
     return (final_index_number != 0);

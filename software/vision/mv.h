@@ -105,8 +105,8 @@ void mvReleaseScratchImage3();
 IplImage* mvGetScratchImage_Color();
 void mvReleaseScratchImage_Color();
 
-/*BRG2HSV -- NOTfaster implementation to convert BRG images into HSV format */
-void mvBRG2HSV(IplImage* src, IplImage* dst);
+/*BGR2HSV -- NOTfaster implementation to convert BGR images into HSV format */
+void mvBGR2HSV(IplImage* src, IplImage* dst);
 
 inline void mvGaussian (IplImage* src, IplImage* dst, unsigned kern_w, unsigned kern_h) {
     cvSmooth (src, dst, CV_GAUSSIAN, kern_w, kern_h);
@@ -193,5 +193,5 @@ class mvBinaryMorphology {
 };
 
 // Helper function for HSV conversion
-void tripletBRG2HSV (uchar Blue, uchar Green, uchar Red, uchar &Hue, uchar &Sat, uchar &Val);
+void tripletBGR2HSV (uchar Blue, uchar Green, uchar Red, uchar &Hue, uchar &Sat, uchar &Val);
 #endif

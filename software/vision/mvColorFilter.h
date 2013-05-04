@@ -190,6 +190,14 @@ public:
         sat /= n_pixels;
         val /= n_pixels;
     }
+    void BGR_to_HSV () {
+        unsigned char H,S,V;
+        tripletBGR2HSV (static_cast<unsigned char>(hue),static_cast<unsigned char>(sat),static_cast<unsigned char>(val)
+                        ,H,S,V); // hue,sat,val are actually in BGR
+        hue = static_cast<unsigned>(H);
+        sat = static_cast<unsigned>(S);
+        val = static_cast<unsigned>(V);
+    }
     void merge (Color_Triple B) {
         unsigned total = n_pixels + B.n_pixels;
         hue = (hue*n_pixels + B.hue*B.n_pixels) / total;
