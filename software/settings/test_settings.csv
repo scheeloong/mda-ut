@@ -34,7 +34,10 @@ SAT_MAX_3, 100
 VAL_MIN_3, 90
 VAL_MAX_3, 90
 
-COLOR_DIST, 60
+HUE_DIST, 20
+SAT_DIST, 40
+VAL_DIST, 40
+COLOR_DIST, 80
 
 ### HoughLines 
 PIXEL_RESOLUTION 2 # step size in pixels, > 1 means the line finder skips pixels

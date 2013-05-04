@@ -34,10 +34,10 @@ mvAdvancedColorFilter::mvAdvancedColorFilter (const char* settings_file) :
     
     // read constants from file
     read_mv_setting (settings_file, "COLOR_DIST", COLOR_DIST);
-    /*read_mv_setting (settings_file, "HUE_DIST", H_DIST);
+    read_mv_setting (settings_file, "HUE_DIST", H_DIST);
     read_mv_setting (settings_file, "SAT_DIST", S_DIST);
     read_mv_setting (settings_file, "VAL_DIST", V_DIST);
-    */
+    
     int width, height;
     read_common_mv_setting ("IMG_WIDTH_COMMON", width);
     read_common_mv_setting ("IMG_HEIGHT_COMMON", height);
@@ -481,7 +481,7 @@ void mvAdvancedColorFilter::flood_image_internal() {
 
     std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
     for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter)
-        DEBUG_PRINT ("color_triplet (%d): %d %d %d\n", iter->n_pixels, iter->hue, iter->sat, iter->val);
+        DEBUG_PRINT ("color_triplet #%2d (%dpix): %d %d %d\n", iter->index_number, iter->n_pixels, iter->hue, iter->sat, iter->val);
     DEBUG_PRINT ("\n");
 }
 
@@ -490,6 +490,7 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
 #define FLOOD_DEBUG
 #ifdef FLOOD_DEBUG
      cvNamedWindow("mvAdvancedColorFilter debug");
+     cvSetMouseCallback("mvAdvancedColorFilter debug", show_HSV_call_back, static_cast<void *>(ds_scratch));
 #endif
 
     int widthStep = ds_scratch->widthStep;
