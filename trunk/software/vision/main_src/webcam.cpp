@@ -83,8 +83,8 @@ int main( int argc, char** argv ) {
 
     // declare filters we need
     mvHSVFilter HSVFilter ("test_settings.csv"); // color filter
-    mvBinaryMorphology Morphology7 (19,19, MV_KERN_ELLIPSE);
-    mvBinaryMorphology Morphology5 (7,7, MV_KERN_ELLIPSE);
+    mvBinaryMorphology Morphology7 (9,9, MV_KERN_ELLIPSE);
+    mvBinaryMorphology Morphology5 (5,5, MV_KERN_ELLIPSE);
     mvHoughLines HoughLines ("test_settings.csv");
     mvLines lines; // data struct to store lines
     mvAdvancedCircles circles ("test_settings.csv");

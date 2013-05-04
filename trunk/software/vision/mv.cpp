@@ -123,8 +123,8 @@ void mvHuMoments(IplImage *src, double *hus){
 #define IN_SRC(x) (((x)>=src_addr_first) && ((x)<src_addr_last))
 #define IN_DST(x) (((x)> dst_addr_first) && ((x)<dst_addr_last))
 
-void mvBinaryDilate (IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_area);
-void mvBinaryErode (IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_area);
+void mvBinaryDilate (IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_width, unsigned kernel_height, unsigned kernel_area);
+void mvBinaryErode (IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_width, unsigned kernel_height, unsigned kernel_area);
 void mvBinaryGradient (IplImage* src, IplImage* dst, int kernel_point_array[], unsigned kernel_width, unsigned kernel_height, unsigned kernel_area);
 
 mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV_KERNEL_SHAPE Shape) :
@@ -134,7 +134,7 @@ mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV
     assert (Kernel_Width % 2 == 1); // odd number
     assert (Kernel_Height % 2 == 1);
 
-    temp = mvGetScratchImage3();
+    temp = mvCreateImage();
     kernel_width = Kernel_Width;
     kernel_height = Kernel_Height;   
     kernel_area = Kernel_Width * Kernel_Height;
@@ -189,7 +189,7 @@ mvBinaryMorphology:: mvBinaryMorphology (int Kernel_Width, int Kernel_Height, MV
 
 mvBinaryMorphology:: ~mvBinaryMorphology () {
 	delete []kernel_point_array;
-	mvReleaseScratchImage3();
+	cvReleaseImage(&temp);
 }
 
 void mvBinaryMorphology:: mvBinaryMorphologyMain (
@@ -207,20 +207,20 @@ void mvBinaryMorphology:: mvBinaryMorphologyMain (
     cvZero (temp);
 
     if (morphology_type == MV_DILATE) {
-        mvBinaryDilate (src, temp, kernel_point_array, kernel_area);
+        mvBinaryDilate (src, temp, kernel_point_array, kernel_width, kernel_height, kernel_area);
     }
     else if (morphology_type == MV_ERODE) {
-        mvBinaryErode (src, temp, kernel_point_array, kernel_area);
+        mvBinaryErode (src, temp, kernel_point_array, kernel_width, kernel_height, kernel_area);
     }
     else if (morphology_type == MV_CLOSE) {
-        mvBinaryDilate (src, temp, kernel_point_array, kernel_area);
+        mvBinaryDilate (src, temp, kernel_point_array, kernel_width, kernel_height, kernel_area);
         cvZero (dst);
-        mvBinaryErode (temp, dst, kernel_point_array, kernel_area);
+        mvBinaryErode (temp, dst, kernel_point_array, kernel_width, kernel_height, kernel_area);
     }
     else if (morphology_type == MV_OPEN) {
-        mvBinaryErode (src, temp, kernel_point_array, kernel_area);
+        mvBinaryErode (src, temp, kernel_point_array, kernel_width, kernel_height, kernel_area);
         cvZero (dst);
-        mvBinaryDilate (temp, dst, kernel_point_array, kernel_area);
+        mvBinaryDilate (temp, dst, kernel_point_array, kernel_width, kernel_height, kernel_area);
     }
     else if (morphology_type == MV_GRADIENT) {
         mvBinaryGradient (src, temp, kernel_point_array, kernel_width, kernel_height, kernel_area);
@@ -236,6 +236,8 @@ void mvBinaryMorphology:: mvBinaryMorphologyMain (
 void mvBinaryDilate (
     IplImage* src, IplImage* dst,
     int* kernel_point_array,
+    unsigned kernel_width,
+    unsigned kernel_height,
     unsigned kernel_area
 )
 {
@@ -248,7 +250,6 @@ void mvBinaryDilate (
 
     unsigned char *srcPtr;
     unsigned char *dstPtr;
-    bool Prev_Pixel_High = false;
 
     /// go over every pixel in src. If that pixel is High, we set a
     /// kernel around it in dst to be High as well.
@@ -259,20 +260,16 @@ void mvBinaryDilate (
         for (unsigned c = 0; c < width; c++) {
             if (*srcPtr != 0) { // only work on non-zero (high) pixels
 
-                for (unsigned i = Prev_Pixel_High?kernel_area/2:0; i < kernel_area; i++) {
+                unsigned start = (c < (kernel_width+1)/2) ? (kernel_area+1)/2 : 0;
+                unsigned stop  = (c > width-(kernel_width+1)/2) ? (kernel_area+1)/2 : kernel_area;
+                for (unsigned i = start; i < stop; i++) {
                     unsigned char *ptr = dstPtr + kernel_point_array[i];
                     if (IN_DST(ptr)) {
                         *ptr = *srcPtr;
-                        Prev_Pixel_High = true;
                     }
-                    else
-                        Prev_Pixel_High = false;
                 }
 
             }
-            else
-                Prev_Pixel_High = false;
-
             srcPtr++;
             dstPtr++;
         }
@@ -282,6 +279,8 @@ void mvBinaryDilate (
 void mvBinaryErode (
     IplImage* src, IplImage* dst,
     int* kernel_point_array,
+    unsigned kernel_width,
+    unsigned kernel_height,
     unsigned kernel_area
 )
 {
@@ -332,7 +331,7 @@ void mvBinaryGradient (
 )
 {
     // first do dilate, then use the result + the src to do the gradient
-    mvBinaryDilate (src, dst, kernel_point_array, kernel_area);
+    mvBinaryDilate (src, dst, kernel_point_array, kernel_width, kernel_height, kernel_area);
 
     assert (src != dst);
     unsigned width = src->width;
@@ -383,7 +382,7 @@ void mvBinaryGradient (
 //#########################################################################
 typedef unsigned char uchar;
 // Takes in 3 numbers B,R,G, and modifies them to instead be in H,S,V format
-void tripletBRG2HSV (uchar Blue, uchar Green, uchar Red, uchar &Hue, uchar &Sat, uchar &Val) {
+void tripletBGR2HSV (uchar Blue, uchar Green, uchar Red, uchar &Hue, uchar &Sat, uchar &Val) {
     /// find the max and min color component
     uchar M, m, Chroma;
     if (Blue > Red) {
@@ -416,7 +415,7 @@ void tripletBRG2HSV (uchar Blue, uchar Green, uchar Red, uchar &Hue, uchar &Sat,
     Sat = 255 *Chroma / Val;
 }
 
-void mvBRG2HSV(IplImage* src, IplImage* dst) {
+void mvBGR2HSV(IplImage* src, IplImage* dst) {
     
     assert (src != NULL);
     assert (dst != NULL);
@@ -430,7 +429,7 @@ void mvBRG2HSV(IplImage* src, IplImage* dst) {
         srcPtr = (unsigned char *)((src->imageData) + i*(src->widthStep));
         dstPtr = (unsigned char *)((dst->imageData) + i*(dst->widthStep));
         for ( j = 0; j < src->width; j++) {
-    	    tripletBRG2HSV(*srcPtr, *(srcPtr+1), *(srcPtr+2), *dstPtr, *(dstPtr+1), *(dstPtr+2));
+    	    tripletBGR2HSV(*srcPtr, *(srcPtr+1), *(srcPtr+2), *dstPtr, *(dstPtr+1), *(dstPtr+2));
     	    srcPtr +=3;
     	    dstPtr +=3;  
 	    }
