@@ -1,5 +1,5 @@
-#include "mda_tasks.h"
 #include "mda_vision.h"
+#include "mda_tasks.h"
 
 MDA_TASK_FRAME:: MDA_TASK_FRAME (AttitudeInput* a, ImageInput* i, ActuatorOutput* o) :
     MDA_TASK_BASE (a, i, o)

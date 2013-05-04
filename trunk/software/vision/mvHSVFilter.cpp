@@ -1,14 +1,5 @@
-#include "mv.h"
-#include "mgui.h"
-#include <cv.h>   
+#include "mvColorFilter.h"
     
-#define FILTER_DEBUG
-#ifdef FILTER_DEBUG
-    #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
-#else
-    #define DEBUG_PRINT(format, ...)
-#endif
-
 mvHSVFilter:: mvHSVFilter (const char* settings_file) :
     bin_WorkingLoop ("HSV - Working Loop"),
     bin_CvtColor ("HSV - CvtColor")
@@ -30,16 +21,6 @@ mvHSVFilter:: ~mvHSVFilter () {
     mvReleaseScratchImage_Color();
 }
 
-inline
-void mvHSVFilter:: setHSV (int hmin, int hmax, unsigned smin, unsigned smax, unsigned vmin, unsigned vmax) {
-    if (hmin != (int)UNCHANGED) HMIN = (hmin>=0) ? hmin : hmin+180; 
-    if (hmax != (int)UNCHANGED) HMAX = (hmax<180) ? hmax : hmax-180; 
-    if (smin != UNCHANGED) SMIN = smin;
-    if (smax != UNCHANGED) SMAX = smax;
-    if (vmin != UNCHANGED) VMIN = vmin;
-    if (vmax != UNCHANGED) VMAX = vmax;
-}
-    
 void mvHSVFilter:: filter_internal (IplImage* HSV_img, IplImage* result) {
     assert (HSV_img != NULL);
     assert (HSV_img->nChannels == 3);

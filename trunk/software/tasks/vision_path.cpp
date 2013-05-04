@@ -1,11 +1,6 @@
 #include "mda_vision.h"
 
-#define VISION_DEBUG
-#ifdef VISION_DEBUG
-    #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
-#else
-    #define DEBUG_PRINT(format, ...)
-#endif
+#define M_DEBUG
 
 float absf(float f){
     if(f < 0) return f*-1;
@@ -18,15 +13,15 @@ const char MDA_VISION_MODULE_PATH::MDA_VISION_PATH_SETTINGS[] = "vision_path_set
 /// MODULE_PATH methods
 /// ########################################################################
 MDA_VISION_MODULE_PATH:: MDA_VISION_MODULE_PATH () :
-	_window (mvWindow("Path Vision Module")),
-	_HSVFilter (mvHSVFilter(MDA_VISION_PATH_SETTINGS)),
-    _MeanShift (mvMeanShift("test_settings.csv")),
-	_Morphology (mvBinaryMorphology(19, 19, MV_KERN_RECT)),
-    _Morphology2 (mvBinaryMorphology(7, 7, MV_KERN_RECT)),
-	_HoughLines (mvHoughLines(MDA_VISION_PATH_SETTINGS)),
-	_lines (mvLines())
+	window (mvWindow("Path Vision Module")),
+	HSVFilter (mvHSVFilter(MDA_VISION_PATH_SETTINGS)),
+	Morphology (mvBinaryMorphology(19, 19, MV_KERN_RECT)),
+    Morphology2 (mvBinaryMorphology(7, 7, MV_KERN_RECT)),
+	HoughLines (mvHoughLines(MDA_VISION_PATH_SETTINGS)),
+    AdvancedColorFilter (mvAdvancedColorFilter("test_settings.csv")),
+	lines (mvLines())
 {
-    _filtered_img = mvGetScratchImage (); // common size
+    filtered_img = mvGetScratchImage (); // common size
 }
 
 MDA_VISION_MODULE_PATH:: ~MDA_VISION_MODULE_PATH () {
@@ -34,26 +29,26 @@ MDA_VISION_MODULE_PATH:: ~MDA_VISION_MODULE_PATH () {
 }
 
 void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
-    //_HSVFilter.filter (src, _filtered_img);
-    _MeanShift.flood_image(src, _filtered_img);
-    _filtered_img->origin = src->origin;
-    _lines.clearData ();
-    _KMeans.clearData ();
+    //_HSVFilter.filter (src, filtered_img);
+    AdvancedColorFilter.flood_image(src, filtered_img);
+    filtered_img->origin = src->origin;
+    lines.clearData ();
+    KMeans.clearData ();
     
-    _Morphology2.open(_filtered_img, _filtered_img);
-    _Morphology.close(_filtered_img, _filtered_img);
-    _Morphology2.gradient(_filtered_img, _filtered_img);
-    _HoughLines.findLines (_filtered_img, &_lines);
-    _KMeans.cluster_auto (1, 4, &_lines, 1);
+    Morphology2.open(filtered_img, filtered_img);
+    Morphology.close(filtered_img, filtered_img);
+    Morphology2.gradient(filtered_img, filtered_img);
+    HoughLines.findLines (filtered_img, &lines);
+    KMeans.cluster_auto (1, 4, &lines, 1);
 
-    _KMeans.drawOntoImage (_filtered_img);
+    KMeans.drawOntoImage (filtered_img);
 
-    _window.showImage (_filtered_img);
+    window.showImage (filtered_img);
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
     MDA_VISION_RETURN_CODE retval = FATAL_ERROR;
-    unsigned nClusters = _KMeans.nClusters();
+    unsigned nClusters = KMeans.nClusters();
 
 //============ 0 CLUSTERS ================================================================================================
     if (nClusters == 0) {
@@ -64,15 +59,15 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
     else if (nClusters == 1) {
         /// single line, not much we can do but return its center and estimate range
         DEBUG_PRINT ("Path: 1 cluster =|\n");
-        m_pixel_x = (_KMeans[0][0].x + _KMeans[0][1].x - _filtered_img->width)*0.5;       // centroid of line
-        m_pixel_y = (_KMeans[0][0].y + _KMeans[0][1].y - _filtered_img->height)*0.5;
-        unsigned length = line_sqr_length(_KMeans[0]);
+        m_pixel_x = (KMeans[0][0].x + KMeans[0][1].x - filtered_img->width)*0.5;       // centroid of line
+        m_pixel_y = (KMeans[0][0].y + KMeans[0][1].y - filtered_img->height)*0.5;
+        unsigned length = line_sqr_length(KMeans[0]);
 
         /// check that the line is near center of image
         
         /// calculate range if we pass sanity check
-        m_range = (PATH_REAL_LENGTH * _filtered_img->width) / (sqrt(length) * TAN_FOV_X);
-        m_angle = RAD_TO_DEG * line_angle_to_vertical(_KMeans[0]);
+        m_range = (PATH_REAL_LENGTH * filtered_img->width) / (sqrt(length) * TAN_FOV_X);
+        m_angle = RAD_TO_DEG * line_angle_to_vertical(KMeans[0]);
         DEBUG_PRINT ("Path Range = %d, PAngle = %5.2f\n", m_range, m_angle);
 
         retval = ONE_SEGMENT;       
@@ -81,19 +76,19 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
 //============ 2 CLUSTERS ================================================================================================
     else if (nClusters == 2) {
         DEBUG_PRINT ("Path: 2 clusters =)\n");
-        int x00 = _KMeans[0][0].x,   y00 = _KMeans[0][0].y;
-        int x01 = _KMeans[0][1].x,   y01 = _KMeans[0][1].y;
-        int x10 = _KMeans[1][0].x,   y10 = _KMeans[1][0].y;
-        int x11 = _KMeans[1][1].x,   y11 = _KMeans[1][1].y;
-        m_pixel_x = (int)((x00+x01+x10+x11)*0.25 - _filtered_img->width*0.5);
-        m_pixel_y = (int)((y00+y01+y10+y11)*0.25 - _filtered_img->height*0.5);
+        int x00 = KMeans[0][0].x,   y00 = KMeans[0][0].y;
+        int x01 = KMeans[0][1].x,   y01 = KMeans[0][1].y;
+        int x10 = KMeans[1][0].x,   y10 = KMeans[1][0].y;
+        int x11 = KMeans[1][1].x,   y11 = KMeans[1][1].y;
+        m_pixel_x = (int)((x00+x01+x10+x11)*0.25 - filtered_img->width*0.5);
+        m_pixel_y = (int)((y00+y01+y10+y11)*0.25 - filtered_img->height*0.5);
 
-        float position_angle_0 = RAD_TO_DEG * line_angle_to_vertical(_KMeans[0]); 
-        float position_angle_1 = RAD_TO_DEG * line_angle_to_vertical(_KMeans[1]);
+        float position_angle_0 = RAD_TO_DEG * line_angle_to_vertical(KMeans[0]); 
+        float position_angle_1 = RAD_TO_DEG * line_angle_to_vertical(KMeans[1]);
 
         /// sanity checks
-        unsigned length_0 = line_sqr_length(_KMeans[0]);
-        unsigned length_1 = line_sqr_length(_KMeans[1]);
+        unsigned length_0 = line_sqr_length(KMeans[0]);
+        unsigned length_1 = line_sqr_length(KMeans[1]);
         DEBUG_PRINT ("angles = %f, %f\n",position_angle_0,position_angle_1);
 
         // Tragically, angles are a circular quantity, and we can't just subtract them.
@@ -104,14 +99,14 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         if (dA > LINE_ANG_THRESH) {
             //Detecting one line from each of two paths
             if(length_0 > LINE_LEN_THRESH && length_0 > LINE_LEN_THRESH){    
-                m_pixel_x = (int)((x00+x01)*0.5 - _filtered_img->width*0.5);
-                m_pixel_y = (int)((y00+y01)*0.5 - _filtered_img->height*0.5);
-                m_pixel_x_alt = (int)((x10+x11)*0.5 - _filtered_img->width*0.5);
-                m_pixel_y_alt = (int)((y10+y11)*0.5 - _filtered_img->height*0.5);
+                m_pixel_x = (int)((x00+x01)*0.5 - filtered_img->width*0.5);
+                m_pixel_y = (int)((y00+y01)*0.5 - filtered_img->height*0.5);
+                m_pixel_x_alt = (int)((x10+x11)*0.5 - filtered_img->width*0.5);
+                m_pixel_y_alt = (int)((y10+y11)*0.5 - filtered_img->height*0.5);
 
-                m_range = (PATH_REAL_LENGTH * _filtered_img->width) / (sqrt(length_0) * TAN_FOV_X);
+                m_range = (PATH_REAL_LENGTH * filtered_img->width) / (sqrt(length_0) * TAN_FOV_X);
                 m_angle = position_angle_0;
-                m_range_alt = (PATH_REAL_LENGTH * _filtered_img->width) / (sqrt(length_1) * TAN_FOV_X);
+                m_range_alt = (PATH_REAL_LENGTH * filtered_img->width) / (sqrt(length_1) * TAN_FOV_X);
                 m_angle_alt = position_angle_1;
 
                 DEBUG_PRINT ("Double Segment Detect: Range_A = %d, PAngle_A = %5.2f\n", m_range, m_angle);
@@ -122,9 +117,9 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
             }
             //Return one line or the other if one is too short
             else if (length_0 > LINE_LEN_THRESH){
-                m_pixel_x = (int)((x00+x01)*0.5 - _filtered_img->width*0.5);
-                m_pixel_y = (int)((y00+y01)*0.5 - _filtered_img->height*0.5);
-                m_range = (PATH_REAL_LENGTH * _filtered_img->width) / (sqrt(length_0) * TAN_FOV_X);
+                m_pixel_x = (int)((x00+x01)*0.5 - filtered_img->width*0.5);
+                m_pixel_y = (int)((y00+y01)*0.5 - filtered_img->height*0.5);
+                m_range = (PATH_REAL_LENGTH * filtered_img->width) / (sqrt(length_0) * TAN_FOV_X);
                 m_angle = position_angle_0;
 
                 DEBUG_PRINT ("One Segment Range = %d, PAngle = %5.2f\n", m_range, m_angle);
@@ -133,9 +128,9 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
                 goto RETURN_CENTROID;
             }
             else if (length_1 > LINE_LEN_THRESH){
-                m_pixel_x = (int)((x10+x11)*0.5 - _filtered_img->width*0.5);
-                m_pixel_y = (int)((y10+y11)*0.5 - _filtered_img->height*0.5);
-                m_range = (PATH_REAL_LENGTH * _filtered_img->width) / (sqrt(length_1) * TAN_FOV_X);
+                m_pixel_x = (int)((x10+x11)*0.5 - filtered_img->width*0.5);
+                m_pixel_y = (int)((y10+y11)*0.5 - filtered_img->height*0.5);
+                m_range = (PATH_REAL_LENGTH * filtered_img->width) / (sqrt(length_1) * TAN_FOV_X);
                 m_angle = position_angle_1;
 
                 DEBUG_PRINT ("One Segment Range = %d, PAngle = %5.2f\n", m_range, m_angle);
@@ -156,7 +151,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         }
 
         // calculate values
-        m_range = (PATH_REAL_LENGTH * _filtered_img->width) / ((sqrt(length_0)+sqrt(length_1))*0.5 * TAN_FOV_X);
+        m_range = (PATH_REAL_LENGTH * filtered_img->width) / ((sqrt(length_0)+sqrt(length_1))*0.5 * TAN_FOV_X);
         m_angle = (position_angle_0 + position_angle_1) * 0.5;
         DEBUG_PRINT ("Path Range = %d, PAngle = %5.2f\n", m_range, m_angle);
 
@@ -196,8 +191,8 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         {
             for (int j = 0; j < 2; j++)
             {
-                x[i][j] = _KMeans[i][j].x;
-                y[i][j] = _KMeans[i][j].y;
+                x[i][j] = KMeans[i][j].x;
+                y[i][j] = KMeans[i][j].y;
 
                 xSum += x[i][j];
                 ySum += y[i][j];
@@ -210,12 +205,12 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
             pair_weight[i][i] = -1;
 
             //Calculate frequently used quantities
-            int dx = _KMeans[i][0].x - _KMeans[i][1].x;
-            int dy = _KMeans[i][0].y - _KMeans[i][1].y;
-            //DEBUG_PRINT("Line %d: (%d,%d):(%d,%d)   (dx,dy): (%d,%d) ==> %d\n",i,_KMeans[i][0].x, _KMeans[i][0].y,_KMeans[i][1].x, _KMeans[i][1].y,dx,dy,dx*dx+dy*dy); 
+            int dx = KMeans[i][0].x - KMeans[i][1].x;
+            int dy = KMeans[i][0].y - KMeans[i][1].y;
+            //DEBUG_PRINT("Line %d: (%d,%d):(%d,%d)   (dx,dy): (%d,%d) ==> %d\n",i,_KMeans[i][0].x, KMeans[i][0].y,_KMeans[i][1].x, KMeans[i][1].y,dx,dy,dx*dx+dy*dy); 
 
             lengths[i] = (unsigned)(dx*dx + dy*dy);
-            position_angles[i] = RAD_TO_DEG * line_angle_to_vertical(_KMeans[i]);
+            position_angles[i] = RAD_TO_DEG * line_angle_to_vertical(KMeans[i]);
             //DEBUG_PRINT("Length[%d]: %d\n",i,dx*dx + dy*dy);  
         }
 
@@ -261,8 +256,8 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         }
 
         //If we can't determine a grouping, default to the centroid
-        m_pixel_x = (int)(xSum*0.167 - _filtered_img->width*0.5);
-        m_pixel_y = (int)(ySum*0.167 - _filtered_img->height*0.5);
+        m_pixel_x = (int)(xSum*0.167 - filtered_img->width*0.5);
+        m_pixel_y = (int)(ySum*0.167 - filtered_img->height*0.5);
 
         int lHalf = (int)((nClusters*(nClusters-1))/2);    //(n*(n-1))/2; the # of elements in the lower half of an n*n matrix
         int ranked[lHalf][2];
@@ -320,14 +315,14 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         }
 
         //Always calculare both points of interest; it is up to control code to use/ignore based on return code
-        m_pixel_x = (int)((x[A[0]][0] + x[A[0]][1] + x[A[1]][0] + x[A[1]][1])*0.25 - _filtered_img->width*0.5);
-        m_pixel_y = (int)((y[A[0]][0] + y[A[0]][1] + y[A[1]][0] + y[A[1]][1])*0.25 - _filtered_img->height*0.5);
-        m_pixel_x_alt = (int)((x[B[0]][0] + x[B[0]][1] + x[B[1]][0] + x[B[1]][1])*0.5 - _filtered_img->width*0.5);
-        m_pixel_y_alt = (int)((y[B[0]][0] + y[B[0]][1] + x[B[1]][0] + x[B[1]][1])*0.5 - _filtered_img->height*0.5);
+        m_pixel_x = (int)((x[A[0]][0] + x[A[0]][1] + x[A[1]][0] + x[A[1]][1])*0.25 - filtered_img->width*0.5);
+        m_pixel_y = (int)((y[A[0]][0] + y[A[0]][1] + y[A[1]][0] + y[A[1]][1])*0.25 - filtered_img->height*0.5);
+        m_pixel_x_alt = (int)((x[B[0]][0] + x[B[0]][1] + x[B[1]][0] + x[B[1]][1])*0.5 - filtered_img->width*0.5);
+        m_pixel_y_alt = (int)((y[B[0]][0] + y[B[0]][1] + x[B[1]][0] + x[B[1]][1])*0.5 - filtered_img->height*0.5);
 
-        m_range = (PATH_REAL_LENGTH * _filtered_img->width) / ((sqrt(lengths[A[0]])+sqrt(lengths[A[1]]))*0.5 * TAN_FOV_X);
+        m_range = (PATH_REAL_LENGTH * filtered_img->width) / ((sqrt(lengths[A[0]])+sqrt(lengths[A[1]]))*0.5 * TAN_FOV_X);
         m_angle = (position_angles[A[0]] + position_angles[A[1]]) * 0.5;
-        m_range_alt = (PATH_REAL_LENGTH * _filtered_img->width) / ((sqrt(lengths[B[0]])+sqrt(lengths[B[1]]))*0.5 * TAN_FOV_X);
+        m_range_alt = (PATH_REAL_LENGTH * filtered_img->width) / ((sqrt(lengths[B[0]])+sqrt(lengths[B[1]]))*0.5 * TAN_FOV_X);
         m_angle_alt = (position_angles[B[0]] + position_angles[B[1]]) * 0.5;
 
 

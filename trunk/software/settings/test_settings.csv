@@ -30,11 +30,13 @@ COLOR_BOX_3, YELLOW
 HUE_MIN_3, 110 # yellow ?
 HUE_MAX_3, 130
 SAT_MIN_3, 100
+SAT_MAX_3, 100
 VAL_MIN_3, 90
+VAL_MAX_3, 90
 
-HUE_DIST, 6
-SAT_DIST, 20
-VAL_DIST, 30
+HUE_DIST, 60
+SAT_DIST, 0
+VAL_DIST, 0
 
 ### HoughLines 
 PIXEL_RESOLUTION 2 # step size in pixels, > 1 means the line finder skips pixels

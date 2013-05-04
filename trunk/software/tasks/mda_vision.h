@@ -8,6 +8,7 @@
 
 #include "mgui.h"
 #include "mv.h"
+#include "mvColorFilter.h"
 #include "mvLines.h"
 #include "mvShapes.h"
 
@@ -28,8 +29,8 @@ enum MDA_VISION_RETURN_CODE  {
  *      - void filter (IplImage* src)
  *      - void calc_vci ()
  *  
- *  The first function filters the source image into _filtered_img
- *  The second calculates relevant information using the _filtered_img
+ *  The first function filters the source image into filtered_img
+ *  The second calculates relevant information using the filtered_img
  *
  *  Besides this you have the option of implementing get_range() and get_angle()
  *  You would do this if your module legitimately uses those values.
@@ -91,17 +92,17 @@ public:
 /// ########################################################################
 class MDA_VISION_MODULE_TEST : public MDA_VISION_MODULE_BASE {
     static const char MDA_VISION_TEST_SETTINGS[];
-    mvWindow _window;
-    mvHSVFilter _HSVFilter;
-    mvMeanShift _MeanShift;
-    mvHoughLines _HoughLines;
-    mvKMeans _KMeans;
-    mvLines _lines;
+    mvWindow window;
+    mvHSVFilter HSVFilter;
+    mvAdvancedColorFilter AdvancedColorFilter;
+    mvHoughLines HoughLines;
+    mvKMeans KMeans;
+    mvLines lines;
     
-    mvAdaptiveFilter _adaptive;
+    mvHistogramFilter histogram_filter;
 
-    IplImage* _color_img;
-    IplImage* _filtered_img;
+    IplImage* color_img;
+    IplImage* filtered_img;
 
     PROFILE_BIN bin_test;
     
@@ -128,14 +129,14 @@ class MDA_VISION_MODULE_GATE : public MDA_VISION_MODULE_BASE {
     static const float GATE_REAL_SLENDERNESS = 0.017;
     static const float GATE_WIDTH_TO_HEIGHT_RATIO = 2.50;
 
-    mvWindow _window;
-    mvHSVFilter _HSVFilter;
-    mvHoughLines _HoughLines;
-    mvKMeans _KMeans;
+    mvWindow window;
+    mvHSVFilter HSVFilter;
+    mvHoughLines HoughLines;
+    mvKMeans KMeans;
 
-    mvLines _lines;
+    mvLines lines;
     
-    IplImage* _filtered_img;
+    IplImage* filtered_img;
 
 public:
     MDA_VISION_MODULE_GATE ();
@@ -155,10 +156,10 @@ class MDA_VISION_MODULE_MARKER : public MDA_VISION_MODULE_BASE {
     static const char MDA_VISION_MARKER_SETTINGS[];
     static const float HU_THRESH = 0.005;
 
-    mvWindow _window;
-    mvHSVFilter _HSVFilter;
+    mvWindow window;
+    mvHSVFilter HSVFilter;
     
-    IplImage* _filtered_img;
+    IplImage* filtered_img;
 
 public:
     MDA_VISION_MODULE_MARKER ();
@@ -196,17 +197,17 @@ class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
     float m_angular_x_alt, m_angular_y_alt;
     float m_angle_alt;
 
-    mvWindow _window;
-    mvHSVFilter _HSVFilter;
-    mvBinaryMorphology _Morphology;
-    mvBinaryMorphology _Morphology2;    
-    mvHoughLines _HoughLines;
-    mvKMeans _KMeans;
-    mvMeanShift _MeanShift;
+    mvWindow window;
+    mvHSVFilter HSVFilter;
+    mvBinaryMorphology Morphology;
+    mvBinaryMorphology Morphology2;    
+    mvHoughLines HoughLines;
+    mvKMeans KMeans;
+    mvAdvancedColorFilter AdvancedColorFilter;
 
-    mvLines _lines;
+    mvLines lines;
     
-    IplImage* _filtered_img;
+    IplImage* filtered_img;
 
 public:
     MDA_VISION_MODULE_PATH ();
@@ -240,15 +241,15 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
     static const float BUOY_REAL_DIAMTER = 23;
     static const float MIN_PIXEL_RADIUS_FACTOR = 0.04;
 
-    mvWindow _window;
-    mvMeanShift _MeanShift;
-    mvBinaryMorphology _Morphology5;
-    mvBinaryMorphology _Morphology3;
-    mvAdvancedCircles _AdvancedCircles;
+    mvWindow window;
+    mvBinaryMorphology Morphology5;
+    mvBinaryMorphology Morphology3;
+    mvAdvancedColorFilter AdvancedColorFilter;
+    mvAdvancedCircles AdvancedCircles;
     
-    mvRect _Rect;
+    mvRect Rect;
 
-    IplImage* _filtered_img;
+    IplImage* filtered_img;
 
 
 public:
@@ -271,16 +272,16 @@ class MDA_VISION_MODULE_FRAME : public MDA_VISION_MODULE_BASE {
     static const float FRAME_REAL_HEIGHT = 120.0;
     static const float FRAME_REAL_VERTICAL_SEGMENT_LENGTH = 40.0;
 
-    mvWindow _window;
-    mvMeanShift _MeanShift;
-    mvHoughLines _HoughLines;
-    mvKMeans _KMeans;
+    mvWindow window;
+    mvAdvancedColorFilter AdvancedColorFilter;
+    mvHoughLines HoughLines;
+    mvKMeans KMeans;
 
-    mvLines _lines;
+    mvLines lines;
 
-    int _IsRed;
+    int IsRed;
     
-    IplImage* _filtered_img;
+    IplImage* filtered_img;
 
     int check_pixel_is_color (unsigned char* imgPtr, unsigned char color) {
         if ((imgPtr[0] == color || imgPtr[0] == MV_UNCOLORED) &&
@@ -301,7 +302,7 @@ public:
     MDA_VISION_RETURN_CODE calc_vci ();
 
     virtual int get_angle() {printf ("VISION_MODULE_FRAME - get_angle not allowed\n"); exit(1); return 0;}
-    int is_red() { return _IsRed; } // 0 means no, 1 means yes, -1 means dunno
+    int is_red() { return IsRed; } // 0 means no, 1 means yes, -1 means dunno
 };
 
 #endif

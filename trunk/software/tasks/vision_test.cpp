@@ -1,12 +1,5 @@
 #include "mda_vision.h"
 
-#define VISION_DEBUG
-#ifdef VISION_DEBUG
-    #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
-#else
-    #define DEBUG_PRINT(format, ...)
-#endif
-
 #define ABS(X) (((X)>0) ? (X) : (-(X)))
 
 const char MDA_VISION_MODULE_TEST::MDA_VISION_TEST_SETTINGS[] = "vision_test_settings.csv";
@@ -15,22 +8,22 @@ const char MDA_VISION_MODULE_TEST::MDA_VISION_TEST_SETTINGS[] = "vision_test_set
 /// MODULE_TEST methods
 /// ########################################################################
 MDA_VISION_MODULE_TEST:: MDA_VISION_MODULE_TEST () :
-	_window (mvWindow("Test Vision Module")),
-	_HSVFilter (mvHSVFilter(MDA_VISION_TEST_SETTINGS)),
-	_MeanShift (mvMeanShift(MDA_VISION_TEST_SETTINGS)),
-	_HoughLines (mvHoughLines(MDA_VISION_TEST_SETTINGS)),
-	_lines (mvLines()),
-    _adaptive ("vision_gate_settings.csv"),
+	window (mvWindow("Test Vision Module")),
+	HSVFilter (mvHSVFilter(MDA_VISION_TEST_SETTINGS)),
+	AdvancedColorFilter (MDA_VISION_TEST_SETTINGS),
+	HoughLines (mvHoughLines(MDA_VISION_TEST_SETTINGS)),
+	lines (mvLines()),
+    histogram_filter ("vision_gate_settings.csv"),
     bin_test ("Test Module")
 {
-    _color_img = mvCreateImage_Color();
-    _filtered_img = mvGetScratchImage();
+    color_img = mvCreateImage_Color();
+    filtered_img = mvGetScratchImage();
     //_filtered_img->origin = 1;
 }
 
 MDA_VISION_MODULE_TEST:: ~MDA_VISION_MODULE_TEST () {
     mvReleaseScratchImage();
-    cvReleaseImage(&_color_img);
+    cvReleaseImage(&color_img);
 }
 
 void MDA_VISION_MODULE_TEST:: primary_filter (IplImage* src) {   
@@ -43,14 +36,14 @@ void MDA_VISION_MODULE_TEST:: primary_filter (IplImage* src) {
     /** YOUR CODE HERE. DO STUFF TO img */
     bin_test.start();
 
-    _MeanShift.mean_shift(src, _color_img);
-    //_HSVFilter.filter (src, _filtered_img);
-    _filtered_img->origin = src->origin;
+    AdvancedColorFilter.mean_shift(src, color_img);
+    //_HSVFilter.filter (src, filtered_img);
+    filtered_img->origin = src->origin;
 
     bin_test.stop();
 
     // this line displays the img in a window
-    _window.showImage (_color_img);
+    window.showImage (color_img);
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_TEST:: calc_vci () {

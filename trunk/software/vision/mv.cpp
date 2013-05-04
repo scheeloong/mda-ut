@@ -427,15 +427,13 @@ void mvBRG2HSV(IplImage* src, IplImage* dst) {
     unsigned char* srcPtr, * dstPtr;
 
     for ( i = 0; i < src->height; i++) {
-      	srcPtr = (unsigned char *)((src->imageData) + i*(src->widthStep));
-	dstPtr = (unsigned char *)((dst->imageData) + i*(dst->widthStep));
+        srcPtr = (unsigned char *)((src->imageData) + i*(src->widthStep));
+        dstPtr = (unsigned char *)((dst->imageData) + i*(dst->widthStep));
         for ( j = 0; j < src->width; j++) {
-	    
-	    tripletBRG2HSV(*srcPtr, *(srcPtr+1), *(srcPtr+2), *dstPtr, *(dstPtr+1), *(dstPtr+2));
-	    srcPtr +=3;
-	    dstPtr +=3;
-	  
-	}
+    	    tripletBRG2HSV(*srcPtr, *(srcPtr+1), *(srcPtr+2), *dstPtr, *(dstPtr+1), *(dstPtr+2));
+    	    srcPtr +=3;
+    	    dstPtr +=3;  
+	    }
     }
     
   return;
