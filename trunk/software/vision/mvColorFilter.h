@@ -219,6 +219,9 @@ public:
 private:
     // parameters read from settings file
     int COLOR_DIST;
+    int H_DIST;
+    int S_DIST;
+    int V_DIST;
 
     // calculated parameters
     int KERNEL_AREA;

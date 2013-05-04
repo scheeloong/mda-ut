@@ -136,7 +136,8 @@ int main( int argc, char** argv ) {
             goto LOOP_BOTTOM;
         }
 
-        win1->showImage (frame);
+        cvCopy (frame, scratch_color);
+        win1->showImage (scratch_color);
         
         /*HSVFilter.filter (frame, filter_img); // process it
         win2->showImage (filter_img);
@@ -147,7 +148,6 @@ int main( int argc, char** argv ) {
       */
         
         if (TEST) {             
-            //advanced_filter.advanced_filter(frame, scratch_color);
             //advanced_filter.watershed(frame, scratch_color);
             advanced_filter.flood_image(frame, filter_img);
             Morphology5.open(filter_img, filter_img);
@@ -156,7 +156,7 @@ int main( int argc, char** argv ) {
             //cvWaitKey(200);
             //advanced_filter.filter(scratch_color, filter_img);
 
-            win2->showImage (scratch_color);
+            //win2->showImage (scratch_color);
             win3->showImage (filter_img);
         }
         if (LINE) {
