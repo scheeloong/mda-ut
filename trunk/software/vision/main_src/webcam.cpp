@@ -98,6 +98,8 @@ int main( int argc, char** argv ) {
     IplImage* filter_img = mvCreateImage ();
     IplImage* filter_img_2 = mvCreateImage ();
  
+    CvMemStorage* storage = cvCreateMemStorage(0);
+
     /// execution
     char c;
     IplImage* frame;
@@ -133,8 +135,72 @@ int main( int argc, char** argv ) {
             advanced_filter.flood_image(frame, filter_img);
             Morphology5.open(filter_img, filter_img);
             Morphology7.close(filter_img, filter_img);
-
             win2->showImage (filter_img);
+        
+            CvSeq * contours;
+
+            cvFindContours (
+                    filter_img,
+                    storage,
+                    &contours,
+                    sizeof(CvContour),
+                    CV_RETR_EXTERNAL,
+                    CV_CHAIN_APPROX_SIMPLE
+                );
+/*
+            CvSeq* hull = cvConvexHull2 (
+                    contours,
+                    storage,
+                    CV_CLOCKWISE,
+                    0
+                );
+*/          
+
+            cvZero (filter_img);
+
+            CvBox2D ellipse = cvFitEllipse2(contours);
+            cvEllipseBox(filter_img, ellipse, cvScalar(200,200,200));
+
+            //float centroid_x = ellipse.center.x - filter_img->width*0.5;
+            //float centroid_y = ellipse.center.y - filter_img->height*0.5;
+
+            float centroid_x_alt = 0, centroid_y_alt = 0;
+            double Area = 0;
+
+            if (contours->total != 0){
+                Area = cvContourArea(contours);
+
+                CvMoments mom;
+                cvMoments(contours, &mom);
+
+                centroid_x_alt = mom.m10/mom.m00 - filter_img->width*0.5;
+                centroid_y_alt = mom.m01/mom.m00 - filter_img->height*0.5;
+            }
+
+
+            printf("Angle is: %5.2f\n", ellipse.angle);
+            //printf("Center is: (%5.2f, %5.2f)\n",centroid_x,centroid_y);
+            printf("Alt Center is: (%5.2f, %5.2f)\n",centroid_x_alt, centroid_y_alt);
+            printf("Area is: %5.2fpxsq\n",Area);
+
+            CvSeq* hull = cvApproxPoly(
+                contours,
+                sizeof(CvContour),
+                storage,
+                CV_POLY_APPROX_DP,
+                5,
+                0
+                );
+
+            cvDrawContours (
+                    filter_img,
+                    hull,
+                    cvScalar(200,200,200),
+                    cvScalar(0,0,0),
+                    0
+            );
+
+            win3->showImage (filter_img);
         }
         else if (WATERSHED) {
             advanced_filter.watershed(frame, scratch_color_2);

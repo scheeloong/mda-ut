@@ -18,7 +18,8 @@ MDA_VISION_MODULE_MARKER:: MDA_VISION_MODULE_MARKER () :
 	window (mvWindow("Marker Vision Module")),
 	HSVFilter (mvHSVFilter(MDA_VISION_MARKER_SETTINGS))
 {
-    targets_found = {false, false};
+    targets_found[0] = false;
+    targets_found[1] = false;
     filtered_img = mvGetScratchImage();
     //_filtered_img->origin = 1;
 }
