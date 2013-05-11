@@ -167,43 +167,81 @@ public:
 // ##################################################################################################
 class Color_Triple {
 public:
-    unsigned hue;
-    unsigned sat;
-    unsigned val;
-    unsigned hue_variance; // not used for now
+    unsigned m1;
+    unsigned m2;
+    unsigned m3;
     unsigned n_pixels;
     unsigned index_number;
 
+    static const int NUM_HISTOGRAM_BINS = 5;
+    unsigned m1_histogram[NUM_HISTOGRAM_BINS];
+    unsigned m2_histogram[NUM_HISTOGRAM_BINS];
+    unsigned m3_histogram[NUM_HISTOGRAM_BINS];
+
     Color_Triple(){
-        hue = sat = val = hue_variance = n_pixels = index_number = 0;
+        m1 = m2 = m3 = n_pixels = index_number = 0;
+        init_histograms();
     }
-    Color_Triple(unsigned Hue, unsigned Sat, unsigned Val, unsigned Index_Number){
-        hue = Hue; 
-        sat = Sat;
-        val = Val;
-        hue_variance = 0;
+    Color_Triple(unsigned M1, unsigned M2, unsigned M3, unsigned Index_Number){
+        m1 = M1; 
+        m2 = M2;
+        m3 = M3;
         n_pixels = 1;
         index_number = Index_Number;
+        init_histograms();
+    }
+    void init_histograms() {
+        for (int i = 0; i < NUM_HISTOGRAM_BINS; i++) {
+            m1_histogram[i] = 0;
+            m2_histogram[i] = 0;
+            m3_histogram[i] = 0;
+        }
     }
     void calc_average () {
-        hue /= n_pixels;
-        sat /= n_pixels;
-        val /= n_pixels;
+        m1 /= n_pixels;
+        m2 /= n_pixels;
+        m3 /= n_pixels;
     }
     void BGR_to_HSV () {
         unsigned char H,S,V;
-        tripletBGR2HSV (static_cast<unsigned char>(hue),static_cast<unsigned char>(sat),static_cast<unsigned char>(val)
-                        ,H,S,V); // hue,sat,val are actually in BGR
-        hue = static_cast<unsigned>(H);
-        sat = static_cast<unsigned>(S);
-        val = static_cast<unsigned>(V);
+        tripletBGR2HSV (static_cast<unsigned char>(m1),static_cast<unsigned char>(m2),static_cast<unsigned char>(m3)
+                        ,H,S,V); // m1,m2,m3 are actually in BGR
+        m1 = static_cast<unsigned>(H);
+        m2 = static_cast<unsigned>(S);
+        m3 = static_cast<unsigned>(V);
     }
     void merge (Color_Triple B) {
         unsigned total = n_pixels + B.n_pixels;
-        hue = (hue*n_pixels + B.hue*B.n_pixels) / total;
-        sat = (sat*n_pixels + B.sat*B.n_pixels) / total;
-        val = (val*n_pixels + B.val*B.n_pixels) / total;
+        m1 = (m1*n_pixels + B.m1*B.n_pixels) / total;
+        m2 = (m2*n_pixels + B.m2*B.n_pixels) / total;
+        m3 = (m3*n_pixels + B.m3*B.n_pixels) / total;
+        for (int i = 0; i < NUM_HISTOGRAM_BINS; i++) {
+            m1_histogram[i] += B.m1_histogram[i];
+            m2_histogram[i] += B.m2_histogram[i];
+            m3_histogram[i] += B.m3_histogram[i];
+        }
         n_pixels = total;
+    }
+    void print () {
+        printf ("color_triplet #%2d (%d pixels): %d %d %d\n", index_number, n_pixels, m1, m2, m3);
+    }
+    void print_with_stats () {
+        printf ("color_triplet #%2d (%d pixels):\n", index_number, n_pixels);
+        printf ("\t%3d\t\t", m1);
+        for (int i = 0; i < Color_Triple::NUM_HISTOGRAM_BINS; i++) {
+            printf ("%4.2f ", (float)m1_histogram[i]/n_pixels);
+        }    
+        printf ("\n");
+        printf ("\t%3d\t\t", m2);
+        for (int i = 0; i < Color_Triple::NUM_HISTOGRAM_BINS; i++) {
+            printf ("%4.2f ", (float)m2_histogram[i]/n_pixels);
+        }    
+        printf ("\n");
+        printf ("\t%3d\t\t", m3);
+        for (int i = 0; i < Color_Triple::NUM_HISTOGRAM_BINS; i++) {
+            printf ("%4.2f ", (float)m3_histogram[i]/n_pixels);
+        }    
+        printf ("\n");
     }
 };
 
@@ -242,6 +280,9 @@ private:
     IplImage* ds_scratch_3;   // downsampled scratch image 3 channel
     IplImage* ds_scratch;   // 1 channel
 
+    // these variables are used to support flood_image_interactive_callback
+
+
     // profile bins
     PROFILE_BIN bin_Resize;
     PROFILE_BIN bin_MeanShift;
@@ -267,14 +308,11 @@ private:
     }
 
     bool check_and_accumulate_pixel (unsigned char* pixel, unsigned char* ref_pixel,
-                                    unsigned &b_sum, unsigned &g_sum, unsigned &r_sum,
-                                    unsigned &num_pixels);
+                                    Color_Triple &triple);
     bool check_and_accumulate_pixel_BGR (unsigned char* pixel, unsigned char* ref_pixel,
-                                    unsigned &b_sum, unsigned &g_sum, unsigned &r_sum,
-                                    unsigned &num_pixels);
+                                    Color_Triple &triple);
     bool check_and_accumulate_pixel_HSV (unsigned char* pixel, unsigned char* ref_pixel,
-                                    unsigned &h_sum, unsigned &s_sum, unsigned &v_sum,
-                                    unsigned &num_pixels);
+                                    Color_Triple &triple);
     
     void meanshift_internal(IplImage* scratch);
     void colorfilter_internal();
@@ -286,10 +324,15 @@ public:
     mvAdvancedColorFilter (const char* settings_file); //constructor
     ~mvAdvancedColorFilter(); // destructor
     void mean_shift(IplImage* src, IplImage* dst);
-    void flood_image(IplImage* src, IplImage* dst);
+    void flood_image(IplImage* src, IplImage* dst, bool interactive=false);
     void watershed(IplImage* src, IplImage* dst);
     void filter(IplImage *src, IplImage* dst);
     void combined_filter(IplImage *src, IplImage* dst);
+
+
+    friend void flood_image_interactive_callback(int event, int x, int y, int flags, void* param);
 };
+
+void flood_image_interactive_callback(int event, int x, int y, int flags, void* param);
 
 #endif

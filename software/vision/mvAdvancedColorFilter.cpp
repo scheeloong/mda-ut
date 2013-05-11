@@ -3,6 +3,7 @@
 
 #define USE_BGR_COLOR_SPACE
 #define FLOOD_IMAGE_COMPARE_WITH_ORIG
+#define CALC_TRIPLE_STATISTICS
 
 #define M_DEBUG
 #ifdef M_DEBUG
@@ -144,7 +145,7 @@ void mvAdvancedColorFilter::combined_filter(IplImage* src, IplImage* dst) {
       upsample_to (dst);
 }
 
-void mvAdvancedColorFilter::flood_image(IplImage* src, IplImage* dst) {
+void mvAdvancedColorFilter::flood_image(IplImage* src, IplImage* dst, bool interactive) {
     assert (src->nChannels == 3);
     assert (dst->nChannels == 1);
     downsample_from (src);
@@ -155,6 +156,14 @@ void mvAdvancedColorFilter::flood_image(IplImage* src, IplImage* dst) {
     // this does most of the work
     flood_image_internal();
 
+    // if interactive mode, we want to display the image and register the interactive callback 
+    if (interactive) {
+        cvNamedWindow ("flood_image_callback");
+        cvSetMouseCallback("flood_image_callback", flood_image_interactive_callback, static_cast<void*>(ds_scratch));
+        cvShowImage("flood_image_callback", ds_scratch);
+        cvWaitKey(0);
+    }
+
     // go thru each active hue box and check if any of the models fit within the hue box
     // if so paint the pixels marked as those models to be the BOX number of that hue box
     cvZero(dst);
@@ -164,7 +173,7 @@ void mvAdvancedColorFilter::flood_image(IplImage* src, IplImage* dst) {
 
         std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
         for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
-            if (hue_box[i]->check_hsv(iter->hue, iter->sat,iter->val)) {
+            if (hue_box[i]->check_hsv(iter->m1, iter->m2,iter->m3)) {
                 
                 for (int k = 0; k < dst->height; k++) {
                     unsigned char* scrPtr = (unsigned char*)(ds_scratch->imageData + k*ds_scratch->widthStep);
@@ -184,42 +193,55 @@ void mvAdvancedColorFilter::flood_image(IplImage* src, IplImage* dst) {
     bin_Filter.stop();
 }
 
-bool mvAdvancedColorFilter::check_and_accumulate_pixel (unsigned char* pixel, unsigned char* ref_pixel,
-                                unsigned &b_sum, unsigned &g_sum, unsigned &r_sum,
-                                unsigned &num_pixels)
+bool mvAdvancedColorFilter::check_and_accumulate_pixel (unsigned char* pixel, unsigned char* ref_pixel, Color_Triple &triple)
 {
     #ifdef USE_BGR_COLOR_SPACE
-        return check_and_accumulate_pixel_BGR (pixel, ref_pixel, b_sum, g_sum, r_sum, num_pixels);
+        return check_and_accumulate_pixel_BGR (pixel, ref_pixel, triple);
     #else
-        return check_and_accumulate_pixel_HSV (pixel, ref_pixel, b_sum, g_sum, r_sum, num_pixels);
+        return check_and_accumulate_pixel_HSV (pixel, ref_pixel, triple);
     #endif
 }
 
-bool mvAdvancedColorFilter::check_and_accumulate_pixel_BGR (unsigned char* pixel, unsigned char* ref_pixel,
-                                unsigned &b_sum, unsigned &g_sum, unsigned &r_sum,
-                                unsigned &num_pixels)
+bool mvAdvancedColorFilter::check_and_accumulate_pixel_BGR (unsigned char* pixel, unsigned char* ref_pixel, Color_Triple &triple)
 {
     // although this uses BGR, the variable names are still HSV, lol...
     int B = pixel[0];
     int G = pixel[1];
     int R = pixel[2];
 
+    #ifdef CALC_TRIPLE_STATISTICS
+        // we iterate through the histogram bins. Starting at bin 0, each bin contains the num of pixels whose value falls
+        // within +- 5*(bin_number+1) of the reference pixel
+        int diff;
+        for (int i = 0; i < Color_Triple::NUM_HISTOGRAM_BINS; i++) {
+            diff = abs(B - (int)ref_pixel[0]);
+            if (diff > i*5 && diff <= (i+1)*5) 
+                triple.m1_histogram[i]++;
+            
+            diff = abs(G - (int)ref_pixel[1]);
+            if (diff > i*5 && diff <= (i+1)*5) 
+                triple.m2_histogram[i]++;
+            
+            diff = abs(R - (int)ref_pixel[2]);
+            if (diff > i*5 && diff <= (i+1)*5) 
+                triple.m3_histogram[i]++;          
+        }
+    #endif
+
     //if (abs(B-ref_pixel[0]) + abs(G-ref_pixel[1]) + abs(R-ref_pixel[2]) < COLOR_DIST)
     if (abs(B-ref_pixel[0]) < H_DIST && abs(G-ref_pixel[1]) < S_DIST && abs(R-ref_pixel[2]) < V_DIST)
     {
-        b_sum += (unsigned)B;           
-        g_sum += (unsigned)G;
-        r_sum += (unsigned)R;
-        num_pixels++;
+        triple.m1 += (unsigned)B;           
+        triple.m2 += (unsigned)G;
+        triple.m3 += (unsigned)R;
+        triple.n_pixels++;
 
         return true;
     }
     return false;
 }
 
-bool mvAdvancedColorFilter::check_and_accumulate_pixel_HSV (unsigned char* pixel, unsigned char* ref_pixel,
-                                unsigned &h_sum, unsigned &s_sum, unsigned &v_sum,
-                                unsigned &num_pixels)
+bool mvAdvancedColorFilter::check_and_accumulate_pixel_HSV (unsigned char* pixel, unsigned char* ref_pixel, Color_Triple &triple)
 {
     int H = pixel[0];
     int S = pixel[1];
@@ -238,16 +260,16 @@ bool mvAdvancedColorFilter::check_and_accumulate_pixel_HSV (unsigned char* pixel
         // and use 179 if we're looking for red >= 0
         if (Hdelta > 90) {
             if (H <= 90)
-                h_sum += 0;
+                triple.m1 += 0;
             else
-                h_sum += 179;
+                triple.m1 += 179;
         }
         else
-            h_sum += (unsigned)H;
+            triple.m1 += (unsigned)H;
                 
-        s_sum += (unsigned)S;
-        v_sum += (unsigned)V;
-        num_pixels++;
+        triple.m2 += (unsigned)S;
+        triple.m3 += (unsigned)V;
+        triple.n_pixels++;
 
         return true;
     }
@@ -285,29 +307,27 @@ void mvAdvancedColorFilter::meanshift_internal(IplImage* src_scratch) {
             }
 
             unsigned char* tempPtr;
-            unsigned H2 = imgPtr[0], S2 = imgPtr[1], V2 = imgPtr[2];
-            unsigned good_pixels = 1, total_pixels = 1;
+            Color_Triple triple(imgPtr[0], imgPtr[1], imgPtr[2], 1);
+            unsigned total_pixels = 1;
 
             // go thru each pixel in the kernel
             for (int i = 0; i < KERNEL_AREA; i++) {
                 tempPtr = imgPtr + 3*kernel_point_array[i];
 
-                check_and_accumulate_pixel (tempPtr, imgPtr, H2, S2, V2, good_pixels);
+                check_and_accumulate_pixel (tempPtr, imgPtr, triple);
 
                 total_pixels++;
             }
 
             // if good enough, visit every pixel in the kernel and set value equal to average
-            if (GOOD_PIXELS_FACTOR*good_pixels >= total_pixels) {
-                unsigned char Hnew = H2 / good_pixels;
-                unsigned char Snew = S2 / good_pixels;
-                unsigned char Vnew = V2 / good_pixels;
+            if (GOOD_PIXELS_FACTOR*triple.n_pixels >= total_pixels) {
+                triple.calc_average();
 
                 for (int i = 0; i < KERNEL_AREA; i++) {
                     tempPtr = resPtr + 3*kernel_point_array[i];
-                    tempPtr[0] = Hnew;
-                    tempPtr[1] = Snew;
-                    tempPtr[2] = Vnew;
+                    tempPtr[0] = triple.m1;
+                    tempPtr[1] = triple.m2;
+                    tempPtr[2] = triple.m3;
                 }
             }
         
@@ -482,7 +502,11 @@ void mvAdvancedColorFilter::flood_image_internal() {
 
     std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
     for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
-        DEBUG_PRINT ("color_triplet #%2d (%dpix): %d %d %d\n", iter->index_number, iter->n_pixels, iter->hue, iter->sat, iter->val);
+        #ifdef CALC_TRIPLE_STATISTICS
+            iter->print_with_stats();    
+        #else
+            iter->print();
+        #endif
     }
     DEBUG_PRINT ("\n");
 }
@@ -525,7 +549,7 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
             continue;
 
         imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*widthStep3+c*3);
-        bool pixel_good = check_and_accumulate_pixel (imgPtr, imgPtrOrig, color_triple.hue, color_triple.sat, color_triple.val, color_triple.n_pixels);
+        bool pixel_good = check_and_accumulate_pixel (imgPtr, imgPtrOrig, color_triple);
         if (pixel_good) {
             // mark pixel as visited
             *resPtr = TEMP_PIXEL;
@@ -555,25 +579,25 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
 
         // check each pixel around it
         if (c > 0 && resPtr[-1] == 0) { // left
-            if (check_and_accumulate_pixel (imgPtr-3, imgPtr, color_triple.hue, color_triple.sat, color_triple.val, color_triple.n_pixels)) {
+            if (check_and_accumulate_pixel (imgPtr-3, imgPtr, color_triple)) {
                 resPtr[-1] = TEMP_PIXEL;
                 Point_Array.push_back(std::make_pair(r,c-1));
             }
         }
         if (c < ds_scratch->width-1 && resPtr[1] == 0) { // right
-            if (check_and_accumulate_pixel (imgPtr+3, imgPtr, color_triple.hue, color_triple.sat, color_triple.val, color_triple.n_pixels)) {
+            if (check_and_accumulate_pixel (imgPtr+3, imgPtr, color_triple)) {
                 resPtr[1] = TEMP_PIXEL;
                 Point_Array.push_back(std::make_pair(r,c+1));
             }
         }
         if (r > 0 && resPtr[-widthStep] == 0) { // above
-            if (check_and_accumulate_pixel (imgPtr-widthStep3, imgPtr, color_triple.hue, color_triple.sat, color_triple.val, color_triple.n_pixels)) {
+            if (check_and_accumulate_pixel (imgPtr-widthStep3, imgPtr, color_triple)) {
                 resPtr[-widthStep] = TEMP_PIXEL;
                 Point_Array.push_back(std::make_pair(r-1,c));
             }
         }
         if (r < ds_scratch->height-1 && resPtr[widthStep] == 0) { // below
-            if (check_and_accumulate_pixel (imgPtr+widthStep3, imgPtr, color_triple.hue, color_triple.sat, color_triple.val, color_triple.n_pixels)) {
+            if (check_and_accumulate_pixel (imgPtr+widthStep3, imgPtr, color_triple)) {
                 resPtr[widthStep] = TEMP_PIXEL;
                 Point_Array.push_back(std::make_pair(r+1,c));
             }
@@ -596,9 +620,9 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
         
         std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
         for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
-            int diff =  abs((int)iter->hue-(int)color_triple.hue) + 
-                        abs((int)iter->sat-(int)color_triple.sat) + 
-                        abs((int)iter->val-(int)color_triple.val);
+            int diff =  abs((int)iter->m1-(int)color_triple.m1) + 
+                        abs((int)iter->m2-(int)color_triple.m2) + 
+                        abs((int)iter->m3-(int)color_triple.m3);
             if (diff < min_diff) {
                 min_diff = diff;
                 min_diff_iter = iter;
@@ -607,8 +631,8 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
         // if could not merge, add the new box to the vector
         if (min_diff < 0.8*COLOR_DIST) {
             printf ("merging BGR triplet #%d (%d %d %d) with #%d (%d %d %d)\n", 
-                    min_diff_iter->index_number, min_diff_iter->hue, min_diff_iter->sat, min_diff_iter->val, 
-                    color_triple.index_number, color_triple.hue, color_triple.sat, color_triple.val
+                    min_diff_iter->index_number, min_diff_iter->m1, min_diff_iter->m2, min_diff_iter->m3, 
+                    color_triple.index_number, color_triple.m1, color_triple.m2, color_triple.m3
                     );
             min_diff_iter->merge(color_triple);
             final_index_number = min_diff_iter->index_number;
@@ -624,14 +648,14 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
         bool merged = false;
         std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
         for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
-            if (abs((int)iter->hue - (int)color_triple.hue) < H_DIST &&
-                abs((int)iter->sat - (int)color_triple.sat) < S_DIST &&
-                abs((int)iter->val - (int)color_triple.val) < V_DIST
+            if (abs((int)iter->m1 - (int)color_triple.m1) < H_DIST &&
+                abs((int)iter->m2 - (int)color_triple.m2) < S_DIST &&
+                abs((int)iter->m3 - (int)color_triple.m3) < V_DIST
                 )
             {
                 printf ("merging HSV triplet #%d (%d %d %d) with #%d (%d %d %d)\n", 
-                    iter->index_number, iter->hue, iter->sat, iter->val, 
-                    color_triple.index_number, color_triple.hue, color_triple.sat, color_triple.val
+                    iter->index_number, iter->m1, iter->m2, iter->m3, 
+                    color_triple.index_number, color_triple.m1, color_triple.m2, color_triple.m3
                     );
 
                 iter->merge(color_triple);
@@ -662,6 +686,16 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
 #endif
 
     return (final_index_number != 0);
+}
+
+void flood_image_interactive_callback(int event, int x, int y, int flags, void* param) {
+    IplImage* img = (IplImage*) param;
+    
+    if (event == CV_EVENT_LBUTTONDOWN) {
+        printf ("hi!\n");
+    }
+    else if (event == CV_EVENT_RBUTTONDOWN) {
+    }
 }
 
 //#########################################################################
