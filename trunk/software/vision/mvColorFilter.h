@@ -163,39 +163,25 @@ public:
 };
 
 // ##################################################################################################
-//  Color_Triple - helper class for mvAdvancedColorFilter
+//  COLOR_TRIPLE - helper class for mvAdvancedColorFilter
 // ##################################################################################################
-class Color_Triple {
+class COLOR_TRIPLE {
 public:
-    unsigned m1;
-    unsigned m2;
-    unsigned m3;
+    unsigned m1, m2, m3;
     unsigned n_pixels;
     unsigned index_number;
 
     static const int NUM_HISTOGRAM_BINS = 5;
-    unsigned m1_histogram[NUM_HISTOGRAM_BINS];
-    unsigned m2_histogram[NUM_HISTOGRAM_BINS];
-    unsigned m3_histogram[NUM_HISTOGRAM_BINS];
-
-    Color_Triple(){
+    
+    COLOR_TRIPLE(){
         m1 = m2 = m3 = n_pixels = index_number = 0;
-        init_histograms();
     }
-    Color_Triple(unsigned M1, unsigned M2, unsigned M3, unsigned Index_Number){
+    COLOR_TRIPLE(unsigned M1, unsigned M2, unsigned M3, unsigned Index_Number){
         m1 = M1; 
         m2 = M2;
         m3 = M3;
         n_pixels = 1;
         index_number = Index_Number;
-        init_histograms();
-    }
-    void init_histograms() {
-        for (int i = 0; i < NUM_HISTOGRAM_BINS; i++) {
-            m1_histogram[i] = 0;
-            m2_histogram[i] = 0;
-            m3_histogram[i] = 0;
-        }
     }
     void calc_average () {
         m1 /= n_pixels;
@@ -210,40 +196,46 @@ public:
         m2 = static_cast<unsigned>(S);
         m3 = static_cast<unsigned>(V);
     }
-    void merge (Color_Triple B) {
+    void merge (COLOR_TRIPLE B) {
         unsigned total = n_pixels + B.n_pixels;
         m1 = (m1*n_pixels + B.m1*B.n_pixels) / total;
         m2 = (m2*n_pixels + B.m2*B.n_pixels) / total;
         m3 = (m3*n_pixels + B.m3*B.n_pixels) / total;
-        for (int i = 0; i < NUM_HISTOGRAM_BINS; i++) {
-            m1_histogram[i] += B.m1_histogram[i];
-            m2_histogram[i] += B.m2_histogram[i];
-            m3_histogram[i] += B.m3_histogram[i];
-        }
         n_pixels = total;
     }
     void print () {
         printf ("color_triplet #%2d (%d pixels): %d %d %d\n", index_number, n_pixels, m1, m2, m3);
     }
-    void print_with_stats () {
-        printf ("color_triplet #%2d (%d pixels):\n", index_number, n_pixels);
-        printf ("\t%3d\t\t", m1);
-        for (int i = 0; i < Color_Triple::NUM_HISTOGRAM_BINS; i++) {
-            printf ("%4.2f ", (float)m1_histogram[i]/n_pixels);
-        }    
-        printf ("\n");
-        printf ("\t%3d\t\t", m2);
-        for (int i = 0; i < Color_Triple::NUM_HISTOGRAM_BINS; i++) {
-            printf ("%4.2f ", (float)m2_histogram[i]/n_pixels);
-        }    
-        printf ("\n");
-        printf ("\t%3d\t\t", m3);
-        for (int i = 0; i < Color_Triple::NUM_HISTOGRAM_BINS; i++) {
-            printf ("%4.2f ", (float)m3_histogram[i]/n_pixels);
-        }    
-        printf ("\n");
+};
+
+class COLOR_TRIPLE_FLOAT {
+public:
+    double mf1, mf2, mf3;
+    unsigned n_pixels;
+
+    COLOR_TRIPLE_FLOAT () {
+        mf1 = mf2 = mf3 = n_pixels = 0;
+    }
+    void add_pixel (int p1, int p2, int p3) {
+        mf1 += static_cast<double>(p1);
+        mf2 += static_cast<double>(p2);
+        mf3 += static_cast<double>(p3);
+        n_pixels++;
+    }
+    void calc_average () {
+        mf1 /= static_cast<double>(n_pixels);
+        mf2 /= static_cast<double>(n_pixels);
+        mf3 /= static_cast<double>(n_pixels);
+    }
+    void print () {
+        printf ("color_triplet_float (%d pixels): %6.2lf %6.2lf %6.2lf\n", n_pixels, mf1, mf2, mf3);    
+    }
+    void print (const char* name) {
+        printf ("%s (%d pixels): %6.2lf %6.2lf %6.2lf\n", name, n_pixels, mf1, mf2, mf3);        
     }
 };
+
+typedef std::vector<COLOR_TRIPLE> COLOR_TRIPLE_VECTOR;  
 
 // ##################################################################################################
 //  mvAdvancedColorFilter - mean_shift, flood_fill, and other more complicated algorithms
@@ -258,6 +250,8 @@ class mvAdvancedColorFilter {
     static const int V_MIN = 30;
     static const unsigned char BAD_PIXEL = 253;
     static const unsigned char TEMP_PIXEL = 251;
+
+    static const bool KERNEL_SHAPE_IS_RECT = false;
 
 public:
     static const int NUM_BOXES = 3;
@@ -275,13 +269,15 @@ private:
 
     // internal data
     Hue_Box* hue_box[NUM_BOXES]; // array of pointers to boxes
-    std::vector<Color_Triple> color_triple_vector;
+    COLOR_TRIPLE_VECTOR color_triple_vector;
     int* kernel_point_array;
     IplImage* ds_scratch_3;   // downsampled scratch image 3 channel
     IplImage* ds_scratch;   // 1 channel
 
     // these variables are used to support flood_image_interactive_callback
-
+    std::vector<COLOR_TRIPLE_VECTOR> Training_Matrix;
+    int Current_Interactive_Color;
+    static const int NUM_INTERACTIVE_COLORS = 2;
 
     // profile bins
     PROFILE_BIN bin_Resize;
@@ -308,11 +304,11 @@ private:
     }
 
     bool check_and_accumulate_pixel (unsigned char* pixel, unsigned char* ref_pixel,
-                                    Color_Triple &triple);
+                                    COLOR_TRIPLE &triple);
     bool check_and_accumulate_pixel_BGR (unsigned char* pixel, unsigned char* ref_pixel,
-                                    Color_Triple &triple);
+                                    COLOR_TRIPLE &triple);
     bool check_and_accumulate_pixel_HSV (unsigned char* pixel, unsigned char* ref_pixel,
-                                    Color_Triple &triple);
+                                    COLOR_TRIPLE &triple);
     
     void meanshift_internal(IplImage* scratch);
     void colorfilter_internal();
@@ -334,5 +330,5 @@ public:
 };
 
 void flood_image_interactive_callback(int event, int x, int y, int flags, void* param);
-
+    
 #endif

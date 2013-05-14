@@ -110,6 +110,50 @@ void mvDumpPixels (IplImage* img, const char* file_name, char delimiter) {
     }
         
     fclose (fp);
+    printf ("Dumped pixels to %s\n", file_name);
+}
+
+void mvDumpHistogram (IplImage* img, const char* file_name, char delimiter) {
+    FILE* fp = fopen (file_name, "w");
+    if (fp == NULL)
+        return;    
+
+    const int step_size = 5;
+    const int nbins = 255/step_size;
+
+    int size[] = {nbins};
+    float range[] = {0, 255};
+    float* ranges[] = {range};
+
+    IplImage* channel1 = cvCreateImage (cvGetSize(img), IPL_DEPTH_8U, 1);
+    IplImage* channel2 = cvCreateImage (cvGetSize(img), IPL_DEPTH_8U, 1);
+    IplImage* channel3 = cvCreateImage (cvGetSize(img), IPL_DEPTH_8U, 1);
+    
+    // Split image onto the color planes.
+    cvSplit(img, channel1, channel2, channel3, NULL);
+    IplImage* planes[] = {channel1, channel2, channel3};
+
+    // here we create 3 1-dimensional histograms. Each hist only looks at one of the 3 colors of RGB
+    for (int i = 0; i < 3; i++) {
+        CvHistogram* hist = cvCreateHist (1, size, CV_HIST_ARRAY, ranges, 1);
+        IplImage* curr_plane[] = {planes[i]};
+        cvCalcHist (curr_plane, hist, 0, NULL);
+        cvNormalizeHist (hist, 10000);
+
+        fprintf (fp, "\nChannel %d Histogram\nRange%cBin #%cCount\n", i+1,delimiter,delimiter);
+
+        // print histogram
+        for (int j = 0; j < nbins; j++) {
+            int binval = cvQueryHistValue_1D(hist, j);
+            fprintf (fp, "%d-%d%c%d%c%d\n", j*step_size,(j+1)*step_size,delimiter,j+1,delimiter,binval);
+        }
+    }
+
+    cvReleaseImage (&channel1);
+    cvReleaseImage (&channel2);
+    cvReleaseImage (&channel3);
+    fclose (fp);
+    printf ("Dumped histogram to %s\n", file_name);
 }
 
 void mvHuMoments(IplImage *src, double *hus){

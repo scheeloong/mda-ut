@@ -3,7 +3,6 @@
 
 #define USE_BGR_COLOR_SPACE
 #define FLOOD_IMAGE_COMPARE_WITH_ORIG
-#define CALC_TRIPLE_STATISTICS
 
 #define M_DEBUG
 #ifdef M_DEBUG
@@ -12,7 +11,7 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
-bool triple_has_more_pixels (Color_Triple t1, Color_Triple t2) {
+bool triple_has_more_pixels (COLOR_TRIPLE t1, COLOR_TRIPLE t2) {
     return (t1.n_pixels > t2.n_pixels);
 }
 void cvt_img_to_HSV (IplImage* src, IplImage* dst) {
@@ -56,43 +55,47 @@ mvAdvancedColorFilter::mvAdvancedColorFilter (const char* settings_file) :
     KERNEL_AREA = KERNEL_SIZE * KERNEL_SIZE;
     KERNEL_RAD = (KERNEL_SIZE - 1)/2;
 
-#ifdef KERNEL_SHAPE_RECT
-    kernel_point_array = new int[KERNEL_AREA];
-    
-    unsigned array_index = 0;
-    for (int j = -KERNEL_RAD; j <= KERNEL_RAD; j++)
-        for (int i = -KERNEL_RAD; i <= KERNEL_RAD; i++)
-            kernel_point_array[array_index++] = i*ds_scratch->widthStep + j;       
-#else    
-    int* temp_array = new int[KERNEL_AREA];
-    unsigned array_index = 0;
-    unsigned valid_count = 0;
-    int R2 = KERNEL_RAD*KERNEL_RAD;//KERNEL_SIZE*KERNEL_SIZE/4;
+    if (KERNEL_SHAPE_IS_RECT) {
+        kernel_point_array = new int[KERNEL_AREA];
+        
+        unsigned array_index = 0;
+        for (int j = -KERNEL_RAD; j <= KERNEL_RAD; j++)
+            for (int i = -KERNEL_RAD; i <= KERNEL_RAD; i++)
+                kernel_point_array[array_index++] = i*ds_scratch->widthStep + j;       
+    } 
+    else {
+        int* temp_array = new int[KERNEL_AREA];
+        unsigned array_index = 0;
+        unsigned valid_count = 0;
+        int R2 = KERNEL_RAD*KERNEL_RAD;//KERNEL_SIZE*KERNEL_SIZE/4;
 
-    for (int j = -KERNEL_RAD; j <= KERNEL_RAD; j++) {
-        for (int i = -KERNEL_RAD; i <= KERNEL_RAD; i++) {
-            if (i*i + j*j <= R2) { // check if i,j are in the ellipse
-                temp_array[array_index++] = i*ds_scratch->widthStep + j;
-                valid_count++;   
+        for (int j = -KERNEL_RAD; j <= KERNEL_RAD; j++) {
+            for (int i = -KERNEL_RAD; i <= KERNEL_RAD; i++) {
+                if (i*i + j*j <= R2) { // check if i,j are in the ellipse
+                    temp_array[array_index++] = i*ds_scratch->widthStep + j;
+                    valid_count++;   
+                }
+                else {
+                    temp_array[array_index++] = MV_UNDEFINED_VALUE;
+                }                
             }
-            else {
-                temp_array[array_index++] = MV_UNDEFINED_VALUE;
-            }                
         }
+
+        /// copy the valid points to kernel_point_array
+        kernel_point_array = new int[valid_count];
+        array_index = 0;
+        for (int i = 0; i < KERNEL_AREA; i++) {
+            if (temp_array[i] != MV_UNDEFINED_VALUE) {
+                kernel_point_array[array_index++] = temp_array[i];
+            }
+        }
+        delete[] temp_array;
+        KERNEL_AREA = valid_count;
     }
 
-    /// copy the valid points to kernel_point_array
-    kernel_point_array = new int[valid_count];
-    array_index = 0;
-    for (int i = 0; i < KERNEL_AREA; i++) {
-        if (temp_array[i] != MV_UNDEFINED_VALUE) {
-            kernel_point_array[array_index++] = temp_array[i];
-        }
-    }
-    delete[] temp_array;
-    KERNEL_AREA = valid_count;
-#endif
-
+    Training_Matrix.resize(NUM_INTERACTIVE_COLORS);
+    cvNamedWindow ("flood_image_callback");
+    
 #ifdef USE_BGR_COLOR_SPACE
     printf ("mvAdvancedColorFilter is using BGR color space\n");
 #else
@@ -158,10 +161,14 @@ void mvAdvancedColorFilter::flood_image(IplImage* src, IplImage* dst, bool inter
 
     // if interactive mode, we want to display the image and register the interactive callback 
     if (interactive) {
-        cvNamedWindow ("flood_image_callback");
-        cvSetMouseCallback("flood_image_callback", flood_image_interactive_callback, static_cast<void*>(ds_scratch));
+        Current_Interactive_Color = 0;
+        for (int i = 0; i < NUM_INTERACTIVE_COLORS; i++)
+            Training_Matrix[i].clear();
+        cvSetMouseCallback("flood_image_callback", flood_image_interactive_callback, static_cast<void*>(this));
         cvShowImage("flood_image_callback", ds_scratch);
-        cvWaitKey(0);
+        printf ("Interactive mode is active.\n");
+        printf ("Current Color is %d\n", Current_Interactive_Color);
+        //cvWaitKey(0);
     }
 
     // go thru each active hue box and check if any of the models fit within the hue box
@@ -171,8 +178,8 @@ void mvAdvancedColorFilter::flood_image(IplImage* src, IplImage* dst, bool inter
         if (!hue_box[i]->BOX_ENABLED)
             continue;
 
-        std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
-        for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
+        COLOR_TRIPLE_VECTOR::iterator iter_end = color_triple_vector.end();
+        for (COLOR_TRIPLE_VECTOR::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
             if (hue_box[i]->check_hsv(iter->m1, iter->m2,iter->m3)) {
                 
                 for (int k = 0; k < dst->height; k++) {
@@ -193,7 +200,7 @@ void mvAdvancedColorFilter::flood_image(IplImage* src, IplImage* dst, bool inter
     bin_Filter.stop();
 }
 
-bool mvAdvancedColorFilter::check_and_accumulate_pixel (unsigned char* pixel, unsigned char* ref_pixel, Color_Triple &triple)
+bool mvAdvancedColorFilter::check_and_accumulate_pixel (unsigned char* pixel, unsigned char* ref_pixel, COLOR_TRIPLE &triple)
 {
     #ifdef USE_BGR_COLOR_SPACE
         return check_and_accumulate_pixel_BGR (pixel, ref_pixel, triple);
@@ -202,31 +209,12 @@ bool mvAdvancedColorFilter::check_and_accumulate_pixel (unsigned char* pixel, un
     #endif
 }
 
-bool mvAdvancedColorFilter::check_and_accumulate_pixel_BGR (unsigned char* pixel, unsigned char* ref_pixel, Color_Triple &triple)
+bool mvAdvancedColorFilter::check_and_accumulate_pixel_BGR (unsigned char* pixel, unsigned char* ref_pixel, COLOR_TRIPLE &triple)
 {
     // although this uses BGR, the variable names are still HSV, lol...
     int B = pixel[0];
     int G = pixel[1];
     int R = pixel[2];
-
-    #ifdef CALC_TRIPLE_STATISTICS
-        // we iterate through the histogram bins. Starting at bin 0, each bin contains the num of pixels whose value falls
-        // within +- 5*(bin_number+1) of the reference pixel
-        int diff;
-        for (int i = 0; i < Color_Triple::NUM_HISTOGRAM_BINS; i++) {
-            diff = abs(B - (int)ref_pixel[0]);
-            if (diff > i*5 && diff <= (i+1)*5) 
-                triple.m1_histogram[i]++;
-            
-            diff = abs(G - (int)ref_pixel[1]);
-            if (diff > i*5 && diff <= (i+1)*5) 
-                triple.m2_histogram[i]++;
-            
-            diff = abs(R - (int)ref_pixel[2]);
-            if (diff > i*5 && diff <= (i+1)*5) 
-                triple.m3_histogram[i]++;          
-        }
-    #endif
 
     //if (abs(B-ref_pixel[0]) + abs(G-ref_pixel[1]) + abs(R-ref_pixel[2]) < COLOR_DIST)
     if (abs(B-ref_pixel[0]) < H_DIST && abs(G-ref_pixel[1]) < S_DIST && abs(R-ref_pixel[2]) < V_DIST)
@@ -241,7 +229,7 @@ bool mvAdvancedColorFilter::check_and_accumulate_pixel_BGR (unsigned char* pixel
     return false;
 }
 
-bool mvAdvancedColorFilter::check_and_accumulate_pixel_HSV (unsigned char* pixel, unsigned char* ref_pixel, Color_Triple &triple)
+bool mvAdvancedColorFilter::check_and_accumulate_pixel_HSV (unsigned char* pixel, unsigned char* ref_pixel, COLOR_TRIPLE &triple)
 {
     int H = pixel[0];
     int S = pixel[1];
@@ -307,7 +295,7 @@ void mvAdvancedColorFilter::meanshift_internal(IplImage* src_scratch) {
             }
 
             unsigned char* tempPtr;
-            Color_Triple triple(imgPtr[0], imgPtr[1], imgPtr[2], 1);
+            COLOR_TRIPLE triple(imgPtr[0], imgPtr[1], imgPtr[2], 1);
             unsigned total_pixels = 1;
 
             // go thru each pixel in the kernel
@@ -477,7 +465,7 @@ void mvAdvancedColorFilter::watershed(IplImage* src, IplImage* dst) {
 
 void mvAdvancedColorFilter::flood_image_internal() {
 // This algorithm marks each different region of the image with a different index. Each
-// region has an average color triple that is stored in Color_Triple_Vector[index]
+// region has an average color triple that is stored in COLOR_TRIPLE_Vector[index]
     color_triple_vector.clear();
 
     // we use ds_scratch as a mask image. If something is marked nonzero in ds_scratch the algorithm
@@ -500,20 +488,16 @@ void mvAdvancedColorFilter::flood_image_internal() {
 
     std::sort (color_triple_vector.begin(), color_triple_vector.end(), triple_has_more_pixels);
 
-    std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
-    for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
-        #ifdef CALC_TRIPLE_STATISTICS
-            iter->print_with_stats();    
-        #else
-            iter->print();
-        #endif
+    COLOR_TRIPLE_VECTOR::iterator iter_end = color_triple_vector.end();
+    for (COLOR_TRIPLE_VECTOR::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
+        iter->print();
     }
     DEBUG_PRINT ("\n");
 }
 
 bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number) {
 // assumes ds_scratch is zeroed as needed and does not use profile bin
-#define FLOOD_DEBUG
+//#define FLOOD_DEBUG
 #ifdef FLOOD_DEBUG
      cvNamedWindow("mvAdvancedColorFilter debug");
      cvSetMouseCallback("mvAdvancedColorFilter debug", show_HSV_call_back, static_cast<void *>(ds_scratch));
@@ -528,7 +512,7 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
         return false;
 
     // create a color model
-    Color_Triple color_triple(imgPtr[0],imgPtr[1],imgPtr[2],index_number); 
+    COLOR_TRIPLE color_triple(imgPtr[0],imgPtr[1],imgPtr[2],index_number); 
 
     // use a queue, each time we visit a new pixel, check if its a "good" pixel and queue
     // visits to neighbours. Good pixels are marked with TEMP_PIXEL
@@ -615,11 +599,11 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
         color_triple.calc_average();
         
         /*// attempt to merge the box with an existing box. This is if the boxes are very similar
-        std::vector<Color_Triple>::iterator min_diff_iter;
+        COLOR_TRIPLE_VECTOR::iterator min_diff_iter;
         int min_diff = 9000;
         
-        std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
-        for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
+        COLOR_TRIPLE_VECTOR::iterator iter_end = color_triple_vector.end();
+        for (COLOR_TRIPLE_VECTOR::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
             int diff =  abs((int)iter->m1-(int)color_triple.m1) + 
                         abs((int)iter->m2-(int)color_triple.m2) + 
                         abs((int)iter->m3-(int)color_triple.m3);
@@ -646,8 +630,8 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
         color_triple.BGR_to_HSV();
 #endif
         bool merged = false;
-        std::vector<Color_Triple>::iterator iter_end = color_triple_vector.end();
-        for (std::vector<Color_Triple>::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
+        COLOR_TRIPLE_VECTOR::iterator iter_end = color_triple_vector.end();
+        for (COLOR_TRIPLE_VECTOR::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
             if (abs((int)iter->m1 - (int)color_triple.m1) < H_DIST &&
                 abs((int)iter->m2 - (int)color_triple.m2) < S_DIST &&
                 abs((int)iter->m3 - (int)color_triple.m3) < V_DIST
@@ -682,19 +666,95 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
   
 #ifdef FLOOD_DEBUG
     cvShowImage("mvAdvancedColorFilter debug", ds_scratch);
-    cvWaitKey(40);
+    cvWaitKey(10);
 #endif
 
     return (final_index_number != 0);
 }
 
 void flood_image_interactive_callback(int event, int x, int y, int flags, void* param) {
-    IplImage* img = (IplImage*) param;
-    
-    if (event == CV_EVENT_LBUTTONDOWN) {
-        printf ("hi!\n");
+    mvAdvancedColorFilter* instance = (mvAdvancedColorFilter*) param;
+    IplImage* img_1 = instance->ds_scratch;
+    IplImage* img_3 = instance->ds_scratch_3;
+    unsigned char* imgPtr1 = (unsigned char*)(img_1->imageData + y*img_1->widthStep + x);
+
+    if (event == CV_EVENT_LBUTTONDOWN) { // paint the bin with pixel (x,y) as current color
+        // Set the Current_Interactive_Color index of the Training_Matrix to color_triple_vector
+        unsigned index_number = *imgPtr1;
+        unsigned num_pixels_added = 0;
+
+        // go through img_1, for each pixel that matches index number, add the corresponding pixel in img_3 to the Training_Matrix
+        for (int r = 0; r < img_1->height; r++) {                        
+            unsigned char* imgPtr3 = (unsigned char*) (img_3->imageData + r*img_3->widthStep);
+            unsigned char* imgPtr1 = (unsigned char*) (img_1->imageData + r*img_1->widthStep);
+                 
+            for (int c = 0; c < img_1->width; c++) {
+                if (*imgPtr1 == index_number) {
+                    instance->Training_Matrix[instance->Current_Interactive_Color].push_back(COLOR_TRIPLE(imgPtr3[0],imgPtr3[1],imgPtr3[2],1));                    
+                    num_pixels_added++;
+                }
+
+                imgPtr3 += 3;
+                imgPtr1++;
+            }
+        }
+
+        printf ("Added %d pixels from bin %d to vector interactive color %d\n", num_pixels_added, index_number, instance->Current_Interactive_Color);
     }
-    else if (event == CV_EVENT_RBUTTONDOWN) {
+    else if (event == CV_EVENT_RBUTTONDOWN) { // move to the next color
+        instance->Current_Interactive_Color += 1;
+        if (instance->Current_Interactive_Color == mvAdvancedColorFilter::NUM_INTERACTIVE_COLORS) {
+            instance->Current_Interactive_Color = 0;
+        }
+        printf ("Current Color is %d\n", instance->Current_Interactive_Color);
+    }
+    else if (event == CV_EVENT_MBUTTONDOWN) {
+        printf ("M mouse\n");
+
+        // go thru each of the training matrix's COLOR_TRIPLE_VECTOR's and calculate statistics
+        for (int i = 0; i < mvAdvancedColorFilter::NUM_INTERACTIVE_COLORS; i++) {
+            printf ("INTERACTIVE_COLOR %d\n", i);
+            COLOR_TRIPLE_VECTOR::iterator iter_begin = instance->Training_Matrix[i].begin();
+            COLOR_TRIPLE_VECTOR::iterator iter_end = instance->Training_Matrix[i].end();
+            COLOR_TRIPLE_FLOAT average, variance, skewness;
+
+            // average
+            for (COLOR_TRIPLE_VECTOR::iterator iter = iter_begin; iter != iter_end; ++iter) {
+                average.add_pixel (
+                    static_cast<int>(iter->m1),
+                    static_cast<int>(iter->m2),
+                    static_cast<int>(iter->m3)
+                );
+            }
+            average.calc_average();
+
+            // variance
+            for (COLOR_TRIPLE_VECTOR::iterator iter = iter_begin; iter != iter_end; ++iter) {
+                variance.add_pixel(
+                    pow(static_cast<int>(iter->m1)-average.mf1, 2),
+                    pow(static_cast<int>(iter->m2)-average.mf2, 2),
+                    pow(static_cast<int>(iter->m3)-average.mf3, 2) 
+                );
+            }
+            variance.calc_average();
+
+            // skewness
+            for (COLOR_TRIPLE_VECTOR::iterator iter = iter_begin; iter != iter_end; ++iter) {
+                skewness.add_pixel(
+                    pow(static_cast<int>(iter->m1)-average.mf1, 3),
+                    pow(static_cast<int>(iter->m2)-average.mf2, 3),
+                    pow(static_cast<int>(iter->m3)-average.mf3, 3) 
+                );
+            }
+            skewness.calc_average();
+            skewness.mf1 /= pow(variance.mf1, 1.5);
+            skewness.mf2 /= pow(variance.mf2, 1.5);
+            skewness.mf3 /= pow(variance.mf3, 1.5);
+
+            average.print("\taverage ");
+            variance.print("\tvariance");
+            skewness.print("\tskewness");
+        }
     }
 }
 
