@@ -223,6 +223,7 @@ public:
         n_pixels++;
     }
     void calc_average () {
+        if (n_pixels == 0) return;
         mf1 /= static_cast<double>(n_pixels);
         mf2 /= static_cast<double>(n_pixels);
         mf3 /= static_cast<double>(n_pixels);
@@ -236,6 +237,11 @@ public:
 };
 
 typedef std::vector<COLOR_TRIPLE> COLOR_TRIPLE_VECTOR;  
+
+void mvGetBoundsFromGaussian (
+    COLOR_TRIPLE_FLOAT mean, COLOR_TRIPLE_FLOAT variance, COLOR_TRIPLE_FLOAT skew, 
+    COLOR_TRIPLE &upper, COLOR_TRIPLE &lower
+);
 
 // ##################################################################################################
 //  mvAdvancedColorFilter - mean_shift, flood_fill, and other more complicated algorithms
