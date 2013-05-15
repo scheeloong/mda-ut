@@ -25,6 +25,31 @@ void cvt_img_to_BGR (IplImage* src, IplImage* dst) {
     #endif
 }
 
+void mvGetBoundsFromGaussian (
+    COLOR_TRIPLE_FLOAT mean, COLOR_TRIPLE_FLOAT variance, COLOR_TRIPLE_FLOAT skew, 
+    COLOR_TRIPLE &upper, COLOR_TRIPLE &lower
+)
+{
+    COLOR_TRIPLE_FLOAT stdev;
+    stdev.mf1 = sqrt(variance.mf1);
+    stdev.mf2 = sqrt(variance.mf2);
+    stdev.mf3 = sqrt(variance.mf3);
+
+    int m1 = static_cast<int>(mean.mf1 + 2*stdev.mf1);
+    int m2 = static_cast<int>(mean.mf2 + 2*stdev.mf2);
+    int m3 = static_cast<int>(mean.mf3 + 2*stdev.mf3);
+    upper.m1 = (m1 > 255) ? 255 : m1;
+    upper.m2 = (m2 > 255) ? 255 : m2;
+    upper.m3 = (m3 > 255) ? 255 : m3;
+
+    m1 = static_cast<int>(mean.mf1 - 2*stdev.mf1);
+    m2 = static_cast<int>(mean.mf2 - 2*stdev.mf2);
+    m3 = static_cast<int>(mean.mf3 - 2*stdev.mf3);
+    lower.m1 = (m1 < 0) ? 0 : m1;
+    lower.m2 = (m2 < 0) ? 0 : m2;
+    lower.m3 = (m3 < 0) ? 0 : m3;
+}
+
 mvAdvancedColorFilter::mvAdvancedColorFilter (const char* settings_file) : 
     bin_Resize ("mvAdvanced - Resize"),
     bin_MeanShift ("mvAdvanced - MeanShift"),
@@ -716,24 +741,24 @@ void flood_image_interactive_callback(int event, int x, int y, int flags, void* 
             printf ("INTERACTIVE_COLOR %d\n", i);
             COLOR_TRIPLE_VECTOR::iterator iter_begin = instance->Training_Matrix[i].begin();
             COLOR_TRIPLE_VECTOR::iterator iter_end = instance->Training_Matrix[i].end();
-            COLOR_TRIPLE_FLOAT average, variance, skewness;
+            COLOR_TRIPLE_FLOAT mean, variance, skewness;
 
-            // average
+            // mean
             for (COLOR_TRIPLE_VECTOR::iterator iter = iter_begin; iter != iter_end; ++iter) {
-                average.add_pixel (
+                mean.add_pixel (
                     static_cast<int>(iter->m1),
                     static_cast<int>(iter->m2),
                     static_cast<int>(iter->m3)
                 );
             }
-            average.calc_average();
+            mean.calc_average();
 
             // variance
             for (COLOR_TRIPLE_VECTOR::iterator iter = iter_begin; iter != iter_end; ++iter) {
                 variance.add_pixel(
-                    pow(static_cast<int>(iter->m1)-average.mf1, 2),
-                    pow(static_cast<int>(iter->m2)-average.mf2, 2),
-                    pow(static_cast<int>(iter->m3)-average.mf3, 2) 
+                    pow(static_cast<double>(iter->m1)-mean.mf1, 2),
+                    pow(static_cast<double>(iter->m2)-mean.mf2, 2),
+                    pow(static_cast<double>(iter->m3)-mean.mf3, 2) 
                 );
             }
             variance.calc_average();
@@ -741,9 +766,9 @@ void flood_image_interactive_callback(int event, int x, int y, int flags, void* 
             // skewness
             for (COLOR_TRIPLE_VECTOR::iterator iter = iter_begin; iter != iter_end; ++iter) {
                 skewness.add_pixel(
-                    pow(static_cast<int>(iter->m1)-average.mf1, 3),
-                    pow(static_cast<int>(iter->m2)-average.mf2, 3),
-                    pow(static_cast<int>(iter->m3)-average.mf3, 3) 
+                    pow(static_cast<double>(iter->m1)-mean.mf1, 3),
+                    pow(static_cast<double>(iter->m2)-mean.mf2, 3),
+                    pow(static_cast<double>(iter->m3)-mean.mf3, 3) 
                 );
             }
             skewness.calc_average();
@@ -751,9 +776,24 @@ void flood_image_interactive_callback(int event, int x, int y, int flags, void* 
             skewness.mf2 /= pow(variance.mf2, 1.5);
             skewness.mf3 /= pow(variance.mf3, 1.5);
 
-            average.print("\taverage ");
-            variance.print("\tvariance");
-            skewness.print("\tskewness");
+            //mean.print("\tmean    ");
+            //variance.print("\tvariance");
+            //skewness.print("\tskewness");
+
+            COLOR_TRIPLE upper, lower;
+            mvGetBoundsFromGaussian (mean, variance, skewness, upper, lower); 
+    
+            printf (
+                "HUE_MIN_1, %d\nHUE_MAX_1, %d\nSAT_MIN_1, %d\nSAT_MAX_1, %d\nVAL_MIN_1, %d\nVAL_MAX_1, %d\n", 
+                lower.m1, upper.m1, lower.m2, upper.m2, lower.m3, upper.m3
+                );
+
+            instance->hue_box[i]->HUE_MIN = lower.m1;
+            instance->hue_box[i]->HUE_MAX = upper.m1;
+            instance->hue_box[i]->SAT_MIN = lower.m2;
+            instance->hue_box[i]->SAT_MAX = upper.m2;
+            instance->hue_box[i]->VAL_MIN = lower.m3;
+            instance->hue_box[i]->VAL_MAX = upper.m3;            
         }
     }
 }
