@@ -104,7 +104,7 @@ int main( int argc, char** argv ) {
     IplImage* filter_img_2 = mvCreateImage ();
  
     /// execution
-    char c;
+    char c = 0;
     IplImage* frame;
 
     t_start = clock();
@@ -135,7 +135,12 @@ int main( int argc, char** argv ) {
         if (TEST) {             
         }
         else if (FLOOD) {
-            advanced_filter.flood_image(frame, filter_img, true);
+            if (c == 'L') { 
+                advanced_filter.flood_image(frame, filter_img, true);
+            }
+            else {
+                advanced_filter.flood_image(frame, filter_img);
+            }
             Morphology5.open(filter_img, filter_img);
             Morphology7.close(filter_img, filter_img);
             
@@ -179,9 +184,11 @@ int main( int argc, char** argv ) {
         nframes++;
         if (BREAK)
             c = cvWaitKey(0);
+        else if (LOAD)
+            c = cvWaitKey(66); // go for about 15 frames per sec
         else
             c = cvWaitKey(5);
-        
+
         if (c == 'q')
             break;
         else if (c == 'w') {

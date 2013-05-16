@@ -119,7 +119,6 @@ mvAdvancedColorFilter::mvAdvancedColorFilter (const char* settings_file) :
     }
 
     Training_Matrix.resize(NUM_INTERACTIVE_COLORS);
-    cvNamedWindow ("flood_image_callback");
     
 #ifdef USE_BGR_COLOR_SPACE
     printf ("mvAdvancedColorFilter is using BGR color space\n");
@@ -189,11 +188,12 @@ void mvAdvancedColorFilter::flood_image(IplImage* src, IplImage* dst, bool inter
         Current_Interactive_Color = 0;
         for (int i = 0; i < NUM_INTERACTIVE_COLORS; i++)
             Training_Matrix[i].clear();
+        cvNamedWindow ("flood_image_callback");
         cvSetMouseCallback("flood_image_callback", flood_image_interactive_callback, static_cast<void*>(this));
         cvShowImage("flood_image_callback", ds_scratch);
         printf ("Interactive mode is active.\n");
         printf ("Current Color is %d\n", Current_Interactive_Color);
-        //cvWaitKey(0);
+        cvWaitKey(0);
     }
 
     // go thru each active hue box and check if any of the models fit within the hue box
@@ -657,9 +657,9 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
         bool merged = false;
         COLOR_TRIPLE_VECTOR::iterator iter_end = color_triple_vector.end();
         for (COLOR_TRIPLE_VECTOR::iterator iter = color_triple_vector.begin(); iter != iter_end; ++iter) {
-            if (abs((int)iter->m1 - (int)color_triple.m1) < H_DIST &&
-                abs((int)iter->m2 - (int)color_triple.m2) < S_DIST &&
-                abs((int)iter->m3 - (int)color_triple.m3) < V_DIST
+            if (abs((int)iter->m1 - (int)color_triple.m1) < H_DIST/2 &&
+                abs((int)iter->m2 - (int)color_triple.m2) < S_DIST/2 &&
+                abs((int)iter->m3 - (int)color_triple.m3) < V_DIST/2
                 )
             {
                 printf ("merging HSV triplet #%d (%d %d %d) with #%d (%d %d %d)\n", 
@@ -793,7 +793,15 @@ void flood_image_interactive_callback(int event, int x, int y, int flags, void* 
             instance->hue_box[i]->SAT_MIN = lower.m2;
             instance->hue_box[i]->SAT_MAX = upper.m2;
             instance->hue_box[i]->VAL_MIN = lower.m3;
-            instance->hue_box[i]->VAL_MAX = upper.m3;            
+            instance->hue_box[i]->VAL_MAX = upper.m3;
+
+            // hack - for now lets base our color distance on the first color
+            if (i == 0) {
+                instance->H_DIST = upper.m1 - lower.m1;
+                instance->S_DIST = upper.m2 - lower.m2;
+                instance->V_DIST = upper.m3 - lower.m3;
+                printf ("H_DIST = %d\nS_DIST = %d\nV_DIST = %d\n", instance->H_DIST, instance->S_DIST, instance->V_DIST);
+            }
         }
     }
 }
