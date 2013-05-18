@@ -466,7 +466,7 @@ void mvAdvancedColorFilter::watershed(IplImage* src, IplImage* dst) {
     typedef std::vector<COLOR_POINT> COLOR_POINT_VECTOR;
     COLOR_POINT_VECTOR color_point_vector;
 
-    const int STEP_SIZE = 9;
+    const int STEP_SIZE = 7;
     unsigned char * ptr;
     for (int r = STEP_SIZE/2; r < ds_image->height - STEP_SIZE/2; r+=STEP_SIZE) {                         
         ptr = (unsigned char*) (ds_image->imageData + r*ds_image->widthStep);
@@ -498,13 +498,13 @@ void mvAdvancedColorFilter::watershed(IplImage* src, IplImage* dst) {
 
     // assign index numbers
     int curr_index = 10;
-    int limit = pair_difference_vector.size()/3;
+    int limit = pair_difference_vector.size()/2;
     for (int i = 0; i < limit; i++) {
         const int index1 = pair_difference_vector[i].m1;
         const int index2 = pair_difference_vector[i].m2;
         const int diff = pair_difference_vector[i].m3;
 
-        if (diff > 90 || curr_index > 250)
+        if (diff > 80 || curr_index > MAX_INDEX_NUMBER)
             break;
 
         const bool pixel1_unassigned = (color_point_vector[index1].first.index_number == 0);
@@ -536,11 +536,25 @@ void mvAdvancedColorFilter::watershed(IplImage* src, IplImage* dst) {
         }
     }
 
+    // clear segment_color_hash, then populate the hash with the needed triples
+    segment_color_hash.clear();
+    for (int i = 0; i < num_pixels; i++) {
+        int index_number = color_point_vector[i].first.index_number;
+        
+        if (index_number != 0) {
+            unsigned char index_char = static_cast<unsigned char>(index_number);
+            COLOR_TRIPLE T (0,0,0,index_number);
+            segment_color_hash.insert(make_pair(index_char,T));
+        }
+    }
+
+    // return curr_segment_iter to beginning
+    curr_segment_iter = segment_color_hash.begin();
+
     // create marker image and draw markers onto it
     // also draw marker positions onto src so we can see where the markers are
     cvZero (marker_img_32s);
-
-    printf ("Markers:\n");
+    //printf ("Markers:\n");
     for (int i = 0; i < num_pixels; i++) {
         COLOR_TRIPLE ct = color_point_vector[i].first;
         CvPoint C = color_point_vector[i].second;
@@ -548,40 +562,75 @@ void mvAdvancedColorFilter::watershed(IplImage* src, IplImage* dst) {
         int y = C.y*WATERSHED_DS_FACTOR;
 
         if (ct.index_number != 0) {
-            int *ptr = ((int*)(marker_img_32s->imageData + marker_img_32s->widthStep*y));
-            unsigned char* srcPtr = (unsigned char*)(src->imageData + src->widthStep*y + x*3);
+            int *ptr = &CV_IMAGE_ELEM(marker_img_32s, int, y, x);
+            unsigned char* srcPtr = &CV_IMAGE_ELEM(src, unsigned char, y, 3*x);
             
-            ptr[x] = static_cast<int>(ct.index_number);
+            *ptr = static_cast<int>(ct.index_number);
             srcPtr[0] = srcPtr[1] = srcPtr[2] = 255;
             srcPtr[-1]= srcPtr[-2]= srcPtr[-3]= 0;
             srcPtr[3] = srcPtr[4] = srcPtr[5] = 0;
         }
 
         //debug
-        printf ("pixel <%3d,%3d> (%3d,%3d,%3d) - %2d\n", x, y, ct.m1, ct.m2, ct.m3, ct.index_number);
+        //printf ("\tmarker: location <%3d,%3d>: color (%3d,%3d,%3d) - %2d\n", x, y, ct.m1, ct.m2, ct.m3, ct.index_number);
     }
 
     cvWatershed(ds_scratch_3, marker_img_32s);
 
-    int multiplier = 1;//curr_index / 250;
+    // go thru each pixel in the marker img and do two things
+    // 1. fill in ds_scratch so we can show it and stuff later
+    // 2. add each pixel from a segment to its entry in segment_color_hash
     for (int i = 0; i < marker_img_32s->height; i++) {
         for (int j = 0; j < marker_img_32s->width; j++) {
-            int index_number = CV_IMAGE_ELEM(marker_img_32s, int, i,j);
+            int index_number = CV_IMAGE_ELEM(marker_img_32s, int, i, j);
+            unsigned char* colorPtr = &CV_IMAGE_ELEM(ds_scratch_3, unsigned char, i, j*3);
             unsigned char* dstPtr = &CV_IMAGE_ELEM(ds_scratch, unsigned char, i, j);
-
-
 
             if (index_number == -1) {
                 *dstPtr = 0;
             }
             else {
-                *dstPtr = index_number*multiplier;
+                unsigned char index_char = static_cast<unsigned char>(index_number);
+                // 1.
+                *dstPtr = index_char * curr_index / MAX_INDEX_NUMBER;
+                // 2.
+                segment_color_hash[index_char].add_pixel(colorPtr[0],colorPtr[1],colorPtr[2]);
             }
+        }
+    }
+
+    printf ("Watershed Segments:\n");
+    // calculate the mean color profile of each segment
+    std::map<unsigned char,COLOR_TRIPLE>::iterator seg_iter = segment_color_hash.begin();
+    std::map<unsigned char,COLOR_TRIPLE>::iterator seg_iter_end = segment_color_hash.end();
+    for (; seg_iter != seg_iter_end; ++seg_iter) {
+        COLOR_TRIPLE* ct_ptr = &(seg_iter->second);
+        if (ct_ptr->n_pixels > 0) {
+            ct_ptr->calc_average();
+            printf ("\tSegment: index %d (%d pixels): (%3d,%3d,%3d)\n", ct_ptr->index_number, ct_ptr->n_pixels, ct_ptr->m1, ct_ptr->m2, ct_ptr->m3);
         }
     }
 
     upsample_to (dst);
     bin_Filter.stop();
+}
+
+bool mvAdvancedColorFilter::get_next_watershed_segment(IplImage* binary_img) {
+    assert (binary_img->width == marker_img_32s->width);
+    assert (binary_img->height == marker_img_32s->height);
+    
+    // check if we are out of segments
+    if (curr_segment_iter == segment_color_hash.end()) {
+        return false;
+    }
+
+    // get the index number of the current segment, then obtain a binary image which is 1 for each pixel
+    // on the watershed result that matches the index number, and 0 otherwise
+    int index_number = static_cast<int>(curr_segment_iter->second.index_number);
+    cvCmpS (marker_img_32s, index_number, binary_img, CV_CMP_EQ);
+
+    ++curr_segment_iter;
+    return true;
 }
 
 void mvAdvancedColorFilter::flood_image_internal() {

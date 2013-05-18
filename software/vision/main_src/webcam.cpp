@@ -148,9 +148,11 @@ int main( int argc, char** argv ) {
         }
         else if (WATERSHED) {
             advanced_filter.watershed(frame, filter_img);
+            advanced_filter.get_next_watershed_segment(filter_img_2);
 
             win1->showImage (frame);
-            win2->showImage (filter_img);   
+            win2->showImage (filter_img);
+            win3->showImage (filter_img_2);
         }
 
         if (GRAD) {
