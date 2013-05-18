@@ -148,11 +148,19 @@ int main( int argc, char** argv ) {
         }
         else if (WATERSHED) {
             advanced_filter.watershed(frame, filter_img);
-            advanced_filter.get_next_watershed_segment(filter_img_2);
-
             win1->showImage (frame);
-            win2->showImage (filter_img);
-            win3->showImage (filter_img_2);
+            
+            int seg = 1;
+            while ( advanced_filter.get_next_watershed_segment(filter_img_2) ) {
+                printf ("\nSegment %d\n", seg++);
+                win2->showImage (filter_img_2);
+
+                CvPoint centroid;
+                float angle;
+                contour_filter.find_rectangle(filter_img_2, centroid, angle);
+                win3->showImage (filter_img_2);
+                cvWaitKey(0);
+            }
         }
 
         if (GRAD) {
