@@ -147,9 +147,10 @@ int main( int argc, char** argv ) {
             win2->showImage (filter_img);
         }
         else if (WATERSHED) {
-            advanced_filter.watershed(frame, scratch_color_2);
-            
-            win2->showImage (scratch_color_2);   
+            advanced_filter.watershed(frame, filter_img);
+
+            win1->showImage (frame);
+            win2->showImage (filter_img);   
         }
 
         if (GRAD) {

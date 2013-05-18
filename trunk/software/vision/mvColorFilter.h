@@ -203,6 +203,11 @@ public:
         m3 = (m3*n_pixels + B.m3*B.n_pixels) / total;
         n_pixels = total;
     }
+    int diff (COLOR_TRIPLE T) {
+        return (abs(static_cast<int>(m1)-static_cast<int>(T.m1))
+              + abs(static_cast<int>(m2)-static_cast<int>(T.m2)) 
+              + abs(static_cast<int>(m3)-static_cast<int>(T.m3)));
+    }
     void print () {
         printf ("color_triplet #%2d (%d pixels): %d %d %d\n", index_number, n_pixels, m1, m2, m3);
     }
@@ -284,6 +289,12 @@ private:
     std::vector<COLOR_TRIPLE_VECTOR> Training_Matrix;
     int Current_Interactive_Color;
     static const int NUM_INTERACTIVE_COLORS = 2;
+    bool FLAG_DO_COLOR_ADJUSTMENT;
+    void perform_color_adjustment_internal ();
+
+    // these variables are used to support mvWaterShed
+    IplImage *ds_image, *marker_img_32s;
+    static const int WATERSHED_DS_FACTOR = 5;
 
     // profile bins
     PROFILE_BIN bin_Resize;
