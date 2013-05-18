@@ -105,6 +105,7 @@ void mvContours::get_hu_moments (CvSeq* contour1, HU_MOMENTS &hu_moments) {
 void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_index, double &best_match_diff, int method) {
     HU_MOMENTS hus_to_match;
     get_hu_moments (contour1, hus_to_match);
+    best_match_diff = 1000000;
 
 #ifdef MATCH_CONTOURS_DEBUG
     printf ("Matching Contours:\n");
@@ -133,9 +134,11 @@ void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_i
             best_match_diff = curr_diff;
         }
     }
+
+    printf ("Best Match Diff = %9.6lf\n", best_match_diff);
 }
 
-bool mvContours::find_rectangle (IplImage* img, CvPoint &centroid, float &angle, int method) {
+double mvContours::find_rectangle (IplImage* img, CvPoint &centroid, float &angle, int method) {
     assert (img != NULL);
     assert (img->nChannels == 1);
 
@@ -149,8 +152,8 @@ bool mvContours::find_rectangle (IplImage* img, CvPoint &centroid, float &angle,
         CV_CHAIN_APPROX_SIMPLE
     );
 
-    if (m_contours == NULL || m_contours->total < 6) {
-        return false;
+    if (m_contours == NULL || m_contours->total <= 6) {
+        return -1;
     }
 
     drawOntoImage (img);
@@ -163,5 +166,5 @@ bool mvContours::find_rectangle (IplImage* img, CvPoint &centroid, float &angle,
     // get the mathematical properties we want
     get_ellipse_parameters (img, m_contours, centroid, angle);
     cvClearSeq(m_contours);
-    return true;
+    return best_match_diff;
 }

@@ -615,7 +615,7 @@ void mvAdvancedColorFilter::watershed(IplImage* src, IplImage* dst) {
     bin_Filter.stop();
 }
 
-bool mvAdvancedColorFilter::get_next_watershed_segment(IplImage* binary_img) {
+bool mvAdvancedColorFilter::get_next_watershed_segment(IplImage* binary_img, COLOR_TRIPLE &T) {
     assert (binary_img->width == marker_img_32s->width);
     assert (binary_img->height == marker_img_32s->height);
     
@@ -627,6 +627,7 @@ bool mvAdvancedColorFilter::get_next_watershed_segment(IplImage* binary_img) {
     // get the index number of the current segment, then obtain a binary image which is 1 for each pixel
     // on the watershed result that matches the index number, and 0 otherwise
     int index_number = static_cast<int>(curr_segment_iter->second.index_number);
+    T = curr_segment_iter->second;
     cvCmpS (marker_img_32s, index_number, binary_img, CV_CMP_EQ);
 
     ++curr_segment_iter;
@@ -936,10 +937,13 @@ void mvAdvancedColorFilter::perform_color_adjustment_internal() {
         COLOR_TRIPLE upper, lower;
         mvGetBoundsFromGaussian (mean, variance, skewness, upper, lower); 
 
-        printf (
+        FILE *fp = fopen ("ADJUSTED_COLOR.csv", (i == 0) ? "w" : "a");
+        fprintf (fp, "ENABLE_BOX_%d, 1\nCOLOR_BOX_%d, UNKNOWN\n", i+1,i+1);
+        fprintf (fp,
             "HUE_MIN_1, %d\nHUE_MAX_1, %d\nSAT_MIN_1, %d\nSAT_MAX_1, %d\nVAL_MIN_1, %d\nVAL_MAX_1, %d\n", 
             lower.m1, upper.m1, lower.m2, upper.m2, lower.m3, upper.m3
             );
+        fclose(fp);
 
         hue_box[i]->HUE_MIN = lower.m1;
         hue_box[i]->HUE_MAX = upper.m1;
