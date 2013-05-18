@@ -150,17 +150,32 @@ int main( int argc, char** argv ) {
             advanced_filter.watershed(frame, filter_img);
             win1->showImage (frame);
             
-            int seg = 1;
-            while ( advanced_filter.get_next_watershed_segment(filter_img_2) ) {
-                printf ("\nSegment %d\n", seg++);
-                win2->showImage (filter_img_2);
+            int seg = 0;
+            COLOR_TRIPLE color;
+            CvPoint best_centroid;
+            float best_angle;
+            double best_shape_diff = 1000000;
+            double best_color_diff = 1000000;
 
+            while ( advanced_filter.get_next_watershed_segment(filter_img_2, color) ) {
+                printf ("\nSegment %d\n", ++seg);
+                printf ("Color (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
+                //win2->showImage(filter_img_2);
+            
                 CvPoint centroid;
                 float angle;
-                contour_filter.find_rectangle(filter_img_2, centroid, angle);
-                win3->showImage (filter_img_2);
-                cvWaitKey(0);
+                double shape_diff = contour_filter.find_rectangle(filter_img_2, centroid, angle);
+                if (seg == 1 || shape_diff < best_shape_diff) {
+                    best_shape_diff = shape_diff;
+                    best_centroid = centroid;
+                    best_angle = angle;
+                    cvCopy (filter_img_2, filter_img);
+                }
+                
+                //cvWaitKey(0);
             }
+
+            win3->showImage (filter_img);
         }
 
         if (GRAD) {

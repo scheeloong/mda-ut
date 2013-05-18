@@ -358,7 +358,7 @@ public:
     void filter(IplImage *src, IplImage* dst);
     void combined_filter(IplImage *src, IplImage* dst);
 
-    bool get_next_watershed_segment (IplImage* binary_img);
+    bool get_next_watershed_segment (IplImage* binary_img, COLOR_TRIPLE &T);
     friend void flood_image_interactive_callback(int event, int x, int y, int flags, void* param);
 };
 
