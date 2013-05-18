@@ -184,9 +184,14 @@ public:
         index_number = Index_Number;
     }
     void calc_average () {
-        m1 /= n_pixels;
-        m2 /= n_pixels;
-        m3 /= n_pixels;
+        if (n_pixels > 0) {
+            m1 /= n_pixels;
+            m2 /= n_pixels;
+            m3 /= n_pixels;
+        }
+        else {
+            m1 = m2 = m3 = 0;
+        }
     }
     void BGR_to_HSV () {
         unsigned char H,S,V;
@@ -202,6 +207,12 @@ public:
         m2 = (m2*n_pixels + B.m2*B.n_pixels) / total;
         m3 = (m3*n_pixels + B.m3*B.n_pixels) / total;
         n_pixels = total;
+    }
+    void add_pixel (int p1, int p2, int p3) {
+        m1 += p1;
+        m2 += p2;
+        m3 += p3;
+        n_pixels++;
     }
     int diff (COLOR_TRIPLE T) {
         return (abs(static_cast<int>(m1)-static_cast<int>(T.m1))
@@ -294,7 +305,12 @@ private:
 
     // these variables are used to support mvWaterShed
     IplImage *ds_image, *marker_img_32s;
+    //COLOR_TRIPLE_VECTOR segment_color_vector;
+    std::map<unsigned char,COLOR_TRIPLE> segment_color_hash;
+    std::map<unsigned char,COLOR_TRIPLE>::iterator curr_segment_iter;
+
     static const int WATERSHED_DS_FACTOR = 5;
+    static const int MAX_INDEX_NUMBER = 250;
 
     // profile bins
     PROFILE_BIN bin_Resize;
@@ -342,7 +358,7 @@ public:
     void filter(IplImage *src, IplImage* dst);
     void combined_filter(IplImage *src, IplImage* dst);
 
-
+    bool get_next_watershed_segment (IplImage* binary_img);
     friend void flood_image_interactive_callback(int event, int x, int y, int flags, void* param);
 };
 
