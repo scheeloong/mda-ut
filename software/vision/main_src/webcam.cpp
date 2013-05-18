@@ -151,27 +151,40 @@ int main( int argc, char** argv ) {
             win1->showImage (frame);
             
             int seg = 0;
+            const double COLOR_DIVISION_FACTOR = 200;
             COLOR_TRIPLE color;
+            //COLOR_TRIPLE color_template (160,95,157,0);
+            COLOR_TRIPLE color_template (155,120,60,0);
+
             CvPoint best_centroid;
             float best_angle;
-            double best_shape_diff = 1000000;
-            double best_color_diff = 1000000;
-
+            double best_diff = 1000000;
+            
             while ( advanced_filter.get_next_watershed_segment(filter_img_2, color) ) {
                 printf ("\nSegment %d\n", ++seg);
-                printf ("Color (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
-                //win2->showImage(filter_img_2);
-            
+                printf ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
+
+                // calculate color diff
+                double color_diff = static_cast<double>(color.diff(color_template)) / COLOR_DIVISION_FACTOR;
+
+                // calculate shape diff
                 CvPoint centroid;
                 float angle;
-                double shape_diff = contour_filter.find_rectangle(filter_img_2, centroid, angle);
-                if (seg == 1 || shape_diff < best_shape_diff) {
-                    best_shape_diff = shape_diff;
+                double shape_diff = contour_filter.match_rectangle(filter_img_2, centroid, angle);
+                if (shape_diff < 0) // i still dont know how this is possible
+                    continue;
+
+                double diff = color_diff + shape_diff;
+                //double diff = shape_diff;
+                printf ("\tColor_Diff=%6.4f  Shape_Diff=%6.4f\n\tFinal_Diff=%6.4f\n", color_diff, shape_diff, diff);
+
+                if (seg == 1 || diff < best_diff) {
+                    best_diff = diff;
                     best_centroid = centroid;
                     best_angle = angle;
                     cvCopy (filter_img_2, filter_img);
                 }
-                
+
                 //cvWaitKey(0);
             }
 
@@ -203,7 +216,7 @@ int main( int argc, char** argv ) {
         else if (RECT) {
             CvPoint centroid;
             float angle;
-            contour_filter.find_rectangle(filter_img, centroid, angle);
+            contour_filter.match_rectangle(filter_img, centroid, angle);
             win3->showImage (filter_img);
         }
         

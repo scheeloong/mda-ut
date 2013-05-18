@@ -94,8 +94,11 @@ void show_HSV_call_back (int event, int x, int y, int flags, void* param) {
 // param must be the IplImage* pointer, with HSV color space    
     IplImage* img = (IplImage*) param;
     unsigned char * imgPtr;
+
+    if (img == NULL) // if the image was already deallocated
+        return;
     
-    if (event == CV_EVENT_LBUTTONDOWN || event == CV_EVENT_RBUTTONDOWN) {
+    if (event == CV_EVENT_LBUTTONDOWN) {
         // print the HSV values at x,y
         imgPtr = (unsigned char*) img->imageData + y*img->widthStep + x*img->nChannels;
         unsigned char b = imgPtr[0];
