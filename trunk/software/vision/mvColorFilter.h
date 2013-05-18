@@ -308,6 +308,7 @@ private:
     //COLOR_TRIPLE_VECTOR segment_color_vector;
     std::map<unsigned char,COLOR_TRIPLE> segment_color_hash;
     std::map<unsigned char,COLOR_TRIPLE>::iterator curr_segment_iter;
+    unsigned curr_segment_index;
 
     static const int WATERSHED_DS_FACTOR = 5;
     static const int MAX_INDEX_NUMBER = 250;

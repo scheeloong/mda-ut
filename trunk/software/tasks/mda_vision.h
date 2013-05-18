@@ -11,6 +11,7 @@
 #include "mvColorFilter.h"
 #include "mvLines.h"
 #include "mvShapes.h"
+#include "mvContours.h"
 
 enum MDA_VISION_RETURN_CODE  {
     FATAL_ERROR,        // defaults to this if you dont change the value
@@ -93,8 +94,10 @@ public:
 class MDA_VISION_MODULE_TEST : public MDA_VISION_MODULE_BASE {
     static const char MDA_VISION_TEST_SETTINGS[];
     mvWindow window;
+    mvWindow window2;
     mvHSVFilter HSVFilter;
     mvAdvancedColorFilter AdvancedColorFilter;
+    mvContours Contours;
     mvHoughLines HoughLines;
     mvKMeans KMeans;
     mvLines lines;
@@ -102,7 +105,8 @@ class MDA_VISION_MODULE_TEST : public MDA_VISION_MODULE_BASE {
     mvHistogramFilter histogram_filter;
 
     IplImage* color_img;
-    IplImage* filtered_img;
+    IplImage* gray_img;
+    IplImage* gray_img_2;
 
     PROFILE_BIN bin_test;
     

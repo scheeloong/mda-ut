@@ -53,7 +53,7 @@ public:
     mvContours ();
     ~mvContours ();
 
-    double find_rectangle (IplImage* img, CvPoint &centroid, float &angle, int method=CONTOURS_MATCH_RECIP);
+    double match_rectangle (IplImage* img, CvPoint &centroid, float &angle, int method=CONTOURS_MATCH_RECIP);
 
     void drawOntoImage (IplImage* img) { draw_contours (m_contours, img); }        
 

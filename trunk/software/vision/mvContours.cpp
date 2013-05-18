@@ -118,6 +118,10 @@ void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_i
         for (int j = 0; j < 7; j++) {
             double m1 = dslog(hus_to_match[j]);
             double m2 = dslog(hus_template[j]);
+            if (isnan(m1))
+                m1 = 1.0;
+            if (isnan(m2))
+                m2 = 1.0;
 
             if (method == CONTOURS_MATCH_NORMAL)
                 curr_diff += fabs(m1 - m2);
@@ -138,7 +142,7 @@ void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_i
     printf ("Best Match Diff = %9.6lf\n", best_match_diff);
 }
 
-double mvContours::find_rectangle (IplImage* img, CvPoint &centroid, float &angle, int method) {
+double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &angle, int method) {
     assert (img != NULL);
     assert (img->nChannels == 1);
 

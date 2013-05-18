@@ -550,6 +550,7 @@ void mvAdvancedColorFilter::watershed(IplImage* src, IplImage* dst) {
 
     // return curr_segment_iter to beginning
     curr_segment_iter = segment_color_hash.begin();
+    curr_segment_index = 0;
 
     // create marker image and draw markers onto it
     // also draw marker positions onto src so we can see where the markers are
@@ -620,8 +621,9 @@ bool mvAdvancedColorFilter::get_next_watershed_segment(IplImage* binary_img, COL
     assert (binary_img->height == marker_img_32s->height);
     
     // check if we are out of segments
-    if (curr_segment_iter == segment_color_hash.end()) {
-        return false;
+    //if (curr_segment_iter == segment_color_hash.end()) {
+    if (curr_segment_index >= segment_color_hash.size()) {
+        return false;   
     }
 
     // get the index number of the current segment, then obtain a binary image which is 1 for each pixel
@@ -631,6 +633,7 @@ bool mvAdvancedColorFilter::get_next_watershed_segment(IplImage* binary_img, COL
     cvCmpS (marker_img_32s, index_number, binary_img, CV_CMP_EQ);
 
     ++curr_segment_iter;
+    ++curr_segment_index;
     return true;
 }
 
