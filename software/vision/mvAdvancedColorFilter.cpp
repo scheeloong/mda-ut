@@ -118,8 +118,20 @@ mvAdvancedColorFilter::mvAdvancedColorFilter (const char* settings_file) :
         KERNEL_AREA = valid_count;
     }
 
+    FLAG_DO_COLOR_ADJUSTMENT = false;
     Training_Matrix.resize(NUM_INTERACTIVE_COLORS);
     
+    ds_image = cvCreateImage (
+        cvSize(ds_scratch_3->width/WATERSHED_DS_FACTOR, ds_scratch_3->height/WATERSHED_DS_FACTOR),
+        IPL_DEPTH_8U,
+        3
+    );
+    marker_img_32s = cvCreateImage(
+        cvGetSize(ds_scratch_3),
+        IPL_DEPTH_32S,
+        1
+    );
+
 #ifdef USE_BGR_COLOR_SPACE
     printf ("mvAdvancedColorFilter is using BGR color space\n");
 #else
@@ -134,7 +146,10 @@ mvAdvancedColorFilter::~mvAdvancedColorFilter () {
         delete hue_box[i];
 
     cvReleaseImage (&ds_scratch_3);
-    cvReleaseImageHeader (&ds_scratch);
+    cvReleaseImage (&ds_scratch);
+
+    cvReleaseImage (&ds_image);
+    cvReleaseImage (&marker_img_32s);
 }
 
 void mvAdvancedColorFilter::mean_shift(IplImage* src, IplImage* dst) {
@@ -180,6 +195,8 @@ void mvAdvancedColorFilter::flood_image(IplImage* src, IplImage* dst, bool inter
     bin_Filter.start();
     cvt_img_to_HSV(ds_scratch_3, ds_scratch_3);
 
+    meanshift_internal(src);
+
     // this does most of the work
     flood_image_internal();
 
@@ -194,6 +211,11 @@ void mvAdvancedColorFilter::flood_image(IplImage* src, IplImage* dst, bool inter
         printf ("Interactive mode is active.\n");
         printf ("Current Color is %d\n", Current_Interactive_Color);
         cvWaitKey(0);
+
+        if (FLAG_DO_COLOR_ADJUSTMENT) {
+            perform_color_adjustment_internal ();
+            FLAG_DO_COLOR_ADJUSTMENT = false;
+        }
     }
 
     // go thru each active hue box and check if any of the models fit within the hue box
@@ -420,72 +442,146 @@ void mvAdvancedColorFilter::colorfilter_internal_adaptive_hue() {
     }
 }
 
+bool m3_less_than (COLOR_TRIPLE T1, COLOR_TRIPLE T2) {
+    return T1.m3 < T2.m3;
+}
 
 void mvAdvancedColorFilter::watershed(IplImage* src, IplImage* dst) {
+// attemps to use cvWaterShed to segment the image
+    assert (src->nChannels == 3);
+    assert (dst->nChannels == 1);
+
+    bin_Filter.start();
+
     downsample_from (src);
     cvt_img_to_HSV(ds_scratch_3, ds_scratch_3);
 
-    meanshift_internal(src);  
+    //meanshift_internal(src);
 
-    IplImage* hue_img = cvCreateImage(cvGetSize(ds_scratch), IPL_DEPTH_8U, 1);
-    IplImage* sat_img = cvCreateImage(cvGetSize(ds_scratch), IPL_DEPTH_8U, 1);
-    unsigned char *imgPtr, *huePtr, *satPtr;
-    for (int r = 0; r < ds_scratch_3->height; r++) {                         
-        imgPtr = (unsigned char*) (ds_scratch_3->imageData + r*ds_scratch_3->widthStep);
-        huePtr = (unsigned char*) (hue_img->imageData + r*hue_img->widthStep);
-        satPtr = (unsigned char*) (sat_img->imageData + r*sat_img->widthStep);
-        for (int c = 0; c < ds_scratch_3->width; c++) {
-            // copy hue and sat over if S/V min fulfilled
-            //if (imgPtr[1] >= S_MIN && imgPtr[2] >= V_MIN) {
-                *huePtr = imgPtr[0];
-                *satPtr = imgPtr[1];
-            //}
+    // massively downsample - this smoothes the image
+    cvResize (ds_scratch_3, ds_image, CV_INTER_LINEAR);
+    
+    // Sample the image at certain intervals - add sample to an array
+    typedef std::pair<COLOR_TRIPLE, CvPoint> COLOR_POINT;
+    typedef std::vector<COLOR_POINT> COLOR_POINT_VECTOR;
+    COLOR_POINT_VECTOR color_point_vector;
+
+    const int STEP_SIZE = 9;
+    unsigned char * ptr;
+    for (int r = STEP_SIZE/2; r < ds_image->height - STEP_SIZE/2; r+=STEP_SIZE) {                         
+        ptr = (unsigned char*) (ds_image->imageData + r*ds_image->widthStep);
+        for (int c = STEP_SIZE/2; c < ds_image->width - STEP_SIZE/2; c+=STEP_SIZE) {
+            unsigned char* cptr = ptr + 3*c;
+            COLOR_TRIPLE ct (cptr[0],cptr[1],cptr[2],0);
+
+            color_point_vector.push_back(make_pair(ct, cvPoint(c,r)));
+        }
+    }
+
+    int num_pixels = color_point_vector.size();
+
+    // go thru each pair of pixels and calculate their color difference and add it to a vector
+    // the pixels are represented by their indices in the color_point_vector
+    // we'll use a vector of triples - m1 = index1, m2 = index2, m3 = diff
+    COLOR_TRIPLE_VECTOR pair_difference_vector;
+    for (int i = 0; i < num_pixels; i++) {
+        for (int j = i+1; j < num_pixels; j++) {
+            int diff = color_point_vector[i].first.diff(color_point_vector[j].first);
+            COLOR_TRIPLE ct (i, j, diff, 0);
+
+            pair_difference_vector.push_back(ct);
+        }
+    }
+
+    // now sort the pair_difference_vector
+    std::sort(pair_difference_vector.begin(), pair_difference_vector.end(), m3_less_than);
+
+    // assign index numbers
+    int curr_index = 10;
+    int limit = pair_difference_vector.size()/3;
+    for (int i = 0; i < limit; i++) {
+        const int index1 = pair_difference_vector[i].m1;
+        const int index2 = pair_difference_vector[i].m2;
+        const int diff = pair_difference_vector[i].m3;
+
+        if (diff > 90 || curr_index > 250)
+            break;
+
+        const bool pixel1_unassigned = (color_point_vector[index1].first.index_number == 0);
+        const bool pixel2_unassigned = (color_point_vector[index2].first.index_number == 0);
+
+        // if neither pixel has been assigned a number
+        if (pixel1_unassigned && pixel2_unassigned) {
+            // assign both pixels the next number
+            color_point_vector[index1].first.index_number = curr_index;
+            color_point_vector[index2].first.index_number = curr_index;
+            curr_index += 10;
+        }
+        // if first has been assigned a number
+        else if (!pixel1_unassigned && pixel2_unassigned) {
+            // assign second the same number
+            color_point_vector[index2].first.index_number = color_point_vector[index1].first.index_number;
+        }
+        else if (pixel1_unassigned && !pixel2_unassigned) {
+            color_point_vector[index1].first.index_number = color_point_vector[index2].first.index_number;
+        }
+        // both have numbers
+        else {
+            // go thru entire color_point_vector. Every pixel with the second index gets the first index instead
+            const unsigned index_to_find = color_point_vector[index2].first.index_number;
+            const unsigned index_to_set = color_point_vector[index1].first.index_number;
+            for (int j = 0; j < num_pixels; j++) 
+                if (color_point_vector[j].first.index_number == index_to_find)
+                    color_point_vector[j].first.index_number = index_to_set;
+        }
+    }
+
+    // create marker image and draw markers onto it
+    // also draw marker positions onto src so we can see where the markers are
+    cvZero (marker_img_32s);
+
+    printf ("Markers:\n");
+    for (int i = 0; i < num_pixels; i++) {
+        COLOR_TRIPLE ct = color_point_vector[i].first;
+        CvPoint C = color_point_vector[i].second;
+        int x = C.x*WATERSHED_DS_FACTOR;
+        int y = C.y*WATERSHED_DS_FACTOR;
+
+        if (ct.index_number != 0) {
+            int *ptr = ((int*)(marker_img_32s->imageData + marker_img_32s->widthStep*y));
+            unsigned char* srcPtr = (unsigned char*)(src->imageData + src->widthStep*y + x*3);
             
-            imgPtr += 3;
-            huePtr++;
-            satPtr++;
+            ptr[x] = static_cast<int>(ct.index_number);
+            srcPtr[0] = srcPtr[1] = srcPtr[2] = 255;
+            srcPtr[-1]= srcPtr[-2]= srcPtr[-3]= 0;
+            srcPtr[3] = srcPtr[4] = srcPtr[5] = 0;
+        }
+
+        //debug
+        printf ("pixel <%3d,%3d> (%3d,%3d,%3d) - %2d\n", x, y, ct.m1, ct.m2, ct.m3, ct.index_number);
+    }
+
+    cvWatershed(ds_scratch_3, marker_img_32s);
+
+    int multiplier = 1;//curr_index / 250;
+    for (int i = 0; i < marker_img_32s->height; i++) {
+        for (int j = 0; j < marker_img_32s->width; j++) {
+            int index_number = CV_IMAGE_ELEM(marker_img_32s, int, i,j);
+            unsigned char* dstPtr = &CV_IMAGE_ELEM(ds_scratch, unsigned char, i, j);
+
+
+
+            if (index_number == -1) {
+                *dstPtr = 0;
+            }
+            else {
+                *dstPtr = index_number*multiplier;
+            }
         }
     }
 
-    IplImage* hue_derivative = cvCreateImage(cvGetSize(hue_img), IPL_DEPTH_16S, 1);
-    IplImage* sat_derivative = cvCreateImage(cvGetSize(hue_img), IPL_DEPTH_16S, 1);
-    cvZero(hue_derivative);
-
-    cvSobel (hue_img, hue_derivative, 1,1, 3);
-    cvAbs(hue_derivative,hue_derivative);
-    cvSobel (sat_img, sat_derivative, 1,1, 3);
-    cvAbs(sat_derivative, sat_derivative);
-    cvAdd(hue_derivative,sat_derivative,hue_derivative);
-    //cvCopy(sat_derivative,hue_derivative);
-
-    CvScalar avg_s, stdev_s;
-    cvAvgSdv(hue_derivative, &avg_s, &stdev_s);
-    short avg = avg_s.val[0];
-    short stdev = stdev_s.val[0];
-    short thresh = avg+stdev;
-    
-    short* shortPtr;
-    for (int r = 0; r < hue_derivative->height; r++) {                         
-        shortPtr = (short*) (hue_derivative->imageData + r*hue_derivative->widthStep);
-        satPtr = (unsigned char*) (sat_img->imageData + r*sat_img->widthStep);
-        for (int c = 0; c < hue_derivative->width; c++) {
-            if (*shortPtr > thresh)
-                *satPtr = 255;
-            else 
-                *satPtr = 0; //(unsigned char) (*shortPtr *127 / thresh);
-            shortPtr++;
-            satPtr++;
-        }
-    }
-
-    cvNamedWindow("mvAdvancedColorFilter",CV_WINDOW_AUTOSIZE);
-    cvShowImage("mvAdvancedColorFilter", sat_img);
-    
-    cvReleaseImage(&hue_derivative);
-    cvReleaseImage(&sat_derivative);
-    cvReleaseImage(&hue_img);
-    cvReleaseImage(&sat_img);
-    upsample_to_3 (dst);
+    upsample_to (dst);
+    bin_Filter.stop();
 }
 
 void mvAdvancedColorFilter::flood_image_internal() {
@@ -498,11 +594,11 @@ void mvAdvancedColorFilter::flood_image_internal() {
     cvZero (ds_scratch);
 
     // this loop does most of the work. It calls flood from pixel in a grid pattern along the image
-    unsigned index_number = 30;
+    unsigned index_number = 10;
     for (int r = 3; r < ds_scratch->height - 3; r+=20) {                         
         for (int c = 3; c < ds_scratch->width - 3; c+=20) {
             if (flood_from_pixel (r,c, index_number))
-                index_number += 15;
+                index_number += 5;
         }
 
         if (index_number > 255) {
@@ -734,74 +830,81 @@ void flood_image_interactive_callback(int event, int x, int y, int flags, void* 
         printf ("Current Color is %d\n", instance->Current_Interactive_Color);
     }
     else if (event == CV_EVENT_MBUTTONDOWN) {
-        printf ("M mouse\n");
+        if (instance->FLAG_DO_COLOR_ADJUSTMENT)
+            instance->FLAG_DO_COLOR_ADJUSTMENT = false;
+        else
+            instance->FLAG_DO_COLOR_ADJUSTMENT = true;
+        
+        printf ("Re-Adjust Color Filters on Exit = %s\n", instance->FLAG_DO_COLOR_ADJUSTMENT ? "TRUE" : "FALSE");
+    }
+}
 
-        // go thru each of the training matrix's COLOR_TRIPLE_VECTOR's and calculate statistics
-        for (int i = 0; i < mvAdvancedColorFilter::NUM_INTERACTIVE_COLORS; i++) {
-            printf ("INTERACTIVE_COLOR %d\n", i);
-            COLOR_TRIPLE_VECTOR::iterator iter_begin = instance->Training_Matrix[i].begin();
-            COLOR_TRIPLE_VECTOR::iterator iter_end = instance->Training_Matrix[i].end();
-            COLOR_TRIPLE_FLOAT mean, variance, skewness;
+void mvAdvancedColorFilter::perform_color_adjustment_internal() {
+    // go thru each of the training matrix's COLOR_TRIPLE_VECTOR's and calculate statistics
+    for (int i = 0; i < mvAdvancedColorFilter::NUM_INTERACTIVE_COLORS; i++) {
+        printf ("INTERACTIVE_COLOR %d\n", i);
+        COLOR_TRIPLE_VECTOR::iterator iter_begin = Training_Matrix[i].begin();
+        COLOR_TRIPLE_VECTOR::iterator iter_end = Training_Matrix[i].end();
+        COLOR_TRIPLE_FLOAT mean, variance, skewness;
 
-            // mean
-            for (COLOR_TRIPLE_VECTOR::iterator iter = iter_begin; iter != iter_end; ++iter) {
-                mean.add_pixel (
-                    static_cast<int>(iter->m1),
-                    static_cast<int>(iter->m2),
-                    static_cast<int>(iter->m3)
-                );
-            }
-            mean.calc_average();
+        // mean
+        for (COLOR_TRIPLE_VECTOR::iterator iter = iter_begin; iter != iter_end; ++iter) {
+            mean.add_pixel (
+                static_cast<int>(iter->m1),
+                static_cast<int>(iter->m2),
+                static_cast<int>(iter->m3)
+            );
+        }
+        mean.calc_average();
 
-            // variance
-            for (COLOR_TRIPLE_VECTOR::iterator iter = iter_begin; iter != iter_end; ++iter) {
-                variance.add_pixel(
-                    pow(static_cast<double>(iter->m1)-mean.mf1, 2),
-                    pow(static_cast<double>(iter->m2)-mean.mf2, 2),
-                    pow(static_cast<double>(iter->m3)-mean.mf3, 2) 
-                );
-            }
-            variance.calc_average();
+        // variance
+        for (COLOR_TRIPLE_VECTOR::iterator iter = iter_begin; iter != iter_end; ++iter) {
+            variance.add_pixel(
+                pow(static_cast<double>(iter->m1)-mean.mf1, 2),
+                pow(static_cast<double>(iter->m2)-mean.mf2, 2),
+                pow(static_cast<double>(iter->m3)-mean.mf3, 2) 
+            );
+        }
+        variance.calc_average();
 
-            // skewness
-            for (COLOR_TRIPLE_VECTOR::iterator iter = iter_begin; iter != iter_end; ++iter) {
-                skewness.add_pixel(
-                    pow(static_cast<double>(iter->m1)-mean.mf1, 3),
-                    pow(static_cast<double>(iter->m2)-mean.mf2, 3),
-                    pow(static_cast<double>(iter->m3)-mean.mf3, 3) 
-                );
-            }
-            skewness.calc_average();
-            skewness.mf1 /= pow(variance.mf1, 1.5);
-            skewness.mf2 /= pow(variance.mf2, 1.5);
-            skewness.mf3 /= pow(variance.mf3, 1.5);
+        // skewness
+        for (COLOR_TRIPLE_VECTOR::iterator iter = iter_begin; iter != iter_end; ++iter) {
+            skewness.add_pixel(
+                pow(static_cast<double>(iter->m1)-mean.mf1, 3),
+                pow(static_cast<double>(iter->m2)-mean.mf2, 3),
+                pow(static_cast<double>(iter->m3)-mean.mf3, 3) 
+            );
+        }
+        skewness.calc_average();
+        skewness.mf1 /= pow(variance.mf1, 1.5);
+        skewness.mf2 /= pow(variance.mf2, 1.5);
+        skewness.mf3 /= pow(variance.mf3, 1.5);
 
-            //mean.print("\tmean    ");
-            //variance.print("\tvariance");
-            //skewness.print("\tskewness");
+        //mean.print("\tmean    ");
+        //variance.print("\tvariance");
+        //skewness.print("\tskewness");
 
-            COLOR_TRIPLE upper, lower;
-            mvGetBoundsFromGaussian (mean, variance, skewness, upper, lower); 
-    
-            printf (
-                "HUE_MIN_1, %d\nHUE_MAX_1, %d\nSAT_MIN_1, %d\nSAT_MAX_1, %d\nVAL_MIN_1, %d\nVAL_MAX_1, %d\n", 
-                lower.m1, upper.m1, lower.m2, upper.m2, lower.m3, upper.m3
-                );
+        COLOR_TRIPLE upper, lower;
+        mvGetBoundsFromGaussian (mean, variance, skewness, upper, lower); 
 
-            instance->hue_box[i]->HUE_MIN = lower.m1;
-            instance->hue_box[i]->HUE_MAX = upper.m1;
-            instance->hue_box[i]->SAT_MIN = lower.m2;
-            instance->hue_box[i]->SAT_MAX = upper.m2;
-            instance->hue_box[i]->VAL_MIN = lower.m3;
-            instance->hue_box[i]->VAL_MAX = upper.m3;
+        printf (
+            "HUE_MIN_1, %d\nHUE_MAX_1, %d\nSAT_MIN_1, %d\nSAT_MAX_1, %d\nVAL_MIN_1, %d\nVAL_MAX_1, %d\n", 
+            lower.m1, upper.m1, lower.m2, upper.m2, lower.m3, upper.m3
+            );
 
-            // hack - for now lets base our color distance on the first color
-            if (i == 0) {
-                instance->H_DIST = upper.m1 - lower.m1;
-                instance->S_DIST = upper.m2 - lower.m2;
-                instance->V_DIST = upper.m3 - lower.m3;
-                printf ("H_DIST = %d\nS_DIST = %d\nV_DIST = %d\n", instance->H_DIST, instance->S_DIST, instance->V_DIST);
-            }
+        hue_box[i]->HUE_MIN = lower.m1;
+        hue_box[i]->HUE_MAX = upper.m1;
+        hue_box[i]->SAT_MIN = lower.m2;
+        hue_box[i]->SAT_MAX = upper.m2;
+        hue_box[i]->VAL_MIN = lower.m3;
+        hue_box[i]->VAL_MAX = upper.m3;
+
+        // hack - for now lets base our color distance on the first color
+        if (i == 0) {
+            H_DIST = upper.m1 - lower.m1;
+            S_DIST = upper.m2 - lower.m2;
+            V_DIST = upper.m3 - lower.m3;
+            printf ("H_DIST = %d\nS_DIST = %d\nV_DIST = %d\n", H_DIST, S_DIST, V_DIST);
         }
     }
 }

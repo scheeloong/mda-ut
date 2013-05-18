@@ -31,6 +31,10 @@ void mvContours::get_ellipse_parameters (IplImage* img, CvSeq* contour1, CvPoint
     printf("Area is: %5.2fpxsq\n",Area);
 }
 
+/*void mvContours::get_hu_moments (CvSeq* contour1, std::vector<int> &hu_moments) {
+
+}*/
+
 float mvContours::match_contour (CvSeq* contour1, CvSeq* contour2) {
     return 1;
 }
