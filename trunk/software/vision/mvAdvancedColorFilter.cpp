@@ -474,7 +474,7 @@ void mvAdvancedColorFilter::watershed(IplImage* src, IplImage* dst) {
             unsigned char* cptr = ptr + 3*c;
             COLOR_TRIPLE ct (cptr[0],cptr[1],cptr[2],0);
 
-            color_point_vector.push_back(make_pair(ct, cvPoint(c,r)));
+            color_point_vector.push_back(std::make_pair(ct, cvPoint(c,r)));
         }
     }
 
@@ -544,7 +544,7 @@ void mvAdvancedColorFilter::watershed(IplImage* src, IplImage* dst) {
         if (index_number != 0) {
             unsigned char index_char = static_cast<unsigned char>(index_number);
             COLOR_TRIPLE T (0,0,0,index_number);
-            segment_color_hash.insert(make_pair(index_char,T));
+            segment_color_hash.insert(std::make_pair(index_char,T));
         }
     }
 
