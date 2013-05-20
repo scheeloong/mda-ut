@@ -308,15 +308,16 @@ private:
     void perform_color_adjustment_internal ();
 
     // variables and functions for mvWaterShed
-    static const int WATERSHED_DS_FACTOR = 5;
+    static const int WATERSHED_DS_FACTOR = 4;
     static const unsigned MAX_INDEX_NUMBER = 250;
-    IplImage *ds_image, *marker_img_32s;
+    IplImage *ds_image_3c, *ds_image_nonedge, *marker_img_32s;
     std::map<unsigned char,COLOR_TRIPLE> segment_color_hash;
     std::map<unsigned char,COLOR_TRIPLE>::iterator curr_segment_iter;
     unsigned curr_segment_index;
-    unsigned max_index_number;
+    unsigned final_index_number;
 
     void watershed_markers_internal (IplImage* src); // place markers
+    void watershed_markers_internal2 (IplImage* src); // place markers
     void watershed_filter_internal (IplImage* src, IplImage* dst); // run watershed
 
     // profile bins

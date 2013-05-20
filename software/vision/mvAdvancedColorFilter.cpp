@@ -121,16 +121,23 @@ mvAdvancedColorFilter::mvAdvancedColorFilter (const char* settings_file) :
     FLAG_DO_COLOR_ADJUSTMENT = false;
     Training_Matrix.resize(NUM_INTERACTIVE_COLORS);
     
-    ds_image = cvCreateImage (
+    ds_image_3c = cvCreateImage (
         cvSize(ds_scratch_3->width/WATERSHED_DS_FACTOR, ds_scratch_3->height/WATERSHED_DS_FACTOR),
         IPL_DEPTH_8U,
         3
+    );
+    ds_image_nonedge = cvCreateImage (
+        cvSize(ds_scratch_3->width/WATERSHED_DS_FACTOR, ds_scratch_3->height/WATERSHED_DS_FACTOR),
+        IPL_DEPTH_8U,
+        1
     );
     marker_img_32s = cvCreateImage(
         cvGetSize(ds_scratch_3),
         IPL_DEPTH_32S,
         1
     );
+
+    srand(time(NULL));
 
 #ifdef USE_BGR_COLOR_SPACE
     printf ("mvAdvancedColorFilter is using BGR color space\n");
@@ -148,7 +155,8 @@ mvAdvancedColorFilter::~mvAdvancedColorFilter () {
     cvReleaseImage (&ds_scratch_3);
     cvReleaseImage (&ds_scratch);
 
-    cvReleaseImage (&ds_image);
+    cvReleaseImage (&ds_image_3c);
+    cvReleaseImage (&ds_image_nonedge);
     cvReleaseImage (&marker_img_32s);
 }
 
@@ -563,11 +571,11 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
     } while (!Point_Array.empty());    
 #endif
 
-    int final_index_number;
+    int max_index_number;
     
     // if the box doesnt contain enough pixels, throw it out
     if (color_triple.n_pixels < 50) {//(unsigned)ds_scratch->width*ds_scratch->height/300) {
-        final_index_number = 0;
+        max_index_number = 0;
     }
     else {
         color_triple.calc_average();
@@ -593,11 +601,11 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
                     color_triple.index_number, color_triple.m1, color_triple.m2, color_triple.m3
                     );
             min_diff_iter->merge(color_triple);
-            final_index_number = min_diff_iter->index_number;
+            max_index_number = min_diff_iter->index_number;
         }
         else {
             color_triple_vector.push_back(color_triple);
-            final_index_number = color_triple.index_number;
+            max_index_number = color_triple.index_number;
         }*/
 #ifdef USE_BGR_COLOR_SPACE
 #else
@@ -617,14 +625,14 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
                     );
 
                 iter->merge(color_triple);
-                final_index_number = iter->index_number;
+                max_index_number = iter->index_number;
                 merged = true;
                 break;
             }
         }
         if (!merged) {
             color_triple_vector.push_back(color_triple);
-            final_index_number = color_triple.index_number;
+            max_index_number = color_triple.index_number;
         }
     }
 
@@ -633,7 +641,7 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
         resPtr = (unsigned char*) (ds_scratch->imageData + r*widthStep);
         for (int c = 0; c < ds_scratch->width; c++) {
             if (*resPtr == TEMP_PIXEL)
-                *resPtr = final_index_number;
+                *resPtr = max_index_number;
             resPtr++;
         }
     }
@@ -643,7 +651,7 @@ bool mvAdvancedColorFilter::flood_from_pixel(int R, int C, unsigned index_number
     cvWaitKey(10);
 #endif
 
-    return (final_index_number != 0);
+    return (max_index_number != 0);
 }
 
 void flood_image_interactive_callback(int event, int x, int y, int flags, void* param) {
