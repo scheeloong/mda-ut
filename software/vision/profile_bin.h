@@ -27,7 +27,7 @@ class PROFILE_BIN {
     }
 
     ~PROFILE_BIN () {
-        if (on) {
+        if (on && nCalls > 0) {
             printf ("%-30s: ", binName);
             printf ("%6d calls; ", nCalls);
             printf ("%7.3f secs total time; ", totalTime);
