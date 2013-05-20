@@ -149,6 +149,7 @@ int main( int argc, char** argv ) {
         else if (WATERSHED) {
             advanced_filter.watershed(frame, filter_img);
             win1->showImage (frame);
+            win2->showImage (filter_img);
             
             int seg = 0;
             const double COLOR_DIVISION_FACTOR = 200;
@@ -171,8 +172,8 @@ int main( int argc, char** argv ) {
                 CvPoint centroid;
                 float angle;
                 double shape_diff = contour_filter.match_rectangle(filter_img_2, centroid, angle);
-                if (shape_diff < 0) // i still dont know how this is possible
-                    continue;
+                //if (shape_diff < 0) // i still dont know how this is possible
+                //    continue;
 
                 double diff = color_diff + shape_diff;
                 //double diff = shape_diff;

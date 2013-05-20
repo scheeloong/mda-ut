@@ -296,26 +296,32 @@ private:
     IplImage* ds_scratch_3;   // downsampled scratch image 3 channel
     IplImage* ds_scratch;   // 1 channel
 
-    // these variables are used to support flood_image_interactive_callback
+    // variable and functions for flood_image algorithm and flood_image_interactive_callback
     std::vector<COLOR_TRIPLE_VECTOR> Training_Matrix;
     int Current_Interactive_Color;
     static const int NUM_INTERACTIVE_COLORS = 2;
     bool FLAG_DO_COLOR_ADJUSTMENT;
+
+    void meanshift_internal(IplImage* scratch);
+    void flood_image_internal ();
+    bool flood_from_pixel(int r, int c, unsigned index_number);
     void perform_color_adjustment_internal ();
 
-    // these variables are used to support mvWaterShed
+    // variables and functions for mvWaterShed
+    static const int WATERSHED_DS_FACTOR = 5;
+    static const unsigned MAX_INDEX_NUMBER = 250;
     IplImage *ds_image, *marker_img_32s;
-    //COLOR_TRIPLE_VECTOR segment_color_vector;
     std::map<unsigned char,COLOR_TRIPLE> segment_color_hash;
     std::map<unsigned char,COLOR_TRIPLE>::iterator curr_segment_iter;
     unsigned curr_segment_index;
+    unsigned max_index_number;
 
-    static const int WATERSHED_DS_FACTOR = 5;
-    static const int MAX_INDEX_NUMBER = 250;
+    void watershed_markers_internal (IplImage* src); // place markers
+    void watershed_filter_internal (IplImage* src, IplImage* dst); // run watershed
 
     // profile bins
     PROFILE_BIN bin_Resize;
-    PROFILE_BIN bin_MeanShift;
+    PROFILE_BIN bin_Seed;
     PROFILE_BIN bin_Filter;
     
     void downsample_from(IplImage* src) {    // downsamples src to internal scratch image
@@ -344,13 +350,10 @@ private:
     bool check_and_accumulate_pixel_HSV (unsigned char* pixel, unsigned char* ref_pixel,
                                     COLOR_TRIPLE &triple);
     
-    void meanshift_internal(IplImage* scratch);
     void colorfilter_internal();
     void colorfilter_internal_adaptive_hue();
-    void flood_image_internal ();
-    bool flood_from_pixel(int r, int c, unsigned index_number);
 
-public: 
+public:
     mvAdvancedColorFilter (const char* settings_file); //constructor
     ~mvAdvancedColorFilter(); // destructor
     void mean_shift(IplImage* src, IplImage* dst);

@@ -19,6 +19,10 @@ class mvContours {
     CvMemStorage* m_storage;
     CvSeq* m_contours;
 
+    PROFILE_BIN bin_contours;
+    PROFILE_BIN bin_match;
+    PROFILE_BIN bin_calc;
+
 private:
     // approximates a rounded contour with a polygon
     CvSeq* approx_poly (CvSeq* contour_to_approx, int accuracy) { 

@@ -20,7 +20,11 @@ double dslog (double x) { // double signed log
     return (sign * log(fabs(x)));
 }
 
-mvContours::mvContours() {
+mvContours::mvContours() :
+    bin_contours(PROFILE_BIN("mvContours - Contour Finding")),
+    bin_match(PROFILE_BIN("mvContours - Matching")),
+    bin_calc(PROFILE_BIN("mvContours - Calculation"))
+{
     m_storage = cvCreateMemStorage(0);
     m_contours = NULL;
 
@@ -119,9 +123,9 @@ void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_i
             double m1 = dslog(hus_to_match[j]);
             double m2 = dslog(hus_template[j]);
             if (isnan(m1))
-                m1 = 1.0;
+                m1 = -100000000;
             if (isnan(m2))
-                m2 = 1.0;
+                m2 = -100000000;
 
             if (method == CONTOURS_MATCH_NORMAL)
                 curr_diff += fabs(m1 - m2);
@@ -145,8 +149,9 @@ void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_i
 double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &angle, int method) {
     assert (img != NULL);
     assert (img->nChannels == 1);
-
+    
     // find the contours
+    bin_contours.start();
     cvFindContours (
         img,
         m_storage,
@@ -155,20 +160,34 @@ double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &ang
         CV_RETR_EXTERNAL,
         CV_CHAIN_APPROX_SIMPLE
     );
-
+    bin_contours.stop();
+    
     if (m_contours == NULL || m_contours->total <= 6) {
+        printf ("match_rectangle: contour too short, returning.\n");
         return -1;
     }
 
     drawOntoImage (img);
 
+    // check the contour's area to make sure it isnt too small
+    double area = cvContourArea(m_contours);
+    if (area < img->width*img->height/10000) {
+        printf ("match_rectangle: contour area too small, returning.\n");
+        return -1;
+    }
+
     // do some kind of matching to ensure the contour is a rectangle
     int match_index;
     double best_match_diff;
+    bin_match.start();
     match_contour_with_database (m_contours, match_index, best_match_diff, method);
+    bin_match.stop();
 
     // get the mathematical properties we want
+    bin_calc.start();
     get_ellipse_parameters (img, m_contours, centroid, angle);
+    bin_calc.stop();
+
     cvClearSeq(m_contours);
     return best_match_diff;
 }
