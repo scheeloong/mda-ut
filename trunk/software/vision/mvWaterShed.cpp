@@ -26,6 +26,7 @@ void mvAdvancedColorFilter::watershed(IplImage* src, IplImage* dst) {
 
     bin_Seed.start();
     watershed_markers_internal(src);
+    //watershed_markers_internal2(src);
     bin_Seed.stop();
 
     bin_Filter.start();
@@ -43,22 +44,65 @@ void mvAdvancedColorFilter::watershed(IplImage* src, IplImage* dst) {
 
 void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
     // massively downsample - this smoothes the image
-    cvResize (ds_scratch_3, ds_image, CV_INTER_LINEAR);
+    cvResize (ds_scratch_3, ds_image_3c, CV_INTER_LINEAR);
     
     // Sample the image at certain intervals - add sample to an array
     typedef std::pair<COLOR_TRIPLE, CvPoint> COLOR_POINT;
     typedef std::vector<COLOR_POINT> COLOR_POINT_VECTOR;
     COLOR_POINT_VECTOR color_point_vector;
 
-    const int STEP_SIZE = 7;
-    unsigned char * ptr;
-    for (int r = STEP_SIZE/2; r < ds_image->height - STEP_SIZE/2; r+=STEP_SIZE) {                         
-        ptr = (unsigned char*) (ds_image->imageData + r*ds_image->widthStep);
-        for (int c = STEP_SIZE/2; c < ds_image->width - STEP_SIZE/2; c+=STEP_SIZE) {
-            unsigned char* cptr = ptr + 3*c;
-            COLOR_TRIPLE ct (cptr[0],cptr[1],cptr[2],0);
+    // generate the "nonedge image" which is 1 if the pixel isnt an edge image in ds_image_3c
+   
+    cvCvtColor (ds_image_3c, ds_image_nonedge, CV_BGR2GRAY);
+    cvSmooth (ds_image_nonedge, ds_image_nonedge, CV_GAUSSIAN, 3);
 
-            color_point_vector.push_back(std::make_pair(ct, cvPoint(c,r)));
+    mvGradient (ds_image_nonedge, ds_image_nonedge, 5, 5);
+    CvScalar mean = cvAvg (ds_image_nonedge);
+    cvThreshold (ds_image_nonedge, ds_image_nonedge, mean.val[0], 255, CV_THRESH_BINARY);
+
+    mvDilate (ds_image_nonedge, ds_image_nonedge, 3, 3);
+    cvNot (ds_image_nonedge, ds_image_nonedge);
+
+    cvResize (ds_image_nonedge, ds_scratch, CV_INTER_NN);
+
+    for (int i = 0; i < ds_scratch->height; i++) {
+        for (int j = 0; j < ds_scratch->width; j++) {
+            unsigned char* srcPtr = &CV_IMAGE_ELEM(ds_scratch, unsigned char, i, j);
+            unsigned char* dstPtr = &CV_IMAGE_ELEM(src, unsigned char, i, 3*j);
+        
+            if (*srcPtr != 0) {
+                dstPtr[0] = 0;
+                dstPtr[1] = 0;
+                dstPtr[2] = 200;
+            }
+        }
+    }
+
+    // sample the image like this
+    // 1. randomly generate an x,y coordinate.
+    // 2. Check if the coordinate is a non-edge pixel on the nonedge image.
+    // 3. If so add it to color_point_vector and
+    // 4. If so mark coordinates near it as edge on the nonege image
+    for (int i = 0; i < 50; i++) {
+        int x = rand() % ds_image_nonedge->width;
+        int y = rand() % ds_image_nonedge->height;
+
+        unsigned char nonedge = CV_IMAGE_ELEM(ds_image_nonedge, unsigned char, y, x);
+        if (nonedge != 0) {
+            // calculate corresponding large image coords
+            int xl = x * WATERSHED_DS_FACTOR;
+            int yl = y * WATERSHED_DS_FACTOR;
+            // 3.
+            unsigned char* colorPtr = &CV_IMAGE_ELEM(ds_scratch_3, unsigned char, yl, 3*xl);
+            COLOR_TRIPLE ct (colorPtr[0], colorPtr[1], colorPtr[2], 0);;
+            color_point_vector.push_back(std::make_pair(ct, cvPoint(xl,yl)));
+            // 4.
+            cvCircle (ds_image_nonedge, cvPoint(x,y), 5, CV_RGB(0,0,0), -1);
+            // 5. mark the pixel on src
+            unsigned char* srcPtr = &CV_IMAGE_ELEM(src, unsigned char, yl, 3*xl);
+            srcPtr[0] = 0;
+            srcPtr[1] = 255;
+            srcPtr[2] = 0;            
         }
     }
 
@@ -81,14 +125,14 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
     std::sort(pair_difference_vector.begin(), pair_difference_vector.end(), m3_less_than);
 
     // assign index numbers
-    max_index_number = 10;
+    final_index_number = 5;
     int limit = pair_difference_vector.size()/2;
     for (int i = 0; i < limit; i++) {
         const int index1 = pair_difference_vector[i].m1;
         const int index2 = pair_difference_vector[i].m2;
         const int diff = pair_difference_vector[i].m3;
 
-        if (diff > 80 || max_index_number > MAX_INDEX_NUMBER)
+        if (diff > 80 || final_index_number > MAX_INDEX_NUMBER)
             break;
 
         const bool pixel1_unassigned = (color_point_vector[index1].first.index_number == 0);
@@ -97,9 +141,9 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
         // if neither pixel has been assigned a number
         if (pixel1_unassigned && pixel2_unassigned) {
             // assign both pixels the next number
-            color_point_vector[index1].first.index_number = max_index_number;
-            color_point_vector[index2].first.index_number = max_index_number;
-            max_index_number += 10;
+            color_point_vector[index1].first.index_number = final_index_number;
+            color_point_vector[index2].first.index_number = final_index_number;
+            final_index_number += 10;
         }
         // if first has been assigned a number
         else if (!pixel1_unassigned && pixel2_unassigned) {
@@ -139,20 +183,55 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
     for (int i = 0; i < num_pixels; i++) {
         COLOR_TRIPLE ct = color_point_vector[i].first;
         CvPoint C = color_point_vector[i].second;
-        int x = C.x*WATERSHED_DS_FACTOR;
-        int y = C.y*WATERSHED_DS_FACTOR;
+        int x = C.x;//*WATERSHED_DS_FACTOR;
+        int y = C.y;//*WATERSHED_DS_FACTOR;
 
         if (ct.index_number != 0) {
             int *ptr = &CV_IMAGE_ELEM(marker_img_32s, int, y, x);
             unsigned char* srcPtr = &CV_IMAGE_ELEM(src, unsigned char, y, 3*x);
             
             *ptr = static_cast<int>(ct.index_number);
-            srcPtr[0] = srcPtr[1] = srcPtr[2] = 255;
-            srcPtr[-1]= srcPtr[-2]= srcPtr[-3]= 0;
-            srcPtr[3] = srcPtr[4] = srcPtr[5] = 0;
+            srcPtr[0] = 255;
+            srcPtr[1] = 0;
+            srcPtr[2] = 255;
         }
         //debug
         //printf ("\tmarker: location <%3d,%3d>: color (%3d,%3d,%3d) - %2d\n", x, y, ct.m1, ct.m2, ct.m3, ct.index_number);
+    }
+}
+
+
+void mvAdvancedColorFilter::watershed_markers_internal2 (IplImage* src) {
+    cvResize (ds_scratch_3, ds_image_3c, CV_INTER_LINEAR);
+    
+    cvCvtColor (ds_image_3c, ds_image_nonedge, CV_BGR2GRAY);
+
+    mvGradient (ds_image_nonedge, ds_image_nonedge, 5, 5);
+/*
+    CvScalar mean, stdev;
+    cvAvgSdv (ds_image_nonedge, &mean, &stdev);
+    double thresh = static_cast<double>(mean.val[0]+1.0*stdev.val[0]);
+    cvThreshold (ds_image_nonedge, ds_image_nonedge, thresh, 255, CV_THRESH_BINARY);
+*/
+    CvScalar mean = cvAvg (ds_image_nonedge);
+    cvThreshold (ds_image_nonedge, ds_image_nonedge, mean.val[0], 255, CV_THRESH_BINARY);
+
+    mvDilate (ds_image_nonedge, ds_image_nonedge, 5, 5);
+    cvNot (ds_image_nonedge, ds_image_nonedge);
+
+    cvResize (ds_image_nonedge, ds_scratch, CV_INTER_NN);
+
+    for (int i = 0; i < ds_scratch->height; i++) {
+        for (int j = 0; j < ds_scratch->width; j++) {
+            unsigned char* srcPtr = &CV_IMAGE_ELEM(ds_scratch, unsigned char, i, j);
+            unsigned char* dstPtr = &CV_IMAGE_ELEM(ds_scratch_3, unsigned char, i, 3*j);
+        
+            if (*srcPtr != 0) {
+                dstPtr[0] = 0;
+                dstPtr[1] = 0;
+                dstPtr[2] = 200;
+            }
+        }
     }
 }
 
@@ -174,7 +253,7 @@ void mvAdvancedColorFilter::watershed_filter_internal (IplImage* src, IplImage* 
             else {
                 unsigned char index_char = static_cast<unsigned char>(index_number);
                 // 1.
-                *dstPtr = index_char * max_index_number / MAX_INDEX_NUMBER;
+                *dstPtr = index_char * final_index_number / MAX_INDEX_NUMBER;
                 // 2.
                 segment_color_hash[index_char].add_pixel(colorPtr[0],colorPtr[1],colorPtr[2]);
             }
