@@ -2,17 +2,19 @@
 
 //#define MATCH_CONTOURS_DEBUG
 
+#define CONTOUR_IMG_PREFIX "../vision/contour_images/"
+
 const char* mvContours::contour_rect_images[] = {
-    "../contour_images/Rect01.png",
-    "../contour_images/Rect02.png",
-    "../contour_images/Rect03.png",
-    "../contour_images/Rect04.png",
-    "../contour_images/Rect05.png",
-    "../contour_images/Rect06.png",
-    "../contour_images/Rect07.png",
-    "../contour_images/Rect08.png",
-    "../contour_images/Rect09.png",
-    "../contour_images/Rect10.png"
+    CONTOUR_IMG_PREFIX "Rect01.png",
+    CONTOUR_IMG_PREFIX "Rect02.png",
+    CONTOUR_IMG_PREFIX "Rect03.png",
+    CONTOUR_IMG_PREFIX "Rect04.png",
+    CONTOUR_IMG_PREFIX "Rect05.png",
+    CONTOUR_IMG_PREFIX "Rect06.png",
+    CONTOUR_IMG_PREFIX "Rect07.png",
+    CONTOUR_IMG_PREFIX "Rect08.png",
+    CONTOUR_IMG_PREFIX "Rect09.png",
+    CONTOUR_IMG_PREFIX "Rect10.png"
 };
 
 double dslog (double x) { // double signed log
