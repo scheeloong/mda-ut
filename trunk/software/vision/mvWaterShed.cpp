@@ -54,11 +54,12 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
     // generate the "nonedge image" which is 1 if the pixel isnt an edge image in ds_image_3c
    
     cvCvtColor (ds_image_3c, ds_image_nonedge, CV_BGR2GRAY);
-    cvSmooth (ds_image_nonedge, ds_image_nonedge, CV_GAUSSIAN, 3);
+    cvSmooth (ds_image_nonedge, ds_image_nonedge, CV_GAUSSIAN, 5);
 
-    mvGradient (ds_image_nonedge, ds_image_nonedge, 5, 5);
-    CvScalar mean = cvAvg (ds_image_nonedge);
-    cvThreshold (ds_image_nonedge, ds_image_nonedge, mean.val[0], 255, CV_THRESH_BINARY);
+    mvGradient (ds_image_nonedge, ds_image_nonedge, 3, 3);
+    CvScalar mean, stdev;
+    cvAvgSdv (ds_image_nonedge, &mean, &stdev);
+    cvThreshold (ds_image_nonedge, ds_image_nonedge, mean.val[0]+stdev.val[0], 255, CV_THRESH_BINARY);
 
     mvDilate (ds_image_nonedge, ds_image_nonedge, 3, 3);
     cvNot (ds_image_nonedge, ds_image_nonedge);
@@ -83,7 +84,7 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
     // 2. Check if the coordinate is a non-edge pixel on the nonedge image.
     // 3. If so add it to color_point_vector and
     // 4. If so mark coordinates near it as edge on the nonege image
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 150; i++) {
         int x = rand() % ds_image_nonedge->width;
         int y = rand() % ds_image_nonedge->height;
 
@@ -97,16 +98,25 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
             COLOR_TRIPLE ct (colorPtr[0], colorPtr[1], colorPtr[2], 0);;
             color_point_vector.push_back(std::make_pair(ct, cvPoint(xl,yl)));
             // 4.
-            cvCircle (ds_image_nonedge, cvPoint(x,y), 5, CV_RGB(0,0,0), -1);
-            // 5. mark the pixel on src
-            unsigned char* srcPtr = &CV_IMAGE_ELEM(src, unsigned char, yl, 3*xl);
-            srcPtr[0] = 0;
-            srcPtr[1] = 255;
-            srcPtr[2] = 0;            
+            cvCircle (ds_image_nonedge, cvPoint(x,y), 3, CV_RGB(0,0,0), -1);          
+        }
+    }
+
+    // the color point vector will have too many pixels that are really similar - get rid of some by merging
+    for (unsigned i = 0; i < color_point_vector.size(); i++) {
+        for (unsigned j = i+1; j < color_point_vector.size(); j++) {
+            if (color_point_vector[i].first.diff(color_point_vector[j].first) < 20 &&
+                abs(color_point_vector[i].second.x - color_point_vector[j].second.x) + 
+                abs(color_point_vector[i].second.y - color_point_vector[j].second.y) < ds_scratch_3->width/2
+                ) {
+                color_point_vector[i].first.merge(color_point_vector[j].first);
+                color_point_vector.erase(color_point_vector.begin()+j);
+            }
         }
     }
 
     int num_pixels = color_point_vector.size();
+    printf ("Candidate Pixels for Markers = %d\n", num_pixels);
 
     // go thru each pair of pixels and calculate their color difference and add it to a vector
     // the pixels are represented by their indices in the color_point_vector
@@ -125,12 +135,18 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
     std::sort(pair_difference_vector.begin(), pair_difference_vector.end(), m3_less_than);
 
     // assign index numbers
-    final_index_number = 5;
-    int limit = pair_difference_vector.size()/2;
+    printf ("Diffs:\n");
+    final_index_number = 4;
+    int limit = pair_difference_vector.size();
     for (int i = 0; i < limit; i++) {
         const int index1 = pair_difference_vector[i].m1;
         const int index2 = pair_difference_vector[i].m2;
         const int diff = pair_difference_vector[i].m3;
+
+        printf ("\tDiff (%3d,%3d) = ", index1, index2);
+        for (int j = 0; j < diff; j+=2)
+            printf ("#");
+        printf ("\n");
 
         if (diff > 80 || final_index_number > MAX_INDEX_NUMBER)
             break;
@@ -143,7 +159,7 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
             // assign both pixels the next number
             color_point_vector[index1].first.index_number = final_index_number;
             color_point_vector[index2].first.index_number = final_index_number;
-            final_index_number += 10;
+            final_index_number += 5;
         }
         // if first has been assigned a number
         else if (!pixel1_unassigned && pixel2_unassigned) {
@@ -164,6 +180,13 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
         }
     }
 
+    for (int i = 0; i < num_pixels; i++) {
+        if (color_point_vector[i].first.index_number == 0) {
+            color_point_vector[i].first.index_number = final_index_number;
+            final_index_number += 5;
+        }
+    }
+
     // clear segment_color_hash, then populate the hash with the needed triples
     segment_color_hash.clear();
     for (int i = 0; i < num_pixels; i++) {
@@ -179,7 +202,7 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
     // zero marker image and draw markers onto it
     // also draw marker positions onto src so we can see where the markers are
     cvZero (marker_img_32s);
-    //printf ("Markers:\n");
+    printf ("Markers:\n");
     for (int i = 0; i < num_pixels; i++) {
         COLOR_TRIPLE ct = color_point_vector[i].first;
         CvPoint C = color_point_vector[i].second;
@@ -196,7 +219,7 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
             srcPtr[2] = 255;
         }
         //debug
-        //printf ("\tmarker: location <%3d,%3d>: color (%3d,%3d,%3d) - %2d\n", x, y, ct.m1, ct.m2, ct.m3, ct.index_number);
+        printf ("\tmarker: location <%3d,%3d>: color (%3d,%3d,%3d) - %2d\n", x, y, ct.m1, ct.m2, ct.m3, ct.index_number);
     }
 }
 
@@ -253,7 +276,7 @@ void mvAdvancedColorFilter::watershed_filter_internal (IplImage* src, IplImage* 
             else {
                 unsigned char index_char = static_cast<unsigned char>(index_number);
                 // 1.
-                *dstPtr = index_char * final_index_number / MAX_INDEX_NUMBER;
+                *dstPtr = index_char * MAX_INDEX_NUMBER / final_index_number;
                 // 2.
                 segment_color_hash[index_char].add_pixel(colorPtr[0],colorPtr[1],colorPtr[2]);
             }

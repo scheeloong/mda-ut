@@ -172,8 +172,8 @@ int main( int argc, char** argv ) {
                 CvPoint centroid;
                 float angle;
                 double shape_diff = contour_filter.match_rectangle(filter_img_2, centroid, angle);
-                //if (shape_diff < 0) // i still dont know how this is possible
-                //    continue;
+                if (shape_diff < 0) // error from the shape matching
+                    continue;
 
                 double diff = color_diff + shape_diff;
                 //double diff = shape_diff;
