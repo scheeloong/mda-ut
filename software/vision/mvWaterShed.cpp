@@ -66,12 +66,13 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
 
     cvResize (ds_image_nonedge, ds_scratch, CV_INTER_NN);
 
+    // draw the bad pixels on the image so we can see them
     for (int i = 0; i < ds_scratch->height; i++) {
         for (int j = 0; j < ds_scratch->width; j++) {
             unsigned char* srcPtr = &CV_IMAGE_ELEM(ds_scratch, unsigned char, i, j);
-            unsigned char* dstPtr = &CV_IMAGE_ELEM(src, unsigned char, i, 3*j);
         
-            if (*srcPtr != 0) {
+            if (*srcPtr == 0) {
+                unsigned char* dstPtr = &CV_IMAGE_ELEM(src, unsigned char, i, 3*j);
                 dstPtr[0] = 0;
                 dstPtr[1] = 0;
                 dstPtr[2] = 200;
