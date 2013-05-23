@@ -66,7 +66,6 @@ public:
         assert (src != NULL);
         assert (src->nChannels == 3);
         
-        
         clear_data();
         primary_filter (src);
         MDA_VISION_RETURN_CODE retval = calc_vci ();
@@ -202,14 +201,19 @@ class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
     float m_angle_alt;
 
     mvWindow window;
+    mvWindow window2;
     mvHSVFilter HSVFilter;
     mvBinaryMorphology Morphology;
     mvBinaryMorphology Morphology2;    
+    mvAdvancedColorFilter advanced_filter;
+    mvContours contour_filter;
     mvHoughLines HoughLines;
     mvKMeans KMeans;
-    mvAdvancedColorFilter AdvancedColorFilter;
-
     mvLines lines;
+    
+    IplImage* color_img;
+    IplImage* gray_img;
+    IplImage* gray_img_2;
     
     IplImage* filtered_img;
 

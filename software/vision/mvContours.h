@@ -40,7 +40,7 @@ private:
             ); 
     }
 
-    void get_ellipse_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &angle);
+    void get_ellipse_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &length, float &angle);
 
     void get_hu_moments (CvSeq* contour1, HU_MOMENTS& hu_moments);
     
@@ -61,7 +61,7 @@ public:
     mvContours ();
     ~mvContours ();
 
-    double match_rectangle (IplImage* img, CvPoint &centroid, float &angle, int method=CONTOURS_MATCH_RECIP);
+    double match_rectangle (IplImage* img, CvPoint &centroid, float &length, float &angle, int method=CONTOURS_MATCH_RECIP);
 
     void drawOntoImage (IplImage* img) { draw_contours (m_contours, img); }        
 

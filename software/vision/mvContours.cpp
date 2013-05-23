@@ -97,7 +97,7 @@ mvContours::~mvContours() {
     cvReleaseMemStorage (&m_storage);
 }
 
-void mvContours::get_ellipse_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &angle) {
+void mvContours::get_ellipse_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &length, float &angle) {
     assert (contour1->total > 6); // needed by cvFitEllipse2
 
     CvBox2D ellipse = cvFitEllipse2(contour1);
@@ -107,9 +107,7 @@ void mvContours::get_ellipse_parameters (IplImage* img, CvSeq* contour1, CvPoint
     if (static_cast<int>(angle) > 90) angle -= 180;
     else if (static_cast<int>(angle) < -90) angle += 180;
 
-
     // RZ - I think this can be removed after a bit more testing
-    float Area = cvContourArea(contour1);
     CvMoments mom;
     cvMoments(contour1, &mom);
 
@@ -117,18 +115,18 @@ void mvContours::get_ellipse_parameters (IplImage* img, CvSeq* contour1, CvPoint
     int y = static_cast<int>(mom.m01/mom.m00);
     centroid.x = x - img->width*0.5;
     centroid.y = y - img->height*0.5;
+    length = 0.6 * ellipse.size.height;
 
     printf("Angle is: %5.2f\n", angle);
     printf("Alt Center is: (%d, %d)\n", x, y);
 
     // draw a line to indicate the angle
     CvPoint p0, p1;
-    int delta_x = 100 * -sin(angle*CV_PI/180.f);
-    int delta_y = 100 * cos(angle*CV_PI/180.f);
+    int delta_x = length/2 * -sin(angle*CV_PI/180.f);
+    int delta_y = length/2 * cos(angle*CV_PI/180.f);
     p0.x = x - delta_x;  p0.y = y - delta_y;
     p1.x = x + delta_x;  p1.y = y + delta_y;
     cvLine (img, p0, p1, CV_RGB(50,50,50), 2);
-    //printf("Area is: %5.2fpxsq\n",Area);
 }
 
 void mvContours::get_hu_moments (CvSeq* contour1, HU_MOMENTS &hu_moments) {
@@ -180,7 +178,7 @@ void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_i
     printf ("Best Match Diff = %9.6lf\n", best_match_diff);
 }
 
-double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &angle, int method) {
+double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &length, float &angle, int method) {
     assert (img != NULL);
     assert (img->nChannels == 1);
     
@@ -219,7 +217,7 @@ double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &ang
 
     // get the mathematical properties we want
     bin_calc.start();
-    get_ellipse_parameters (img, m_contours, centroid, angle);
+    get_ellipse_parameters (img, m_contours, centroid, length, angle);
     bin_calc.stop();
 
     cvClearSeq(m_contours);
