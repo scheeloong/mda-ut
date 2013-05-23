@@ -12,9 +12,13 @@ static const int CONTOURS_MATCH_FRACTION = 2;
 
 class mvContours {
     // list of images that contain objects to match against
-    static const int NUM_CONTOUR_IMAGES = 10;
+    static const int NUM_CONTOUR_RECT_IMAGES = 10;
     static const char* contour_rect_images[];
-    std::vector<HU_MOMENTS> hu_moments_vector;
+    std::vector<HU_MOMENTS> hu_moments_rect_vector;
+
+    static const int NUM_CONTOUR_CIRC_IMAGES = 2;
+    static const char* contour_circ_images[];
+    std::vector<HU_MOMENTS> hu_moments_circ_vector;
 
     CvMemStorage* m_storage;
     CvSeq* m_contours;
@@ -41,7 +45,7 @@ private:
     void get_hu_moments (CvSeq* contour1, HU_MOMENTS& hu_moments);
     
     // match the hu moments of the contour against all the ones in hu_moments_vector
-    void match_contour_with_database (CvSeq* contour1, int &best_match_index, double &best_match_diff, int method);
+    void match_contour_with_database (CvSeq* contour1, int &best_match_index, double &best_match_diff, int method, std::vector<HU_MOMENTS> hu_moments_vector);
     
     void draw_contours (CvSeq* contours_to_draw, IplImage* img) {
         cvDrawContours (

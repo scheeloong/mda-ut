@@ -17,6 +17,11 @@ const char* mvContours::contour_rect_images[] = {
     CONTOUR_IMG_PREFIX "Rect10.png"
 };
 
+const char* mvContours::contour_circ_images[] = {
+    CONTOUR_IMG_PREFIX "circ01.png",
+    CONTOUR_IMG_PREFIX "circ02.png"
+};
+
 double dslog (double x) { // double signed log
     double sign = static_cast<double>(x>0) - static_cast<double>(x<0);
     return (sign * log(fabs(x)));
@@ -30,8 +35,8 @@ mvContours::mvContours() :
     m_storage = cvCreateMemStorage(0);
     m_contours = NULL;
 
-    // iterate in reverse dir because we push back onto the hu_moments_vector
-    for (int i = NUM_CONTOUR_IMAGES-1; i >= 0; i--) {
+    // iterate in reverse dir because we push back onto the hu_moments_rect_vector
+    for (int i = NUM_CONTOUR_RECT_IMAGES-1; i >= 0; i--) {
         IplImage* img = cvLoadImage(contour_rect_images[i], CV_LOAD_IMAGE_GRAYSCALE);
         cvFindContours (
             img,
@@ -50,12 +55,39 @@ mvContours::mvContours() :
             // get the hu moments and add it to the vector
             HU_MOMENTS h;
             get_hu_moments (m_contours, h);
-            hu_moments_vector.push_back(h);
+            hu_moments_rect_vector.push_back(h);
             // clear sequence for next loop
             cvClearSeq(m_contours);
         }
         cvReleaseImage(&img);
     }
+
+    for (int i = NUM_CONTOUR_CIRC_IMAGES-1; i >= 0; i--) {
+        IplImage* img = cvLoadImage(contour_circ_images[i], CV_LOAD_IMAGE_GRAYSCALE);
+        cvFindContours (
+            img,
+            m_storage,
+            &m_contours,
+            sizeof(CvContour),
+            CV_RETR_EXTERNAL,
+            CV_CHAIN_APPROX_SIMPLE
+        );
+
+        if (m_contours == NULL || m_contours->total == 0) {
+            printf ("ERROR: No contours found when loading contour_image %s\n", contour_rect_images[i]);
+            exit(1);
+        }
+        else {
+            // get the hu moments and add it to the vector
+            HU_MOMENTS h;
+            get_hu_moments (m_contours, h);
+            hu_moments_circ_vector.push_back(h);
+            // clear sequence for next loop
+            cvClearSeq(m_contours);
+        }
+        cvReleaseImage(&img);
+    }
+
 
     // return used memory to storage
     cvClearMemStorage(m_storage);
@@ -108,7 +140,7 @@ void mvContours::get_hu_moments (CvSeq* contour1, HU_MOMENTS &hu_moments) {
     hu_moments = std::vector<double>(hus, hus+sizeof(hus)/sizeof(double));
 }
 
-void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_index, double &best_match_diff, int method) {
+void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_index, double &best_match_diff, int method, std::vector<HU_MOMENTS> hu_moments_vector) {
     HU_MOMENTS hus_to_match;
     get_hu_moments (contour1, hus_to_match);
     best_match_diff = 1000000;
@@ -116,7 +148,7 @@ void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_i
 #ifdef MATCH_CONTOURS_DEBUG
     printf ("Matching Contours:\n");
 #endif
-    for (int i = 0; i < NUM_CONTOUR_IMAGES; i++) {
+    for (unsigned i = 0; i < hu_moments_vector.size(); i++) {
         HU_MOMENTS hus_template = hu_moments_vector[i];
         double curr_diff = 0;
 
@@ -182,7 +214,7 @@ double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &ang
     int match_index;
     double best_match_diff;
     bin_match.start();
-    match_contour_with_database (m_contours, match_index, best_match_diff, method);
+    match_contour_with_database (m_contours, match_index, best_match_diff, method, hu_moments_rect_vector);
     bin_match.stop();
 
     // get the mathematical properties we want
