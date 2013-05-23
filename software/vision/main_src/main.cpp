@@ -60,11 +60,12 @@ int main (int argc, char** argv) {
     window.showImage(colourResize);
     printf ("Width: %d, Height: %d, nChannels: %d, origin: %d, widthStep: %d\n", colourImage->width, colourImage->height, colourImage->nChannels, colourImage->origin, colourImage->widthStep);
     cvWaitKey(0);
-    
+/*    
     IplImage* binaryImage = cvCreateImage (cvSize(colourImage->width,colourImage->height),
 					   IPL_DEPTH_8U, 
 					   1
 					  );
+*/
     IplImage* binaryResize = mvCreateImage();
     
     mvHSVFilter HSVFilter ("test_settings.csv");
