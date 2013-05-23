@@ -40,13 +40,18 @@ private:
             ); 
     }
 
-    void get_ellipse_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &length, float &angle);
+    void get_ellipse_parameters_for_rect (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &length, float &angle);
+    void get_circle_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float radius);
 
     void get_hu_moments (CvSeq* contour1, HU_MOMENTS& hu_moments);
     
+    // initialize the database of hu moments for a given shape database
+    void init_contour_template_database (const char** image_database_vector, int num_images, std::vector<HU_MOMENTS> &output_moments);
+
     // match the hu moments of the contour against all the ones in hu_moments_vector
-    void match_contour_with_database (CvSeq* contour1, int &best_match_index, double &best_match_diff, int method, std::vector<HU_MOMENTS> hu_moments_vector);
-    
+    void match_contour_with_database (CvSeq* contour1, int &best_match_index, double &best_match_diff, 
+                                    int method, std::vector<HU_MOMENTS> hu_moments_vector);
+
     void draw_contours (CvSeq* contours_to_draw, IplImage* img) {
         cvDrawContours (
                     img,
@@ -62,6 +67,7 @@ public:
     ~mvContours ();
 
     double match_rectangle (IplImage* img, CvPoint &centroid, float &length, float &angle, int method=CONTOURS_MATCH_RECIP);
+    double match_circle (IplImage* img, CvPoint &centroid, float &radius, int method=CONTOURS_MATCH_RECIP);
 
     void drawOntoImage (IplImage* img) { draw_contours (m_contours, img); }        
 

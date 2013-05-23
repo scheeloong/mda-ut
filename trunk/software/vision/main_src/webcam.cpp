@@ -208,10 +208,15 @@ int main( int argc, char** argv ) {
             win3->showImage (filter_img);
         }
         else if (CIRCLE) {
-            circles.find (filter_img);
+            /*circles.find (filter_img);
             printf ("ncircles = %d\n", circles.ncircles());
             circles.drawOntoImage (filter_img);
 
+            win3->showImage (filter_img);
+            */
+            CvPoint centroid;
+            float radius;
+            contour_filter.match_circle(filter_img, centroid, radius);
             win3->showImage (filter_img);
         }
         else if (RECT) {
