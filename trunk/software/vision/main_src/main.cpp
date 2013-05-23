@@ -16,7 +16,7 @@
 int main (int argc, char** argv) {
     // We want to do HSV color filter, take the gradient of result,
     // and run line finding on the gradient img
-    assert (argc == 2); // need image as first argument
+    /*assert (argc == 2); // need image as first argument
     
     /// Grab the filters and data structs we need
     mvHSVFilter HSVFilter ("HSVFilter_settings.csv"); // color filter
@@ -48,6 +48,33 @@ int main (int argc, char** argv) {
     
     win3.showImage(res);
         
+    cvWaitKey(0);
+    */
+    
+    mvWindow window ("My First Window...yay...");
+    IplImage* colourImage = cvLoadImage("color1.jpg", CV_LOAD_IMAGE_COLOR);
+    IplImage* colourResize = mvCreateImage_Color();
+    cvResize (colourImage, colourResize);
+    
+    
+    window.showImage(colourResize);
+    printf ("Width: %d, Height: %d, nChannels: %d, origin: %d, widthStep: %d\n", colourImage->width, colourImage->height, colourImage->nChannels, colourImage->origin, colourImage->widthStep);
+    cvWaitKey(0);
+    
+    IplImage* binaryImage = cvCreateImage (cvSize(colourImage->width,colourImage->height),
+					   IPL_DEPTH_8U, 
+					   1
+					  );
+    IplImage* binaryResize = mvCreateImage();
+    
+    mvHSVFilter HSVFilter ("test_settings.csv");
+    HSVFilter.filter_non_common_size (colourResize, binaryResize);
+    window.showImage(binaryResize);
+    cvWaitKey(0);
+    
+    mvBinaryMorphology morph(5,5,MV_KERN_ELLIPSE);
+    morph.close (binaryResize, binaryResize);
+    window.showImage(binaryResize);
     cvWaitKey(0);
     
     return 0;
