@@ -3,7 +3,7 @@
 
 // Contains functions for mvAdvancedColorFilter that pertain to the watershed algorithm
 
-#define M_DEBUG
+//#define M_DEBUG
 #ifdef M_DEBUG
     #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
 #else
@@ -61,7 +61,7 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
     cvAvgSdv (ds_image_nonedge, &mean, &stdev);
     cvThreshold (ds_image_nonedge, ds_image_nonedge, mean.val[0]+stdev.val[0], 255, CV_THRESH_BINARY);
 
-    mvDilate (ds_image_nonedge, ds_image_nonedge, 3, 3);
+    //mvDilate (ds_image_nonedge, ds_image_nonedge, 3, 3);
     cvNot (ds_image_nonedge, ds_image_nonedge);
 
     cvResize (ds_image_nonedge, ds_scratch, CV_INTER_NN);
@@ -84,7 +84,7 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
     // 2. Check if the coordinate is a non-edge pixel on the nonedge image.
     // 3. If so add it to color_point_vector and
     // 4. If so mark coordinates near it as edge on the nonege image
-    for (int i = 0; i < 150; i++) {
+    for (int i = 0; i < 200; i++) {
         int x = rand() % ds_image_nonedge->width;
         int y = rand() % ds_image_nonedge->height;
 
@@ -116,7 +116,7 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
     }
 
     int num_pixels = color_point_vector.size();
-    printf ("Candidate Pixels for Markers = %d\n", num_pixels);
+    DEBUG_PRINT ("Candidate Pixels for Markers = %d\n", num_pixels);
 
     // go thru each pair of pixels and calculate their color difference and add it to a vector
     // the pixels are represented by their indices in the color_point_vector
@@ -135,19 +135,19 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
     std::sort(pair_difference_vector.begin(), pair_difference_vector.end(), m3_less_than);
 
     // assign index numbers
-    printf ("Diffs:\n");
+    DEBUG_PRINT ("Diffs:\n");
     final_index_number = 4;
     int limit = pair_difference_vector.size();
     for (int i = 0; i < limit; i++) {
         const int index1 = pair_difference_vector[i].m1;
         const int index2 = pair_difference_vector[i].m2;
         const int diff = pair_difference_vector[i].m3;
-
+/*        // Print a histogram like graphic for the sorted diffs
         printf ("\tDiff (%3d,%3d) = ", index1, index2);
         for (int j = 0; j < diff; j+=2)
             printf ("#");
         printf ("\n");
-
+*/
         if (diff > 80 || final_index_number > MAX_INDEX_NUMBER)
             break;
 
@@ -202,7 +202,7 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
     // zero marker image and draw markers onto it
     // also draw marker positions onto src so we can see where the markers are
     cvZero (marker_img_32s);
-    printf ("Markers:\n");
+    DEBUG_PRINT ("Markers:\n");
     for (int i = 0; i < num_pixels; i++) {
         COLOR_TRIPLE ct = color_point_vector[i].first;
         CvPoint C = color_point_vector[i].second;
@@ -218,8 +218,7 @@ void mvAdvancedColorFilter::watershed_markers_internal (IplImage* src) {
             srcPtr[1] = 0;
             srcPtr[2] = 255;
         }
-        //debug
-        printf ("\tmarker: location <%3d,%3d>: color (%3d,%3d,%3d) - %2d\n", x, y, ct.m1, ct.m2, ct.m3, ct.index_number);
+        DEBUG_PRINT ("\tmarker: location <%3d,%3d>: color (%3d,%3d,%3d) - %2d\n", x, y, ct.m1, ct.m2, ct.m3, ct.index_number);
     }
 }
 
@@ -283,7 +282,7 @@ void mvAdvancedColorFilter::watershed_filter_internal (IplImage* src, IplImage* 
         }
     }
 
-    printf ("Watershed Segments:\n");
+    DEBUG_PRINT ("Watershed Segments:\n");
     // calculate the mean color profile of each segment
     std::map<unsigned char,COLOR_TRIPLE>::iterator seg_iter = segment_color_hash.begin();
     std::map<unsigned char,COLOR_TRIPLE>::iterator seg_iter_end = segment_color_hash.end();
@@ -291,7 +290,7 @@ void mvAdvancedColorFilter::watershed_filter_internal (IplImage* src, IplImage* 
         COLOR_TRIPLE* ct_ptr = &(seg_iter->second);
         if (ct_ptr->n_pixels > 0) {
             ct_ptr->calc_average();
-            printf ("\tSegment: index %d (%d pixels): (%3d,%3d,%3d)\n", ct_ptr->index_number, ct_ptr->n_pixels, ct_ptr->m1, ct_ptr->m2, ct_ptr->m3);
+            DEBUG_PRINT ("\tSegment: index %d (%d pixels): (%3d,%3d,%3d)\n", ct_ptr->index_number, ct_ptr->n_pixels, ct_ptr->m1, ct_ptr->m2, ct_ptr->m3);
         }
     }
 }

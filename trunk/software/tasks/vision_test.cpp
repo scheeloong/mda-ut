@@ -51,14 +51,14 @@ void MDA_VISION_MODULE_TEST:: primary_filter (IplImage* src) {
 
     // variables for color matching
     int seg = 0;
-    const double COLOR_DIVISION_FACTOR = 180;
+    const double COLOR_DIVISION_FACTOR = 1.0;
     COLOR_TRIPLE color;
-    //COLOR_TRIPLE color_template (160,95,157,0);
-    COLOR_TRIPLE color_template (155,120,60,0);
+    COLOR_TRIPLE color_template (160,95,157,0);
+    //COLOR_TRIPLE color_template (155,120,60,0);
 
     // variables for shape matching
     CvPoint best_centroid;
-    float best_angle;
+    float best_length, best_angle;
     double best_diff = 1000000;
     
     // get each segment from the filter and try to match
@@ -67,13 +67,13 @@ void MDA_VISION_MODULE_TEST:: primary_filter (IplImage* src) {
         printf ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
 
         // calculate color diff
-        double color_diff = 0;//static_cast<double>(color.diff(color_template)) / COLOR_DIVISION_FACTOR;
+        double color_diff = static_cast<double>(color.diff(color_template)) / COLOR_DIVISION_FACTOR;
 
         // calculate shape diff
         CvPoint centroid;
-        float angle;
-        double shape_diff = Contours.match_rectangle(gray_img_2, centroid, angle);
-        if (shape_diff < 0) // i still dont know how this is possible
+        float length, angle;
+        double shape_diff = Contours.match_rectangle(gray_img_2, centroid, length, angle);
+        if (shape_diff < 0) // this happens if match_rectangle returns with an error
             continue;
 
         double diff = color_diff + shape_diff;
@@ -83,6 +83,7 @@ void MDA_VISION_MODULE_TEST:: primary_filter (IplImage* src) {
         if (seg == 1 || diff < best_diff) {
             best_diff = diff;
             best_centroid = centroid;
+            best_length = length;
             best_angle = angle;
             cvCopy (gray_img_2, gray_img);
         }

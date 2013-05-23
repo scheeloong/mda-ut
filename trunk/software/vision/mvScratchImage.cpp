@@ -16,18 +16,15 @@ static int instances_3channel = 0;
 IplImage* mvGetScratchImage() {
 #ifndef DISABLE_SCRATCH_IMAGE
     if (instances_1channel == 0) {
+        assert (scratch_img_1channel == NULL);
 #endif
         instances_1channel++;
-
-        mvGetScratchImage_Color();
         scratch_img_1channel = mvCreateImage();
-
         return scratch_img_1channel;
 #ifndef DISABLE_SCRATCH_IMAGE
     }
     else {
         instances_1channel++;
-        scratch_img_1channel->imageData = scratch_img_3channel->imageData;
         return scratch_img_1channel;
     }
 #endif
@@ -37,8 +34,7 @@ void mvReleaseScratchImage() {
 #ifndef DISABLE_SCRATCH_IMAGE
     if (instances_1channel == 1) {
 #endif
-        mvReleaseScratchImage_Color();
-        cvReleaseImageHeader(&scratch_img_1channel);
+        cvReleaseImage(&scratch_img_1channel);
         instances_1channel = 0;
 #ifndef DISABLE_SCRATCH_IMAGE
     }
@@ -55,26 +51,15 @@ void mvReleaseScratchImage() {
 IplImage* mvGetScratchImage2() {
 #ifndef DISABLE_SCRATCH_IMAGE
     if (instances_1channel_2 == 0) {
+        assert (scratch_img_1channel_2 == NULL);
 #endif
         instances_1channel_2++;
-
-        // For this one, we are going to use the middle 1/3 of the 3 channel image's data array
-        mvGetScratchImage_Color();
-        scratch_img_1channel_2 = cvCreateImageHeader(
-            cvGetSize(scratch_img_3channel),
-            IPL_DEPTH_8U,
-            1
-        );
-        scratch_img_1channel_2->imageData = scratch_img_3channel->imageData + 
-                                            scratch_img_1channel_2->height * scratch_img_1channel_2->widthStep;
-
+        scratch_img_1channel_2 = mvCreateImage();
         return scratch_img_1channel_2;
 #ifndef DISABLE_SCRATCH_IMAGE
     }
     else {
         instances_1channel_2++;
-        scratch_img_1channel_2->imageData = scratch_img_3channel->imageData + 
-                                            scratch_img_1channel_2->height * scratch_img_1channel_2->widthStep;
         return scratch_img_1channel_2;
     }
 #endif
@@ -84,8 +69,7 @@ void mvReleaseScratchImage2() {
 #ifndef DISABLE_SCRATCH_IMAGE
     if (instances_1channel_2 == 1) {
 #endif
-        mvReleaseScratchImage_Color();
-        cvReleaseImageHeader(&scratch_img_1channel_2);
+        cvReleaseImage(&scratch_img_1channel_2);
         instances_1channel_2 = 0;
 #ifndef DISABLE_SCRATCH_IMAGE
     }
@@ -102,26 +86,15 @@ void mvReleaseScratchImage2() {
 IplImage* mvGetScratchImage3() {
 #ifndef DISABLE_SCRATCH_IMAGE
     if (instances_1channel_3 == 0) {
+        assert (scratch_img_1channel_3 == NULL);
 #endif
         instances_1channel_3++;
-
-        // For this one, we are going to use the last 1/3 of the 3 channel image's data array
-        mvGetScratchImage_Color();
-        scratch_img_1channel_3 = cvCreateImageHeader(
-            cvGetSize(scratch_img_3channel),
-            IPL_DEPTH_8U,
-            1
-        );
-        scratch_img_1channel_3->imageData = scratch_img_3channel->imageData + 
-                                            2*scratch_img_1channel_3->height * scratch_img_1channel_3->widthStep;
-
+        scratch_img_1channel_3 = mvCreateImage();
         return scratch_img_1channel_3;
 #ifndef DISABLE_SCRATCH_IMAGE
     }
     else {
         instances_1channel_3++;
-        scratch_img_1channel_3->imageData = scratch_img_3channel->imageData + 
-                                            2*scratch_img_1channel_3->height * scratch_img_1channel_3->widthStep;
         return scratch_img_1channel_3;
     }
 #endif
@@ -131,8 +104,7 @@ void mvReleaseScratchImage3() {
 #ifndef DISABLE_SCRATCH_IMAGE
     if (instances_1channel_3 == 1) {
 #endif
-        mvReleaseScratchImage_Color();
-        cvReleaseImageHeader(&scratch_img_1channel_3);
+        cvReleaseImage(&scratch_img_1channel_3);
         instances_1channel_3 = 0;
 #ifndef DISABLE_SCRATCH_IMAGE
     }

@@ -158,7 +158,7 @@ int main( int argc, char** argv ) {
             COLOR_TRIPLE color_template (155,120,60,0);
 
             CvPoint best_centroid;
-            float best_angle;
+            float best_length, best_angle;
             double best_diff = 1000000;
             
             while ( advanced_filter.get_next_watershed_segment(filter_img_2, color) ) {
@@ -170,8 +170,8 @@ int main( int argc, char** argv ) {
 
                 // calculate shape diff
                 CvPoint centroid;
-                float angle;
-                double shape_diff = contour_filter.match_rectangle(filter_img_2, centroid, angle);
+                float length, angle;
+                double shape_diff = contour_filter.match_rectangle(filter_img_2, centroid, length, angle);
                 if (shape_diff < 0) // error from the shape matching
                     continue;
 
@@ -182,10 +182,10 @@ int main( int argc, char** argv ) {
                 if (seg == 1 || diff < best_diff) {
                     best_diff = diff;
                     best_centroid = centroid;
+                    best_length = length;
                     best_angle = angle;
                     cvCopy (filter_img_2, filter_img);
                 }
-
                 //cvWaitKey(0);
             }
 
@@ -216,8 +216,8 @@ int main( int argc, char** argv ) {
         }
         else if (RECT) {
             CvPoint centroid;
-            float angle;
-            contour_filter.match_rectangle(filter_img, centroid, angle);
+            float length, angle;
+            contour_filter.match_rectangle(filter_img, centroid, length, angle);
             win3->showImage (filter_img);
         }
         
