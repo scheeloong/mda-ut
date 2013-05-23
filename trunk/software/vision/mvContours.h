@@ -12,11 +12,11 @@ static const int CONTOURS_MATCH_FRACTION = 2;
 
 class mvContours {
     // list of images that contain objects to match against
-    static const int NUM_CONTOUR_RECT_IMAGES = 10;
+    static const int NUM_CONTOUR_RECT_IMAGES = 5;
     static const char* contour_rect_images[];
     std::vector<HU_MOMENTS> hu_moments_rect_vector;
 
-    static const int NUM_CONTOUR_CIRC_IMAGES = 2;
+    static const int NUM_CONTOUR_CIRC_IMAGES = 3;
     static const char* contour_circ_images[];
     std::vector<HU_MOMENTS> hu_moments_circ_vector;
 

@@ -10,16 +10,12 @@ const char* mvContours::contour_rect_images[] = {
     CONTOUR_IMG_PREFIX "Rect03.png",
     CONTOUR_IMG_PREFIX "Rect04.png",
     CONTOUR_IMG_PREFIX "Rect05.png",
-    CONTOUR_IMG_PREFIX "Rect06.png",
-    CONTOUR_IMG_PREFIX "Rect07.png",
-    CONTOUR_IMG_PREFIX "Rect08.png",
-    CONTOUR_IMG_PREFIX "Rect09.png",
-    CONTOUR_IMG_PREFIX "Rect10.png"
 };
 
 const char* mvContours::contour_circ_images[] = {
     CONTOUR_IMG_PREFIX "circ01.png",
-    CONTOUR_IMG_PREFIX "circ02.png"
+    CONTOUR_IMG_PREFIX "circ02.png",
+    CONTOUR_IMG_PREFIX "circ03.png",
 };
 
 double dslog (double x) { // double signed log
@@ -225,8 +221,8 @@ double mvContours::match_circle (IplImage* img, CvPoint &centroid, float &radius
     );
     bin_contours.stop();
     
-    if (m_contours == NULL || m_contours->total <= 6) {
-        printf ("match_rectangle: contour too short, returning.\n");
+    if (m_contours == NULL || m_contours->total <= 3) {
+        printf ("match_circle: contour too short, returning.\n");
         return -1;
     }
 
@@ -234,16 +230,16 @@ double mvContours::match_circle (IplImage* img, CvPoint &centroid, float &radius
 
     // check the contour's area to make sure it isnt too small
     double area = cvContourArea(m_contours);
-    if (area < img->width*img->height/10000) {
-        printf ("match_rectangle: contour area too small, returning.\n");
+    if (area < img->width*img->height/1000) {
+        printf ("match_circle: contour area too small, returning.\n");
         return -1;
     }
 
-    // do some kind of matching to ensure the contour is a rectangle
+    // do some kind of matching to ensure the contour is a circle
     int match_index;
     double best_match_diff;
     bin_match.start();
-    match_contour_with_database (m_contours, match_index, best_match_diff, method, hu_moments_rect_vector);
+    match_contour_with_database (m_contours, match_index, best_match_diff, method, hu_moments_circ_vector);
     bin_match.stop();
 
     // get the mathematical properties we want
