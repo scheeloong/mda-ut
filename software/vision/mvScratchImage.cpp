@@ -35,6 +35,7 @@ void mvReleaseScratchImage() {
     if (instances_1channel == 1) {
 #endif
         cvReleaseImage(&scratch_img_1channel);
+        scratch_img_1channel = NULL;
         instances_1channel = 0;
 #ifndef DISABLE_SCRATCH_IMAGE
     }
@@ -70,6 +71,7 @@ void mvReleaseScratchImage2() {
     if (instances_1channel_2 == 1) {
 #endif
         cvReleaseImage(&scratch_img_1channel_2);
+        scratch_img_1channel_2 = NULL;
         instances_1channel_2 = 0;
 #ifndef DISABLE_SCRATCH_IMAGE
     }
@@ -105,6 +107,7 @@ void mvReleaseScratchImage3() {
     if (instances_1channel_3 == 1) {
 #endif
         cvReleaseImage(&scratch_img_1channel_3);
+        scratch_img_1channel_3 = NULL;
         instances_1channel_3 = 0;
 #ifndef DISABLE_SCRATCH_IMAGE
     }
@@ -140,6 +143,7 @@ void mvReleaseScratchImage_Color() {
     if (instances_3channel == 1) {
 #endif
         cvReleaseImage (&scratch_img_3channel);
+        scratch_img_3channel = NULL;
         instances_3channel = 0;
 #ifndef DISABLE_SCRATCH_IMAGE
     }

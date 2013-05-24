@@ -96,6 +96,7 @@ class MDA_VISION_MODULE_TEST : public MDA_VISION_MODULE_BASE {
     mvWindow window2;
     mvHSVFilter HSVFilter;
     mvAdvancedColorFilter AdvancedColorFilter;
+    mvWatershedFilter WatershedFilter;
     mvContours Contours;
     mvHoughLines HoughLines;
     mvKMeans KMeans;
@@ -206,6 +207,7 @@ class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
     mvBinaryMorphology Morphology;
     mvBinaryMorphology Morphology2;    
     mvAdvancedColorFilter advanced_filter;
+    mvWatershedFilter watershed_filter;
     mvContours contour_filter;
     mvHoughLines HoughLines;
     mvKMeans KMeans;
