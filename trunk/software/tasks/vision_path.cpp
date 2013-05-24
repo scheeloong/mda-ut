@@ -23,9 +23,12 @@ MDA_VISION_MODULE_PATH:: MDA_VISION_MODULE_PATH () :
     HSVFilter (mvHSVFilter(MDA_VISION_PATH_SETTINGS)),
     Morphology (mvBinaryMorphology(19, 19, MV_KERN_RECT)),
     Morphology2 (mvBinaryMorphology(7, 7, MV_KERN_RECT)),
-    advanced_filter (mvAdvancedColorFilter("test_settings.csv")),
     HoughLines (mvHoughLines(MDA_VISION_PATH_SETTINGS))
 {
+    read_mv_setting (MDA_VISION_PATH_SETTINGS, "TARGET_BLUE", TARGET_BLUE);
+    read_mv_setting (MDA_VISION_PATH_SETTINGS, "TARGET_GREEN", TARGET_GREEN);
+    read_mv_setting (MDA_VISION_PATH_SETTINGS, "TARGET_RED", TARGET_RED);
+
     color_img = mvGetScratchImage_Color();
     gray_img = mvGetScratchImage();
     gray_img_2 = mvGetScratchImage2();
@@ -56,22 +59,22 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
     watershed_filter.watershed(src, gray_img);
     window.showImage (gray_img);
 
-    int seg = 0;
-    const double COLOR_DIVISION_FACTOR = 1.0;
+    int seg = 1;
     COLOR_TRIPLE color;
-    COLOR_TRIPLE color_template (160,95,157,0);
+    COLOR_TRIPLE color_template (TARGET_BLUE,TARGET_GREEN,TARGET_RED,0);
 
     CvPoint best_centroid = cvPoint(MV_UNDEFINED_VALUE, MV_UNDEFINED_VALUE);
     float best_length = MV_UNDEFINED_VALUE;
     float best_angle = MV_UNDEFINED_VALUE;
+    double best_shape_diff, best_color_diff;
     double best_diff = 1000000;
     
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
-        //DEBUG_PRINT ("\nSegment %d\n", ++seg);
+        //DEBUG_PRINT ("\nSegment %d\n", seg);
         //DEBUG_PRINT ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
 
         // calculate color diff
-        double color_diff = 0;//static_cast<double>(color.diff(color_template)) / COLOR_DIVISION_FACTOR;
+        double color_diff = static_cast<double>(color.diff(color_template)) / COLOR_DIVISION_FACTOR;
 
         // calculate shape diff
         CvPoint centroid;
@@ -84,15 +87,23 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
         //DEBUG_PRINT ("\tColor_Diff=%6.4f  Shape_Diff=%6.4f\n\tFinal_Diff=%6.4f\n", color_diff, shape_diff, diff);
 
         if (seg == 1 || diff < best_diff) {
-            best_diff = diff;
+            best_diff = diff;  best_shape_diff = shape_diff;  best_color_diff = color_diff;
             best_centroid = centroid;
             best_length = length;
             best_angle = angle;
             cvCopy (gray_img_2, gray_img);
         }
+        seg++;
     }
 
-    DEBUG_PRINT ("Best Diff = %5.2lf\n", best_diff);
+    double confidence_level = DIFF_THRESHOLD / best_diff;
+    DEBUG_PRINT ("Confidence Level = %5.3lf (%4.2lf shape diff, %4.2lf color diff)\n", 
+        confidence_level, best_shape_diff, best_color_diff);
+    if (confidence_level < 1.0) {
+        DEBUG_PRINT ("Confidence level does not meet threshold\n");
+        return;
+    }
+
     window2.showImage (gray_img);
     
     m_pixel_x = best_centroid.x;

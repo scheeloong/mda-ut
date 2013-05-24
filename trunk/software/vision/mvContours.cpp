@@ -1,6 +1,12 @@
 #include "mvContours.h"
 
 //#define MATCH_CONTOURS_DEBUG
+//#define M_DEBUG
+#ifdef M_DEBUG
+    #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
+#else
+    #define DEBUG_PRINT(format, ...)
+#endif
 
 #define CONTOUR_IMG_PREFIX "../vision/contour_images/"
 
@@ -84,9 +90,6 @@ void mvContours::get_ellipse_parameters_for_rect (IplImage* img, CvSeq* contour1
     centroid.y = y - img->height*0.5;
     length = 0.6 * ellipse.size.height;
 
-    printf("Angle is: %5.2f\n", angle);
-    printf("Alt Center is: (%d, %d)\n", x, y);
-
     // draw a line to indicate the angle
     CvPoint p0, p1;
     int delta_x = length/2 * -sin(angle*CV_PI/180.f);
@@ -156,7 +159,7 @@ void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_i
         }
     }
 
-    printf ("Best Match Diff = %9.6lf\n", best_match_diff);
+    DEBUG_PRINT ("Best Match Diff = %9.6lf\n", best_match_diff);
 }
 
 double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &length, float &angle, int method) {
@@ -176,7 +179,7 @@ double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &len
     bin_contours.stop();
     
     if (m_contours == NULL || m_contours->total <= 6) {
-        printf ("match_rectangle: contour too short, returning.\n");
+        DEBUG_PRINT ("match_rectangle: contour too short, returning.\n");
         return -1;
     }
 
@@ -185,7 +188,7 @@ double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &len
     // check the contour's area to make sure it isnt too small
     double area = cvContourArea(m_contours);
     if (area < img->width*img->height/10000) {
-        printf ("match_rectangle: contour area too small, returning.\n");
+        DEBUG_PRINT ("match_rectangle: contour area too small, returning.\n");
         return -1;
     }
 
@@ -222,7 +225,7 @@ double mvContours::match_circle (IplImage* img, CvPoint &centroid, float &radius
     bin_contours.stop();
     
     if (m_contours == NULL || m_contours->total <= 3) {
-        printf ("match_circle: contour too short, returning.\n");
+        DEBUG_PRINT ("match_circle: contour too short, returning.\n");
         return -1;
     }
 
@@ -231,7 +234,7 @@ double mvContours::match_circle (IplImage* img, CvPoint &centroid, float &radius
     // check the contour's area to make sure it isnt too small
     double area = cvContourArea(m_contours);
     if (area < img->width*img->height/1000) {
-        printf ("match_circle: contour area too small, returning.\n");
+        DEBUG_PRINT ("match_circle: contour area too small, returning.\n");
         return -1;
     }
 
