@@ -1,3 +1,8 @@
+# target color
+TARGET_BLUE, 160
+TARGET_GREEN, 95
+TARGET_RED, 160
+
 # H,S,V max and min for the gate task
 HUE_MIN, 10
 HUE_MAX, 30

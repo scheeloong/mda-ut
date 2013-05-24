@@ -197,6 +197,11 @@ class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
     static const float K_LEN = 1.0;
     static const float K_DIS = 2.0;
 
+    // for contour shape/color matching
+    static const double COLOR_DIVISION_FACTOR = 2000;
+    static const double DIFF_THRESHOLD = 1.8 + 80/200; // shape diff + color diff
+    int TARGET_BLUE, TARGET_GREEN, TARGET_RED;
+
     int m_pixel_x_alt, m_pixel_y_alt, m_range_alt;
     float m_angular_x_alt, m_angular_y_alt;
     float m_angle_alt;
@@ -206,7 +211,6 @@ class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
     mvHSVFilter HSVFilter;
     mvBinaryMorphology Morphology;
     mvBinaryMorphology Morphology2;    
-    mvAdvancedColorFilter advanced_filter;
     mvWatershedFilter watershed_filter;
     mvContours contour_filter;
     mvHoughLines HoughLines;
