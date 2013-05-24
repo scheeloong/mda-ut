@@ -17,9 +17,7 @@ MDA_VISION_MODULE_TEST:: MDA_VISION_MODULE_TEST () :
     window2 (mvWindow("Test Vision Module 2")),
 	HSVFilter (mvHSVFilter(MDA_VISION_TEST_SETTINGS)),
 	AdvancedColorFilter (MDA_VISION_TEST_SETTINGS),
-	Contours (mvContours()),
     HoughLines (mvHoughLines(MDA_VISION_TEST_SETTINGS)),
-	lines (mvLines()),
     histogram_filter ("vision_gate_settings.csv"),
     bin_test ("Test Module")
 {
@@ -46,7 +44,7 @@ void MDA_VISION_MODULE_TEST:: primary_filter (IplImage* src) {
     bin_test.start();
     
     // do the filter - easy!
-    AdvancedColorFilter.watershed(src, gray_img);
+    WatershedFilter.watershed(src, gray_img);
     window.showImage (gray_img);
 
     // variables for color matching
@@ -62,7 +60,7 @@ void MDA_VISION_MODULE_TEST:: primary_filter (IplImage* src) {
     double best_diff = 1000000;
     
     // get each segment from the filter and try to match
-    while ( AdvancedColorFilter.get_next_watershed_segment(gray_img_2, color) ) {
+    while ( WatershedFilter.get_next_watershed_segment(gray_img_2, color) ) {
         printf ("\nSegment %d\n", ++seg);
         printf ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
 

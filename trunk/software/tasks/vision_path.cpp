@@ -53,7 +53,7 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
     KMeans.drawOntoImage (gray_image);
     */
 
-    advanced_filter.watershed(src, gray_img);
+    watershed_filter.watershed(src, gray_img);
     window.showImage (gray_img);
 
     int seg = 0;
@@ -66,12 +66,12 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
     float best_angle = MV_UNDEFINED_VALUE;
     double best_diff = 1000000;
     
-    while ( advanced_filter.get_next_watershed_segment(gray_img_2, color) ) {
-        printf ("\nSegment %d\n", ++seg);
-        printf ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
+    while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
+        //DEBUG_PRINT ("\nSegment %d\n", ++seg);
+        //DEBUG_PRINT ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
 
         // calculate color diff
-        double color_diff = static_cast<double>(color.diff(color_template)) / COLOR_DIVISION_FACTOR;
+        double color_diff = 0;//static_cast<double>(color.diff(color_template)) / COLOR_DIVISION_FACTOR;
 
         // calculate shape diff
         CvPoint centroid;
@@ -81,7 +81,7 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
             continue;
 
         double diff = color_diff + shape_diff;
-        printf ("\tColor_Diff=%6.4f  Shape_Diff=%6.4f\n\tFinal_Diff=%6.4f\n", color_diff, shape_diff, diff);
+        //DEBUG_PRINT ("\tColor_Diff=%6.4f  Shape_Diff=%6.4f\n\tFinal_Diff=%6.4f\n", color_diff, shape_diff, diff);
 
         if (seg == 1 || diff < best_diff) {
             best_diff = diff;
@@ -92,6 +92,7 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
         }
     }
 
+    DEBUG_PRINT ("Best Diff = %5.2lf\n", best_diff);
     window2.showImage (gray_img);
     
     m_pixel_x = best_centroid.x;
@@ -430,7 +431,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         retval = TWO_SEGMENT;
         m_angular_x = RAD_TO_DEG * atan((float)m_pixel_x / m_pixel_y);
         DEBUG_PRINT ("Path: (%d,%d) (%5.2f,?)\n", m_pixel_x, m_pixel_y, 
-            m_angular_x); 
+            m_angular_x);
         
         return retval;
 }

@@ -95,6 +95,7 @@ int main( int argc, char** argv ) {
     mvKMeans kmeans;
     mvHistogramFilter histogram_filter ("test_settings.csv");
     mvAdvancedColorFilter advanced_filter("test_settings.csv");
+    mvWatershedFilter watershed_filter;
     mvContours contour_filter;
 
     // declare images we need
@@ -147,7 +148,7 @@ int main( int argc, char** argv ) {
             win2->showImage (filter_img);
         }
         else if (WATERSHED) {
-            advanced_filter.watershed(frame, filter_img);
+            watershed_filter.watershed(frame, filter_img);
             win1->showImage (frame);
             win2->showImage (filter_img);
             
@@ -161,7 +162,7 @@ int main( int argc, char** argv ) {
             float best_length, best_angle;
             double best_diff = 1000000;
             
-            while ( advanced_filter.get_next_watershed_segment(filter_img_2, color) ) {
+            while ( watershed_filter.get_next_watershed_segment(filter_img_2, color) ) {
                 printf ("\nSegment %d\n", ++seg);
                 printf ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
 

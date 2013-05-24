@@ -263,7 +263,6 @@ void mvGetBoundsFromGaussian (
 //  mvAdvancedColorFilter - mean_shift, flood_fill, and other more complicated algorithms
 // ##################################################################################################
 class mvAdvancedColorFilter {
-
     //declare constants here
     static const int DS_FACTOR = 1; // downsampling
     static const int GOOD_PIXELS_FACTOR = 6;
@@ -307,22 +306,8 @@ private:
     bool flood_from_pixel(int r, int c, unsigned index_number);
     void perform_color_adjustment_internal ();
 
-    // variables and functions for mvWaterShed
-    static const int WATERSHED_DS_FACTOR = 4;
-    static const unsigned MAX_INDEX_NUMBER = 250;
-    IplImage *ds_image_3c, *ds_image_nonedge, *marker_img_32s;
-    std::map<unsigned char,COLOR_TRIPLE> segment_color_hash;
-    std::map<unsigned char,COLOR_TRIPLE>::iterator curr_segment_iter;
-    unsigned curr_segment_index;
-    unsigned final_index_number;
-
-    void watershed_markers_internal (IplImage* src); // place markers
-    void watershed_markers_internal2 (IplImage* src); // place markers
-    void watershed_filter_internal (IplImage* src, IplImage* dst); // run watershed
-
     // profile bins
     PROFILE_BIN bin_Resize;
-    PROFILE_BIN bin_Seed;
     PROFILE_BIN bin_Filter;
     
     void downsample_from(IplImage* src) {    // downsamples src to internal scratch image
@@ -359,14 +344,48 @@ public:
     ~mvAdvancedColorFilter(); // destructor
     void mean_shift(IplImage* src, IplImage* dst);
     void flood_image(IplImage* src, IplImage* dst, bool interactive=false);
-    void watershed(IplImage* src, IplImage* dst);
     void filter(IplImage *src, IplImage* dst);
     void combined_filter(IplImage *src, IplImage* dst);
 
-    bool get_next_watershed_segment (IplImage* binary_img, COLOR_TRIPLE &T);
     friend void flood_image_interactive_callback(int event, int x, int y, int flags, void* param);
 };
 
 void flood_image_interactive_callback(int event, int x, int y, int flags, void* param);
+
+// ##################################################################################################
+//  mvWatershedFilter
+// ##################################################################################################
+class mvWatershedFilter {
+    static const int WATERSHED_DS_FACTOR = 4;
+    static const unsigned MAX_INDEX_NUMBER = 250;
+    static const int KERNEL_WIDTH = 3;
+    static const int KERNEL_HEIGHT = 3;
     
+    IplImage* scratch_image_3c;
+    IplImage* scratch_image;
+    IplImage* ds_image_3c;
+    IplImage* ds_image_nonedge;
+    IplImage* marker_img_32s;
+    IplConvKernel* kernel;
+
+    std::map<unsigned char,COLOR_TRIPLE> segment_color_hash;
+    std::map<unsigned char,COLOR_TRIPLE>::iterator curr_segment_iter;
+    
+    unsigned curr_segment_index;
+    unsigned final_index_number;
+
+    PROFILE_BIN bin_Seed;
+    PROFILE_BIN bin_Filter;
+
+    void watershed_markers_internal (IplImage* src); // place markers
+    void watershed_filter_internal (IplImage* src, IplImage* dst); // run watershed
+
+public:
+    mvWatershedFilter ();
+    mvWatershedFilter (const char* settings_file); //constructor
+    ~mvWatershedFilter(); // destructor
+    void watershed(IplImage* src, IplImage* dst);
+    bool get_next_watershed_segment (IplImage* binary_img, COLOR_TRIPLE &T);    
+};
+
 #endif

@@ -52,7 +52,6 @@ void mvGetBoundsFromGaussian (
 
 mvAdvancedColorFilter::mvAdvancedColorFilter (const char* settings_file) : 
     bin_Resize ("mvAdvanced - Resize"),
-    bin_Seed ("mvAdvanced - Seed"),
     bin_Filter ("mvAdvanced - Filter")
 {
     assert (KERNEL_SIZE % 2 == 1);
@@ -121,24 +120,6 @@ mvAdvancedColorFilter::mvAdvancedColorFilter (const char* settings_file) :
     FLAG_DO_COLOR_ADJUSTMENT = false;
     Training_Matrix.resize(NUM_INTERACTIVE_COLORS);
     
-    ds_image_3c = cvCreateImage (
-        cvSize(ds_scratch_3->width/WATERSHED_DS_FACTOR, ds_scratch_3->height/WATERSHED_DS_FACTOR),
-        IPL_DEPTH_8U,
-        3
-    );
-    ds_image_nonedge = cvCreateImage (
-        cvSize(ds_scratch_3->width/WATERSHED_DS_FACTOR, ds_scratch_3->height/WATERSHED_DS_FACTOR),
-        IPL_DEPTH_8U,
-        1
-    );
-    marker_img_32s = cvCreateImage(
-        cvGetSize(ds_scratch_3),
-        IPL_DEPTH_32S,
-        1
-    );
-
-    srand(time(NULL));
-
 #ifdef USE_BGR_COLOR_SPACE
     printf ("mvAdvancedColorFilter is using BGR color space\n");
 #else
@@ -154,10 +135,6 @@ mvAdvancedColorFilter::~mvAdvancedColorFilter () {
 
     cvReleaseImage (&ds_scratch_3);
     cvReleaseImage (&ds_scratch);
-
-    cvReleaseImage (&ds_image_3c);
-    cvReleaseImage (&ds_image_nonedge);
-    cvReleaseImage (&marker_img_32s);
 }
 
 void mvAdvancedColorFilter::mean_shift(IplImage* src, IplImage* dst) {
