@@ -29,13 +29,11 @@ MDA_VISION_MODULE_PATH:: MDA_VISION_MODULE_PATH () :
     read_mv_setting (MDA_VISION_PATH_SETTINGS, "TARGET_GREEN", TARGET_GREEN);
     read_mv_setting (MDA_VISION_PATH_SETTINGS, "TARGET_RED", TARGET_RED);
 
-    color_img = mvGetScratchImage_Color();
     gray_img = mvGetScratchImage();
     gray_img_2 = mvGetScratchImage2();
 }
 
 MDA_VISION_MODULE_PATH:: ~MDA_VISION_MODULE_PATH () {
-    mvReleaseScratchImage_Color();
     mvReleaseScratchImage();
     mvReleaseScratchImage2();
 }
@@ -66,7 +64,7 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
     CvPoint best_centroid = cvPoint(MV_UNDEFINED_VALUE, MV_UNDEFINED_VALUE);
     float best_length = MV_UNDEFINED_VALUE;
     float best_angle = MV_UNDEFINED_VALUE;
-    double best_shape_diff, best_color_diff;
+    double best_shape_diff=1000000, best_color_diff=1000000;
     double best_diff = 1000000;
     
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
@@ -440,7 +438,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
             return NO_TARGET;
 
         retval = TWO_SEGMENT;
-        m_angular_x = RAD_TO_DEG * atan((float)m_pixel_x / m_pixel_y);
+        m_angular_x = m_angle; //RAD_TO_DEG * atan((float)m_pixel_x / m_pixel_y);
         DEBUG_PRINT ("Path: (%d,%d) (%5.2f,?)\n", m_pixel_x, m_pixel_y, 
             m_angular_x);
         

@@ -73,22 +73,24 @@ void mvContours::init_contour_template_database (const char** image_database_vec
 void mvContours::get_ellipse_parameters_for_rect (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &length, float &angle) {
     assert (contour1->total > 6); // needed by cvFitEllipse2
 
-    CvBox2D ellipse = cvFitEllipse2(contour1);
+    //CvBox2D ellipse = cvFitEllipse2(contour1);
+    CvBox2D ellipse = cvMinAreaRect2(contour1, m_storage);
     angle = ellipse.angle;
-    if (static_cast<int>(angle) > 180) angle -= 180;
+    int height = ellipse.size.height;
+    int width = ellipse.size.width;
 
-    if (static_cast<int>(angle) > 90) angle -= 180;
-    else if (static_cast<int>(angle) < -90) angle += 180;
+    // depending on which is the long side we assign the angle differently    
+    if (height > width) {
+        length = height;
+    } else {
+        length = width;
+        angle += 90;
+    }
 
-    // RZ - I think this can be removed after a bit more testing
-    CvMoments mom;
-    cvMoments(contour1, &mom);
-
-    int x = static_cast<int>(mom.m10/mom.m00);
-    int y = static_cast<int>(mom.m01/mom.m00);
+    int x = ellipse.center.x;
+    int y = ellipse.center.y;
     centroid.x = x - img->width*0.5;
     centroid.y = y - img->height*0.5;
-    length = 0.6 * ellipse.size.height;
 
     // draw a line to indicate the angle
     CvPoint p0, p1;
@@ -99,17 +101,17 @@ void mvContours::get_ellipse_parameters_for_rect (IplImage* img, CvSeq* contour1
     cvLine (img, p0, p1, CV_RGB(50,50,50), 2);
 }
 
-void mvContours::get_circle_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float radius) {
+void mvContours::get_circle_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &radius) {
     assert (contour1->total > 3);
 
-    CvMoments mom;
-    cvMoments (contour1, &mom);
-    int x = static_cast<int>(mom.m10/mom.m00);
-    int y = static_cast<int>(mom.m01/mom.m00);
+    CvPoint2D32f centroid32f;
+    cvMinEnclosingCircle(contour1, &centroid32f, &radius);
+    int x = static_cast<int>(centroid32f.x);
+    int y = static_cast<int>(centroid32f.y);
+
     centroid.x = x - img->width*0.5;
     centroid.y = y - img->height*0.5;
     
-    radius = static_cast<float>(std::sqrt(mom.m00 / CV_PI)); // m00 is just the area
     cvCircle (img, cvPoint(x,y), static_cast<int>(radius), CV_RGB(50,50,50), 2);
 }
 
@@ -183,14 +185,14 @@ double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &len
         return -1;
     }
 
-    drawOntoImage (img);
-
     // check the contour's area to make sure it isnt too small
     double area = cvContourArea(m_contours);
     if (area < img->width*img->height/10000) {
         DEBUG_PRINT ("match_rectangle: contour area too small, returning.\n");
         return -1;
     }
+
+    drawOntoImage (img);
 
     // do matching to ensure the contour is a rectangle
     int match_index;
