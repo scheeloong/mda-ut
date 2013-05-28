@@ -217,7 +217,6 @@ class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
     mvKMeans KMeans;
     mvLines lines;
     
-    IplImage* color_img;
     IplImage* gray_img;
     IplImage* gray_img_2;
     
@@ -255,15 +254,24 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
     static const float BUOY_REAL_DIAMTER = 23;
     static const float MIN_PIXEL_RADIUS_FACTOR = 0.04;
 
+    // for contour shape/color matching
+    static const double COLOR_DIVISION_FACTOR = 2000;
+    static const double DIFF_THRESHOLD = 1.8 + 80/200; // shape diff + color diff
+    int TARGET_BLUE, TARGET_GREEN, TARGET_RED;
+
     mvWindow window;
+    mvWindow window2;
     mvBinaryMorphology Morphology5;
     mvBinaryMorphology Morphology3;
-    mvAdvancedColorFilter AdvancedColorFilter;
+    mvWatershedFilter watershed_filter;
+    mvContours contour_filter;
     mvAdvancedCircles AdvancedCircles;
-    
+
     mvRect Rect;
 
-    IplImage* filtered_img;
+    IplImage* gray_img;
+    IplImage* gray_img_2;
+    //IplImage* filtered_img;
 
 
 public:
