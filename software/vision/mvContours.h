@@ -16,7 +16,7 @@ class mvContours {
     static const char* contour_rect_images[];
     std::vector<HU_MOMENTS> hu_moments_rect_vector;
 
-    static const int NUM_CONTOUR_CIRC_IMAGES = 3;
+    static const int NUM_CONTOUR_CIRC_IMAGES = 2;
     static const char* contour_circ_images[];
     std::vector<HU_MOMENTS> hu_moments_circ_vector;
 

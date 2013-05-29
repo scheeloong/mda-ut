@@ -20,6 +20,11 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
 
     bool done_path = false;
 
+    // sink to starting depth
+    const int starting_depth = 300; 
+    actuator_output->set_attitude_absolute(DEPTH, starting_depth); // this is rough depth of the buoys
+    sleep(5);
+
     while (1) {
         IplImage* frame = image_input->get_image(DWN_IMG);
         if (!frame) {
@@ -94,13 +99,13 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
 
                 printf("xy_distance = %d    xy_angle = %5.2f\n==============================\n", xy_distance, xy_ang);
 
-                if (xy_distance < frame->height/5) {
+                if (xy_distance < frame->height/6) {
                     // if we are oriented over the path, we can sink
                     actuator_output->set_attitude_change(FORWARD, 0);
                     actuator_output->set_attitude_absolute(DEPTH, DEPTH_TARGET);
 
                     if(attitude_input->depth() > DEPTH_TARGET-5 && attitude_input->depth() < DEPTH_TARGET+5){
-                        actuator_output->set_attitude_change(LEFT,pos_ang);
+                        actuator_output->set_attitude_change(RIGHT,pos_ang);
                         if(abs(pos_ang) < 5){
                             done_path = true;
                             // settle for 2s
@@ -116,7 +121,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                         actuator_output->set_attitude_change(FORWARD);
                     } 
                     else {
-                        actuator_output->set_attitude_change(LEFT, xy_ang);
+                        actuator_output->set_attitude_change(RIGHT, xy_ang);
                     }
                 }
             }

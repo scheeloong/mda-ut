@@ -437,10 +437,17 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         if (m_pixel_x == MV_UNDEFINED_VALUE || m_pixel_y == MV_UNDEFINED_VALUE || m_angle == MV_UNDEFINED_VALUE)
             return NO_TARGET;
 
-        retval = TWO_SEGMENT;
-        m_angular_x = m_angle; //RAD_TO_DEG * atan((float)m_pixel_x / m_pixel_y);
-        DEBUG_PRINT ("Path: (%d,%d) (%5.2f,?)\n", m_pixel_x, m_pixel_y, 
-            m_angular_x);
+        retval = FULL_DETECT;
+        m_angular_x = RAD_TO_DEG * atan((float)m_pixel_x / m_pixel_y);
+        if (m_pixel_y < 0) {
+            if (m_pixel_x > 0)
+                m_angular_x += 180;
+            else
+                m_angular_x -= 180;
+        }
+
+        DEBUG_PRINT ("Path: (%d,%d) angular_pos=%5.2f, angle=%5.2f\n", m_pixel_x, m_pixel_y, 
+            m_angular_x, m_angle);
         
         return retval;
 }
