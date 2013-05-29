@@ -589,7 +589,7 @@ void ManualOperation::long_input()
     sscanf(buf, "right %d", &target_yaw_change);
     if (target_yaw_change >= 0 && target_yaw_change <= 180) {
       if (actuator_output->set_attitude_change(RIGHT, target_yaw_change)) {
-        message_hold("Turning left");
+        message_hold("Turning right");
       } else {
         message_hold("Yaw not stable, not turning right");
       }
