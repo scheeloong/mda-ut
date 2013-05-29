@@ -70,7 +70,7 @@ void MDA_VISION_MODULE_BUOY:: primary_filter (IplImage* src) {
     window.showImage (filtered_img);*/
 
     watershed_filter.watershed(src, gray_img);
-    window.showImage (gray_img);
+    //window.showImage (gray_img);
 
     int seg = 1;
     COLOR_TRIPLE color;
@@ -82,8 +82,8 @@ void MDA_VISION_MODULE_BUOY:: primary_filter (IplImage* src) {
     double best_diff = 1000000;
     
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
-        //DEBUG_PRINT ("\nSegment %d\n", seg);
-        //DEBUG_PRINT ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
+        DEBUG_PRINT ("\nSegment %d\n", seg);
+        DEBUG_PRINT ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
 
         // calculate color diff
         double color_diff = static_cast<double>(color.diff(color_template)) / COLOR_DIVISION_FACTOR;
@@ -96,7 +96,9 @@ void MDA_VISION_MODULE_BUOY:: primary_filter (IplImage* src) {
             continue;
 
         double diff = color_diff + shape_diff;
-        //DEBUG_PRINT ("\tColor_Diff=%6.4f  Shape_Diff=%6.4f\n\tFinal_Diff=%6.4f\n", color_diff, shape_diff, diff);
+        DEBUG_PRINT ("\tColor_Diff=%6.4f  Shape_Diff=%6.4f\n\tFinal_Diff=%6.4f\n", color_diff, shape_diff, diff);
+        window2.showImage (gray_img_2);
+        //cvWaitKey(300);
 
         if (seg == 1 || diff < best_diff) {
             best_diff = diff;  best_shape_diff = shape_diff;  best_color_diff = color_diff;
@@ -115,7 +117,7 @@ void MDA_VISION_MODULE_BUOY:: primary_filter (IplImage* src) {
         return;
     }
 
-    window2.showImage (gray_img);
+    window.showImage (gray_img);
     
     m_pixel_x = best_centroid.x;
     m_pixel_y = best_centroid.y;

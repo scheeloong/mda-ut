@@ -256,7 +256,7 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
 
     // for contour shape/color matching
     static const double COLOR_DIVISION_FACTOR = 2000;
-    static const double DIFF_THRESHOLD = 1.8 + 80/200; // shape diff + color diff
+    static const double DIFF_THRESHOLD = 0.3 + 40/200; // shape diff + color diff
     int TARGET_BLUE, TARGET_GREEN, TARGET_RED;
 
     mvWindow window;

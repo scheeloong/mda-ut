@@ -21,7 +21,7 @@ const char* mvContours::contour_rect_images[] = {
 const char* mvContours::contour_circ_images[] = {
     CONTOUR_IMG_PREFIX "circ01.png",
     CONTOUR_IMG_PREFIX "circ02.png",
-    CONTOUR_IMG_PREFIX "circ03.png",
+    /*CONTOUR_IMG_PREFIX "circ03.png", dont use the half circle for now*/
 };
 
 double dslog (double x) { // double signed log
@@ -90,7 +90,7 @@ void mvContours::get_ellipse_parameters_for_rect (IplImage* img, CvSeq* contour1
     int x = ellipse.center.x;
     int y = ellipse.center.y;
     centroid.x = x - img->width*0.5;
-    centroid.y = y - img->height*0.5;
+    centroid.y = -y + img->height*0.5; // the centroid y is measured to the bottom of the image
 
     // draw a line to indicate the angle
     CvPoint p0, p1;
@@ -178,13 +178,12 @@ double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &len
         CV_RETR_EXTERNAL,
         CV_CHAIN_APPROX_SIMPLE
     );
-    bin_contours.stop();
-    
+
     if (m_contours == NULL || m_contours->total <= 6) {
         DEBUG_PRINT ("match_rectangle: contour too short, returning.\n");
         return -1;
     }
-
+    
     // check the contour's area to make sure it isnt too small
     double area = cvContourArea(m_contours);
     if (area < img->width*img->height/10000) {
@@ -224,14 +223,11 @@ double mvContours::match_circle (IplImage* img, CvPoint &centroid, float &radius
         CV_RETR_EXTERNAL,
         CV_CHAIN_APPROX_SIMPLE
     );
-    bin_contours.stop();
-    
-    if (m_contours == NULL || m_contours->total <= 3) {
+
+    if (m_contours == NULL || m_contours->total <= 10) {
         DEBUG_PRINT ("match_circle: contour too short, returning.\n");
         return -1;
     }
-
-    drawOntoImage (img);
 
     // check the contour's area to make sure it isnt too small
     double area = cvContourArea(m_contours);
@@ -239,6 +235,17 @@ double mvContours::match_circle (IplImage* img, CvPoint &centroid, float &radius
         DEBUG_PRINT ("match_circle: contour area too small, returning.\n");
         return -1;
     }
+
+    CvSeq* poly = approx_poly (m_contours, 3);
+    cvClearSeq (m_contours);
+    m_contours = poly;
+    if (m_contours == NULL || m_contours->total <= 6) { // check again after the approxpoly
+        DEBUG_PRINT ("match_circle: contour too short, returning.\n");
+        return -1;
+    }
+    bin_contours.stop();
+
+    drawOntoImage (img);
 
     // do some kind of matching to ensure the contour is a circle
     int match_index;
