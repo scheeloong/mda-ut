@@ -62,7 +62,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
     /// Here we should store the starting attitude vector, so we can return to this attitude later
 
     bool done_buoy = false;
-    int EMA_range = -1;
+    int EMA_range = 400;
     printf ("Sinking to appropriate buoy depth\n");
     actuator_output->set_attitude_absolute(DEPTH, starting_depth); // this is rough depth of the buoys
     sleep(2);
@@ -111,7 +111,9 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
                     actuator_output->set_attitude_change(FORWARD);
 
                     // calculate an exponential moving average for range
-                    EMA_range = (EMA_range == -1) ? range : 0.1*range+0.9*EMA_range;
+                    //EMA_range = (EMA_range == -1) ? range : 0.1*range+0.9*EMA_range;
+                    EMA_range = 0.1*range+0.9*EMA_range;
+                    printf ("task_buoy: range = %d.  EMA_range = %d", range, EMA_range);
 
                     // more forgiving on EMA_range
                     if (EMA_range < BUOY_RANGE_WHEN_DONE * 1.33) {

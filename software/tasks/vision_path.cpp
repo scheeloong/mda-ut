@@ -28,6 +28,7 @@ MDA_VISION_MODULE_PATH:: MDA_VISION_MODULE_PATH () :
     read_mv_setting (MDA_VISION_PATH_SETTINGS, "TARGET_BLUE", TARGET_BLUE);
     read_mv_setting (MDA_VISION_PATH_SETTINGS, "TARGET_GREEN", TARGET_GREEN);
     read_mv_setting (MDA_VISION_PATH_SETTINGS, "TARGET_RED", TARGET_RED);
+    read_mv_setting (MDA_VISION_PATH_SETTINGS, "DIFF_THRESHOLD", DIFF_THRESHOLD_SETTING);
 
     gray_img = mvGetScratchImage();
     gray_img_2 = mvGetScratchImage2();
@@ -57,7 +58,7 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
     watershed_filter.watershed(src, gray_img);
     window.showImage (gray_img);
 
-    int seg = 1;
+    int seg = 0;
     COLOR_TRIPLE color;
     COLOR_TRIPLE color_template (TARGET_BLUE,TARGET_GREEN,TARGET_RED,0);
 
@@ -68,8 +69,7 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
     double best_diff = 1000000;
     
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
-        //DEBUG_PRINT ("\nSegment %d\n", seg);
-        //DEBUG_PRINT ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
+        seg++;
 
         // calculate color diff
         double color_diff = static_cast<double>(color.diff(color_template)) / COLOR_DIVISION_FACTOR;
@@ -82,6 +82,8 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
             continue;
 
         double diff = color_diff + shape_diff;
+        //DEBUG_PRINT ("\nSegment %d\n", seg);
+        //DEBUG_PRINT ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
         //DEBUG_PRINT ("\tColor_Diff=%6.4f  Shape_Diff=%6.4f\n\tFinal_Diff=%6.4f\n", color_diff, shape_diff, diff);
 
         if (seg == 1 || diff < best_diff) {
@@ -91,10 +93,14 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
             best_angle = angle;
             cvCopy (gray_img_2, gray_img);
         }
-        seg++;
     }
 
-    double confidence_level = DIFF_THRESHOLD / best_diff;
+    if (seg <= 1) { // only 1 segment
+        DEBUG_PRINT ("vision_buoy: Only 1 Segment. No information returned.\n");
+        return;
+    }
+
+    double confidence_level = DIFF_THRESHOLD_SETTING / best_diff;
     DEBUG_PRINT ("Confidence Level = %5.3lf (%4.2lf shape diff, %4.2lf color diff)\n", 
         confidence_level, best_shape_diff, best_color_diff);
     if (confidence_level < 1.0) {
