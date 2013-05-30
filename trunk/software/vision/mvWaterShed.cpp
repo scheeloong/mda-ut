@@ -73,7 +73,7 @@ void mvWatershedFilter::watershed_markers_internal (IplImage* src) {
     cvResize (scratch_image, ds_image_nonedge, CV_INTER_LINEAR);
       
     // generate the "nonedge image" which is 1 if the pixel isnt an edge image in ds_image_3c
-    cvSmooth (ds_image_nonedge, ds_image_nonedge, CV_GAUSSIAN, 5);
+    //cvSmooth (ds_image_nonedge, ds_image_nonedge, CV_GAUSSIAN, 5);
 
     // perform gradient
     IplImage *ds_scratch = cvCreateImageHeader (cvGetSize(ds_image_nonedge), IPL_DEPTH_8U, 1);
@@ -113,7 +113,7 @@ void mvWatershedFilter::watershed_markers_internal (IplImage* src) {
     // 2. Check if the coordinate is a non-edge pixel on the nonedge image.
     // 3. If so add it to color_point_vector and
     // 4. If so mark coordinates near it as edge on the nonege image
-    for (int i = 0; i < 200; i++) {
+    for (int i = 0; i < 70; i++) {
         int x = rand() % ds_image_nonedge->width;
         int y = rand() % ds_image_nonedge->height;
 
@@ -177,7 +177,7 @@ void mvWatershedFilter::watershed_markers_internal (IplImage* src) {
             printf ("#");
         printf ("\n");
 */
-        if (diff > 80 || final_index_number > MAX_INDEX_NUMBER)
+        if (diff > 50 || final_index_number > MAX_INDEX_NUMBER)
             break;
 
         const bool pixel1_unassigned = (color_point_vector[index1].first.index_number == 0);

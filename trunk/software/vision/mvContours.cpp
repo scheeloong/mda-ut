@@ -235,7 +235,7 @@ double mvContours::match_circle (IplImage* img, CvPoint &centroid, float &radius
         DEBUG_PRINT ("match_circle: contour area too small, returning.\n");
         return -1;
     }
-
+/*
     CvSeq* poly = approx_poly (m_contours, 3);
     cvClearSeq (m_contours);
     m_contours = poly;
@@ -243,6 +243,7 @@ double mvContours::match_circle (IplImage* img, CvPoint &centroid, float &radius
         DEBUG_PRINT ("match_circle: contour too short, returning.\n");
         return -1;
     }
+*/
     bin_contours.stop();
 
     drawOntoImage (img);

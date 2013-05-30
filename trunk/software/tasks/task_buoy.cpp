@@ -62,7 +62,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
     /// Here we should store the starting attitude vector, so we can return to this attitude later
 
     bool done_buoy = false;
-    int EMA_range = 400;
+    int EMA_range = 200;
     printf ("Sinking to appropriate buoy depth\n");
     actuator_output->set_attitude_absolute(DEPTH, starting_depth); // this is rough depth of the buoys
     sleep(2);
@@ -86,7 +86,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
                 break;
             }
             else if (vision_code == NO_TARGET) {
-                actuator_output->set_attitude_change(FORWARD);
+                //actuator_output->set_attitude_change(FORWARD);
             }
             else if (vision_code == UNKNOWN_TARGET) {
                 // here range is not valid, probably cuz theres interference or circle too small
@@ -94,7 +94,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
                 int ang_x = buoy_vision.get_angular_x();
 
                 actuator_output->set_attitude_change(RIGHT, ang_x);
-                actuator_output->set_attitude_change(FORWARD);
+                //actuator_output->set_attitude_change(FORWARD);
             }
             else if (vision_code == FULL_DETECT) {
                 // range is valid, so we can use it to calculate the right depth
@@ -103,7 +103,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
                 int range = buoy_vision.get_range();
 
                 int depth_change = tan(ang_y*0.017453) * range; 
-                actuator_output->set_attitude_change(SINK, depth_change);
+                //actuator_output->set_attitude_change(SINK, depth_change);
 
                 // we cant use set_attitude_change to rise and fwd at the same time so we have to
                 // check if we are roughly pointing at the target, and decide what to do
@@ -112,16 +112,25 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
 
                     // calculate an exponential moving average for range
                     //EMA_range = (EMA_range == -1) ? range : 0.1*range+0.9*EMA_range;
-                    EMA_range = 0.1*range+0.9*EMA_range;
+                    EMA_range = 0.5*range+0.5*EMA_range;
                     printf ("task_buoy: range = %d.  EMA_range = %d", range, EMA_range);
 
                     // more forgiving on EMA_range
-                    if (EMA_range < BUOY_RANGE_WHEN_DONE * 1.33) {
+                    if (EMA_range < 30) {
                         done_buoy = true;
+			printf("\n\nBUOY TASK DONE\n\n\n");
                     }   
                 }
                 else {
-                    actuator_output->set_attitude_change(RIGHT, ang_x);              
+                    if (ang_x > 20) ang_x = 20;
+                    if (ang_x < -20) ang_x = -20;
+                    static int count = 0;
+                    count++;
+                    if (count == 4) {
+                        count = 0;
+                        printf("Turning %s %d degrees\n", (ang_x > 0) ? "right" : "left", abs(ang_x));
+                        actuator_output->set_attitude_change(RIGHT, ang_x); 
+                    }
                 }
             }
             else {
