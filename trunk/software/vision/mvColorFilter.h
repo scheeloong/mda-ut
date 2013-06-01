@@ -219,6 +219,12 @@ public:
               + abs(static_cast<int>(m2)-static_cast<int>(T.m2)) 
               + abs(static_cast<int>(m3)-static_cast<int>(T.m3)));
     }
+    int sqr_diff (COLOR_TRIPLE T) {
+        int d1 = static_cast<int>(m1) - static_cast<int>(T.m1);
+        int d2 = static_cast<int>(m2) - static_cast<int>(T.m2);
+        int d3 = static_cast<int>(m3) - static_cast<int>(T.m3);
+        return (d1*d1 + d2*d2 + d3*d3);
+    }
     void print () {
         printf ("color_triplet #%2d (%d pixels): %d %d %d\n", index_number, n_pixels, m1, m2, m3);
     }

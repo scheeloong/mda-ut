@@ -9,6 +9,7 @@
 #endif
 
 #define CONTOUR_IMG_PREFIX "../vision/contour_images/"
+#define MEAN2(a,b) ((abs((a) + (b)))/2.0)
 
 const char* mvContours::contour_rect_images[] = {
     CONTOUR_IMG_PREFIX "Rect01.png",
@@ -70,14 +71,14 @@ void mvContours::init_contour_template_database (const char** image_database_vec
     }
 }
 
-void mvContours::get_ellipse_parameters_for_rect (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &length, float &angle) {
+void mvContours::get_rect_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &length, float &angle) {
     assert (contour1->total > 6); // needed by cvFitEllipse2
 
-    //CvBox2D ellipse = cvFitEllipse2(contour1);
-    CvBox2D ellipse = cvMinAreaRect2(contour1, m_storage);
-    angle = ellipse.angle;
-    int height = ellipse.size.height;
-    int width = ellipse.size.width;
+    //CvBox2D Rect = cvFitEllipse2(contour1);
+    CvBox2D Rect = cvMinAreaRect2(contour1, m_storage);
+    angle = Rect.angle;
+    int height = Rect.size.height;
+    int width = Rect.size.width;
 
     // depending on which is the long side we assign the angle differently    
     if (height > width) {
@@ -87,8 +88,8 @@ void mvContours::get_ellipse_parameters_for_rect (IplImage* img, CvSeq* contour1
         angle += 90;
     }
 
-    int x = ellipse.center.x;
-    int y = ellipse.center.y;
+    int x = Rect.center.x;
+    int y = Rect.center.y;
     centroid.x = x - img->width*0.5;
     centroid.y = -y + img->height*0.5; // the centroid y is measured to the bottom of the image
 
@@ -108,6 +109,11 @@ void mvContours::get_circle_parameters (IplImage* img, CvSeq* contour1, CvPoint 
     cvMinEnclosingCircle(contour1, &centroid32f, &radius);
     int x = static_cast<int>(centroid32f.x);
     int y = static_cast<int>(centroid32f.y);
+
+    if (radius > img->height/2) {
+        radius = -1;
+        return;
+    }
 
     centroid.x = x - img->width*0.5;
     centroid.y = y - img->height*0.5;
@@ -167,7 +173,11 @@ void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_i
 double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &length, float &angle, int method) {
     assert (img != NULL);
     assert (img->nChannels == 1);
-    
+    if (m_contours != NULL) {
+        cvClearSeq(m_contours);
+        m_contours = NULL;
+    }
+
     // find the contours
     bin_contours.start();
     cvFindContours (
@@ -191,8 +201,6 @@ double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &len
         return -1;
     }
 
-    drawOntoImage (img);
-
     // do matching to ensure the contour is a rectangle
     int match_index;
     double best_match_diff;
@@ -202,17 +210,20 @@ double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &len
 
     // get the mathematical properties we want
     bin_calc.start();
-    get_ellipse_parameters_for_rect (img, m_contours, centroid, length, angle);
+    get_rect_parameters (img, m_contours, centroid, length, angle);
     bin_calc.stop();
 
-    cvClearSeq(m_contours);
     return best_match_diff;
 }
 
 double mvContours::match_circle (IplImage* img, CvPoint &centroid, float &radius, int method) {
     assert (img != NULL);
     assert (img->nChannels == 1);
-    
+    if (m_contours != NULL) {
+        cvClearSeq(m_contours);
+        m_contours = NULL;
+    }
+
     // find the contours
     bin_contours.start();
     cvFindContours (
@@ -231,35 +242,50 @@ double mvContours::match_circle (IplImage* img, CvPoint &centroid, float &radius
 
     // check the contour's area to make sure it isnt too small
     double area = cvContourArea(m_contours);
-    if (area < img->width*img->height/1000) {
+    if (area < img->width*img->height/600) {
         DEBUG_PRINT ("match_circle: contour area too small, returning.\n");
         return -1;
     }
-/*
-    CvSeq* poly = approx_poly (m_contours, 3);
-    cvClearSeq (m_contours);
-    m_contours = poly;
-    if (m_contours == NULL || m_contours->total <= 6) { // check again after the approxpoly
-        DEBUG_PRINT ("match_circle: contour too short, returning.\n");
-        return -1;
-    }
-*/
+
     bin_contours.stop();
 
-    drawOntoImage (img);
-
     // do some kind of matching to ensure the contour is a circle
-    int match_index;
-    double best_match_diff;
-    bin_match.start();
-    match_contour_with_database (m_contours, match_index, best_match_diff, method, hu_moments_circ_vector);
-    bin_match.stop();
+    CvMoments moments;
+    cvContourMoments (m_contours, &moments);
+    cv::Moments cvmoments(moments);
+
+    double nu11 = cvmoments.nu11;
+    double nu20 = cvmoments.nu02;
+    double nu02 = cvmoments.nu20;
+    double nu21 = cvmoments.nu21;
+    double nu12 = cvmoments.nu12;
+    double nu03 = cvmoments.nu03;
+    double nu30 = cvmoments.nu30;
+
+    double r03 = abs(nu30 / nu03);
+    r03 = (r03 > 1) ? r03 : 1.0/r03;
+    double r12 = abs(nu12 / nu21);
+    r12 = (r12 > 1) ? r12 : 1.0/r12;
+    double r02 = abs(nu02 / nu20);
+    r02 = (r02 > 1) ? r02 : 1.0/r02;
+
+    double r11 = abs( MEAN2(nu02,nu20) / nu11);
+    double R = MEAN2(nu20,nu02) / std::max((MEAN2(nu21,nu12)), (MEAN2(nu30,nu03)));
+    bool pass = (r03 <= 15.0) && (r12 <= 5.0) && (r02 <= 5.0) && (r11 > 5.0) && (R > 50);
+
+    printf ("\nCircle Contours: nu11=%lf, nu20=%lf, nu02=%lf, nu21=%lf, nu12=%lf, nu30=%lf, nu03=%lf\n",
+        nu11, nu20, nu02, nu21, nu12, nu30, nu03);
+    printf ("\tn30/n03=%3.1lf, n21/n12=%3.1lf, nu20/nu02=%3.1lf, r11=%3.1f, R=%3.1f. %s\n", r03, r12, r02, r11, R, pass?"PASS!":"FAIL!");
+    if (!pass)
+        return -1;
 
     // get the mathematical properties we want
     bin_calc.start();
     get_circle_parameters (img, m_contours, centroid, radius);
+    if (radius < 0) // get_circle_parameters returned an error
+        return -1;
     bin_calc.stop();
 
-    cvClearSeq(m_contours);
-    return best_match_diff;
+    //return best_match_diff;
+    return 1.0;
 }

@@ -163,34 +163,37 @@ int main( int argc, char** argv ) {
             double best_diff = 1000000;
             
             while ( watershed_filter.get_next_watershed_segment(filter_img_2, color) ) {
-                printf ("\nSegment %d\n", ++seg);
-                printf ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
-
                 // calculate color diff
                 double color_diff = static_cast<double>(color.diff(color_template)) / COLOR_DIVISION_FACTOR;
 
                 // calculate shape diff
                 CvPoint centroid;
                 float length, angle;
-                double shape_diff = contour_filter.match_rectangle(filter_img_2, centroid, length, angle);
+                double shape_diff = contour_filter.match_circle(filter_img_2, centroid, length);
+                win3->showImage(filter_img_2);
+                    cvWaitKey(0);
                 if (shape_diff < 0) // error from the shape matching
                     continue;
 
                 double diff = color_diff + shape_diff;
                 //double diff = shape_diff;
+                printf ("\nSegment %d\n", ++seg);
+                printf ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
                 printf ("\tColor_Diff=%6.4f  Shape_Diff=%6.4f\n\tFinal_Diff=%6.4f\n", color_diff, shape_diff, diff);
-
+                
                 if (seg == 1 || diff < best_diff) {
                     best_diff = diff;
                     best_centroid = centroid;
                     best_length = length;
                     best_angle = angle;
-                    cvCopy (filter_img_2, filter_img);
+                    //cvCopy (filter_img_2, filter_img);
+                    contour_filter.drawOntoImage(filter_img_2);
+                    
                 }
                 //cvWaitKey(0);
             }
 
-            win3->showImage (filter_img);
+            win3->showImage (filter_img_2);
         }
 
         if (GRAD) {
@@ -218,12 +221,14 @@ int main( int argc, char** argv ) {
             CvPoint centroid;
             float radius;
             contour_filter.match_circle(filter_img, centroid, radius);
+            contour_filter.drawOntoImage(filter_img);
             win3->showImage (filter_img);
         }
         else if (RECT) {
             CvPoint centroid;
             float length, angle;
             contour_filter.match_rectangle(filter_img, centroid, length, angle);
+            contour_filter.drawOntoImage(filter_img);
             win3->showImage (filter_img);
         }
         
@@ -231,7 +236,7 @@ int main( int argc, char** argv ) {
         if (BREAK)
             c = cvWaitKey(0);
         else if (LOAD)
-            c = cvWaitKey(66); // go for about 15 frames per sec
+            c = cvWaitKey(6); // go for about 15 frames per sec
         else
             c = cvWaitKey(5);
 
