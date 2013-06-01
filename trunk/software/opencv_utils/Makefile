@@ -6,6 +6,6 @@ include ../Makefile.in
 include Makefile.deps
 
 %.out: %.o $(LIB)
-	$(CC) -o $@ $< $(CXXFLAGS)
+	$(CXX) -o $@ $< $(CXXFLAGS)
 
 .PHONY: parallel all deps clean
