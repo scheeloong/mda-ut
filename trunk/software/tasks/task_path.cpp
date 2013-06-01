@@ -22,8 +22,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
 
     // sink to starting depth
     const int starting_depth = 300; 
-    actuator_output->set_attitude_absolute(DEPTH, starting_depth); // this is rough depth of the buoys
-    sleep(5);
+    set(DEPTH, starting_depth); // this is rough depth of the buoys
 
     while (1) {
         IplImage* frame = image_input->get_image(DWN_IMG);
@@ -52,15 +51,15 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
 
                 if(xy_distance > frame->height/5){
                     if (abs(xy_ang) < 10){
-                        actuator_output->set_attitude_change(SINK, 0);
                         actuator_output->set_attitude_change(FORWARD);           
                     }
                     else {
-                        actuator_output->set_attitude_change(LEFT, xy_ang);
+                        move(RIGHT, xy_ang);
+                        printf("Turning %s %d degrees (xy_ang)\n", (xy_ang > 0) ? "right" : "left", abs(xy_ang));
                     }
                 }
                 else{
-                    actuator_output->set_attitude_change(FORWARD, 0);
+                    // TODO: set depth based on range, not a hard-coded value
                     actuator_output->set_attitude_absolute(DEPTH, DEPTH_TARGET);
                 }
             }
@@ -101,11 +100,11 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
 
                 if (xy_distance < frame->height/6) {
                     // if we are oriented over the path, we can sink
-                    actuator_output->set_attitude_change(FORWARD, 0);
                     actuator_output->set_attitude_absolute(DEPTH, DEPTH_TARGET);
 
                     if(attitude_input->depth() > DEPTH_TARGET-5 && attitude_input->depth() < DEPTH_TARGET+5){
-                        actuator_output->set_attitude_change(RIGHT,pos_ang);
+                        move(RIGHT,pos_ang);
+                        printf("Turning %s %d (pos_ang) degrees\n", (pos_ang > 0) ? "right" : "left", abs(pos_ang));
                         if(abs(pos_ang) < 5){
                             done_path = true;
                             // settle for 2s
@@ -117,11 +116,11 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                 else {
                     // if we are not oriented over the path, put the path in front of us and go fwd
                     if (abs(xy_ang) < 10){
-                        actuator_output->set_attitude_change(SINK, 0);
                         actuator_output->set_attitude_change(FORWARD);
                     } 
                     else {
-                        actuator_output->set_attitude_change(RIGHT, xy_ang);
+                        move(RIGHT, xy_ang);
+                        printf("Turning %s %d (xy_ang2) degrees\n", (xy_ang > 0) ? "right" : "left", abs(xy_ang));
                     }
                 }
             }
