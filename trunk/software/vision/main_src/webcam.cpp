@@ -231,7 +231,7 @@ int main( int argc, char** argv ) {
         if (BREAK)
             c = cvWaitKey(0);
         else if (LOAD)
-            c = cvWaitKey(3); // go for about 15 frames per sec
+            c = cvWaitKey(66); // go for about 15 frames per sec
         else
             c = cvWaitKey(5);
 

@@ -356,8 +356,9 @@ void flood_image_interactive_callback(int event, int x, int y, int flags, void* 
 //  mvWatershedFilter
 // ##################################################################################################
 class mvWatershedFilter {
-    static const int WATERSHED_DS_FACTOR = 4;
+    static const int WATERSHED_DS_FACTOR = 3;
     static const unsigned MAX_INDEX_NUMBER = 250;
+    static const int MAX_MARKERS_TO_GENERATE = 100;
     static const int KERNEL_WIDTH = 3;
     static const int KERNEL_HEIGHT = 3;
     
@@ -368,16 +369,28 @@ class mvWatershedFilter {
     IplImage* marker_img_32s;
     IplConvKernel* kernel;
 
+    typedef std::pair<COLOR_TRIPLE, CvPoint> COLOR_POINT;
+    typedef std::vector<COLOR_POINT> COLOR_POINT_VECTOR;
+    COLOR_POINT_VECTOR color_point_vector;
+
     std::map<unsigned char,COLOR_TRIPLE> segment_color_hash;
     std::map<unsigned char,COLOR_TRIPLE>::iterator curr_segment_iter;
     
     unsigned curr_segment_index;
     unsigned final_index_number;
 
-    PROFILE_BIN bin_Seed;
+    PROFILE_BIN bin_SeedGen;
+    PROFILE_BIN bin_SeedPlace;
     PROFILE_BIN bin_Filter;
 
-    void watershed_markers_internal (IplImage* src); // place markers
+    // generate markers from image, place them into color_point_vector
+    void watershed_generate_markers_internal (IplImage* src);
+    // assign index number to markers - similar colored markers get similar indices
+    void watershed_process_markers_internal ();
+    void watershed_process_markers_internal2 ();
+    // draw markers onto marker_img_32s and ready the segment_color_hash
+    void watershed_place_markers_internal (IplImage* src);
+    // calls cvWatershed
     void watershed_filter_internal (IplImage* src, IplImage* dst); // run watershed
 
 public:

@@ -3,6 +3,7 @@
 
 // Contains functions for mvWatershedFilter that pertain to the watershed algorithm
 
+#define USE_KMEANS_COLOR_CLUSTERING
 //#define M_DEBUG
 #ifdef M_DEBUG
     #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
@@ -18,7 +19,8 @@ bool m3_less_than (COLOR_TRIPLE T1, COLOR_TRIPLE T2) {
 // ########################################################################################
 
 mvWatershedFilter::mvWatershedFilter() :
-    bin_Seed ("mvWatershed - Seed"),
+    bin_SeedGen ("mvWatershed - SeedGen"),
+    bin_SeedPlace ("mvWatershed - SeedPlace"),
     bin_Filter ("mvWatershed - Filter")
 {
     scratch_image_3c = mvCreateImage_Color();
@@ -54,9 +56,14 @@ void mvWatershedFilter::watershed(IplImage* src, IplImage* dst) {
 
     cvCopy (src, scratch_image_3c);
 
-    bin_Seed.start();
-    watershed_markers_internal(src);
-    bin_Seed.stop();
+    bin_SeedGen.start();
+    watershed_generate_markers_internal(src);
+    bin_SeedGen.stop();
+
+    bin_SeedPlace.start();
+    watershed_process_markers_internal2();
+    watershed_place_markers_internal(src);
+    bin_SeedPlace.stop();
 
     bin_Filter.start();
     watershed_filter_internal(src,dst);
@@ -67,7 +74,8 @@ void mvWatershedFilter::watershed(IplImage* src, IplImage* dst) {
     curr_segment_index = 0;
 }
 
-void mvWatershedFilter::watershed_markers_internal (IplImage* src) {
+void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
+// This function generates a bunch of markers and puts them into color_point_vector
     // massively downsample - this smoothes the image
     cvCvtColor (src, scratch_image, CV_BGR2GRAY);
     cvResize (scratch_image, ds_image_nonedge, CV_INTER_LINEAR);
@@ -91,29 +99,28 @@ void mvWatershedFilter::watershed_markers_internal (IplImage* src) {
 
     // draw the bad pixels on the image so we can see them
     for (int i = 0; i < scratch_image->height; i++) {
-        for (int j = 0; j < scratch_image->width; j++) {
-            unsigned char* srcPtr = &CV_IMAGE_ELEM(scratch_image, unsigned char, i, j);
-        
+        unsigned char* srcPtr = (unsigned char*)(scratch_image->imageData + i*scratch_image->widthStep);
+        unsigned char* dstPtr = (unsigned char*)(src->imageData + i*src->widthStep);
+
+        for (int j = 0; j < scratch_image->width; j++) {        
             if (*srcPtr == 0) {
-                unsigned char* dstPtr = &CV_IMAGE_ELEM(src, unsigned char, i, 3*j);
                 dstPtr[0] = 0;
                 dstPtr[1] = 0;
                 dstPtr[2] = 200;
             }
+            srcPtr ++;
+            dstPtr += 3;
         }
     }
 
-    // Sample the image at certain intervals - add sample to an array
-    typedef std::pair<COLOR_TRIPLE, CvPoint> COLOR_POINT;
-    typedef std::vector<COLOR_POINT> COLOR_POINT_VECTOR;
-    COLOR_POINT_VECTOR color_point_vector;
+    color_point_vector.clear();
 
     // sample the image like this
     // 1. randomly generate an x,y coordinate.
     // 2. Check if the coordinate is a non-edge pixel on the nonedge image.
     // 3. If so add it to color_point_vector and
     // 4. If so mark coordinates near it as edge on the nonege image
-    for (int i = 0; i < 70; i++) {
+    for (int i = 0; i < 120; i++) {
         int x = rand() % ds_image_nonedge->width;
         int y = rand() % ds_image_nonedge->height;
 
@@ -127,7 +134,7 @@ void mvWatershedFilter::watershed_markers_internal (IplImage* src) {
             COLOR_TRIPLE ct (colorPtr[0], colorPtr[1], colorPtr[2], 0);;
             color_point_vector.push_back(std::make_pair(ct, cvPoint(xl,yl)));
             // 4.
-            cvCircle (ds_image_nonedge, cvPoint(x,y), 3, CV_RGB(0,0,0), -1);          
+            cvCircle (ds_image_nonedge, cvPoint(x,y), ds_image_nonedge->width/10, CV_RGB(0,0,0), -1);          
         }
     }
 
@@ -143,7 +150,45 @@ void mvWatershedFilter::watershed_markers_internal (IplImage* src) {
             }
         }
     }
+}
 
+
+void mvWatershedFilter::watershed_place_markers_internal (IplImage* src) {
+    // clear segment_color_hash, then populate the hash with the needed triples
+    int num_pixels = color_point_vector.size();
+
+    segment_color_hash.clear();
+    for (int i = 0; i < num_pixels; i++) {
+        int index_number = color_point_vector[i].first.index_number;
+        
+        if (index_number != 0) {
+            unsigned char index_char = static_cast<unsigned char>(index_number);
+            COLOR_TRIPLE T (0,0,0,index_number);
+            segment_color_hash.insert(std::make_pair(index_char,T));
+        }
+    }
+
+    // zero marker image and draw markers onto it
+    // also draw marker positions onto src so we can see where the markers are
+    cvZero (marker_img_32s);
+    DEBUG_PRINT ("Markers:\n");
+    for (int i = 0; i < num_pixels; i++) {
+        COLOR_TRIPLE ct = color_point_vector[i].first;
+        CvPoint C = color_point_vector[i].second;
+        int x = C.x;
+        int y = C.y;
+
+        if (ct.index_number != 0) {
+            int *ptr = &CV_IMAGE_ELEM(marker_img_32s, int, y, x);
+            *ptr = static_cast<int>(ct.index_number);
+
+            cvCircle(src, cvPoint(x,y), 2, CV_RGB(200,0,200), -1);
+            DEBUG_PRINT ("\tmarker: location <%3d,%3d>: color (%3d,%3d,%3d) - %2d\n", x, y, ct.m1, ct.m2, ct.m3, ct.index_number);
+        }
+    }
+}
+
+void mvWatershedFilter::watershed_process_markers_internal () {
     int num_pixels = color_point_vector.size();
     DEBUG_PRINT ("Candidate Pixels for Markers = %d\n", num_pixels);
 
@@ -208,46 +253,96 @@ void mvWatershedFilter::watershed_markers_internal (IplImage* src) {
                     color_point_vector[j].first.index_number = index_to_set;
         }
     }
+}
+
+void mvWatershedFilter::watershed_process_markers_internal2 () {
+    // Use cvKMeans2 to cluster the colors
+    int num_pixels = color_point_vector.size();
+    cv::Mat color_point_mat (num_pixels, 1, CV_32FC3);       // rows=num_pixels, cols=1, type = 8bit Unsigned Channels2
+    //CvMat* cluster_index_mat = cvCreateMat(num_pixels, 1, CV_32SC1);
+    cv::Mat cluster_index_mat (num_pixels, 1, CV_32SC1);
 
     for (int i = 0; i < num_pixels; i++) {
-        if (color_point_vector[i].first.index_number == 0) {
-            color_point_vector[i].first.index_number = final_index_number;
-            final_index_number += 5;
-        }
+        float* matPtr = (float*)(color_point_mat.data + i*color_point_mat.step);
+        matPtr[0] = color_point_vector[i].first.m1;
+        matPtr[1] = color_point_vector[i].first.m2;
+        matPtr[2] = color_point_vector[i].first.m3;
     }
+    /*for (int i = 0; i < num_pixels; i++) {
+        float* data = (float*)(color_point_mat.data + i*color_point_mat.step);
+        printf ("Pixel stored in matrix: (%5.1f, %5.1f, %5.1f)\n", data[0], data[1], data[2]);
+    }*/
 
-    // clear segment_color_hash, then populate the hash with the needed triples
-    segment_color_hash.clear();
-    for (int i = 0; i < num_pixels; i++) {
-        int index_number = color_point_vector[i].first.index_number;
+    double best_validity = -100;    // will keep track of lower validity number
+    int bad_cluster_counter = 0;    // keeps track of how many non-valid clustering configs we've had
+
+    for (int n_clusters = 1; n_clusters <= 10; n_clusters++) {
+        cv::Mat centers (n_clusters, 1, CV_32FC3);
+
+        double compactness = cv::kmeans (
+                color_point_mat,    
+                n_clusters,
+                cluster_index_mat,
+                cvTermCriteria (CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 6, 2.0),
+                1,      // attempts
+                cv::KMEANS_PP_CENTERS,      // flags
+                &centers   // CvArr* centers
+                //&compactness
+        );
+
+        // find the inter cluster diff
+        double min_cluster_dist = -100;
+        if (n_clusters == 1) {
+            min_cluster_dist = 3 * 30*30;
+        }
+        else {
+            for (int c1 = 0; c1 < n_clusters; c1++) {
+                for (int c2 = c1+1; c2 < n_clusters; c2++) {
+                    float* center1 = (float*)(centers.data + c1*centers.step);
+                    float* center2 = (float*)(centers.data + c2*centers.step);
+                    assert (center1 != center2);
+
+                    float d0 = center1[0] - center2[0];
+                    float d1 = center1[1] - center2[1];
+                    float d2 = center1[2] - center2[2];
+
+                    double cluster_dist = d0*d0 + d1*d1 + d2*d2;
+                    if (min_cluster_dist < 0 || cluster_dist < min_cluster_dist)
+                        min_cluster_dist = cluster_dist;
+                }
+            }
+        }
+
+        double validity = compactness / min_cluster_dist;
+        printf ("n_clusters=%d, compactness=%2.0lf, min_cluster_dist=%2.0lf, validity=%3.1lf\n", 
+                n_clusters, compactness, min_cluster_dist, validity);
         
-        if (index_number != 0) {
-            unsigned char index_char = static_cast<unsigned char>(index_number);
-            COLOR_TRIPLE T (0,0,0,index_number);
-            segment_color_hash.insert(std::make_pair(index_char,T));
-        }
-    }
+        if (best_validity < 0 || (best_validity-validity) > 0.2) {
+            best_validity = validity;
 
-    // zero marker image and draw markers onto it
-    // also draw marker positions onto src so we can see where the markers are
-    cvZero (marker_img_32s);
-    DEBUG_PRINT ("Markers:\n");
-    for (int i = 0; i < num_pixels; i++) {
-        COLOR_TRIPLE ct = color_point_vector[i].first;
-        CvPoint C = color_point_vector[i].second;
-        int x = C.x;//*WATERSHED_DS_FACTOR;
-        int y = C.y;//*WATERSHED_DS_FACTOR;
+            printf ("New Cluster Configuration Accepted\n");
+            for (int i = 0; i < num_pixels; i++) {
+                color_point_vector[i].first.index_number = 1+static_cast<int>(*(cluster_index_mat.data + i*cluster_index_mat.step));
+            }
 
-        if (ct.index_number != 0) {
-            int *ptr = &CV_IMAGE_ELEM(marker_img_32s, int, y, x);
-            unsigned char* srcPtr = &CV_IMAGE_ELEM(src, unsigned char, y, 3*x);
-            
-            *ptr = static_cast<int>(ct.index_number);
-            srcPtr[0] = 255;
-            srcPtr[1] = 0;
-            srcPtr[2] = 255;
+            final_index_number = n_clusters+1;
         }
-        DEBUG_PRINT ("\tmarker: location <%3d,%3d>: color (%3d,%3d,%3d) - %2d\n", x, y, ct.m1, ct.m2, ct.m3, ct.index_number);
+        else {
+            if (++bad_cluster_counter >= 2) {
+                printf ("Broke from clustering. Last attempt used %d clusters\n", n_clusters);
+                break;
+            }
+        }
+        /*
+        for (int i = 0; i < num_pixels; i++) {
+            float* data = (float*)(color_point_mat.data + i*color_point_mat.step);
+            int index_number = static_cast<int>(*(cluster_index_mat.data + i*cluster_index_mat.step));
+            printf ("\t(%5.1lf, %5.1lf, %5.1lf)  index_number=%d\n", data[0], data[1], data[2], index_number);
+        }*/
+        /*for (int i = 0; i < n_clusters; i++) {
+            float* data = (float*)(centers.data + i*centers.step);
+            printf ("\tCenter (%5.1f, %5.1f, %5.1f)\n", data[0], data[1], data[2]);
+        }*/
     }
 }
 
@@ -258,11 +353,11 @@ void mvWatershedFilter::watershed_filter_internal (IplImage* src, IplImage* dst)
     // 1. fill in dst so we can show it and stuff later
     // 2. add each pixel from a segment to its entry in segment_color_hash
     for (int i = 0; i < marker_img_32s->height; i++) {
+        unsigned char* dstPtr = (unsigned char*)dst->imageData + i*dst->widthStep;
+        unsigned char* colorPtr = (unsigned char*)scratch_image_3c->imageData + i*scratch_image_3c->widthStep;
+
         for (int j = 0; j < marker_img_32s->width; j++) {
             int index_number = CV_IMAGE_ELEM(marker_img_32s, int, i, j);
-            unsigned char* dstPtr = &CV_IMAGE_ELEM(dst, unsigned char, i, j);
-            unsigned char* colorPtr = &CV_IMAGE_ELEM(scratch_image_3c, unsigned char, i, j*3);
-
             if (index_number == -1) {
                 *dstPtr = 0;
             }
@@ -273,6 +368,9 @@ void mvWatershedFilter::watershed_filter_internal (IplImage* src, IplImage* dst)
                 // 2.
                 segment_color_hash[index_char].add_pixel(colorPtr[0],colorPtr[1],colorPtr[2]);
             }
+
+            dstPtr ++;
+            colorPtr += 3;
         }
     }
 
