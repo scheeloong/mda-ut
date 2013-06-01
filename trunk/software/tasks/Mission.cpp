@@ -5,6 +5,30 @@ Mission::~Mission()
 {
 }
 
+bool Mission::startup()
+{
+  static const int STARTUP_DEPTH_THRESHOLD = 10;
+
+  actuator_output->special_cmd(SUB_POWER_ON);
+
+  while (attitude_input->depth() < STARTUP_DEPTH_THRESHOLD) {
+    if (CharacterStreamSingleton::get_instance().wait_key(1) == 'q') {
+      return false;
+    }
+  }
+
+  actuator_output->special_cmd(SUB_STARTUP_SEQUENCE);
+
+  // clear webcam cache
+  for (int i = 0; i < WEBCAM_CACHE; i++) {
+    image_input->ready_image();
+    image_input->ready_image(DWN_IMG);
+  }
+
+  // startup successful
+  return true;
+}
+
 void Mission::work()
 {
   // Tasks
@@ -21,6 +45,10 @@ void Mission::work()
 
   // Result of a task
   MDA_TASK_RETURN_CODE ret_code;
+
+  if (!startup()) {
+    return;
+  }
 
   // Run each task until the list of tasks is complete
   while (*task_ptr) {

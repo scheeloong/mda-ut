@@ -10,5 +10,7 @@ class Mission : public Operation {
     virtual ~Mission();
 
     virtual void work();
+  private:
+    bool startup();
 };
 #endif

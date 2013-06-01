@@ -145,6 +145,12 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
 
             actuator_output->set_attitude_change(FORWARD,0);
 
+            // clear stale webcam video cache
+            for (int i = 0; i < WEBCAM_CACHE; i++) {
+                image_input->ready_image();
+                image_input->ready_image(DWN_IMG);
+            }
+
             ret_code = TASK_DONE;
             break;
         }
