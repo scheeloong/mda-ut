@@ -292,7 +292,11 @@ void mvWatershedFilter::watershed_process_markers_internal2 () {
                 cvTermCriteria (CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 6, 2.0),
                 1,      // attempts
                 cv::KMEANS_PP_CENTERS,      // flags
+#if CV_MINOR_VERSION > 2
+                centers
+#else
                 &centers   // CvArr* centers
+#endif
                 //&compactness
         );
 
