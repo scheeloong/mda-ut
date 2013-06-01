@@ -5,6 +5,7 @@ Mission::~Mission()
 {
 }
 
+// Turn controllers on once the submarine is in the water using a depth threshold
 bool Mission::startup()
 {
   static const int STARTUP_DEPTH_THRESHOLD = 10;
