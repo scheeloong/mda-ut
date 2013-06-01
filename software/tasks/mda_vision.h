@@ -13,6 +13,8 @@
 #include "mvShapes.h"
 #include "mvContours.h"
 
+#define WEBCAM_CACHE 5
+
 enum MDA_VISION_RETURN_CODE  {
     FATAL_ERROR,        // defaults to this if you dont change the value
     NO_TARGET,          // cant find anything, no defined data 
