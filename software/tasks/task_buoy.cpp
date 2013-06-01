@@ -64,8 +64,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
     bool done_buoy = false;
     int EMA_range = 200;
     printf ("Sinking to appropriate buoy depth\n");
-    actuator_output->set_attitude_absolute(DEPTH, starting_depth); // this is rough depth of the buoys
-    sleep(2);
+    set(DEPTH, starting_depth); // this is rough depth of the buoys
 
     while (1) {
         IplImage* frame = image_input->get_image();
@@ -93,7 +92,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
                 // we'll ignore the vertical direction for now
                 int ang_x = buoy_vision.get_angular_x();
 
-                actuator_output->set_attitude_change(RIGHT, ang_x);
+                move(RIGHT, ang_x);
                 //actuator_output->set_attitude_change(FORWARD);
             }
             else if (vision_code == FULL_DETECT) {
@@ -103,7 +102,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
                 int range = buoy_vision.get_range();
 
                 int depth_change = tan(ang_y*0.017453) * range; 
-                //actuator_output->set_attitude_change(SINK, depth_change);
+                //move(SINK, depth_change);
 
                 // we cant use set_attitude_change to rise and fwd at the same time so we have to
                 // check if we are roughly pointing at the target, and decide what to do
@@ -124,13 +123,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
                 else {
                     if (ang_x > 20) ang_x = 20;
                     if (ang_x < -20) ang_x = -20;
-                    static int count = 0;
-                    count++;
-                    if (count == 4) {
-                        count = 0;
-                        printf("Turning %s %d degrees\n", (ang_x > 0) ? "right" : "left", abs(ang_x));
-                        actuator_output->set_attitude_change(RIGHT, ang_x); 
-                    }
+                    printf("Turning %s %d degrees\n", (ang_x > 0) ? "right" : "left", abs(ang_x));
+                    move(RIGHT, ang_x); 
                 }
             }
             else {
@@ -150,6 +144,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
             sleep (4);
 
             actuator_output->set_attitude_change(FORWARD,0);
+
             ret_code = TASK_DONE;
             break;
         }

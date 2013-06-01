@@ -21,8 +21,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_MARKER:: run_task() {
     static const int starting_depth = 630;
 
     // this is rough depth of the marker dropper targets
-    actuator_output->set_attitude_absolute(DEPTH, starting_depth);
-    sleep(2);
+    set(DEPTH, starting_depth);
 
     while (true) {
         IplImage* frame = image_input->get_image(DWN_IMG);

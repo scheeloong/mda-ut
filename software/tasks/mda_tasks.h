@@ -2,7 +2,6 @@
 #define __MDA_TASK__MDA_TASK__
 
 #include "mda_vision.h"
-#include "viterbi.h"
 #include "AttitudeInput.h"
 #include "ImageInput.h"
 #include "ActuatorOutput.h"
@@ -31,8 +30,33 @@ protected:
 	ImageInput* image_input;
 	ActuatorOutput* actuator_output;
 
+	// Move or set attitude until stable
 	void move (ATTITUDE_CHANGE_DIRECTION direction, int delta_accel) {
-		actuator_output->set_attitude_change(direction, delta_accel);	
+		bool stable = actuator_output->set_attitude_change(direction, delta_accel);	
+		if (!stable) {
+			stabilize(direction);
+		}
+	}
+	void set (ATTITUDE_DIRECTION dir, int val) {
+		actuator_output->set_attitude_absolute(dir, val);	
+		ATTITUDE_CHANGE_DIRECTION direction;
+		switch (dir) {
+			case YAW:
+				direction = LEFT;
+			case DEPTH:
+				direction = RISE;
+			default:
+				return; // No need to stabilize speed command
+		}
+		stabilize(direction);
+	}
+	void stabilize(ATTITUDE_CHANGE_DIRECTION direction) {
+		bool stable = false;
+		while (!stable) {
+			image_input->ready_image(FWD_IMG);
+			image_input->ready_image(DWN_IMG);
+			stable = actuator_output->set_attitude_change(direction, 0);
+		}
 	}
 
 // Wait for user to press a key
@@ -78,18 +102,6 @@ public:
 	~MDA_TASK_GATE ();
 
 	MDA_TASK_RETURN_CODE run_task ();
-};
-
-// gate task with Viterbi algorithm
-class MDA_TASK_GATE_VITERBI : public MDA_TASK_BASE {
-
-public:
-	MDA_TASK_GATE_VITERBI (AttitudeInput* a, ImageInput* i, ActuatorOutput* o);
-	~MDA_TASK_GATE_VITERBI ();
-
-	MDA_TASK_RETURN_CODE run_task ();
-private:
-  Viterbi *v;
 };
 
 /// ########################################################################
