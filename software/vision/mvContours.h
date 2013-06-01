@@ -40,7 +40,7 @@ private:
             ); 
     }
 
-    void get_ellipse_parameters_for_rect (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &length, float &angle);
+    void get_rect_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &length, float &angle);
     void get_circle_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &radius);
 
     void get_hu_moments (CvSeq* contour1, HU_MOMENTS& hu_moments);

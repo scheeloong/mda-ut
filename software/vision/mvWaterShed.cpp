@@ -3,7 +3,6 @@
 
 // Contains functions for mvWatershedFilter that pertain to the watershed algorithm
 
-#define USE_KMEANS_COLOR_CLUSTERING
 //#define M_DEBUG
 #ifdef M_DEBUG
     #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
@@ -134,17 +133,19 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
             COLOR_TRIPLE ct (colorPtr[0], colorPtr[1], colorPtr[2], 0);;
             color_point_vector.push_back(std::make_pair(ct, cvPoint(xl,yl)));
             // 4.
-            cvCircle (ds_image_nonedge, cvPoint(x,y), ds_image_nonedge->width/10, CV_RGB(0,0,0), -1);          
+            cvCircle (ds_image_nonedge, cvPoint(x,y), ds_image_nonedge->width/20, CV_RGB(0,0,0), -1);          
         }
     }
 
     // the color point vector will have too many pixels that are really similar - get rid of some by merging
     for (unsigned i = 0; i < color_point_vector.size(); i++) {
         for (unsigned j = i+1; j < color_point_vector.size(); j++) {
+            int dx = color_point_vector[i].second.x - color_point_vector[j].second.x;
+            int dy = color_point_vector[i].second.y - color_point_vector[j].second.y;  
+
             if (color_point_vector[i].first.diff(color_point_vector[j].first) < 20 &&
-                abs(color_point_vector[i].second.x - color_point_vector[j].second.x) + 
-                abs(color_point_vector[i].second.y - color_point_vector[j].second.y) < src->width/2
-                ) {
+                dx*dx + dy*dy < src->width*src->width/16)
+            {
                 color_point_vector[i].first.merge(color_point_vector[j].first);
                 color_point_vector.erase(color_point_vector.begin()+j);
             }
@@ -198,10 +199,15 @@ void mvWatershedFilter::watershed_process_markers_internal () {
     COLOR_TRIPLE_VECTOR pair_difference_vector;
     for (int i = 0; i < num_pixels; i++) {
         for (int j = i+1; j < num_pixels; j++) {
-            int diff = color_point_vector[i].first.diff(color_point_vector[j].first);
-            COLOR_TRIPLE ct (i, j, diff, 0);
+            int dx = color_point_vector[i].second.x - color_point_vector[j].second.x;
+            int dy = color_point_vector[i].second.y - color_point_vector[j].second.y;  
 
-            pair_difference_vector.push_back(ct);
+            if (dx*dx + dy+dy < scratch_image->width*scratch_image->width/16) {
+                int diff = color_point_vector[i].first.diff(color_point_vector[j].first);
+                COLOR_TRIPLE ct (i, j, diff, 0);
+
+                pair_difference_vector.push_back(ct);
+            }
         }
     }
 
@@ -216,13 +222,13 @@ void mvWatershedFilter::watershed_process_markers_internal () {
         const int index1 = pair_difference_vector[i].m1;
         const int index2 = pair_difference_vector[i].m2;
         const int diff = pair_difference_vector[i].m3;
-/*        // Print a histogram like graphic for the sorted diffs
-        printf ("\tDiff (%3d,%3d) = ", index1, index2);
-        for (int j = 0; j < diff; j+=2)
+        // Print a histogram like graphic for the sorted diffs
+        /*printf ("\tDiff (%3d,%3d) = %5d\t", index1, index2, diff);
+        for (int j = 0; j < diff; j+=200)
             printf ("#");
         printf ("\n");
-*/
-        if (diff > 50 || final_index_number > MAX_INDEX_NUMBER)
+        */
+        if (diff > 60 || final_index_number > MAX_INDEX_NUMBER)
             break;
 
         const bool pixel1_unassigned = (color_point_vector[index1].first.index_number == 0);
@@ -314,13 +320,13 @@ void mvWatershedFilter::watershed_process_markers_internal2 () {
         }
 
         double validity = compactness / min_cluster_dist;
-        printf ("n_clusters=%d, compactness=%2.0lf, min_cluster_dist=%2.0lf, validity=%3.1lf\n", 
+        DEBUG_PRINT ("n_clusters=%d, compactness=%2.0lf, min_cluster_dist=%2.0lf, validity=%3.1lf\n", 
                 n_clusters, compactness, min_cluster_dist, validity);
         
         if (best_validity < 0 || (best_validity-validity) > 0.2) {
             best_validity = validity;
 
-            printf ("New Cluster Configuration Accepted\n");
+            DEBUG_PRINT ("New Cluster Configuration Accepted\n");
             for (int i = 0; i < num_pixels; i++) {
                 color_point_vector[i].first.index_number = 1+static_cast<int>(*(cluster_index_mat.data + i*cluster_index_mat.step));
             }
@@ -329,7 +335,7 @@ void mvWatershedFilter::watershed_process_markers_internal2 () {
         }
         else {
             if (++bad_cluster_counter >= 2) {
-                printf ("Broke from clustering. Last attempt used %d clusters\n", n_clusters);
+                DEBUG_PRINT ("Broke from clustering. Last attempt used %d clusters\n", n_clusters);
                 break;
             }
         }
