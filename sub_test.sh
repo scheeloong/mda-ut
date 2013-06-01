@@ -1,5 +1,7 @@
 #!/bin/sh
 
+rm -f software/interface/log.txt $dir
+
 cd software/vision && ./init_webcam.sh
 cd ../..
 
