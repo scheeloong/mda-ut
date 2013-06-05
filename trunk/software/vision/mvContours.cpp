@@ -130,6 +130,63 @@ void mvContours::get_hu_moments (CvSeq* contour1, HU_MOMENTS &hu_moments) {
     hu_moments = std::vector<double>(hus, hus+sizeof(hus)/sizeof(double));
 }
 
+void mvContours::find_contour_and_check_errors(IplImage* img) {
+    if (m_contours != NULL) {
+        cvClearSeq(m_contours);
+        m_contours = NULL;
+    }
+
+    // find the contours
+    bin_contours.start();
+    cvFindContours (
+        img,
+        m_storage,
+        &m_contours,
+        sizeof(CvContour),
+        CV_RETR_EXTERNAL,
+        CV_CHAIN_APPROX_SIMPLE
+    );
+
+    int last_x=-1, last_y=-1;
+    double area;
+    if (m_contours == NULL || m_contours->total <= 6) {
+        DEBUG_PRINT ("find_countour: contour too short, returning.\n");
+        goto FIND_CONTOUR_ERROR;
+    }
+    
+    // check the contour's area to make sure it isnt too small
+    area = cvContourArea(m_contours);
+    if (area < img->width*img->height/600) {
+        DEBUG_PRINT ("find_countour: contour area too small, returning.\n");
+        goto FIND_CONTOUR_ERROR;
+    }
+
+    // check that the contour does not coincide with the sides of the image for more than 20% of its perimeter
+    for (int i = 0; i < m_contours->total; i++) {
+        CvPoint* p = CV_GET_SEQ_ELEM (CvPoint, m_contours, i);
+        if (p->x == last_x && abs(p->y-last_y) > img->height/3) {
+            printf ("find_contour: contour shares vertical side with image. Discarding.\n");
+            goto FIND_CONTOUR_ERROR;
+        }
+        if (p->y == last_y && abs(p->x-last_x) > img->width/3) {
+            printf ("find_contour: contour shares horizontal side with image. Discarding.\n");
+            goto FIND_CONTOUR_ERROR;
+        }
+
+        last_x = p->x;
+        last_y = p->y;
+    }
+    bin_contours.stop();
+    return;
+
+    FIND_CONTOUR_ERROR:
+    if (m_contours != NULL) {
+        cvClearSeq(m_contours);
+        m_contours = NULL;
+    }
+    bin_contours.stop();
+}
+
 void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_index, double &best_match_diff, int method, std::vector<HU_MOMENTS> hu_moments_vector) {
     HU_MOMENTS hus_to_match;
     get_hu_moments (contour1, hus_to_match);
@@ -173,33 +230,10 @@ void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_i
 double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &length, float &angle, int method) {
     assert (img != NULL);
     assert (img->nChannels == 1);
-    if (m_contours != NULL) {
-        cvClearSeq(m_contours);
-        m_contours = NULL;
-    }
 
-    // find the contours
-    bin_contours.start();
-    cvFindContours (
-        img,
-        m_storage,
-        &m_contours,
-        sizeof(CvContour),
-        CV_RETR_EXTERNAL,
-        CV_CHAIN_APPROX_SIMPLE
-    );
-
-    if (m_contours == NULL || m_contours->total <= 6) {
-        DEBUG_PRINT ("match_rectangle: contour too short, returning.\n");
+    find_contour_and_check_errors (img);
+    if (m_contours == NULL)
         return -1;
-    }
-    
-    // check the contour's area to make sure it isnt too small
-    double area = cvContourArea(m_contours);
-    if (area < img->width*img->height/10000) {
-        DEBUG_PRINT ("match_rectangle: contour area too small, returning.\n");
-        return -1;
-    }
 
     // do matching to ensure the contour is a rectangle
     int match_index;
@@ -219,35 +253,10 @@ double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &len
 double mvContours::match_circle (IplImage* img, CvPoint &centroid, float &radius, int method) {
     assert (img != NULL);
     assert (img->nChannels == 1);
-    if (m_contours != NULL) {
-        cvClearSeq(m_contours);
-        m_contours = NULL;
-    }
 
-    // find the contours
-    bin_contours.start();
-    cvFindContours (
-        img,
-        m_storage,
-        &m_contours,
-        sizeof(CvContour),
-        CV_RETR_EXTERNAL,
-        CV_CHAIN_APPROX_SIMPLE
-    );
-
-    if (m_contours == NULL || m_contours->total <= 10) {
-        DEBUG_PRINT ("match_circle: contour too short, returning.\n");
+    find_contour_and_check_errors(img);
+    if (m_contours == NULL)
         return -1;
-    }
-
-    // check the contour's area to make sure it isnt too small
-    double area = cvContourArea(m_contours);
-    if (area < img->width*img->height/600) {
-        DEBUG_PRINT ("match_circle: contour area too small, returning.\n");
-        return -1;
-    }
-
-    bin_contours.stop();
 
     // do some kind of matching to ensure the contour is a circle
     CvMoments moments;

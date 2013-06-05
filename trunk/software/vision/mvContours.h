@@ -40,6 +40,7 @@ private:
             ); 
     }
 
+    void find_contour_and_check_errors (IplImage* img);
     void get_rect_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &length, float &angle);
     void get_circle_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &radius);
 

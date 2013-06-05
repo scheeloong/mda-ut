@@ -393,7 +393,7 @@ class mvWatershedFilter {
     void watershed_generate_markers_internal (IplImage* src);
     // assign index number to markers - similar colored markers get similar indices
     void watershed_process_markers_internal ();
-    void watershed_process_markers_internal2 ();
+    void watershed_process_markers_internal2 (int method=0);
     // draw markers onto marker_img_32s and ready the segment_color_hash
     void watershed_place_markers_internal (IplImage* src);
     // calls cvWatershed
