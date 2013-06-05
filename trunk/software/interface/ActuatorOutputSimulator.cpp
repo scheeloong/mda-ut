@@ -98,6 +98,7 @@ void ActuatorOutputSimulator::stop()
 }
 
 #define DELTA_MOVE 0.15
+#define DELTA_TURN 2.5
 
 void ActuatorOutputSimulator::special_cmd(SPECIAL_COMMAND cmd)
 {
@@ -125,11 +126,11 @@ void ActuatorOutputSimulator::special_cmd(SPECIAL_COMMAND cmd)
       SimulatorSingleton::get_instance().add_position(p);
       break;
     case SIM_MOVE_LEFT:
-      o.yaw = -DELTA_MOVE;
+      o.yaw = -DELTA_TURN;
       SimulatorSingleton::get_instance().add_orientation(o);
       break;
     case SIM_MOVE_RIGHT:
-      o.yaw = DELTA_MOVE;
+      o.yaw = DELTA_TURN;
       SimulatorSingleton::get_instance().add_orientation(o);
       break;
     case SIM_MOVE_RISE:

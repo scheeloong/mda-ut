@@ -9,7 +9,7 @@
 #endif
 
 #define CONTOUR_IMG_PREFIX "../vision/contour_images/"
-#define MEAN2(a,b) ((abs((a) + (b)))/2.0)
+#define MEAN2(a,b) ((fabs((a) + (b)))/2.0)
 
 const char* mvContours::contour_rect_images[] = {
     CONTOUR_IMG_PREFIX "Rect01.png",
@@ -262,14 +262,14 @@ double mvContours::match_circle (IplImage* img, CvPoint &centroid, float &radius
     double nu03 = cvmoments.nu03;
     double nu30 = cvmoments.nu30;
 
-    double r03 = abs(nu30 / nu03);
+    double r03 = fabs(nu30 / nu03);
     r03 = (r03 > 1) ? r03 : 1.0/r03;
-    double r12 = abs(nu12 / nu21);
+    double r12 = fabs(nu12 / nu21);
     r12 = (r12 > 1) ? r12 : 1.0/r12;
-    double r02 = abs(nu02 / nu20);
+    double r02 = fabs(nu02 / nu20);
     r02 = (r02 > 1) ? r02 : 1.0/r02;
 
-    double r11 = abs( MEAN2(nu02,nu20) / nu11);
+    double r11 = fabs( MEAN2(nu02,nu20) / nu11);
     double R = MEAN2(nu20,nu02) / std::max((MEAN2(nu21,nu12)), (MEAN2(nu30,nu03)));
     bool pass = (r03 <= 15.0) && (r12 <= 5.0) && (r02 <= 5.0) && (r11 > 5.0) && (R > 50);
 
