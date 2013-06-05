@@ -169,9 +169,13 @@ int main( int argc, char** argv ) {
                 // calculate shape diff
                 CvPoint centroid;
                 float length, angle;
-                double shape_diff = contour_filter.match_circle(filter_img_2, centroid, length);
-                win3->showImage(filter_img_2);
-                    cvWaitKey(0);
+                double shape_diff;
+                if (CIRCLE) 
+                    shape_diff = contour_filter.match_circle(filter_img_2, centroid, length);
+                else
+                    shape_diff = contour_filter.match_rectangle(filter_img_2, centroid, length, angle);
+                //win3->showImage(filter_img_2);
+                //    cvWaitKey(0);
                 if (shape_diff < 0) // error from the shape matching
                     continue;
 
@@ -188,9 +192,9 @@ int main( int argc, char** argv ) {
                     best_angle = angle;
                     //cvCopy (filter_img_2, filter_img);
                     contour_filter.drawOntoImage(filter_img_2);
-                    
+                    win3->showImage (filter_img_2);
+                    cvWaitKey(200);  
                 }
-                //cvWaitKey(0);
             }
 
             win3->showImage (filter_img_2);
@@ -211,13 +215,8 @@ int main( int argc, char** argv ) {
             
             win3->showImage (filter_img);
         }
+        /*
         else if (CIRCLE) {
-            /*circles.find (filter_img);
-            printf ("ncircles = %d\n", circles.ncircles());
-            circles.drawOntoImage (filter_img);
-
-            win3->showImage (filter_img);
-            */
             CvPoint centroid;
             float radius;
             contour_filter.match_circle(filter_img, centroid, radius);
@@ -231,12 +230,12 @@ int main( int argc, char** argv ) {
             contour_filter.drawOntoImage(filter_img);
             win3->showImage (filter_img);
         }
-        
+        */
         nframes++;
         if (BREAK)
             c = cvWaitKey(0);
         else if (LOAD)
-            c = cvWaitKey(6); // go for about 15 frames per sec
+            c = cvWaitKey(66); // go for about 15 frames per sec
         else
             c = cvWaitKey(5);
 

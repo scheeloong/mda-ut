@@ -60,6 +60,7 @@ void mvWatershedFilter::watershed(IplImage* src, IplImage* dst) {
     bin_SeedGen.stop();
 
     bin_SeedPlace.start();
+    //watershed_process_markers_internal();
     watershed_process_markers_internal2();
     watershed_place_markers_internal(src);
     bin_SeedPlace.stop();
@@ -94,7 +95,7 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
     //cvDilate (ds_image_nondege, ds_image_nondege, kernel);
     cvNot (ds_image_nonedge, ds_image_nonedge);
 
-    cvResize (ds_image_nonedge, scratch_image, CV_INTER_NN);
+    /*cvResize (ds_image_nonedge, scratch_image, CV_INTER_NN);
 
     // draw the bad pixels on the image so we can see them
     for (int i = 0; i < scratch_image->height; i++) {
@@ -110,7 +111,7 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
             srcPtr ++;
             dstPtr += 3;
         }
-    }
+    }*/
 
     color_point_vector.clear();
 
@@ -119,7 +120,7 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
     // 2. Check if the coordinate is a non-edge pixel on the nonedge image.
     // 3. If so add it to color_point_vector and
     // 4. If so mark coordinates near it as edge on the nonege image
-    for (int i = 0; i < 120; i++) {
+    for (int i = 0; i < 200; i++) {
         int x = rand() % ds_image_nonedge->width;
         int y = rand() % ds_image_nonedge->height;
 
@@ -172,7 +173,7 @@ void mvWatershedFilter::watershed_place_markers_internal (IplImage* src) {
     // zero marker image and draw markers onto it
     // also draw marker positions onto src so we can see where the markers are
     cvZero (marker_img_32s);
-    DEBUG_PRINT ("Markers:\n");
+    //DEBUG_PRINT ("Markers:\n");
     for (int i = 0; i < num_pixels; i++) {
         COLOR_TRIPLE ct = color_point_vector[i].first;
         CvPoint C = color_point_vector[i].second;
@@ -184,7 +185,7 @@ void mvWatershedFilter::watershed_place_markers_internal (IplImage* src) {
             *ptr = static_cast<int>(ct.index_number);
 
             cvCircle(src, cvPoint(x,y), 2, CV_RGB(200,0,200), -1);
-            DEBUG_PRINT ("\tmarker: location <%3d,%3d>: color (%3d,%3d,%3d) - %2d\n", x, y, ct.m1, ct.m2, ct.m3, ct.index_number);
+            //DEBUG_PRINT ("\tmarker: location <%3d,%3d>: color (%3d,%3d,%3d) - %2d\n", x, y, ct.m1, ct.m2, ct.m3, ct.index_number);
         }
     }
 }
@@ -261,7 +262,7 @@ void mvWatershedFilter::watershed_process_markers_internal () {
     }
 }
 
-void mvWatershedFilter::watershed_process_markers_internal2 () {
+void mvWatershedFilter::watershed_process_markers_internal2 (int method) {
     // Use cvKMeans2 to cluster the colors
     int num_pixels = color_point_vector.size();
     cv::Mat color_point_mat (num_pixels, 1, CV_32FC3);       // rows=num_pixels, cols=1, type = 8bit Unsigned Channels2
@@ -279,17 +280,17 @@ void mvWatershedFilter::watershed_process_markers_internal2 () {
         printf ("Pixel stored in matrix: (%5.1f, %5.1f, %5.1f)\n", data[0], data[1], data[2]);
     }*/
 
-    double best_validity = -100;    // will keep track of lower validity number
+    double best_validity = -100;    // will keep track of lowest validity number
     int bad_cluster_counter = 0;    // keeps track of how many non-valid clustering configs we've had
 
-    for (int n_clusters = 1; n_clusters <= 10; n_clusters++) {
+    for (int n_clusters = 1; n_clusters <= 6; n_clusters++) {
         cv::Mat centers (n_clusters, 1, CV_32FC3);
 
         double compactness = cv::kmeans (
                 color_point_mat,    
                 n_clusters,
                 cluster_index_mat,
-                cvTermCriteria (CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 6, 2.0),
+                cvTermCriteria (CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 1.0),
                 1,      // attempts
                 cv::KMEANS_PP_CENTERS,      // flags
 #if CV_MINOR_VERSION > 2
@@ -301,7 +302,8 @@ void mvWatershedFilter::watershed_process_markers_internal2 () {
         );
 
         // find the inter cluster diff
-        double min_cluster_dist = -100;
+        double min_cluster_dist = 0;
+        int num_cluster_dists = 0;
         if (n_clusters == 1) {
             min_cluster_dist = 3 * 30*30;
         }
@@ -317,17 +319,33 @@ void mvWatershedFilter::watershed_process_markers_internal2 () {
                     float d2 = center1[2] - center2[2];
 
                     double cluster_dist = d0*d0 + d1*d1 + d2*d2;
-                    if (min_cluster_dist < 0 || cluster_dist < min_cluster_dist)
-                        min_cluster_dist = cluster_dist;
+                    assert (cluster_dist != 0);
+                    
+                    switch (method) {
+                        case 0: // find the min cluster dist
+                            if (min_cluster_dist == 0 || cluster_dist < min_cluster_dist)
+                                min_cluster_dist = cluster_dist;
+                            break;
+                        case 1:
+                            min_cluster_dist += cluster_dist;
+                            num_cluster_dists++;
+                            break;
+                        default:
+                            printf ("paramenter 'method' is invalid in watershed_process_markers_internal2\n");
+                            exit(1);
+                    }
                 }
             }
+
+            if (method == 1)
+                min_cluster_dist /= num_cluster_dists;
         }
 
         double validity = compactness / min_cluster_dist;
         DEBUG_PRINT ("n_clusters=%d, compactness=%2.0lf, min_cluster_dist=%2.0lf, validity=%3.1lf\n", 
                 n_clusters, compactness, min_cluster_dist, validity);
         
-        if (best_validity < 0 || (best_validity-validity) > 0.2) {
+        if (best_validity < 0 || (best_validity/validity) > 1.1) {
             best_validity = validity;
 
             DEBUG_PRINT ("New Cluster Configuration Accepted\n");
