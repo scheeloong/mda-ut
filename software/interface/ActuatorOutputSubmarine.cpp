@@ -98,8 +98,6 @@ int ActuatorOutputSubmarine::get_target_attitude(ATTITUDE_DIRECTION dir)
 void ActuatorOutputSubmarine::stop()
 {
   set_attitude_absolute(SPEED, 0);
-  set_attitude_absolute(YAW, get_yaw());
-  set_attitude_absolute(DEPTH, get_depth());
 }
 
 void ActuatorOutputSubmarine::special_cmd(SPECIAL_COMMAND cmd)

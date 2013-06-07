@@ -89,12 +89,6 @@ int ActuatorOutputSimulator::get_target_attitude(ATTITUDE_DIRECTION dir)
 void ActuatorOutputSimulator::stop()
 {
   set_attitude_absolute(SPEED, 0);
-
-  physical_model m = SimulatorSingleton::get_instance().attitude();
-  float yaw = m.angle.yaw, depth = m.position.y * 100;
-
-  set_attitude_absolute(YAW, yaw);
-  set_attitude_absolute(DEPTH, depth);
 }
 
 #define DELTA_MOVE 0.15
