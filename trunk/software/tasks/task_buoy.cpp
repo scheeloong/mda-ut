@@ -66,6 +66,12 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
     printf ("Sinking to appropriate buoy depth\n");
     set(DEPTH, starting_depth); // this is rough depth of the buoys
 
+    // clear webcam cache
+    for (int i = 0; i < WEBCAM_CACHE; i++) {
+      image_input->ready_image();
+      image_input->ready_image(DWN_IMG);
+    }
+
     while (1) {
         IplImage* frame = image_input->get_image();
         if (!frame) {

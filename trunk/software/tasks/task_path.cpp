@@ -24,6 +24,12 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
     const int starting_depth = 300; 
     set(DEPTH, starting_depth); // this is rough depth of the buoys
 
+    // clear webcam cache
+    for (int i = 0; i < WEBCAM_CACHE; i++) {
+      image_input->ready_image();
+      image_input->ready_image(DWN_IMG);
+    }
+
     while (1) {
         IplImage* frame = image_input->get_image(DWN_IMG);
         if (!frame) {
