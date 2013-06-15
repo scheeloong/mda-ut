@@ -51,8 +51,8 @@ class ActuatorOutput {
 
     bool set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir) { return set_attitude_change(dir, DEFAULT_ATTITUDE_CHANGE); }
   protected:
-    static const int stable_yaw_threshold = 15;
-    static const int stable_depth_threshold = 30;
+    static const int stable_yaw_threshold = 5;
+    static const int stable_depth_threshold = 15;
 };
 
 /* A don't care implementation */

@@ -25,6 +25,11 @@ bool ActuatorOutputSubmarine::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir,
       break;
   }
   int current_yaw, target_yaw, current_depth, target_depth;
+
+  // Return stable if unstable for a certain threshold of times
+  static int yaw_unstable_count = 0, depth_unstable_count = 0;
+  const int yaw_unstable_threshold = 10, depth_unstable_threshold = 20;
+
   switch(dir) {
     case FORWARD:
     case REVERSE:
@@ -38,8 +43,14 @@ bool ActuatorOutputSubmarine::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir,
       target_yaw = SubmarineSingleton::get_instance().get_target_yaw();
       if (abs(current_yaw - target_yaw) <= stable_yaw_threshold || abs(current_yaw - target_yaw) >= 360 - stable_yaw_threshold) {
         set_attitude_absolute(YAW, current_yaw + delta);
+        yaw_unstable_count = 0;
         return true;
       } else {
+        yaw_unstable_count++;
+        if (yaw_unstable_count >= yaw_unstable_threshold) {
+          yaw_unstable_count = 0;
+          return true;
+        }
         return false;
       }
     case RISE:
@@ -50,8 +61,14 @@ bool ActuatorOutputSubmarine::set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir,
       target_depth = SubmarineSingleton::get_instance().get_target_depth();
       if (abs(current_depth - target_depth) <= stable_depth_threshold) {
         set_attitude_absolute(YAW, current_depth + delta);
+        depth_unstable_count = 0;
         return true;
       } else {
+        depth_unstable_count++;
+        if (depth_unstable_count >= depth_unstable_threshold) {
+          depth_unstable_count = 0;
+          return true;
+        }
         return false;
       }
     default:
