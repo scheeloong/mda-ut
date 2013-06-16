@@ -576,11 +576,11 @@ void ManualOperation::long_input()
     int target_yaw_change;
     sscanf(buf, "left %d", &target_yaw_change);
     if (target_yaw_change >= 0 && target_yaw_change <= 180) {
-      if (actuator_output->set_attitude_change(LEFT, target_yaw_change)) {
-        message_hold("Turning left");
-      } else {
-        message_hold("Yaw not stable, not turning left");
-      }
+      int target_yaw = actuator_output->get_target_attitude(YAW);
+      target_yaw -= target_yaw_change;
+      if (target_yaw < -180) target_yaw += 360;
+      actuator_output->set_attitude_absolute(YAW, target_yaw);
+      message_hold("Turning left");
     } else {
       message_hold("Invalid left turn, must be [0, 180]");
     }
@@ -588,11 +588,11 @@ void ManualOperation::long_input()
     int target_yaw_change;
     sscanf(buf, "right %d", &target_yaw_change);
     if (target_yaw_change >= 0 && target_yaw_change <= 180) {
-      if (actuator_output->set_attitude_change(RIGHT, target_yaw_change)) {
-        message_hold("Turning right");
-      } else {
-        message_hold("Yaw not stable, not turning right");
-      }
+      int target_yaw = actuator_output->get_target_attitude(YAW);
+      target_yaw += target_yaw_change;
+      if (target_yaw > 180) target_yaw -= 360;
+      actuator_output->set_attitude_absolute(YAW, target_yaw);
+      message_hold("Turning right");
     } else {
       message_hold("Invalid left turn, must be [0, 180]");
     }
@@ -609,11 +609,10 @@ void ManualOperation::long_input()
     int target_depth_change;
     sscanf(buf, "up %d", &target_depth_change);
     if (target_depth_change >= 0) {
-      if (actuator_output->set_attitude_change(RISE, target_depth_change)) {
-        message_hold("Rising up");
-      } else {
-        message_hold("Depth not stable, not rising");
-      }
+      int target_depth = actuator_output->get_target_attitude(DEPTH);
+      target_depth -= target_depth_change;
+      actuator_output->set_attitude_absolute(DEPTH, target_depth);
+      message_hold("Rising up");
     } else {
       message_hold("Invalid up command, must be >= 0");
     }
@@ -621,11 +620,10 @@ void ManualOperation::long_input()
     int target_depth_change;
     sscanf(buf, "down %d", &target_depth_change);
     if (target_depth_change >= 0) {
-      if (actuator_output->set_attitude_change(SINK, target_depth_change)) {
-        message_hold("Sinking down");
-      } else {
-        message_hold("Depth not stable, not sinking");
-      }
+      int target_depth = actuator_output->get_target_attitude(DEPTH);
+      target_depth += target_depth_change;
+      actuator_output->set_attitude_absolute(DEPTH, target_depth);
+      message_hold("Sinking down");
     } else {
       message_hold("Invalid down command, must be >= 0");
     }
