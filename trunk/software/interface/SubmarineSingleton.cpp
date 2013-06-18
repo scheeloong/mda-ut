@@ -41,7 +41,6 @@ void SubmarineSingleton::set_target_yaw(int target_yaw)
 
 void SubmarineSingleton::set_target_depth(int target_depth)
 {
-#if 0
   const int upper_depth_staircase_limit = 200;
   const int staircase_depth = 50;
   const int stable_threshold = 15;
@@ -65,8 +64,4 @@ void SubmarineSingleton::set_target_depth(int target_depth)
       }
     }
   }
-#else
-  this->target_depth = target_depth;
-  dyn_set_target_depth(target_depth);
-#endif
 }
