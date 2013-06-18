@@ -36,7 +36,7 @@ public:
 };
 
 
-/** MV_RECTANGLE */
+/** MV_SHAPE_RECTANGLE */
 class mvRect : mvShape {
     typedef struct _row_ {
         int y, x1, x2;  // a row has a vertical coord, a starting x coord, an ending x coord
@@ -45,15 +45,15 @@ class mvRect : mvShape {
         int x1, y1, x2, y2;
         int color;
         unsigned num;
-    } MV_RECT;
+    } MV_SHAPE_RECT;
 
     ROW make_row (int y, int x1, int x2) {
         ROW R;
         R.y = y; R.x1 = x1; R.x2 = x2;
         return R;
     }
-    MV_RECT make_rect (int x1, int y1, int x2, int y2) {
-        MV_RECT R;
+    MV_SHAPE_RECT make_rect (int x1, int y1, int x2, int y2) {
+        MV_SHAPE_RECT R;
         R.x1 = x1; R.y1 = y1; R.x2 = x2; R.y2 = y2;
         R.num = 0;
         return R;
@@ -65,7 +65,7 @@ class mvRect : mvShape {
     int MIN_ROW_LENGTH;
     float RECT_HEIGHT_TO_WIDTH_RATIO;
 
-    std::vector<MV_RECT> m_rect_v;
+    std::vector<MV_SHAPE_RECT> m_rect_v;
 
     PROFILE_BIN bin_rect;
 
@@ -74,7 +74,7 @@ public:
     ~mvRect ();
 
     int n_rect() { return m_rect_v.size(); }
-    MV_RECT operator [] (unsigned index) { return m_rect_v[index]; }
+    MV_SHAPE_RECT operator [] (unsigned index) { return m_rect_v[index]; }
     
     void get_rect_color (IplImage* img);
     int find_internal (IplImage* img, int target_brightness);
@@ -82,12 +82,12 @@ public:
 
     //CvPoint operator [] (unsigned index) { return m_rect[index]; }
     void drawOntoImage (IplImage *img) {
-        for (std::vector<MV_RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end(); it++) {
+        for (std::vector<MV_SHAPE_RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end(); it++) {
             cvRectangle (img, cvPoint(it->x1-1,it->y1-2), cvPoint(it->x2+1,it->y2+2), cvScalar(120));
         }
     }
     void removeFromImage (IplImage* img) {
-        for (std::vector<MV_RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end(); it++)
+        for (std::vector<MV_SHAPE_RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end(); it++)
             cvRectangle (img, cvPoint(it->x1-6,it->y1-8), cvPoint(it->x2+6,it->y2+8), cvScalar(0), CV_FILLED);
     }
 
@@ -95,10 +95,10 @@ public:
 
 
 
-/** MV_CIRCLE - simple structure to represent a circle */
+/** MV_SHAPE_CIRCLE - simple structure to represent a circle */
 // note OpenCV stores its circle finding algorithm's output in a
 // float* array, where [0],[1] are x,y and [2] is radius
-// so you can easily typecast the float* into MV_CIRCLE*
+// so you can easily typecast the float* into MV_SHAPE_CIRCLE*
 // and have easier, more readable code
 typedef struct _Circle_ {
     int x;
@@ -106,9 +106,9 @@ typedef struct _Circle_ {
     float rad;
     int color;
     unsigned num;
-} MV_CIRCLE;
+} MV_SHAPE_CIRCLE;
 
-typedef std::vector<MV_CIRCLE> CIRCLE_VECTOR;
+typedef std::vector<MV_SHAPE_CIRCLE> CIRCLE_VECTOR;
 typedef std::pair<float,float> FLOAT_PAIR;
 
 class mvAdvancedCircles : mvShape {
@@ -133,9 +133,9 @@ class mvAdvancedCircles : mvShape {
 
     private:
     int find_internal (IplImage* img);
-    int get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, MV_CIRCLE &Circle);
-    int check_circle_validity (IplImage* img, MV_CIRCLE Circle);
-    int get_circle_color (IplImage* img, MV_CIRCLE &Circle);
+    int get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, MV_SHAPE_CIRCLE &Circle);
+    int check_circle_validity (IplImage* img, MV_SHAPE_CIRCLE Circle);
+    int get_circle_color (IplImage* img, MV_SHAPE_CIRCLE &Circle);
 
     public:
     mvAdvancedCircles (const char* settings_file);
@@ -143,7 +143,7 @@ class mvAdvancedCircles : mvShape {
     int find (IplImage* img);
     int ncircles ();
 
-    MV_CIRCLE operator [] (unsigned index) { return accepted_circles[index]; }
+    MV_SHAPE_CIRCLE operator [] (unsigned index) { return accepted_circles[index]; }
     void drawOntoImage (IplImage* img);
 };
 

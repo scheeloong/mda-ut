@@ -183,7 +183,7 @@ int mvRect::find_internal(IplImage* img, int target_brightness) {
         /// compare the row object with all existing m_rect_v objects, clustering to closest one or adding a new
         /// m_rect_v if no good clustering option
         bool cluster_success = false;
-        for (std::vector<MV_RECT>::iterator rect_iter = m_rect_v.begin(); rect_iter != m_rect_v.end(); ++rect_iter) {
+        for (std::vector<MV_SHAPE_RECT>::iterator rect_iter = m_rect_v.begin(); rect_iter != m_rect_v.end(); ++rect_iter) {
             if (row_iter->y >= rect_iter->y1-2 && row_iter->y <= rect_iter->y2+2 &&
                 abs(row_iter->x1 - rect_iter->x1) <= 2 && abs(row_iter->x2 - rect_iter->x2) <= 2)
             {
@@ -201,7 +201,7 @@ int mvRect::find_internal(IplImage* img, int target_brightness) {
             m_rect_v.push_back(make_rect(row_iter->x1,row_iter->y, row_iter->x2,row_iter->y));
     }
 
-    for (std::vector<MV_RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end();) {
+    for (std::vector<MV_SHAPE_RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end();) {
         float hw_ratio = (float)(it->y2 - it->y1) / (float)(it->x2 - it->x1);
 
         if (it->num < 6 || hw_ratio > 1.2*RECT_HEIGHT_TO_WIDTH_RATIO || hw_ratio < 0.8*RECT_HEIGHT_TO_WIDTH_RATIO)
@@ -221,7 +221,7 @@ int mvRect::find_internal(IplImage* img, int target_brightness) {
 void mvRect::get_rect_color(IplImage* img) {
 // takes the internal array of rectangles, and checks what color each of them are on the input image
 // the check is done by looking at 5 different points in a cruciform pattern inside the rectangle
-    for (std::vector<MV_RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end(); ++it) {
+    for (std::vector<MV_SHAPE_RECT>::iterator it = m_rect_v.begin(); it != m_rect_v.end(); ++it) {
         int color_count[5] = {0,0,0,0,0};
         int Px[5], Py[5];
         it->color = MV_UNCOLORED;
@@ -260,7 +260,7 @@ void mvRect::get_rect_color(IplImage* img) {
     }
 }
 
-bool m_circle_has_greater_count (MV_CIRCLE c1, MV_CIRCLE c2) { return (c1.num > c2.num); }
+bool m_circle_has_greater_count (MV_SHAPE_CIRCLE c1, MV_SHAPE_CIRCLE c2) { return (c1.num > c2.num); }
 
 mvAdvancedCircles::mvAdvancedCircles (const char* settings_file) :
     mvShape(settings_file),
@@ -351,7 +351,7 @@ int mvAdvancedCircles::find_internal (IplImage* img) {
         }*/
             
         // get the circle center and radius
-        MV_CIRCLE Circle;
+        MV_SHAPE_CIRCLE Circle;
         Circle.num = 1;
         Circle.color = 0;
         if ( get_circle_from_3_points (point_vector[c1],point_vector[c2],point_vector[c3], Circle) )
@@ -395,7 +395,7 @@ int mvAdvancedCircles::find_internal (IplImage* img) {
                 // this is done by removing points from point_vector
                 if (accepted_circles[i].num == N_CIRCLES_CUTOFF) {
                     for (unsigned j = 0; j < point_vector.size(); j++) {
-                        MV_CIRCLE temp_circle;
+                        MV_SHAPE_CIRCLE temp_circle;
                         temp_circle.x = accepted_circles[i].x / DOWNSAMPLING_FACTOR;
                         temp_circle.y = accepted_circles[i].y / DOWNSAMPLING_FACTOR;
                         temp_circle.rad = accepted_circles[i].rad / DOWNSAMPLING_FACTOR;
@@ -442,7 +442,7 @@ int mvAdvancedCircles::find_internal (IplImage* img) {
     std::sort (accepted_circles.begin(), accepted_circles.end(), m_circle_has_greater_count);
 
     /*for (unsigned i = 0; i < accepted_circles.size(); i++) {
-        MV_CIRCLE circle = accepted_circles[i];
+        MV_SHAPE_CIRCLE circle = accepted_circles[i];
         DEBUG_PRINT ("(x=%d, y=%d, R=%f)  c=%d\n", circle.x,circle.y,circle.rad,accepted_circles[i].num);
     }*/
 
@@ -462,7 +462,7 @@ int mvAdvancedCircles::ncircles() {
     return (int)(accepted_circles.size());
 }
 
-int mvAdvancedCircles::get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, MV_CIRCLE &Circle) {
+int mvAdvancedCircles::get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint p3, MV_SHAPE_CIRCLE &Circle) {
     /** Basically, if you have 3 points, you can solve for the point which is equidistant to all 3.
      *  You get a matrix equation Ax = B, where A is a 2x2 matrix, x is trans([X, Y]), and B is trans([B1 B2])
      *  Then you can solve for x = inv(A) * B. Which is what we do below.
@@ -491,7 +491,7 @@ int mvAdvancedCircles::get_circle_from_3_points (CvPoint p1, CvPoint p2, CvPoint
     return 0;
 }
 
-int mvAdvancedCircles::check_circle_validity (IplImage* img, MV_CIRCLE Circle) {
+int mvAdvancedCircles::check_circle_validity (IplImage* img, MV_SHAPE_CIRCLE Circle) {
     int x, y, count = 0;
     std::vector<FLOAT_PAIR>::iterator it = cos_sin_vector.begin();
     std::vector<FLOAT_PAIR>::iterator end_it = cos_sin_vector.end();
@@ -514,7 +514,7 @@ int mvAdvancedCircles::check_circle_validity (IplImage* img, MV_CIRCLE Circle) {
     return count;
 }
 
-int mvAdvancedCircles::get_circle_color (IplImage* img, MV_CIRCLE &Circle) {
+int mvAdvancedCircles::get_circle_color (IplImage* img, MV_SHAPE_CIRCLE &Circle) {
     Circle.color = MV_UNCOLORED;
     int x, y;
     int color_count[4] = {0,0,0,0};

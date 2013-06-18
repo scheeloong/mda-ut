@@ -152,52 +152,61 @@ int main( int argc, char** argv ) {
             win1->showImage (frame);
             win2->showImage (filter_img);
             
-            int seg = 0;
-            const double COLOR_DIVISION_FACTOR = 200;
             COLOR_TRIPLE color;
-            //COLOR_TRIPLE color_template (160,95,157,0);
-            COLOR_TRIPLE color_template (155,120,60,0);
-
-            CvPoint best_centroid;
-            float best_length, best_angle;
-            double best_diff = 1000000;
+            MvCircleVector circle_vector;
+            MvRBoxVector rbox_vector;
             
             while ( watershed_filter.get_next_watershed_segment(filter_img_2, color) ) {
-                // calculate color diff
-                double color_diff = static_cast<double>(color.diff(color_template)) / COLOR_DIVISION_FACTOR;
+                if (CIRCLE) {
+                    if (contour_filter.match_circle(filter_img_2, &circle_vector) < 0)
+                        continue;
 
-                // calculate shape diff
-                CvPoint centroid;
-                float length, angle;
-                double shape_diff;
-                if (CIRCLE) 
-                    shape_diff = contour_filter.match_circle(filter_img_2, centroid, length);
-                else
-                    shape_diff = contour_filter.match_rectangle(filter_img_2, centroid, length, angle);
-                //win3->showImage(filter_img_2);
-                //    cvWaitKey(0);
-                if (shape_diff < 0) // error from the shape matching
-                    continue;
-
-                double diff = color_diff + shape_diff;
-                //double diff = shape_diff;
-                printf ("\nSegment %d\n", ++seg);
-                printf ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
-                printf ("\tColor_Diff=%6.4f  Shape_Diff=%6.4f\n\tFinal_Diff=%6.4f\n", color_diff, shape_diff, diff);
-                
-                if (seg == 1 || diff < best_diff) {
-                    best_diff = diff;
-                    best_centroid = centroid;
-                    best_length = length;
-                    best_angle = angle;
-                    //cvCopy (filter_img_2, filter_img);
-                    contour_filter.drawOntoImage(filter_img_2);
-                    win3->showImage (filter_img_2);
-                    cvWaitKey(200);  
+                    circle_vector.back().m1 = color.m1;
+                    circle_vector.back().m2 = color.m2;
+                    circle_vector.back().m3 = color.m3;
                 }
+                else if (RECT) {
+                    if (contour_filter.match_rectangle(filter_img_2, &rbox_vector) < 0)
+                        continue;
+
+                    rbox_vector.back().m1 = color.m1;
+                    rbox_vector.back().m2 = color.m2;
+                    rbox_vector.back().m3 = color.m3;
+                }
+/*
+                win3->showImage(filter_img_2);
+                cvWaitKey(200);
+*/              
             }
 
-            win3->showImage (filter_img_2);
+            if (CIRCLE && circle_vector.size() > 0) {
+                MvCircleVector::iterator iter = circle_vector.begin();
+                MvCircleVector::iterator iter_end = circle_vector.end();
+                int index = 0;
+                printf ("%d Circles Detected:\n", static_cast<int>(circle_vector.size()));
+                for (; iter != iter_end; ++iter) {
+                    printf ("\tCircle #%d: (%3d,%3d), Rad=%5.1f, <%3d,%3d,%3d>\n", ++index,
+                        iter->center.x, iter->center.y, iter->radius, iter->m1, iter->m2, iter->m3);
+                    iter->drawOntoImage(filter_img_2);
+                }
+                
+                win3->showImage (filter_img_2);
+                cvWaitKey(200);
+            }
+            else if (RECT && rbox_vector.size() > 0) {
+                MvRBoxVector::iterator iter = rbox_vector.begin();
+                MvRBoxVector::iterator iter_end = rbox_vector.end();
+                int index = 0;
+                printf ("%d Rectangles Detected:\n", static_cast<int>(rbox_vector.size()));
+                for (; iter != iter_end; ++iter) {
+                    printf ("\tRect #%d: (%3d,%3d), Len=%5.1f, Width=%5.1f, Angle=%5.1f <%3d,%3d,%3d>\n", ++index, 
+                        iter->center.x, iter->center.y, iter->length, iter->width, iter->angle, iter->m1, iter->m2, iter->m3);
+                    iter->drawOntoImage(filter_img_2);
+                }
+                
+                win3->showImage (filter_img_2);
+                cvWaitKey(200);
+            }
         }
 
         if (GRAD) {

@@ -165,11 +165,11 @@ void mvContours::find_contour_and_check_errors(IplImage* img) {
     for (int i = 0; i < m_contours->total; i++) {
         CvPoint* p = CV_GET_SEQ_ELEM (CvPoint, m_contours, i);
         if (p->x == last_x && abs(p->y-last_y) > img->height/3) {
-            printf ("find_contour: contour shares vertical side with image. Discarding.\n");
+            DEBUG_PRINT ("find_contour: contour shares vertical side with image. Discarding.\n");
             goto FIND_CONTOUR_ERROR;
         }
         if (p->y == last_y && abs(p->x-last_x) > img->width/3) {
-            printf ("find_contour: contour shares horizontal side with image. Discarding.\n");
+            DEBUG_PRINT ("find_contour: contour shares horizontal side with image. Discarding.\n");
             goto FIND_CONTOUR_ERROR;
         }
 
@@ -227,7 +227,7 @@ void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_i
     DEBUG_PRINT ("Best Match Diff = %9.6lf\n", best_match_diff);
 }
 
-double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &length, float &angle, int method) {
+int mvContours::match_rectangle (IplImage* img, MvRBoxVector* RBoxVector, int method) {
     assert (img != NULL);
     assert (img->nChannels == 1);
 
@@ -235,28 +235,59 @@ double mvContours::match_rectangle (IplImage* img, CvPoint &centroid, float &len
     if (m_contours == NULL)
         return -1;
 
-    // do matching to ensure the contour is a rectangle
-    int match_index;
-    double best_match_diff;
-    bin_match.start();
-    match_contour_with_database (m_contours, match_index, best_match_diff, method, hu_moments_rect_vector);
-    bin_match.stop();
-
-    // get the mathematical properties we want
     bin_calc.start();
-    get_rect_parameters (img, m_contours, centroid, length, angle);
+
+    double perimeter = cvArcLength (m_contours, CV_WHOLE_SEQ, 1);
+    double area = cvContourArea (m_contours);
+
+    CvBox2D Rect = cvMinAreaRect2(m_contours, m_storage);
+    float angle = Rect.angle;
+    int length = Rect.size.height;
+    int width = Rect.size.width;
+    // depending on which is the long side we assign the sides and angle differently    
+    if (length < width) {
+        length = Rect.size.width;
+        width = Rect.size.height;
+        angle += 90;
+    }
+
+    double perimeter_ratio = perimeter / (2*length+2*width);
+    double area_ratio = area / (length*width);
+    printf ("Rect: Area / Peri:    %6.2lf / %6.2lf\n", area_ratio, perimeter_ratio);
+    if (area_ratio < 0.6 || perimeter_ratio > 1.1) {
+        return -1;
+    }
+
+    MvRotatedBox box;
+    box.center.x = Rect.center.x;
+    box.center.y = Rect.center.y;
+    box.length = length;
+    box.width = width;
+    box.angle = angle;
+    RBoxVector->push_back(box);
+
+    // draw a line to indicate the angle
+    /*CvPoint p0, p1;
+    int delta_x = length/2 * -sin(angle*CV_PI/180.f);
+    int delta_y = length/2 * cos(angle*CV_PI/180.f);
+    p0.x = x - delta_x;  p0.y = y - delta_y;
+    p1.x = x + delta_x;  p1.y = y + delta_y;
+    cvLine (img, p0, p1, CV_RGB(50,50,50), 2);
+    */
     bin_calc.stop();
 
-    return best_match_diff;
+    return 1;
 }
 
-double mvContours::match_circle (IplImage* img, CvPoint &centroid, float &radius, int method) {
+int mvContours::match_circle (IplImage* img, MvCircleVector* circle_vector, int method) {
     assert (img != NULL);
     assert (img->nChannels == 1);
 
     find_contour_and_check_errors(img);
     if (m_contours == NULL)
         return -1;
+
+    bin_calc.start();
 
     // do some kind of matching to ensure the contour is a circle
     CvMoments moments;
@@ -285,16 +316,40 @@ double mvContours::match_circle (IplImage* img, CvPoint &centroid, float &radius
     printf ("\nCircle Contours: nu11=%lf, nu20=%lf, nu02=%lf, nu21=%lf, nu12=%lf, nu30=%lf, nu03=%lf\n",
         nu11, nu20, nu02, nu21, nu12, nu30, nu03);
     printf ("\tn30/n03=%3.1lf, n21/n12=%3.1lf, nu20/nu02=%3.1lf, r11=%3.1f, R=%3.1f. %s\n", r03, r12, r02, r11, R, pass?"PASS!":"FAIL!");
-    if (!pass)
+    if (!pass) {
         return -1;
+    }
+    
+    // get area and perimeter of the contour
+    //double perimeter = cvArcLength (m_contours, CV_WHOLE_SEQ, 1);
+    double area = cvContourArea (m_contours);
 
-    // get the mathematical properties we want
-    bin_calc.start();
-    get_circle_parameters (img, m_contours, centroid, radius);
-    if (radius < 0) // get_circle_parameters returned an error
+    // get min enclosing circle and radius
+    CvPoint2D32f centroid32f;
+    float radius;
+    cvMinEnclosingCircle(m_contours, &centroid32f, &radius);
+    if (radius > img->width/2 || radius < 0) {
         return -1;
+    }
+
+    // do checks on area and perimeter
+    double area_ratio = area / (CV_PI*radius*radius);
+    //double perimeter_ratio = perimeter / (2*CV_PI*radius);
+    //printf ("Circle: Area/Peri:    %6.2lf / %6.2lf\n", area_ratio, perimeter_ratio);
+    if (area_ratio < 0.7) {
+        return -1;
+    }
+    
+    MvCircle circle;
+    circle.center.x = static_cast<int>(centroid32f.x);
+    circle.center.y = static_cast<int>(centroid32f.y);
+
+    circle.radius = radius;
+    circle_vector->push_back(circle);
+    
+    //cvCircle (img, cvPoint(x,y), static_cast<int>(radius), CV_RGB(50,50,50), 2);
+
     bin_calc.stop();
 
-    //return best_match_diff;
-    return 1.0;
+    return 1;
 }

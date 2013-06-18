@@ -41,6 +41,42 @@ inline std::string color_int_to_string (int color) {
     return std::string("UNKNOWN");
 }
 
+class MvCircle {
+public:
+    CvPoint center;
+    float radius;
+    int m1,m2,m3;
+
+    MvCircle () { center.x=center.y=0; radius=0; m1=m2=m3=0; }
+    void drawOntoImage (IplImage* img) {
+        cvCircle (img, center, static_cast<int>(radius), CV_RGB(50,50,50), 2);
+    }
+};
+class MvRotatedBox {
+public:
+    CvPoint center;
+    float length, width;    // length is the long edge
+    float angle;            // angle points in direction of length
+    int m1,m2,m3;
+
+    MvRotatedBox () { center.x=center.y=0; length=width=angle=0; m1=m2=m3=0; }
+    void drawOntoImage (IplImage* img) {
+        CvPoint p0, p1;
+        float ang_sin = -sin(angle*CV_PI/180.f);
+        float ang_cos = cos(angle*CV_PI/180.f);
+        int length_x = length/2 * ang_sin;  int length_y = length/2 * ang_cos;
+        int width_x = width/2 * ang_cos;    int width_y = width/2 * ang_sin;
+        p0.x = center.x-length_x-width_x;  p0.y = center.y-length_y+width_y;
+        p1.x = center.x+length_x-width_x;  p1.y = center.y+length_y+width_y;
+        cvLine (img, p0, p1, CV_RGB(50,50,50), 2);
+        p0.x = center.x-length_x+width_x;  p0.y = center.y-length_y-width_y;
+        p1.x = center.x+length_x+width_x;  p1.y = center.y+length_y-width_y;
+        cvLine (img, p0, p1, CV_RGB(50,50,50), 2);
+    }
+};
+typedef std::vector<MvCircle> MvCircleVector;
+typedef std::vector<MvRotatedBox> MvRBoxVector;
+
 // write the pixel content of an image into a txt file
 void mvDumpPixels (IplImage* img, const char* file_name, char delimiter = ',');
 void mvDumpHistogram (IplImage* img, const char* file_name, char delimiter = ',');

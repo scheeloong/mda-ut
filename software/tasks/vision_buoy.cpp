@@ -70,63 +70,42 @@ void MDA_VISION_MODULE_BUOY:: primary_filter (IplImage* src) {
     window.showImage (filtered_img);*/
 
     watershed_filter.watershed(src, gray_img);
-    //window.showImage (gray_img);
+    window.showImage (gray_img);
 
-    int seg = 0;
     COLOR_TRIPLE color;
-    COLOR_TRIPLE color_template (TARGET_BLUE,TARGET_GREEN,TARGET_RED,0);
-
-    CvPoint best_centroid = cvPoint(MV_UNDEFINED_VALUE, MV_UNDEFINED_VALUE);
-    float best_radius = MV_UNDEFINED_VALUE;
-    double best_shape_diff=1000000, best_color_diff=1000000;
-    double best_diff = 1000000;
+    MvCircleVector circle_vector;
+    MvRBoxVector rbox_vector;
     
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
-        seg++;
-
-        // calculate color diff
-        double color_diff = static_cast<double>(color.diff(color_template)) / COLOR_DIVISION_FACTOR;
-
-        // calculate shape diff
-        CvPoint centroid;
-        float radius;
-        double shape_diff = contour_filter.match_circle(gray_img_2, centroid, radius);
-        if (shape_diff < 0) // error from the shape matching
+        if (contour_filter.match_circle(gray_img_2, &circle_vector) < 0)
             continue;
 
-        double diff = color_diff + shape_diff;
-        DEBUG_PRINT ("\nSegment %d\n", seg);
-        DEBUG_PRINT ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
-        DEBUG_PRINT ("\tColor_Diff=%6.4f  Shape_Diff=%6.4f\n\tFinal_Diff=%6.4f\n", color_diff, shape_diff, diff);
-        window2.showImage (gray_img_2);
-        //cvWaitKey(300);
+        circle_vector.back().m1 = color.m1;
+        circle_vector.back().m2 = color.m2;
+        circle_vector.back().m3 = color.m3;
+    }
 
-        if (seg == 1 || diff < best_diff) {
-            best_diff = diff;  best_shape_diff = shape_diff;  best_color_diff = color_diff;
-            best_centroid = centroid;
-            best_radius = radius;
-            cvCopy (gray_img_2, gray_img);
+    if (circle_vector.size() > 0) {
+        MvCircleVector::iterator iter = circle_vector.begin();
+        MvCircleVector::iterator iter_end = circle_vector.end();
+        int index = 0;
+        cvZero (gray_img_2);
+
+        printf ("vision_buoy: %d Circles Detected:\n", static_cast<int>(circle_vector.size()));
+        for (; iter != iter_end; ++iter) {
+            printf ("\tCircle #%d: (%3d,%3d), Rad=%5.1f, <%3d,%3d,%3d>\n", ++index,
+                iter->center.x, iter->center.y, iter->radius, iter->m1, iter->m2, iter->m3);
+            iter->drawOntoImage(gray_img_2);
         }
+
+        // for now best circle is first circle
+        MvCircle* best_circle = &(circle_vector.front());
+        m_pixel_x = best_circle->center.x;
+        m_pixel_y = best_circle->center.y;
+        m_range = (BUOY_REAL_DIAMTER * gray_img->width) / (2*best_circle->radius * TAN_FOV_X);
     }
 
-    if (seg <= 1) { // only 1 segment
-        DEBUG_PRINT ("vision_buoy: Only 1 Segment. No information returned.\n");
-        return;
-    }
-
-    double confidence_level = DIFF_THRESHOLD_SETTING / best_diff;
-    DEBUG_PRINT ("Confidence Level = %5.3lf (%4.2lf shape diff, %4.2lf color diff)\n", 
-        confidence_level, best_shape_diff, best_color_diff);
-    if (confidence_level < 1.0) {
-        DEBUG_PRINT ("Confidence level does not meet threshold.\n");
-        return;
-    }
-
-    window.showImage (gray_img);
-    
-    m_pixel_x = best_centroid.x;
-    m_pixel_y = best_centroid.y;
-    m_range = (BUOY_REAL_DIAMTER * gray_img->width) / (2*best_radius * TAN_FOV_X);
+    window2.showImage (gray_img_2);
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
