@@ -16,9 +16,9 @@ DWN_VIDEO_FILE sub_dwn.avi
 
 ### Options for the submarine ###
 
-DEPTH_P 10.0
-DEPTH_I 0.0
-DEPTH_D 1.0
+DEPTH_P 20.0
+DEPTH_I 0.005
+DEPTH_D 10.0
 DEPTH_ALPHA 0.0
 
 PITCH_P 24.0
