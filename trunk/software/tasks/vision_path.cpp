@@ -58,62 +58,38 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
     watershed_filter.watershed(src, gray_img);
     window.showImage (gray_img);
 
-    int seg = 0;
     COLOR_TRIPLE color;
-    COLOR_TRIPLE color_template (TARGET_BLUE,TARGET_GREEN,TARGET_RED,0);
+    MvRBoxVector rbox_vector;
 
-    CvPoint best_centroid = cvPoint(MV_UNDEFINED_VALUE, MV_UNDEFINED_VALUE);
-    float best_length = MV_UNDEFINED_VALUE;
-    float best_angle = MV_UNDEFINED_VALUE;
-    double best_shape_diff=1000000, best_color_diff=1000000;
-    double best_diff = 1000000;
-    
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
-        seg++;
-
-        // calculate color diff
-        double color_diff = static_cast<double>(color.diff(color_template)) / COLOR_DIVISION_FACTOR;
-
-        // calculate shape diff
-        CvPoint centroid;
-        float length, angle;
-        double shape_diff = contour_filter.match_rectangle(gray_img_2, centroid, length, angle);
-        if (shape_diff < 0) // error from the shape matching
+        if (contour_filter.match_rectangle(gray_img_2, &rbox_vector) < 0)
             continue;
 
-        double diff = color_diff + shape_diff;
-        //DEBUG_PRINT ("\nSegment %d\n", seg);
-        //DEBUG_PRINT ("\tColor (%3d,%3d,%3d)\n", color.m1, color.m2, color.m3);
-        //DEBUG_PRINT ("\tColor_Diff=%6.4f  Shape_Diff=%6.4f\n\tFinal_Diff=%6.4f\n", color_diff, shape_diff, diff);
+        rbox_vector.back().m1 = color.m1;
+        rbox_vector.back().m2 = color.m2;
+        rbox_vector.back().m3 = color.m3;
+    }
 
-        if (seg == 1 || diff < best_diff) {
-            best_diff = diff;  best_shape_diff = shape_diff;  best_color_diff = color_diff;
-            best_centroid = centroid;
-            best_length = length;
-            best_angle = angle;
-            cvCopy (gray_img_2, gray_img);
+    if (rbox_vector.size() > 0) {
+        MvRBoxVector::iterator iter = rbox_vector.begin();
+        MvRBoxVector::iterator iter_end = rbox_vector.end();
+        int index = 0;
+        printf ("vision_path: %d Rectangles Detected:\n", static_cast<int>(rbox_vector.size()));
+        for (; iter != iter_end; ++iter) {
+            printf ("\tRect #%d: (%3d,%3d), Len=%5.1f, Width=%5.1f, Angle=%5.1f <%3d,%3d,%3d>\n", ++index, 
+                iter->center.x, iter->center.y, iter->length, iter->width, iter->angle, iter->m1, iter->m2, iter->m3);
+            iter->drawOntoImage(gray_img_2);
         }
+
+        // for now the best box is the first box
+        MvRotatedBox* best_box = &(rbox_vector.front());
+        m_pixel_x = best_box->center.x;
+        m_pixel_y = best_box->center.y;
+        m_range = (PATH_REAL_LENGTH * gray_img->width) / (sqrt(best_box->length) * TAN_FOV_X);
+        m_angle = best_box->angle;
     }
 
-    if (seg <= 1) { // only 1 segment
-        DEBUG_PRINT ("vision_buoy: Only 1 Segment. No information returned.\n");
-        return;
-    }
-
-    double confidence_level = DIFF_THRESHOLD_SETTING / best_diff;
-    DEBUG_PRINT ("Confidence Level = %5.3lf (%4.2lf shape diff, %4.2lf color diff)\n", 
-        confidence_level, best_shape_diff, best_color_diff);
-    if (confidence_level < 1.0) {
-        DEBUG_PRINT ("Confidence level does not meet threshold\n");
-        return;
-    }
-
-    window2.showImage (gray_img);
-    
-    m_pixel_x = best_centroid.x;
-    m_pixel_y = best_centroid.y;
-    m_range = (PATH_REAL_LENGTH * gray_img->width) / (sqrt(best_length) * TAN_FOV_X);
-    m_angle = best_angle;
+    window2.showImage (gray_img_2);
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
