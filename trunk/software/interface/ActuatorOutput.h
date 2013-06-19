@@ -43,16 +43,39 @@ class ActuatorOutput {
     virtual ~ActuatorOutput() {}
 
     // some methods to actuate the output
-    virtual bool set_attitude_change(ATTITUDE_CHANGE_DIRECTION, int) = 0; // return if attitude was actually changed (won't change unless the attitude is stable)
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION, int) = 0;
     virtual int get_target_attitude(ATTITUDE_DIRECTION) = 0;
     virtual void stop() = 0;
     virtual void special_cmd(SPECIAL_COMMAND) = 0;
+    virtual void set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir, int delta)
+    {
+      switch(dir) {
+        case REVERSE:
+        case LEFT:
+        case SINK:
+          delta *= -1;
+          break;
+        default:
+          break;
+      }
 
-    bool set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir) { return set_attitude_change(dir, DEFAULT_ATTITUDE_CHANGE); }
-  protected:
-    static const int stable_yaw_threshold = 5;
-    static const int stable_depth_threshold = 15;
+      switch(dir) {
+        case REVERSE:
+        case FORWARD:
+          set_attitude_absolute(SPEED, delta); // doesn't make sense to change the speed, set absolute
+          break;
+        case RIGHT:
+        case LEFT:
+          set_attitude_absolute(YAW, get_target_attitude(YAW) + delta);
+          break;
+        case SINK:
+        case RISE:
+          set_attitude_absolute(DEPTH, get_target_attitude(DEPTH) + delta);
+          break;
+      }
+    }
+
+    void set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir) { set_attitude_change(dir, DEFAULT_ATTITUDE_CHANGE); }
 };
 
 /* A don't care implementation */
@@ -60,7 +83,6 @@ class ActuatorOutputNull : public ActuatorOutput {
   public:
     virtual ~ActuatorOutputNull() {}
 
-    virtual bool set_attitude_change(ATTITUDE_CHANGE_DIRECTION dir, int delta) { return false; }
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION dir, int val) {}
     virtual int get_target_attitude(ATTITUDE_DIRECTION) { return 0; }
     virtual void stop() {}
@@ -73,7 +95,6 @@ class ActuatorOutputSimulator : public ActuatorOutput {
     ActuatorOutputSimulator();
     virtual ~ActuatorOutputSimulator();
 
-    virtual bool set_attitude_change(ATTITUDE_CHANGE_DIRECTION, int);
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION, int);
     virtual int get_target_attitude(ATTITUDE_DIRECTION);
     virtual void stop();
@@ -86,7 +107,6 @@ class ActuatorOutputSubmarine : public ActuatorOutput {
     ActuatorOutputSubmarine();
     virtual ~ActuatorOutputSubmarine();
 
-    virtual bool set_attitude_change(ATTITUDE_CHANGE_DIRECTION, int);
     virtual void set_attitude_absolute(ATTITUDE_DIRECTION, int);
     virtual int get_target_attitude(ATTITUDE_DIRECTION);
     virtual void stop();
