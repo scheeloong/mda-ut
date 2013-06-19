@@ -18,17 +18,12 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
 
     const int sink_depth = 450;
     const int rise_depth = 300;
-    const int depth_threshold = 10;
-    const int yaw_threshold = 5;
     const int fwd_timesteps = 25;
-    const int speed = 2;
+    const int speed = 1;
 
-    enum state {SINK_STATE, TURN_FWD_STATE, FWD_STATE, RISE_STATE, TURN_REV_STATE, REV_STATE};
+    enum state {SINK_STATE, FWD_STATE, RISE_STATE, REV_STATE};
     enum state cur_state = SINK_STATE;
 
-    int fwd_yaw = attitude_input->yaw();
-    int rev_yaw = fwd_yaw + 180;
-    if (rev_yaw > 180) rev_yaw -= 360;
     int counter = 0;
 
     printf("Sinking\n");
@@ -44,19 +39,11 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
 
         switch (cur_state) {
           case SINK_STATE:
-            actuator_output->set_attitude_absolute(DEPTH, sink_depth);
-            actuator_output->set_attitude_absolute(SPEED, 0);
-            if (abs(attitude_input->depth() - sink_depth) < depth_threshold) {
-              printf("Going forward\n");
-              cur_state = TURN_FWD_STATE;
-              counter = 0;
-              actuator_output->set_attitude_absolute(YAW, fwd_yaw);
-            }
-            break;
-          case TURN_FWD_STATE:
-            if (abs(attitude_input->yaw() - fwd_yaw) < yaw_threshold || abs(attitude_input->yaw() - fwd_yaw) > 360 - yaw_threshold) {
-              cur_state = FWD_STATE;
-            }
+            set(DEPTH, sink_depth);
+            printf("Going forward\n");
+            cur_state = FWD_STATE;
+            counter = 0;
+            move(RIGHT, 180);
             break;
           case FWD_STATE:
             actuator_output->set_attitude_absolute(SPEED, speed);
@@ -68,19 +55,11 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
             }
             break;
           case RISE_STATE:
-            actuator_output->set_attitude_absolute(DEPTH, rise_depth);
-            actuator_output->set_attitude_absolute(SPEED, 0);
-            if (abs(attitude_input->depth() - rise_depth) < depth_threshold) {
-              printf("Going back\n");
-              cur_state = TURN_REV_STATE;
-              counter = 0;
-              actuator_output->set_attitude_absolute(YAW, rev_yaw);
-            }
-            break;
-          case TURN_REV_STATE:
-            if (abs(attitude_input->yaw() - rev_yaw) < yaw_threshold || abs(attitude_input->yaw() - rev_yaw) > 360 - yaw_threshold) {
-              cur_state = REV_STATE;
-            }
+            set(DEPTH, rise_depth);
+            printf("Going back\n");
+            cur_state = REV_STATE;
+            counter = 0;
+            move(LEFT, 180);
             break;
           case REV_STATE:
             actuator_output->set_attitude_absolute(SPEED, speed);
