@@ -311,11 +311,11 @@ int mvContours::match_circle (IplImage* img, MvCircleVector* circle_vector, int 
 
     double r11 = fabs( MEAN2(nu02,nu20) / nu11);
     double R = MEAN2(nu20,nu02) / std::max((MEAN2(nu21,nu12)), (MEAN2(nu30,nu03)));
-    bool pass = (r03 <= 15.0) && (r12 <= 5.0) && (r02 <= 5.0) && (r11 > 5.0) && (R > 50);
+    bool pass = (r03 <= 25.0) && (r12 <= 8.0) && (r02 <= 8.0) && (r11 > 2.5) && (R > 25);
 
-    printf ("\nCircle Contours: nu11=%lf, nu20=%lf, nu02=%lf, nu21=%lf, nu12=%lf, nu30=%lf, nu03=%lf\n",
-        nu11, nu20, nu02, nu21, nu12, nu30, nu03);
-    printf ("\tn30/n03=%3.1lf, n21/n12=%3.1lf, nu20/nu02=%3.1lf, r11=%3.1f, R=%3.1f. %s\n", r03, r12, r02, r11, R, pass?"PASS!":"FAIL!");
+    //printf ("Circle Contours: nu11=%lf, nu20=%lf, nu02=%lf, nu21=%lf, nu12=%lf, nu30=%lf, nu03=%lf\n",
+    //    nu11, nu20, nu02, nu21, nu12, nu30, nu03);
+    printf ("Circle Contours: \tn30/n03=%3.1lf, n21/n12=%3.1lf, nu20/nu02=%3.1lf, r11=%3.1f, R=%3.1f. %s\n", r03, r12, r02, r11, R, pass?"PASS!":"FAIL!");
     if (!pass) {
         return -1;
     }

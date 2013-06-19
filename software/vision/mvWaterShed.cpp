@@ -78,10 +78,10 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
 // This function generates a bunch of markers and puts them into color_point_vector
     // massively downsample - this smoothes the image
     cvCvtColor (src, scratch_image, CV_BGR2GRAY);
-    cvResize (scratch_image, ds_image_nonedge, CV_INTER_LINEAR);
+    /*cvResize (scratch_image, ds_image_nonedge, CV_INTER_LINEAR);
       
     // generate the "nonedge image" which is 1 if the pixel isnt an edge image in ds_image_3c
-    //cvSmooth (ds_image_nonedge, ds_image_nonedge, CV_GAUSSIAN, 5);
+    cvSmooth (ds_image_nonedge, ds_image_nonedge, CV_GAUSSIAN, 5);
 
     // perform gradient
     IplImage *ds_scratch = cvCreateImageHeader (cvGetSize(ds_image_nonedge), IPL_DEPTH_8U, 1);
@@ -91,13 +91,12 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
 
     CvScalar mean, stdev;
     cvAvgSdv (ds_image_nonedge, &mean, &stdev);
-    cvThreshold (ds_image_nonedge, ds_image_nonedge, mean.val[0]+stdev.val[0], 255, CV_THRESH_BINARY);
-    //cvDilate (ds_image_nondege, ds_image_nondege, kernel);
+    cvThreshold (ds_image_nonedge, ds_image_nonedge, mean.val[0]+2*stdev.val[0], 255, CV_THRESH_BINARY);
+    cvErode (ds_image_nonedge, ds_image_nonedge, kernel);
     cvNot (ds_image_nonedge, ds_image_nonedge);
 
-    /*cvResize (ds_image_nonedge, scratch_image, CV_INTER_NN);
-
     // draw the bad pixels on the image so we can see them
+    cvResize (ds_image_nonedge, scratch_image, CV_INTER_NN);
     for (int i = 0; i < scratch_image->height; i++) {
         unsigned char* srcPtr = (unsigned char*)(scratch_image->imageData + i*scratch_image->widthStep);
         unsigned char* dstPtr = (unsigned char*)(src->imageData + i*src->widthStep);
@@ -111,10 +110,10 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
             srcPtr ++;
             dstPtr += 3;
         }
-    }*/
-
+    }
+    */
     color_point_vector.clear();
-
+    //cvSet (ds_image_nonedge, CV_RGB(1,1,1));
     // sample the image like this
     // 1. randomly generate an x,y coordinate.
     // 2. Check if the coordinate is a non-edge pixel on the nonedge image.
@@ -124,18 +123,18 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
         int x = rand() % ds_image_nonedge->width;
         int y = rand() % ds_image_nonedge->height;
 
-        unsigned char nonedge = CV_IMAGE_ELEM(ds_image_nonedge, unsigned char, y, x);
-        if (nonedge != 0) {
+        //unsigned char nonedge = *((unsigned char*)ds_image_nonedge->imageData + y*ds_image_nonedge->widthStep + x);
+        //if (nonedge != 0) {
             // calculate corresponding large image coords
             int xl = x * WATERSHED_DS_FACTOR;
             int yl = y * WATERSHED_DS_FACTOR;
             // 3.
-            unsigned char* colorPtr = &CV_IMAGE_ELEM(src, unsigned char, yl, 3*xl);
+            unsigned char* colorPtr = (unsigned char*)src->imageData + yl*src->widthStep + 3*xl;
             COLOR_TRIPLE ct (colorPtr[0], colorPtr[1], colorPtr[2], 0);;
             color_point_vector.push_back(std::make_pair(ct, cvPoint(xl,yl)));
             // 4.
-            cvCircle (ds_image_nonedge, cvPoint(x,y), ds_image_nonedge->width/20, CV_RGB(0,0,0), -1);          
-        }
+            //cvCircle (ds_image_nonedge, cvPoint(x,y), ds_image_nonedge->width/50, CV_RGB(0,0,0), -1);          
+        //}
     }
 
     // the color point vector will have too many pixels that are really similar - get rid of some by merging
@@ -192,7 +191,8 @@ void mvWatershedFilter::watershed_place_markers_internal (IplImage* src) {
 
 void mvWatershedFilter::watershed_process_markers_internal () {
     int num_pixels = color_point_vector.size();
-    DEBUG_PRINT ("Candidate Pixels for Markers = %d\n", num_pixels);
+    assert (num_pixels > 0);
+    DEBUG_PRINT ("Candidate Number of Pixels for Markers = %d\n", num_pixels);
 
     // go thru each pair of pixels and calculate their color difference and add it to a vector
     // the pixels are represented by their indices in the color_point_vector
@@ -265,6 +265,8 @@ void mvWatershedFilter::watershed_process_markers_internal () {
 void mvWatershedFilter::watershed_process_markers_internal2 (int method) {
     // Use cvKMeans2 to cluster the colors
     int num_pixels = color_point_vector.size();
+    assert (num_pixels > 0);
+
     cv::Mat color_point_mat (num_pixels, 1, CV_32FC3);       // rows=num_pixels, cols=1, type = 8bit Unsigned Channels2
     //CvMat* cluster_index_mat = cvCreateMat(num_pixels, 1, CV_32SC1);
     cv::Mat cluster_index_mat (num_pixels, 1, CV_32SC1);
