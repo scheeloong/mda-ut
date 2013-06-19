@@ -99,9 +99,6 @@ void ManualOperation::work()
       }
     }
 
-    // variables for switch statement
-    int target_yaw = 0, target_depth = 0;
-
     switch(c) {
       case 'q':
          loop = false;
@@ -148,26 +145,16 @@ void ManualOperation::work()
          actuator_output->set_attitude_change(REVERSE, SPEED_CHG);
          break;
       case 'a':
-         target_yaw = actuator_output->get_target_attitude(YAW);
-         target_yaw -= YAW_CHG_IN_DEG;
-         if (target_yaw < -180) target_yaw += 360;
-         actuator_output->set_attitude_absolute(YAW, target_yaw);
+         actuator_output->set_attitude_change(LEFT, YAW_CHG_IN_DEG);
          break;
       case 'd':
-         target_yaw = actuator_output->get_target_attitude(YAW);
-         target_yaw += YAW_CHG_IN_DEG;
-         if (target_yaw > 180) target_yaw -= 360;
-         actuator_output->set_attitude_absolute(YAW, target_yaw);
+         actuator_output->set_attitude_change(RIGHT, YAW_CHG_IN_DEG);
          break;
       case 'r':
-         target_depth = actuator_output->get_target_attitude(DEPTH);
-         target_depth -= DEPTH_CHG_IN_CM;
-         actuator_output->set_attitude_absolute(DEPTH, target_depth);
+         actuator_output->set_attitude_change(RISE, DEPTH_CHG_IN_CM);
          break;
       case 'f':
-         target_depth = actuator_output->get_target_attitude(DEPTH);
-         target_depth += DEPTH_CHG_IN_CM;
-         actuator_output->set_attitude_absolute(DEPTH, target_depth);
+         actuator_output->set_attitude_change(SINK, DEPTH_CHG_IN_CM);
          break;
       case ' ':
          actuator_output->special_cmd(SIM_ACCEL_ZERO);
@@ -576,10 +563,7 @@ void ManualOperation::long_input()
     int target_yaw_change;
     sscanf(buf, "left %d", &target_yaw_change);
     if (target_yaw_change >= 0 && target_yaw_change <= 180) {
-      int target_yaw = actuator_output->get_target_attitude(YAW);
-      target_yaw -= target_yaw_change;
-      if (target_yaw < -180) target_yaw += 360;
-      actuator_output->set_attitude_absolute(YAW, target_yaw);
+      actuator_output->set_attitude_change(LEFT, target_yaw_change);
       message_hold("Turning left");
     } else {
       message_hold("Invalid left turn, must be [0, 180]");
@@ -588,10 +572,7 @@ void ManualOperation::long_input()
     int target_yaw_change;
     sscanf(buf, "right %d", &target_yaw_change);
     if (target_yaw_change >= 0 && target_yaw_change <= 180) {
-      int target_yaw = actuator_output->get_target_attitude(YAW);
-      target_yaw += target_yaw_change;
-      if (target_yaw > 180) target_yaw -= 360;
-      actuator_output->set_attitude_absolute(YAW, target_yaw);
+      actuator_output->set_attitude_change(RIGHT, target_yaw_change);
       message_hold("Turning right");
     } else {
       message_hold("Invalid left turn, must be [0, 180]");
@@ -609,9 +590,7 @@ void ManualOperation::long_input()
     int target_depth_change;
     sscanf(buf, "up %d", &target_depth_change);
     if (target_depth_change >= 0) {
-      int target_depth = actuator_output->get_target_attitude(DEPTH);
-      target_depth -= target_depth_change;
-      actuator_output->set_attitude_absolute(DEPTH, target_depth);
+      actuator_output->set_attitude_change(RISE, target_depth_change);
       message_hold("Rising up");
     } else {
       message_hold("Invalid up command, must be >= 0");
@@ -620,9 +599,7 @@ void ManualOperation::long_input()
     int target_depth_change;
     sscanf(buf, "down %d", &target_depth_change);
     if (target_depth_change >= 0) {
-      int target_depth = actuator_output->get_target_attitude(DEPTH);
-      target_depth += target_depth_change;
-      actuator_output->set_attitude_absolute(DEPTH, target_depth);
+      actuator_output->set_attitude_absolute(DEPTH, target_depth_change);
       message_hold("Sinking down");
     } else {
       message_hold("Invalid down command, must be >= 0");

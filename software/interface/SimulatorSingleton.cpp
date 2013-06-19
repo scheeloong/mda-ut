@@ -138,6 +138,11 @@ void SimulatorSingleton::set_target_accel(float accel)
 void SimulatorSingleton::set_target_yaw(float yaw)
 {
   target_model.angle.yaw = yaw;
+  if (target_model.angle.yaw >= 180) {
+    target_model.angle.yaw -= 360;
+  } else if (target_model.angle.yaw < -180) {
+    target_model.angle.yaw += 360;
+  }
 }
 
 void SimulatorSingleton::set_target_depth(float depth)
