@@ -12,6 +12,7 @@
 #include "mvLines.h"
 #include "mvShapes.h"
 #include "mvContours.h"
+#include "frame_data.h"
 
 #define WEBCAM_CACHE 5
 
@@ -275,8 +276,9 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
 
     IplImage* gray_img;
     IplImage* gray_img_2;
-    //IplImage* filtered_img;
 
+    static const int N_FRAMES_TO_KEEP = 10;
+    MDA_FRAME_DATA m_frame_data_vector[N_FRAMES_TO_KEEP];
 
 public:
     MDA_VISION_MODULE_BUOY ();

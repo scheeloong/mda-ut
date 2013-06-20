@@ -61,7 +61,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     }
                     else {
                         move(RIGHT, xy_ang);
-                        printf("Turning %s %d degrees (xy_ang)\n", (xy_ang > 0) ? "right" : "left", abs(xy_ang));
+                        printf("Turning %s %d degrees (xy_ang)\n", (xy_ang > 0) ? "right" : "left", static_cast<int>(abs(xy_ang)));
                     }
                 }
                 else{
@@ -126,7 +126,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     } 
                     else {
                         move(RIGHT, xy_ang);
-                        printf("Turning %s %d (xy_ang2) degrees\n", (xy_ang > 0) ? "right" : "left", abs(xy_ang));
+                        printf("Turning %s %d (xy_ang2) degrees\n", (xy_ang > 0) ? "right" : "left", static_cast<int>(abs(xy_ang)));
                     }
                 }
             }

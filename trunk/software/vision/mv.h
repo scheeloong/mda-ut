@@ -41,25 +41,46 @@ inline std::string color_int_to_string (int color) {
     return std::string("UNKNOWN");
 }
 
-class MvCircle {
+class MvShape {
 public:
     CvPoint center;
-    float radius;
     int m1,m2,m3;
-
-    MvCircle () { center.x=center.y=0; radius=0; m1=m2=m3=0; }
+    MvShape () { center.x=center.y=0; m1=m2=m3=0; }
+    CvPoint center_diff (MvShape first, MvShape second) {
+        return cvPoint (first.center.x-second.center.x, first.center.y-second.center.y);
+    }
+    int color_diff (MvShape first, MvShape second) {
+        return abs(first.m1-second.m1)+abs(first.m2-second.m2)+abs(first.m3-second.m3);
+    }
+};
+class MvCircle : public MvShape {
+public:
+    //CvPoint center;
+    //int m1,m2,m3;
+    float radius;
+    
+    MvCircle () { radius=0; }
     void drawOntoImage (IplImage* img) {
         cvCircle (img, center, static_cast<int>(radius), CV_RGB(50,50,50), 2);
     }
+    MvCircle& operator = (MvCircle other) {
+        this->center.x = other.center.x;
+        this->center.y = other.center.y;
+        this->radius = other.radius;
+        this->m1 = other.m1;
+        this->m2 = other.m2;
+        this->m3 = other.m3;
+        return *this;
+    }
 };
-class MvRotatedBox {
+class MvRotatedBox : public MvShape {
 public:
-    CvPoint center;
+    //CvPoint center;
+    //int m1,m2,m3;
     float length, width;    // length is the long edge
     float angle;            // angle points in direction of length
-    int m1,m2,m3;
-
-    MvRotatedBox () { center.x=center.y=0; length=width=angle=0; m1=m2=m3=0; }
+    
+    MvRotatedBox () { length=width=angle=0; }
     void drawOntoImage (IplImage* img) {
         CvPoint p0, p1;
         float ang_sin = -sin(angle*CV_PI/180.f);
@@ -72,6 +93,17 @@ public:
         p0.x = center.x-length_x+width_x;  p0.y = center.y-length_y-width_y;
         p1.x = center.x+length_x+width_x;  p1.y = center.y+length_y-width_y;
         cvLine (img, p0, p1, CV_RGB(50,50,50), 2);
+    }
+    MvRotatedBox& operator = (MvRotatedBox other) {
+        this->center.x = other.center.x;
+        this->center.y = other.center.y;
+        this->length = other.length;
+        this->width = other.width;
+        this->angle = other.angle;
+        this->m1 = other.m1;
+        this->m2 = other.m2;
+        this->m3 = other.m3;
+        return *this;    
     }
 };
 typedef std::vector<MvCircle> MvCircleVector;
