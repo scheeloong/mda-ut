@@ -40,13 +40,14 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
         switch (cur_state) {
           case SINK_STATE:
             set(DEPTH, sink_depth);
-            printf("Going forward\n");
             cur_state = FWD_STATE;
             counter = 0;
-            move(RIGHT, 180);
+            move(LEFT, 20);
+            move(RIGHT, 40);
+            move(LEFT, 20);
             break;
           case FWD_STATE:
-            actuator_output->set_attitude_absolute(SPEED, speed);
+            move(FORWARD, speed);
             printf("Current timestep: %d Maximum timestep: %d\n", counter, fwd_timesteps);
             counter++;
             if (counter == fwd_timesteps) {
@@ -56,13 +57,14 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
             break;
           case RISE_STATE:
             set(DEPTH, rise_depth);
-            printf("Going back\n");
             cur_state = REV_STATE;
             counter = 0;
-            move(LEFT, 180);
+            move(RIGHT, 20);
+            move(LEFT, 40);
+            move(RIGHT, 20);
             break;
           case REV_STATE:
-            actuator_output->set_attitude_absolute(SPEED, speed);
+            move(REVERSE, speed);
             printf("Current timestep: %d Maximum timestep: %d\n", counter, fwd_timesteps);
             counter++;
             if (counter == fwd_timesteps) {
