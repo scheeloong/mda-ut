@@ -65,7 +65,7 @@ public:
     MDA_VISION_MODULE_BASE () {}
     virtual ~MDA_VISION_MODULE_BASE () {} 
 
-    MDA_VISION_RETURN_CODE filter (IplImage* src) {
+    virtual MDA_VISION_RETURN_CODE filter (IplImage* src) {
         assert (src != NULL);
         assert (src->nChannels == 3);
         
@@ -279,6 +279,9 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
 
     static const int N_FRAMES_TO_KEEP = 10;
     MDA_FRAME_DATA m_frame_data_vector[N_FRAMES_TO_KEEP];
+    int n_valid_frames;
+    int n_valid_circle_frames;
+    int n_valid_box_frames;
 
 public:
     MDA_VISION_MODULE_BUOY ();
@@ -288,7 +291,23 @@ public:
     void primary_filter (IplImage* src);
     MDA_VISION_RETURN_CODE calc_vci ();
 
+    MDA_VISION_RETURN_CODE filter (IplImage* src) {
+        assert (src != NULL);
+        assert (src->nChannels == 3);
+        
+        clear_data();
+        add_frame (src);
+        MDA_VISION_RETURN_CODE retval = calc_vci ();
+ 
+        assert (retval != FATAL_ERROR);
+        return retval;
+    };
+
     virtual int get_angle() {printf ("VISION_MODULE_BUOY- get_angle not allowed\n"); exit(1); return 0;}
+
+    // functions to support frame data stuff
+    void add_frame (IplImage* src);
+    void clear_frames ();    
 };
 
 /// ########################################################################

@@ -67,8 +67,8 @@ public:
     mvContours ();
     ~mvContours ();
 
-    int match_rectangle (IplImage* img, MvRBoxVector* RBoxVector, int method=CONTOURS_MATCH_RECIP);
-    int match_circle (IplImage* img, MvCircleVector* circle_vector, int method=CONTOURS_MATCH_RECIP);
+    float match_rectangle (IplImage* img, MvRotatedBox* rbox, int method=CONTOURS_MATCH_RECIP);
+    float match_circle (IplImage* img, MvCircle* circle, int method=CONTOURS_MATCH_RECIP);
 
     void drawOntoImage (IplImage* img) { draw_contours (m_contours, img); }        
 
