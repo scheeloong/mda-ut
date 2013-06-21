@@ -1,6 +1,8 @@
 #ifndef __MDA_TASK__MDA_TASK__
 #define __MDA_TASK__MDA_TASK__
 
+#include <time.h>
+
 #include "mda_vision.h"
 #include "AttitudeInput.h"
 #include "ImageInput.h"
@@ -53,16 +55,23 @@ protected:
 		actuator_output->set_attitude_absolute(dir, val);	
 		stabilize(dir);
 	}
-	// TODO: Make this exit for submarine after some # of iterations
 	void stabilize (ATTITUDE_DIRECTION dir) {
 		if (dir == SPEED) {
 			return; // No need to stabilize
 		}
 
 		const int yaw_threshold = 3, depth_threshold = 15;
+		double max_elapsed_seconds = 10.;
+		time_t start_time = time(NULL);
 		while (1) {
 			image_input->ready_image(FWD_IMG);
 			image_input->ready_image(DWN_IMG);
+
+			// Exit in max_elapsed_seconds to prevent hanging
+			if (difftime(time(NULL), start_time) > max_elapsed_seconds) {
+				break;
+			}
+
 			if (dir == YAW) {
 				int current_yaw = attitude_input->yaw();
 				int target_yaw = actuator_output->get_target_attitude(YAW);
