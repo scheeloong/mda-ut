@@ -28,6 +28,10 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY () :
     gray_img = mvGetScratchImage();
     gray_img_2 = mvGetScratchImage2();
     //filtered_img = mvGetScratchImage (); // common size
+
+    n_valid_frames = 0;
+    n_valid_circle_frames = 0;
+    n_valid_box_frames = 0;
 }
 
 MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY (const char* settings_file) :
@@ -45,6 +49,10 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY (const char* settings_file) :
     gray_img = mvGetScratchImage();
     gray_img_2 = mvGetScratchImage2();
     //filtered_img = mvGetScratchImage (); // common size
+    
+    n_valid_frames = 0;
+    n_valid_circle_frames = 0;
+    n_valid_box_frames = 0;
 }
 
 MDA_VISION_MODULE_BUOY:: ~MDA_VISION_MODULE_BUOY () {
@@ -73,16 +81,17 @@ void MDA_VISION_MODULE_BUOY:: primary_filter (IplImage* src) {
     window.showImage (gray_img);
 
     COLOR_TRIPLE color;
+    MvCircle circle;
     MvCircleVector circle_vector;
-    MvRBoxVector rbox_vector;
     
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
-        if (contour_filter.match_circle(gray_img_2, &circle_vector) < 0)
+        if (contour_filter.match_circle(gray_img_2, &circle) < 0)
             continue;
 
-        circle_vector.back().m1 = color.m1;
-        circle_vector.back().m2 = color.m2;
-        circle_vector.back().m3 = color.m3;
+        circle.m1 = color.m1;
+        circle.m2 = color.m2;
+        circle.m3 = color.m3;
+        circle_vector.push_back(circle);
     }
 
     if (circle_vector.size() > 0) {
@@ -161,4 +170,74 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
             m_angular_x, m_angular_y, m_range);
 
     return FULL_DETECT;
+}
+
+
+void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
+    // shift the frames back by 1
+    shift_frame_data (m_frame_data_vector, N_FRAMES_TO_KEEP);
+
+    watershed_filter.watershed(src, gray_img);
+    window.showImage (gray_img);
+
+    COLOR_TRIPLE color;
+    MvCircle circle;
+    MvCircleVector circle_vector;
+    MvRotatedBox rbox;
+    MvRBoxVector rbox_vector;
+
+    while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
+        if (contour_filter.match_circle(gray_img_2, &circle) > 0) {
+            circle.m1 = color.m1;
+            circle.m2 = color.m2;
+            circle.m3 = color.m3;
+            circle_vector.push_back(circle);            
+        }
+        if (contour_filter.match_rectangle(gray_img_2, &rbox) > 0) {
+            rbox.m1 = color.m1;
+            rbox.m2 = color.m2;
+            rbox.m3 = color.m3;
+            rbox_vector.push_back(rbox);
+        }
+
+        //window2.showImage (gray_img_2);
+    }
+
+    cvZero (gray_img_2);
+
+    if (circle_vector.size() > 0) {
+        MvCircleVector::iterator iter = circle_vector.begin();
+        MvCircleVector::iterator iter_end = circle_vector.end();
+        
+        // for now, frame will store circle with best validity
+        float best_validity = -1;
+        for (; iter != iter_end; ++iter) {
+            if (iter->validity > best_validity) {
+                m_frame_data_vector[0].assign_circle(*iter);
+                best_validity = iter->validity;
+            }
+        }
+
+        m_pixel_x = m_frame_data_vector[0].m_frame_circle.center.x;
+        m_pixel_y = m_frame_data_vector[0].m_frame_circle.center.y;
+        m_range = (BUOY_REAL_DIAMTER * gray_img->width) / (2*m_frame_data_vector[0].m_frame_circle.radius * TAN_FOV_X);
+    }
+
+    if (rbox_vector.size() > 0) {
+        MvRBoxVector::iterator iter = rbox_vector.begin();
+        MvRBoxVector::iterator iter_end = rbox_vector.end();
+        
+        // for now, frame will store rect with best validity
+        float best_validity = -1;
+        for (; iter != iter_end; ++iter) {
+            if (iter->validity > best_validity) {
+                m_frame_data_vector[0].assign_rbox(*iter);
+                best_validity = iter->validity;
+            }
+        }
+    }
+
+    m_frame_data_vector[0].print();
+    m_frame_data_vector[0].drawOntoImage(gray_img_2);
+    window2.showImage (gray_img_2);
 }

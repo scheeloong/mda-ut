@@ -153,25 +153,29 @@ int main( int argc, char** argv ) {
             win2->showImage (filter_img);
             
             COLOR_TRIPLE color;
+            MvCircle circle;
             MvCircleVector circle_vector;
+            MvRotatedBox rbox;
             MvRBoxVector rbox_vector;
             
             while ( watershed_filter.get_next_watershed_segment(filter_img_2, color) ) {
                 if (CIRCLE) {
-                    if (contour_filter.match_circle(filter_img_2, &circle_vector) < 0)
+                    if (contour_filter.match_circle(filter_img_2, &circle) < 0)
                         continue;
 
-                    circle_vector.back().m1 = color.m1;
-                    circle_vector.back().m2 = color.m2;
-                    circle_vector.back().m3 = color.m3;
+                    circle.m1 = color.m1;
+                    circle.m2 = color.m2;
+                    circle.m3 = color.m3;
+                    circle_vector.push_back(circle);
                 }
                 else if (RECT) {
-                    if (contour_filter.match_rectangle(filter_img_2, &rbox_vector) < 0)
+                    if (contour_filter.match_rectangle(filter_img_2, &rbox) < 0)
                         continue;
 
-                    rbox_vector.back().m1 = color.m1;
-                    rbox_vector.back().m2 = color.m2;
-                    rbox_vector.back().m3 = color.m3;
+                    rbox.m1 = color.m1;
+                    rbox.m2 = color.m2;
+                    rbox.m3 = color.m3;
+                    rbox_vector.push_back(rbox);
                 }
 /*
                 win3->showImage(filter_img_2);

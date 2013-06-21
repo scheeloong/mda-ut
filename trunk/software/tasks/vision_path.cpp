@@ -59,15 +59,17 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
     window.showImage (gray_img);
 
     COLOR_TRIPLE color;
+    MvRotatedBox rbox;
     MvRBoxVector rbox_vector;
 
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
-        if (contour_filter.match_rectangle(gray_img_2, &rbox_vector) < 0)
+        if (contour_filter.match_rectangle(gray_img_2, &rbox) < 0)
             continue;
 
-        rbox_vector.back().m1 = color.m1;
-        rbox_vector.back().m2 = color.m2;
-        rbox_vector.back().m3 = color.m3;
+        rbox.m1 = color.m1;
+        rbox.m2 = color.m2;
+        rbox.m3 = color.m3;
+        rbox_vector.push_back(rbox);
     }
 
     if (rbox_vector.size() > 0) {

@@ -113,7 +113,7 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
     }
     */
     color_point_vector.clear();
-    //cvSet (ds_image_nonedge, CV_RGB(1,1,1));
+    cvSet (ds_image_nonedge, CV_RGB(1,1,1));
     // sample the image like this
     // 1. randomly generate an x,y coordinate.
     // 2. Check if the coordinate is a non-edge pixel on the nonedge image.
@@ -123,8 +123,8 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
         int x = rand() % ds_image_nonedge->width;
         int y = rand() % ds_image_nonedge->height;
 
-        //unsigned char nonedge = *((unsigned char*)ds_image_nonedge->imageData + y*ds_image_nonedge->widthStep + x);
-        //if (nonedge != 0) {
+        unsigned char nonedge = *((unsigned char*)ds_image_nonedge->imageData + y*ds_image_nonedge->widthStep + x);
+        if (nonedge != 0) {
             // calculate corresponding large image coords
             int xl = x * WATERSHED_DS_FACTOR;
             int yl = y * WATERSHED_DS_FACTOR;
@@ -133,8 +133,8 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
             COLOR_TRIPLE ct (colorPtr[0], colorPtr[1], colorPtr[2], 0);;
             color_point_vector.push_back(std::make_pair(ct, cvPoint(xl,yl)));
             // 4.
-            //cvCircle (ds_image_nonedge, cvPoint(x,y), ds_image_nonedge->width/50, CV_RGB(0,0,0), -1);          
-        //}
+            cvCircle (ds_image_nonedge, cvPoint(x,y), ds_image_nonedge->width/15, CV_RGB(0,0,0), -1);          
+        }
     }
 
     // the color point vector will have too many pixels that are really similar - get rid of some by merging

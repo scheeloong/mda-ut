@@ -45,7 +45,8 @@ class MvShape {
 public:
     CvPoint center;
     int m1,m2,m3;
-    MvShape () { center.x=center.y=0; m1=m2=m3=0; }
+    int validity;
+    MvShape () { validity = -1; center.x=center.y=0; m1=m2=m3=0; }
     CvPoint center_diff (MvShape first, MvShape second) {
         return cvPoint (first.center.x-second.center.x, first.center.y-second.center.y);
     }

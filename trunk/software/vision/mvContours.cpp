@@ -227,7 +227,7 @@ void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_i
     DEBUG_PRINT ("Best Match Diff = %9.6lf\n", best_match_diff);
 }
 
-int mvContours::match_rectangle (IplImage* img, MvRBoxVector* RBoxVector, int method) {
+float mvContours::match_rectangle (IplImage* img, MvRotatedBox* rbox, int method) {
     assert (img != NULL);
     assert (img->nChannels == 1);
 
@@ -254,18 +254,17 @@ int mvContours::match_rectangle (IplImage* img, MvRBoxVector* RBoxVector, int me
     double perimeter_ratio = perimeter / (2*length+2*width);
     double area_ratio = area / (length*width);
     printf ("Rect: Area / Peri:    %6.2lf / %6.2lf\n", area_ratio, perimeter_ratio);
-    if (area_ratio < 0.6 || perimeter_ratio > 1.1) {
+    if (area_ratio < 0.7 || perimeter_ratio > 1.2 || perimeter_ratio < 0.85) {
         return -1;
     }
 
-    MvRotatedBox box;
-    box.center.x = Rect.center.x;
-    box.center.y = Rect.center.y;
-    box.length = length;
-    box.width = width;
-    box.angle = angle;
-    RBoxVector->push_back(box);
-
+    rbox->center.x = Rect.center.x;
+    rbox->center.y = Rect.center.y;
+    rbox->length = length;
+    rbox->width = width;
+    rbox->angle = angle;
+    rbox->validity = area_ratio;
+    
     // draw a line to indicate the angle
     /*CvPoint p0, p1;
     int delta_x = length/2 * -sin(angle*CV_PI/180.f);
@@ -276,10 +275,10 @@ int mvContours::match_rectangle (IplImage* img, MvRBoxVector* RBoxVector, int me
     */
     bin_calc.stop();
 
-    return 1;
+    return area_ratio;
 }
 
-int mvContours::match_circle (IplImage* img, MvCircleVector* circle_vector, int method) {
+float mvContours::match_circle (IplImage* img, MvCircle* circle, int method) {
     assert (img != NULL);
     assert (img->nChannels == 1);
 
@@ -311,11 +310,11 @@ int mvContours::match_circle (IplImage* img, MvCircleVector* circle_vector, int 
 
     double r11 = fabs( MEAN2(nu02,nu20) / nu11);
     double R = MEAN2(nu20,nu02) / std::max((MEAN2(nu21,nu12)), (MEAN2(nu30,nu03)));
-    bool pass = (r03 <= 25.0) && (r12 <= 8.0) && (r02 <= 8.0) && (r11 > 2.5) && (R > 25);
+    bool pass = (r03 <= 25.0) && (r12 <= 12.0) && (r02 <= 12.0) && (r11 > 2.5) && (R > 25);
 
     //printf ("Circle Contours: nu11=%lf, nu20=%lf, nu02=%lf, nu21=%lf, nu12=%lf, nu30=%lf, nu03=%lf\n",
     //    nu11, nu20, nu02, nu21, nu12, nu30, nu03);
-    printf ("Circle Contours: \tn30/n03=%3.1lf, n21/n12=%3.1lf, nu20/nu02=%3.1lf, r11=%3.1f, R=%3.1f. %s\n", r03, r12, r02, r11, R, pass?"PASS!":"FAIL!");
+    //printf ("Circle Contours: \tn30/n03=%3.1lf, n21/n12=%3.1lf, nu20/nu02=%3.1lf, r11=%3.1f, R=%3.1f. %s\n", r03, r12, r02, r11, R, pass?"PASS!":"FAIL!");
     if (!pass) {
         return -1;
     }
@@ -340,16 +339,14 @@ int mvContours::match_circle (IplImage* img, MvCircleVector* circle_vector, int 
         return -1;
     }
     
-    MvCircle circle;
-    circle.center.x = static_cast<int>(centroid32f.x);
-    circle.center.y = static_cast<int>(centroid32f.y);
-
-    circle.radius = radius;
-    circle_vector->push_back(circle);
+    circle->center.x = static_cast<int>(centroid32f.x);
+    circle->center.y = static_cast<int>(centroid32f.y);
+    circle->radius = radius;
+    circle->validity = area_ratio;
     
     //cvCircle (img, cvPoint(x,y), static_cast<int>(radius), CV_RGB(50,50,50), 2);
 
     bin_calc.stop();
 
-    return 1;
+    return area_ratio;
 }
