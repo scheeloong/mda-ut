@@ -52,7 +52,7 @@ class ActuatorOutput {
       switch(dir) {
         case REVERSE:
         case LEFT:
-        case SINK:
+        case RISE:
           delta *= -1;
           break;
         default:
