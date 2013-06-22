@@ -599,7 +599,7 @@ void ManualOperation::long_input()
     int target_depth_change;
     sscanf(buf, "down %d", &target_depth_change);
     if (target_depth_change >= 0) {
-      actuator_output->set_attitude_absolute(DEPTH, target_depth_change);
+      actuator_output->set_attitude_change(SINK, target_depth_change);
       message_hold("Sinking down");
     } else {
       message_hold("Invalid down command, must be >= 0");
