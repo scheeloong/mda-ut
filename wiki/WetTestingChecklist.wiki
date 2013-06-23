@@ -1,0 +1,26 @@
+= Wet Testing Checklist =
+
+This is a checklist of things to bring. If not all things are checked off on this list, we should not be going to a pool yet!
+
+  * Equipment
+    # Technical goals for water test
+    # The submarine!
+      # Battery and circuit boards
+      # 2 webcams, netbook, USB hub connected to webcams and FPGA
+    # O-ring and cover for sealing
+    # Extra ballast
+    # Ethernet connector
+    # External laptop with 4+ hours of battery life
+    # Multimeter
+    # Power bar
+    # Tape (duct, masking, and electrical)
+    # String
+    # Water testing props
+      # Path task (red/orange/yellow pipes that sink)
+      # Buoy task (single-coloured balls that will submerge, but not sink to the bottom)
+  * Testing
+    # DryTestingChecklist
+  * Miscellaneous
+    # Underwater camera
+    # Goggles/snorkel gear
+    # 2+ people with swimming gear

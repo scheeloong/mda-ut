@@ -1,0 +1,15 @@
+= Dry Testing Checklist =
+
+This is a checklist of tests we can do 1-2 days before a water test in the MDA room.
+
+  * Preparation
+    # Charge the submarine batteries
+    # Charge the netbook batteries
+  * Dry Testing
+    # Power on/off
+    # Depth and yaw readings
+    # Depth and yaw controllers
+    # Depth and yaw logging
+    # Webcam mounting, orientation, and video feed
+    # Video logging
+    # Ethernet SSH with external laptop/computer
