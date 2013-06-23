@@ -55,6 +55,9 @@ protected:
 		actuator_output->set_attitude_absolute(dir, val);	
 		stabilize(dir);
 	}
+	void stop() {
+		actuator_output->stop();
+	}
 	void stabilize (ATTITUDE_DIRECTION dir) {
 		if (dir == SPEED) {
 			return; // No need to stabilize

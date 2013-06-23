@@ -144,7 +144,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
             CharacterStreamSingleton::get_instance().write_char(c);
         }
         if (CharacterStreamSingleton::get_instance().wait_key(1) == 'q'){
-            actuator_output->stop();
+            stop();
             ret_code = TASK_QUIT;
             break;
         }

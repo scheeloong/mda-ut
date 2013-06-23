@@ -85,7 +85,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
 
             if (vision_code == ONE_SEGMENT || vision_code == FULL_DETECT || vision_code == UNKNOWN_TARGET) {
                 ret_code = TASK_DONE;
-                actuator_output->stop();
+                stop();
                 break;
             }
         }
@@ -98,7 +98,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
             CharacterStreamSingleton::get_instance().write_char(c);
         }
         if (CharacterStreamSingleton::get_instance().wait_key(1) == 'q'){
-            actuator_output->stop();
+            stop();
             ret_code = TASK_QUIT;
             break;
         }
