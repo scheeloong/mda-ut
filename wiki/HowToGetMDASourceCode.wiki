@@ -1,0 +1,41 @@
+= How to Get MDA Source Code =
+
+Do:
+  - Get Ubuntu
+  - Install some packages
+  - Become a member of our Google Group
+  - Follow Google Code instructions to download the source
+
+Don't:
+
+{{http://imgs.xkcd.com/comics/cautionary.png}}
+
+----
+
+== Get Ubuntu ==
+Simply download a disk image from the Ubuntu website and mount it on your USB using [[http://unetbootin.sourceforge.net/|Unetbootin]]. <br>
+If you want you can also get the Windows Installer (http://www.ubuntu.com/download/desktop => Download Windows Installer).
+  * Ubuntu 10 (http://releases.ubuntu.com/10.10/) is most similar to the Redhat systems in the ECF labs.
+  * Ubuntu 11 and up (http://releases.ubuntu.com/11.10/) has a more Mac-like UI.
+
+== Install Packages ==
+<code>sudo apt-get install build-essential openssh-server subversion freeglut3-dev libncurses5-dev aptitude
+sudo apt-get install libcv-dev libcv2.1 libcvaux-dev libcvaux2.1 libhighgui-dev libhighgui2.1</code>
+
+If you get errors on the second command, try:
+
+<code>aptitude search libcv</code>
+
+If you see something like libcv2.3 pop up, then type:
+
+<code>sudo apt-get install libopencv-dev libcv-dev libcv2.3 libcvaux-dev libcvaux2.3 libhighgui-dev libhighgui2.3</code>
+
+== Become a Member ==
+This should be easy. Email one of the execs at [[mech.design@utoronto.ca]].
+
+== Download the Code Repository ==
+Follow the instructions at http://code.google.com/p/mda-ut/source/checkout.
+
+Specifically, paste this into your terminal
+<code>svn checkout https://mda-ut.googlecode.com/svn/trunk/ mda-ut --username MYUSERNAME@gmail.com</code>
+When it asks for your password use the link on the google page to generate your password.
