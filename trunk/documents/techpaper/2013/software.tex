@@ -1,16 +1,11 @@
 \section{Software}
 
-The vision subsystem is a critical component of AquaTux because it is
-the one performing the identification of mission objectives. It is
-also complementary to the passive sonar to grab the suitcase above the
-acoustic pinger. Because the turbidity of the water and the small
-number of visual features in the underwater floor prevent making
-reliable correspondences between two views, we decided that stereo
-vision was impractical in our vessel. Instead, we use two independent
-cameras: one facing forward and one facing down. Since they
-are rigidly attached to the AUV, we need to move the AUV
-to change the viewpoint. In this section, we explain in more details
-the features of our vision subsystem.
+The submarine's software aware of the competition objectives, and performs computer vision to
+command the submarine to move via the embedded system.
+The computer vision uses the OpenCV library to help identify objects based on shape and color.
+The video input consists of two webcams, one facing forward and one facing down.
+These cameras are rigidly attached to the AUV, and we need to move the AUV to change the viewpoint.
+The software also includes a graphical simulator that we can use to test our computer vision algorithms.
 
 \subsection{Software Organization}
 \label{gui}
@@ -32,8 +27,8 @@ the features of our vision subsystem.
 \end{center}
 \end{figure}
 
-The vision system is broken down in 3
-software components (Figure~\ref{vision}): (i) the mission software that performs the image
+The software is broken down into 3
+components (Figure~\ref{vision}): (i) the mission software that performs the image
 processing; (ii) the simulator that recreates synthetic underwater
 images based on the vehicle position (example in
 Figure~\ref{sim}) and (iii) the graphical interface that is used to
