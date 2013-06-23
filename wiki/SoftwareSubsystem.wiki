@@ -22,7 +22,7 @@ All of the FPGA code is in /fpga/
 For more detailed technical documentation, consult the following:
 
 Getting Started Pages:
-  * HowToGetMDASourceCode
+  * HowToGetMdaSourceCode
   * CodingPractices
 
 Modules:
