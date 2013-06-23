@@ -63,11 +63,11 @@ First on the laptop that is connected to Ethernet, set up a wired connection:
 
 Go to Network Connections and create a new Wired connection.
 
-IPv4 settings: `<br>`
-Method: Manual `<br>`
-Address: 192.168.1.20 `<br>`
-Netmask: 255.255.255.0 `<br>`
-Gateway: 255.255.255.0 `<br>`
+IPv4 settings: <br>
+Method: Manual <br>
+Address: 192.168.1.20 <br>
+Netmask: 255.255.255.0 <br>
+Gateway: 255.255.255.0 <br>
 Uncheck "Require IPv4 addressing for this connection to complete"
 
   # Connect the Ethernet cable and SSH into the netbook
@@ -76,14 +76,14 @@ Uncheck "Require IPv4 addressing for this connection to complete"
   # Run: cd mda-ut/fpga && make dl_both, which will program the FPGA and the soft processor on the FPGA
   # Run: cd ..
   # Run: ./sub_test.sh
-    * This will run the command-line UI to control the sub, and also log the video and text output to tests/(HH)_(MM) after quitting
+    * This will run the command-line UI to control the sub, and also log the video and text output to tests/`<HH>`_`<MM>` after quitting
   # Press '^' to power on the sub. The depth and yaw readings should start to make sense. If there is an error, the UI will print out 'power failed' after the target yaw/depth readings
   # Press '%' to turn on the sub's controllers
     * Do this on deck first to check the controllers are working. Plug the depth sensor with a finger to get some motors to move, and press 'a' or 'd' to go left/right for the yaw motors to move
     * On a real test, only do this once the sub is in the water and the ballast is balanced
   # Press '$' to power off the sub if necessary. Press 'q' or Ctrl+C to exit the UI.
   # If you are in a task or in vision mode, you need to press enter after a command for it to be flushed. ie, to exit a task, press 'q' then enter.
-  # To check the logged videos, you can run: mplayer tests/(HH)_(MM)/sub.avi (or sub_dwn.avi). You may need to run ls/tests to see the time of the latest run.
+  # To check the logged videos, you can run: mplayer tests/`<HH>`_`<MM>`/sub.avi (or sub_dwn.avi). You may need to run ls/tests to see the time of the latest run.
 
 == Fixing random issues with testing the sub ==
 
