@@ -63,12 +63,12 @@ First on the laptop that is connected to Ethernet, set up a wired connection:
 
 Go to Network Connections and create a new Wired connection.
 
-  IPv4 settings:
-  Method: Manual
-  Address: 192.168.1.20
-  Netmask: 255.255.255.0
-  Gateway: 255.255.255.0
-  Uncheck "Require IPv4 addressing for this connection to complete"
+IPv4 settings: `<br>`
+Method: Manual `<br>`
+Address: 192.168.1.20 `<br>`
+Netmask: 255.255.255.0 `<br>`
+Gateway: 255.255.255.0 `<br>`
+Uncheck "Require IPv4 addressing for this connection to complete"
 
   # Connect the Ethernet cable and SSH into the netbook
     * Turn on the Wired Connection by clicking the Wireless icon on the panel and selecting the Manual Ethernet connection
@@ -76,26 +76,26 @@ Go to Network Connections and create a new Wired connection.
   # Run: cd mda-ut/fpga && make dl_both, which will program the FPGA and the soft processor on the FPGA
   # Run: cd ..
   # Run: ./sub_test.sh
-    * This will run the command-line UI to control the sub, and also log the video and text output to tests/<HH>_<MM> after quitting
+    * This will run the command-line UI to control the sub, and also log the video and text output to tests/(HH)_(MM) after quitting
   # Press '^' to power on the sub. The depth and yaw readings should start to make sense. If there is an error, the UI will print out 'power failed' after the target yaw/depth readings
   # Press '%' to turn on the sub's controllers
     * Do this on deck first to check the controllers are working. Plug the depth sensor with a finger to get some motors to move, and press 'a' or 'd' to go left/right for the yaw motors to move
     * On a real test, only do this once the sub is in the water and the ballast is balanced
   # Press '$' to power off the sub if necessary. Press 'q' or Ctrl+C to exit the UI.
   # If you are in a task or in vision mode, you need to press enter after a command for it to be flushed. ie, to exit a task, press 'q' then enter.
-  # To check the logged videos, you can run: mplayer tests/<HH>_<MM>/sub.avi (or sub_dwn.avi). You may need to run ls/tests to see the time of the latest run.
+  # To check the logged videos, you can run: mplayer tests/(HH)_(MM)/sub.avi (or sub_dwn.avi). You may need to run ls/tests to see the time of the latest run.
 
 == Fixing random issues with testing the sub ==
 
 If you run into any weird problems with the UI such as the Ethernet connection dropping or strange error messages, try the following:
 
   * Did the Ethernet disconnect while a program was still running?
-    # Yes -> Flip the kill switch! Once you regain the Ethernet connection, run: pkill -2 aquatux
-      # Still have problems? -> Run: pkill -9 aquatux; pkill -9 nios2-terminal
+    * Yes -> Flip the kill switch! Once you regain the Ethernet connection, run: pkill -2 aquatux
+    * Still have problems? -> Run: pkill -9 aquatux; pkill -9 nios2-terminal
   * Does the error message say "No longer connected to nios2-terminal, exiting"?
-    # Yes -> Flip the kill switch, then run: make -C ~/mda-ut/fpga dl_both (the FPGA needs to be reprogrammed)
+    * Yes -> Flip the kill switch, then run: make -C ~/mda-ut/fpga dl_both (the FPGA needs to be reprogrammed)
   * Is there some weird message about the display being incorrect?
-    # Yes -> Start a new SSH connection with: ssh -X mda@192.168.1.21
+    * Yes -> Start a new SSH connection with: ssh -X mda@192.168.1.21
   * Need to copy files from the netbook or update code on the netbook?
-    # Yes -> Use scp (copy over SSH), ie scp -r mda@192.168.1.21:~/mda-ut/tests . (this will recursively copy all the testing data from the Netbook to the connected laptop)
+    * Yes -> Use scp (copy over SSH), ie scp -r mda@192.168.1.21:~/mda-ut/tests . (this will recursively copy all the testing data from the Netbook to the connected laptop)
   * Your problem not covered? -> You're on your own then... 
