@@ -1,41 +1,14 @@
 %\section{Electrical aspects}
 
-\section{Electronics and Communication}
+\section{Electronics}
 Our electronics were designed to handle all low-level tasks that are
 required to move AquaTux, acquire sensor data and trigger
 electrical systems like the  marker droppers. The main goal
 of the electronics is to allow the AUV to be driven with only
 high-level heading and depth commands. The electronics are responsible for
 executing the commands and controlling their results (e.g. depth or
-heading) in a ``black box'' fashion. This level of separation, created by our command
-communication protocol, provides the option of tethered communication directly to the Navigation board via RS232 or through the computer's ethernet port
-that relays commands to the Navigation board.
-
-\subsection{Navigation Board}
-The Navigation Board provides signal conditioning and circuitry interfacing for all sensors, including the Motor Boards and Peripheral Control Boards. In addition, all communication either goes to or through the navigation board. This is also
-the access point when the computer has to communicate with the lower level
-electronics. It features an LPC2129 microcontroller (MCU) at its core, operating at
-12Mhz and utilizes Control Area Network (CAN), two-wire serial I2C,
-and RS232 protocols to communicate with the Motor Boards, Peripheral
-Control Board / Batteries, and the Computer respectively. The
-navigation board reads the heading from an HMR3300 Digital Compass
-connected through a serial port.  An analog pressure sensor, MPX4115, provides a linear
-voltage representation of the depth, and is also connected to the
-navigation board feeding directly into a successive approximation A/D
-in the LPC2129. This board is the key element in handling all low-level operations such as movement and data collection.
-
-\subsection{Peripheral Control Board}
-
-
-The circuit board operates as an extension to the navigation board by
-performing the tasks of actuating the marker droppers and debouncing
-the custom-made leak sensors. The Peripheral Control Board uses
-SN754410 quadruple half H-Bridge drivers: two of which are used to
-actuate the marker droppers and one to fire the torpedo. The
-Peripheral Control Board uses an ATmega48p MCU to control the half
-H-bridge drivers, and query the leak sensors and the feedback switches
-from the marker dropper. The microcontroller communicates with the
-navigation board through the I2C network of the AUV.
+heading) in a ``black box'' fashion. The electronics are managed by the embedded
+system described in the next section, giving access to each electronic peripheral.
 
 \subsection{Motor Board}
 
@@ -105,17 +78,3 @@ battery.  This FET will disconnect the pack when the pack is drained
 or at a temperature greater than 80 degrees Celsius. All battery packs
 are connected to the I2C bus on the navigation board, allowing for
 remote monitoring of the batteries at all time.
-
-\subsection{Battery Charger}
-The battery charger was also designed by our team and has at its core
-an Atmega168p MCU.  This MCU monitors the voltage and
-temperature of the battery pack being charged, and will automatically
-terminate charging based on the temperature rise of the NiMH cells.
-The charger must also communicate with the pack via I2C in order to
-read the battery pack ID, and to ensure that the disconnect FET is
-enabled for charging.  Charge current is set by utilizing a sense
-resistor, and an opamp to control the gate voltage of a MOSFET.  The
-MOSFET operates in saturation in order for us to appropriately limit
-the charge current of the batteries. Because the voltage range of the
-NiMH cells extends from 1.4V to 1.6V, the voltage supply required to
-charge a 20 cell pack must be greater than 32V: we chose a 36V supply for cost-effectiveness.
