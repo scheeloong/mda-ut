@@ -1,6 +1,6 @@
 default: paper.pdf
 
-SRC = abstract.tex conclusions.tex introduction.tex paper.tex electronics.tex embedded.tex software.tex frame.tex  
+SRC = *.tex fig/*
 
 paper.pdf: $(SRC)
 	pdflatex paper
