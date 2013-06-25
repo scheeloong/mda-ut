@@ -29,6 +29,7 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY () :
     gray_img_2 = mvGetScratchImage2();
     //filtered_img = mvGetScratchImage (); // common size
 
+    read_index = 0;
     n_valid_frames = 0;
     n_valid_circle_frames = 0;
     n_valid_box_frames = 0;
@@ -50,6 +51,7 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY (const char* settings_file) :
     gray_img_2 = mvGetScratchImage2();
     //filtered_img = mvGetScratchImage (); // common size
     
+    read_index = 0;
     n_valid_frames = 0;
     n_valid_circle_frames = 0;
     n_valid_box_frames = 0;
@@ -175,7 +177,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
 
 void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
     // shift the frames back by 1
-    shift_frame_data (m_frame_data_vector, N_FRAMES_TO_KEEP);
+    shift_frame_data (m_frame_data_vector, read_index, N_FRAMES_TO_KEEP);
 
     watershed_filter.watershed(src, gray_img);
     window.showImage (gray_img);
@@ -186,6 +188,9 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
     MvRotatedBox rbox;
     MvRBoxVector rbox_vector;
 
+    //temp
+    cvZero (gray_img);
+
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
         if (contour_filter.match_circle(gray_img_2, &circle) > 0) {
             circle.m1 = color.m1;
@@ -193,17 +198,20 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
             circle.m3 = color.m3;
             circle_vector.push_back(circle);            
         }
-        if (contour_filter.match_rectangle(gray_img_2, &rbox) > 0) {
+        if (contour_filter.match_rectangle(gray_img_2, &rbox, 1.9, 2.7) > 0) {
             rbox.m1 = color.m1;
             rbox.m2 = color.m2;
             rbox.m3 = color.m3;
             rbox_vector.push_back(rbox);
+
+            //temp
+            contour_filter.drawOntoImage(gray_img);
         }
 
         //window2.showImage (gray_img_2);
     }
 
-    cvZero (gray_img_2);
+    cvCopy (gray_img, gray_img_2);
 
     if (circle_vector.size() > 0) {
         MvCircleVector::iterator iter = circle_vector.begin();
@@ -213,14 +221,14 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
         float best_validity = -1;
         for (; iter != iter_end; ++iter) {
             if (iter->validity > best_validity) {
-                m_frame_data_vector[0].assign_circle(*iter);
+                m_frame_data_vector[read_index].assign_circle(*iter);
                 best_validity = iter->validity;
             }
         }
 
-        m_pixel_x = m_frame_data_vector[0].m_frame_circle.center.x;
-        m_pixel_y = m_frame_data_vector[0].m_frame_circle.center.y;
-        m_range = (BUOY_REAL_DIAMTER * gray_img->width) / (2*m_frame_data_vector[0].m_frame_circle.radius * TAN_FOV_X);
+        m_pixel_x = m_frame_data_vector[read_index].m_frame_circle.center.x;
+        m_pixel_y = m_frame_data_vector[read_index].m_frame_circle.center.y;
+        m_range = (BUOY_REAL_DIAMTER * gray_img->width) / (2*m_frame_data_vector[read_index].m_frame_circle.radius * TAN_FOV_X);
     }
 
     if (rbox_vector.size() > 0) {
@@ -231,13 +239,34 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
         float best_validity = -1;
         for (; iter != iter_end; ++iter) {
             if (iter->validity > best_validity) {
-                m_frame_data_vector[0].assign_rbox(*iter);
+                m_frame_data_vector[read_index].assign_rbox(*iter);
                 best_validity = iter->validity;
             }
         }
     }
 
-    m_frame_data_vector[0].print();
-    m_frame_data_vector[0].drawOntoImage(gray_img_2);
-    window2.showImage (gray_img_2);
+    if (m_frame_data_vector[read_index].valid) {
+        m_frame_data_vector[read_index].drawOntoImage(gray_img_2);
+        window2.showImage (gray_img_2);
+    }
+
+    print_frames();
+    if (cvWaitKey(400) == 'q')
+        exit(0);
 }
+
+void MDA_VISION_MODULE_BUOY::print_frames () {
+        printf ("\nBUOY SAVED FRAMES\n");
+        int i = read_index;
+        int i2 = 0;
+        do {
+            printf ("Frame[%-2d]: ", i2);        
+            if (m_frame_data_vector[i].valid)
+                printf ("%d Circles, %d Boxes\n", m_frame_data_vector[i].n_circles, m_frame_data_vector[i].n_boxes);
+            else
+                printf ("Invalid\n");
+
+            if (++i >= N_FRAMES_TO_KEEP) i = 0;
+            i2++;
+        } while (i != read_index && i2 < N_FRAMES_TO_KEEP);
+    }

@@ -277,8 +277,9 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
     IplImage* gray_img;
     IplImage* gray_img_2;
 
-    static const int N_FRAMES_TO_KEEP = 10;
+    static const int N_FRAMES_TO_KEEP = 20;
     MDA_FRAME_DATA m_frame_data_vector[N_FRAMES_TO_KEEP];
+    int read_index;
     int n_valid_frames;
     int n_valid_circle_frames;
     int n_valid_box_frames;
@@ -307,7 +308,12 @@ public:
 
     // functions to support frame data stuff
     void add_frame (IplImage* src);
-    void clear_frames ();    
+    void clear_frames () {
+        for (int i = 0; i < N_FRAMES_TO_KEEP; i++)
+            m_frame_data_vector[i].clear();
+        read_index = 0;
+    }  
+    void print_frames ();
 };
 
 /// ########################################################################
