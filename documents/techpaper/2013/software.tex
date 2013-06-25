@@ -13,7 +13,7 @@ The software also includes a graphical simulator that we can use to test our com
 
 \begin{figure}
 \begin{center}
- \includegraphics[width=2.2in]{fig/vision}
+ \includegraphics[height=1.9in]{fig/modules.png}
 \caption{Software module organization.}\label{vision}
 \end{center}
 \end{figure}
@@ -21,28 +21,28 @@ The software also includes a graphical simulator that we can use to test our com
 
 \begin{figure}
 \begin{center}
- \includegraphics[width=2.7in]{fig/sim.png}
+ \includegraphics[height=1.9in]{fig/sim.png}
 \caption{Example image from the simulator showing pipe segments and the buoys
          in turbid water.}\label{sim}
 \end{center}
 \end{figure}
 
 The software is broken down into 3
-components (Figure~\ref{vision}): (i) the mission software that performs the image
-processing; (ii) the simulator that recreates synthetic underwater
-images based on the vehicle position (example in
-Figure~\ref{sim}) and (iii) the graphical interface that is used to
-control the mission software. The simulator and the graphical
-interface were solely created to test and debug the vision
-algorithms when AquaTux is not functioning autonomously. All modules connect through TCP/IP in a
-very flexible and extensible fashion. This allows us to seamlessly
-replace the simulator by the real hardware sensors and electronics
-when we take our system from the lab to the water environment. The
-graphical interface allows us to access all the data structures in the
-AUV and can act as a passive observer, constantly requesting the
-state of the vehicle, or as a controller sending commands to the
-vessel.
-
+components (Figure~\ref{vision}): (i) the video input;
+(ii) the mission software gives physical commands to move the sub;
+and (iii) the environment that reacts to the physical commands.
+The video input can come from the submarine's webcams, pre-recorded video,
+or the simulator (Figure~\ref{sim}). The mission software can be the autonomous
+algorithms that drive the submarine or a manually controlled user interface.
+The environment that reacts to physical commands can be the submarine or the
+simulator. The different permutations to hook up the software components
+solely created to test and debug the vision
+algorithms when AquaTux is not functioning autonomously.
+These software interfaces help ensure the software to test the submarine
+resembles the autonomous functionality as much as possible.
+The manual user interface allows us to act as a passive observer,
+constantly requesting the state of the vehicle,
+or as a controller sending commands to the AUV.
 
 
 \vspace{-.1in}
@@ -57,7 +57,9 @@ if their view changes due to perspective or the presence of debris in
 the water.  The mission software consists of a main loop that acquires
 images, processes them and send commands to the other subsystems on
 one of the two serial ports of the embedded computer (see
-Section~\ref{gui}). The mission is broken down into modular tasks that
+Section~\ref{gui}).
+
+The mission is broken down into modular tasks that
 can me chained or tested individually. Tasks proceed by first
 identifying a target for the vehicle to begin pursuit. If the object
 in question is not found, the vehicle rotates on its vertical axis
