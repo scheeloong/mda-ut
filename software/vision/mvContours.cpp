@@ -162,20 +162,22 @@ void mvContours::find_contour_and_check_errors(IplImage* img) {
     }
 
     // check that the contour does not coincide with the sides of the image for more than 20% of its perimeter
+    /*
     for (int i = 0; i < m_contours->total; i++) {
         CvPoint* p = CV_GET_SEQ_ELEM (CvPoint, m_contours, i);
         if (p->x == last_x && abs(p->y-last_y) > img->height/3) {
-            DEBUG_PRINT ("find_contour: contour shares vertical side with image. Discarding.\n");
+            DEBUG_PRINT ("find_contour: contour shares vertical side with image (x=%d). Discarding.\n", last_x);
             goto FIND_CONTOUR_ERROR;
         }
         if (p->y == last_y && abs(p->x-last_x) > img->width/3) {
-            DEBUG_PRINT ("find_contour: contour shares horizontal side with image. Discarding.\n");
+            DEBUG_PRINT ("find_contour: contour shares horizontal side with image (y=%d). Discarding.\n", last_y);
             goto FIND_CONTOUR_ERROR;
         }
 
         last_x = p->x;
         last_y = p->y;
     }
+    */
     bin_contours.stop();
     return;
 
@@ -227,7 +229,7 @@ void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_i
     DEBUG_PRINT ("Best Match Diff = %9.6lf\n", best_match_diff);
 }
 
-float mvContours::match_rectangle (IplImage* img, MvRotatedBox* rbox, int method) {
+float mvContours::match_rectangle (IplImage* img, MvRotatedBox* rbox, float min_lw_ratio, float max_lw_ratio, int method) {
     assert (img != NULL);
     assert (img->nChannels == 1);
 
@@ -242,13 +244,18 @@ float mvContours::match_rectangle (IplImage* img, MvRotatedBox* rbox, int method
 
     CvBox2D Rect = cvMinAreaRect2(m_contours, m_storage);
     float angle = Rect.angle;
-    int length = Rect.size.height;
-    int width = Rect.size.width;
+    float length = Rect.size.height;
+    float width = Rect.size.width;
     // depending on which is the long side we assign the sides and angle differently    
     if (length < width) {
         length = Rect.size.width;
         width = Rect.size.height;
         angle += 90;
+    }
+
+    printf ("length/width = %6.2f\n", length/width);    
+    if (length/width < min_lw_ratio || length/width > max_lw_ratio) {
+        return -1;
     }
 
     double perimeter_ratio = perimeter / (2*length+2*width);

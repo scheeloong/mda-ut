@@ -69,11 +69,11 @@ public:
     }
 };
 
-inline void shift_frame_data (MDA_FRAME_DATA frame_data_vector[], int num_frames) {
-    for (int i = num_frames-2; i > 0; i--) {
-        frame_data_vector[i+1] = frame_data_vector[i];
-    }
-    frame_data_vector[0].clear();
+inline void shift_frame_data (MDA_FRAME_DATA frame_data_vector[], int &read_index, int num_frames) {
+    read_index--;
+    if (read_index < 0)
+        read_index = num_frames-1;
+    frame_data_vector[read_index].clear();
 }
 
 #endif
