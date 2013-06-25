@@ -116,14 +116,14 @@ class ImageInput {
       IplImage *img_fwd = get_image();
       if (img_fwd) {
         std::ostringstream oss;
-        oss << "image_fwd_" << count << ".jpg";
+        oss << "image_fwd_" << count << ".png";
         cvSaveImage (oss.str().c_str(), img_fwd);
       }
 
       IplImage *img_dwn = get_image(DWN_IMG);
       if (img_dwn) {
         std::ostringstream oss;
-        oss << "image_dwn_" << count << ".jpg";
+        oss << "image_dwn_" << count << ".png";
         cvSaveImage (oss.str().c_str(), img_dwn);
       }
 

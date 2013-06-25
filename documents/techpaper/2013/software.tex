@@ -1,10 +1,10 @@
 \section{Software}
 
-The submarine's software aware of the competition objectives, and performs computer vision to
-command the submarine to move via the embedded system.
+The submarine's software is aware of the competition objectives, and performs computer vision to
+command the submarine to move through the embedded system.
 The computer vision uses the OpenCV library to help identify objects based on shape and color.
 The video input consists of two webcams, one facing forward and one facing down.
-These cameras are rigidly attached to the AUV, and we need to move the AUV to change the viewpoint.
+These cameras are rigidly attached to the AUV, and the AUV must move to change the viewpoint.
 The software also includes a graphical simulator that we can use to test our computer vision algorithms.
 
 \subsection{Software Organization}
@@ -14,16 +14,16 @@ The software also includes a graphical simulator that we can use to test our com
 \begin{figure}
 \begin{center}
  \includegraphics[width=2.2in]{fig/vision}
-\caption{Vision modules organization in the AUV.}\label{vision}
+\caption{Software module organization.}\label{vision}
 \end{center}
 \end{figure}
 
 
 \begin{figure}
 \begin{center}
- \includegraphics[width=2.7in]{fig/sim}
-\caption{Example image from the simulator showing pipe segments, a box
-  and a red buoy in turbid water.}\label{sim}
+ \includegraphics[width=2.7in]{fig/sim.png}
+\caption{Example image from the simulator showing pipe segments and the buoys
+         in turbid water.}\label{sim}
 \end{center}
 \end{figure}
 
