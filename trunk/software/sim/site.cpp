@@ -499,15 +499,15 @@ void do_buoys()
       if (BUOY_CYLINDRICAL[i]) {
         glTranslatef(0, 0, -0.25);
         gluCylinder(buoys[2 * i],
-                  /*BASE_RADIUS*/ .12,
-                  /*TOP_RADIUS*/ .12,
+                  /*BASE_RADIUS*/ .1,//double size
+                  /*TOP_RADIUS*/ .1,
                   /*HEIGHT*/ .5,
                   /*SLICES*/ 30,
                   /*STACKS*/ 5);
       }
       else {
         gluSphere(buoys[2 * i],
-                /* radius*/ .2,//.115, made them bigger for easier testing
+                /* radius*/ .23,//double size
                 /* slices*/ 40,
                 /* stacks*/ 40);
       }
