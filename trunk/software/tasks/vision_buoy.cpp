@@ -198,7 +198,7 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
             circle.m3 = color.m3;
             circle_vector.push_back(circle);            
         }
-        if (contour_filter.match_rectangle(gray_img_2, &rbox, 1.9, 2.7) > 0) {
+        if (contour_filter.match_rectangle(gray_img_2, &rbox, 2.5, 3.1) > 0) {
             rbox.m1 = color.m1;
             rbox.m2 = color.m2;
             rbox.m3 = color.m3;
