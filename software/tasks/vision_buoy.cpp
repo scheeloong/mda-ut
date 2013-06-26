@@ -115,7 +115,7 @@ void MDA_VISION_MODULE_BUOY:: primary_filter (IplImage* src) {
         MvCircle* best_circle = &(circle_vector.front());
         m_pixel_x = best_circle->center.x;
         m_pixel_y = best_circle->center.y;
-        m_range = (BUOY_REAL_DIAMTER * gray_img->width) / (2*best_circle->radius * TAN_FOV_X);
+        m_range = (BUOY_REAL_DIAMETER * gray_img->width) / (2*best_circle->radius * TAN_FOV_X);
     }
 
     window2.showImage (gray_img_2);
@@ -152,7 +152,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
     m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / filtered_img->height);
 
     if (nCircles == 1 && rad > MIN_PIXEL_RADIUS_FACTOR*filtered_img->height) {
-        m_range = (BUOY_REAL_DIAMTER * filtered_img->width) / (2*rad * TAN_FOV_X);
+        m_range = (BUOY_REAL_DIAMETER * filtered_img->width) / (2*rad * TAN_FOV_X);
         DEBUG_PRINT ("Buoy: (%d,%d) (%5.2f,%5.2f). Color = %s. Range = %d\n", m_pixel_x, m_pixel_y, 
             m_angular_x, m_angular_y, color_int_to_string(AdvancedCircles[0].color).c_str(), m_range);
 
@@ -176,10 +176,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
     return FULL_DETECT;
 }
 
-bool MDA_VISION_MODULE_BUOY::rbox_stable () {
-    // TO TUNE!!!
-    static const float DIFFERENCE_THRESHOLD = 50.f;
-
+bool MDA_VISION_MODULE_BUOY::rbox_stable (float threshold) {
     n_valid = 0;
     int i = read_index;
     std::vector<MvRotatedBox> rboxes;
@@ -200,25 +197,24 @@ bool MDA_VISION_MODULE_BUOY::rbox_stable () {
        MvRotatedBox curr_rbox = *cit;
        float difference = curr_rbox.diff(last_rbox);
        printf("difference %f\n", difference);
-       if (difference > DIFFERENCE_THRESHOLD) return false;
+       if (difference > threshold) return false;
        last_rbox = curr_rbox;
 
        x_sum += curr_rbox.center.x;
        y_sum += curr_rbox.center.y;
-       range_sum += 0; // TODO figure out range
+       range_sum = (RBOX_REAL_LENGTH * gray_img->width) / (sqrt(curr_rbox.length) * TAN_FOV_X);
     }
 
     m_pixel_x = x_sum / n_valid;
     m_pixel_y = y_sum / n_valid;
+    m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / gray_img->width);
+    m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
     m_range = range_sum / n_valid;
 
     return true;
 }
 
-bool MDA_VISION_MODULE_BUOY::circle_stable () {
-    // TO TUNE!!!
-    static const float DIFFERENCE_THRESHOLD = 50.f;
-
+bool MDA_VISION_MODULE_BUOY::circle_stable (float threshold) {
     n_valid = 0;
     int i = read_index;
     std::vector<MvCircle> circles;
@@ -239,16 +235,18 @@ bool MDA_VISION_MODULE_BUOY::circle_stable () {
        MvCircle curr_circle = *cit;
        float difference = curr_circle.diff(last_circle);
        printf("difference %f\n", difference);
-       if (difference > DIFFERENCE_THRESHOLD) return false;
+       if (difference > threshold) return false;
        last_circle = curr_circle;
 
        x_sum += curr_circle.center.x;
        y_sum += curr_circle.center.y;
-       range_sum += (BUOY_REAL_DIAMTER * gray_img->width) / (2*curr_circle.radius * TAN_FOV_X);
+       range_sum += (BUOY_REAL_DIAMETER * gray_img->width) / (2*curr_circle.radius * TAN_FOV_X);
     }
 
     m_pixel_x = x_sum / n_valid;
     m_pixel_y = y_sum / n_valid;
+    m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / gray_img->width);
+    m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
     m_range = range_sum / n_valid;
 
     return true;
@@ -297,7 +295,7 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
 
         m_pixel_x = m_frame_data_vector[read_index].m_frame_circle.center.x;
         m_pixel_y = m_frame_data_vector[read_index].m_frame_circle.center.y;
-        m_range = (BUOY_REAL_DIAMTER * gray_img->width) / (2*m_frame_data_vector[read_index].m_frame_circle.radius * TAN_FOV_X);
+        m_range = (BUOY_REAL_DIAMETER * gray_img->width) / (2*m_frame_data_vector[read_index].m_frame_circle.radius * TAN_FOV_X);
     }
 
     if (rbox_vector.size() > 0) {

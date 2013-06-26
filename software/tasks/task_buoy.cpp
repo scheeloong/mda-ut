@@ -82,8 +82,13 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
         MDA_VISION_RETURN_CODE vision_code = buoy_vision.filter(frame);
 
         // NEW CODE ALERT!!!
+        const int stable_threshold = 35.f; // TO TUNE!!
         buoy_vision.add_frame(frame);
-        if (buoy_vision.circle_stable()) printf("Circle stable!!!\n");
+        if (buoy_vision.circle_stable(stable_threshold)) {
+            printf("Circle stable: x: %d y: %d ang_x: %d ang_y: %d range: %d \n",
+                    buoy_vision.get_pixel_x(), buoy_vision.get_pixel_y(),
+                    buoy_vision.get_angular_x(), buoy_vision.get_angular_y(), buoy_vision.get_range());
+        }
         // NEW CODE ALERT!!!
 
         // clear dwn image

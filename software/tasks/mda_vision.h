@@ -255,7 +255,9 @@ public:
 /// ########################################################################
 class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
     static const char MDA_VISION_BUOY_SETTINGS[];
-    static const float BUOY_REAL_DIAMTER = 23;
+    static const float BUOY_REAL_DIAMETER = 23;
+    static const float RBOX_REAL_DIAMETER = 10;
+    static const float RBOX_REAL_LENGTH = 25;
     static const float MIN_PIXEL_RADIUS_FACTOR = 0.04;
 
     // for contour shape/color matching
@@ -309,8 +311,8 @@ public:
     virtual int get_angle() {printf ("VISION_MODULE_BUOY- get_angle not allowed\n"); exit(1); return 0;}
 
     // functions to support frame data stuff
-    bool rbox_stable();
-    bool circle_stable();
+    bool rbox_stable(float threshold);
+    bool circle_stable(float threshold);
     int num_stable() { return n_valid; }
     void add_frame (IplImage* src);
     void clear_frames () {
