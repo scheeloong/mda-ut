@@ -176,6 +176,83 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
     return FULL_DETECT;
 }
 
+bool MDA_VISION_MODULE_BUOY::rbox_stable () {
+    // TO TUNE!!!
+    static const float DIFFERENCE_THRESHOLD = 50.f;
+
+    n_valid = 0;
+    int i = read_index;
+    std::vector<MvRotatedBox> rboxes;
+    do {
+        if (m_frame_data_vector[i].valid) {
+            n_valid++;
+            rboxes.push_back(m_frame_data_vector[i].m_frame_box[0]);
+        }
+        if (++i >= N_FRAMES_TO_KEEP) i = 0;
+    } while (i != read_index);
+
+    printf("rbox: n_valid %d VALID_FRAMES %d\n", n_valid, VALID_FRAMES);
+    if (n_valid < VALID_FRAMES) return false;
+
+    MvRotatedBox last_rbox = rboxes.back();
+    int x_sum = 0, y_sum = 0, range_sum = 0;
+    for (std::vector<MvRotatedBox>::iterator cit = rboxes.begin(); cit != rboxes.end(); ++cit) {
+       MvRotatedBox curr_rbox = *cit;
+       float difference = curr_rbox.diff(last_rbox);
+       printf("difference %f\n", difference);
+       if (difference > DIFFERENCE_THRESHOLD) return false;
+       last_rbox = curr_rbox;
+
+       x_sum += curr_rbox.center.x;
+       y_sum += curr_rbox.center.y;
+       range_sum += 0; // TODO figure out range
+    }
+
+    m_pixel_x = x_sum / n_valid;
+    m_pixel_y = y_sum / n_valid;
+    m_range = range_sum / n_valid;
+
+    return true;
+}
+
+bool MDA_VISION_MODULE_BUOY::circle_stable () {
+    // TO TUNE!!!
+    static const float DIFFERENCE_THRESHOLD = 50.f;
+
+    n_valid = 0;
+    int i = read_index;
+    std::vector<MvCircle> circles;
+    do {
+        if (m_frame_data_vector[i].valid) {
+            n_valid++;
+            circles.push_back(m_frame_data_vector[i].m_frame_circle);
+        }
+        if (++i >= N_FRAMES_TO_KEEP) i = 0;
+    } while (i != read_index);
+
+    printf("circle: n_valid %d VALID_FRAMES %d\n", n_valid, VALID_FRAMES);
+    if (n_valid < VALID_FRAMES) return false;
+
+    MvCircle last_circle = circles.back();
+    int x_sum = 0, y_sum = 0, range_sum = 0;
+    for (std::vector<MvCircle>::iterator cit = circles.begin(); cit != circles.end(); ++cit) {
+       MvCircle curr_circle = *cit;
+       float difference = curr_circle.diff(last_circle);
+       printf("difference %f\n", difference);
+       if (difference > DIFFERENCE_THRESHOLD) return false;
+       last_circle = curr_circle;
+
+       x_sum += curr_circle.center.x;
+       y_sum += curr_circle.center.y;
+       range_sum += (BUOY_REAL_DIAMTER * gray_img->width) / (2*curr_circle.radius * TAN_FOV_X);
+    }
+
+    m_pixel_x = x_sum / n_valid;
+    m_pixel_y = y_sum / n_valid;
+    m_range = range_sum / n_valid;
+
+    return true;
+}
 
 void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
     // shift the frames back by 1
