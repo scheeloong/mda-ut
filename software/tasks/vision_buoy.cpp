@@ -7,6 +7,8 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
+#define CURR_FRAME m_frame_data_vector[i]
+
 const char MDA_VISION_MODULE_BUOY::MDA_VISION_BUOY_SETTINGS[] = "vision_buoy_settings_new.csv";
 
 /// #########################################################################
@@ -250,28 +252,20 @@ void MDA_VISION_MODULE_BUOY::print_frames () {
         int i = read_index;
         int i2 = 0;
         do {
-            printf ("Frame[%-2d]: ", i2);        
+            printf ("Frame[%-2d]:\t", i2);        
             if (m_frame_data_vector[i].valid) {
-                printf ("%d Circles, %d Boxes\n", m_frame_data_vector[i].n_circles, m_frame_data_vector[i].n_boxes);
-                std::string color_str;
-                if (m_frame_data_vector[i].n_circles > 0) {
-                    color_str = color_int_to_string(m_frame_data_vector[i].m_frame_circle.color_int);
-                    printf ("Circle Color (%3d %3d %3d)->%s\n",
-                        m_frame_data_vector[i].m_frame_circle.h1,
-                        m_frame_data_vector[i].m_frame_circle.h2,
-                        m_frame_data_vector[i].m_frame_circle.h3,
-                        color_str.c_str()
+                int n_circles = m_frame_data_vector[i].n_circles;
+                int n_boxes = m_frame_data_vector[i].n_boxes;
+                std::string color_str, color_str_2;
+
+                color_str = color_int_to_string(m_frame_data_vector[i].m_frame_circle.color_int);
+                printf ("%d Circles (%s)\t", n_circles, (n_circles > 0)?color_str.c_str():"---");
+
+                color_str = color_int_to_string(m_frame_data_vector[i].m_frame_box[0].color_int);
+                color_str_2 = color_int_to_string(m_frame_data_vector[i].m_frame_box[1].color_int);
+                printf ("%d Boxes (%s,%s)\n", m_frame_data_vector[i].n_boxes,
+                    (n_boxes > 0)?color_str.c_str():"---", (n_boxes > 1)?color_str_2.c_str():"---"
                     );
-                }
-                if (m_frame_data_vector[i].n_boxes > 0) {
-                    color_str = color_int_to_string(m_frame_data_vector[i].m_frame_box[0].color_int);
-                    printf ("RBox 1 Color (%3d %3d %3d)->%s\n",
-                        m_frame_data_vector[i].m_frame_box[0].h1,
-                        m_frame_data_vector[i].m_frame_box[0].h2,
-                        m_frame_data_vector[i].m_frame_box[0].h3,
-                        color_str.c_str()
-                    );
-                }
             }
             else
                 printf ("Invalid\n");
