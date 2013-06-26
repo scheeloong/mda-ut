@@ -426,6 +426,13 @@ void mvBinaryGradient (
 //#########################################################################
 typedef unsigned char uchar;
 // Takes in 3 numbers B,R,G, and modifies them to instead be in H,S,V format
+void tripletBGR2HSV (int Blue, int Green, int Red, int &Hue, int &Sat, int &Val) {
+    uchar uH, uS, uV;
+    tripletBGR2HSV (static_cast<uchar>(Blue), static_cast<uchar>(Green), static_cast<uchar>(Red), uH,uS,uV);
+    Hue = static_cast<int>(uH);
+    Sat = static_cast<int>(uS);
+    Val = static_cast<int>(uV); 
+}
 void tripletBGR2HSV (uchar Blue, uchar Green, uchar Red, uchar &Hue, uchar &Sat, uchar &Val) {
     /// find the max and min color component
     uchar M, m, Chroma;

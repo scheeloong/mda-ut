@@ -45,8 +45,10 @@ class MvShape {
 public:
     CvPoint center;
     int m1,m2,m3;
+    int h1,h2,h3;
+    int color_int;
     int validity;
-    MvShape () { validity = -1; center.x=center.y=0; m1=m2=m3=0; }
+    MvShape () { validity = -1; center.x=center.y=0; m1=m2=m3=0; color_int = MV_UNCOLORED; }
     CvPoint center_diff (MvShape first, MvShape second) {
         return cvPoint (first.center.x-second.center.x, first.center.y-second.center.y);
     }
@@ -56,8 +58,6 @@ public:
 };
 class MvCircle : public MvShape {
 public:
-    //CvPoint center;
-    //int m1,m2,m3;
     float radius;
     
     MvCircle () { radius=0; }
@@ -68,16 +68,14 @@ public:
         this->center.x = other.center.x;
         this->center.y = other.center.y;
         this->radius = other.radius;
-        this->m1 = other.m1;
-        this->m2 = other.m2;
-        this->m3 = other.m3;
+        this->m1 = other.m1;  this->m2 = other.m2;  this->m3 = other.m3;
+        this->h1 = other.h1;  this->h2 = other.h2;  this->h3 = other.h3;
+        this->color_int = other.color_int;
         return *this;
     }
 };
 class MvRotatedBox : public MvShape {
 public:
-    //CvPoint center;
-    //int m1,m2,m3;
     float length, width;    // length is the long edge
     float angle;            // angle points in direction of length
     
@@ -101,9 +99,9 @@ public:
         this->length = other.length;
         this->width = other.width;
         this->angle = other.angle;
-        this->m1 = other.m1;
-        this->m2 = other.m2;
-        this->m3 = other.m3;
+        this->m1 = other.m1;  this->m2 = other.m2;  this->m3 = other.m3;
+        this->h1 = other.h1;  this->h2 = other.h2;  this->h3 = other.h3;
+        this->color_int = other.color_int;
         return *this;    
     }
 };
@@ -264,4 +262,6 @@ class mvBinaryMorphology {
 
 // Helper function for HSV conversion
 void tripletBGR2HSV (uchar Blue, uchar Green, uchar Red, uchar &Hue, uchar &Sat, uchar &Val);
+void tripletBGR2HSV (int Blue, int Green, int Red, int &Hue, int &Sat, int &Val);
+
 #endif

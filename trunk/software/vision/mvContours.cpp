@@ -357,3 +357,35 @@ float mvContours::match_circle (IplImage* img, MvCircle* circle, int method) {
 
     return area_ratio;
 }
+
+
+int assign_color_to_shape (int B, int G, int R, MvShape* shape) {
+    int H,S,V;
+    int color_integer = MV_UNCOLORED;
+    tripletBGR2HSV (B,G,R, H,S,V);
+
+    if (S >= 50 && V >= 30) {
+        if (H >= 170 || H < 10)
+            color_integer = MV_RED;
+        else if (H >= 20 && H < 40)
+            color_integer = MV_YELLOW;
+        else if (H >= 50 && H < 70)
+            color_integer = MV_GREEN;
+        else if (H >= 110 && H < 130)
+            color_integer = MV_BLUE; 
+    }
+
+    if (shape != NULL) {
+        shape->m1 = B;
+        shape->m2 = G;
+        shape->m3 = R;
+        shape->h1 = H;
+        shape->h2 = S;
+        shape->h3 = V;
+        shape->color_int = color_integer;
+    }
+    return color_integer;
+}
+int assign_color_to_shape (COLOR_TRIPLE t, MvShape* shape) {
+    return assign_color_to_shape(t.m1,t.m2,t.m3, shape);
+}
