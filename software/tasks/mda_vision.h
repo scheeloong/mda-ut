@@ -278,11 +278,13 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
     IplImage* gray_img_2;
 
     static const int N_FRAMES_TO_KEEP = 20;
+    static const int VALID_FRAMES = (N_FRAMES_TO_KEEP / 4);
     MDA_FRAME_DATA m_frame_data_vector[N_FRAMES_TO_KEEP];
     int read_index;
     int n_valid_frames;
     int n_valid_circle_frames;
     int n_valid_box_frames;
+    int n_valid;
 
 public:
     MDA_VISION_MODULE_BUOY ();
@@ -307,6 +309,9 @@ public:
     virtual int get_angle() {printf ("VISION_MODULE_BUOY- get_angle not allowed\n"); exit(1); return 0;}
 
     // functions to support frame data stuff
+    bool rbox_stable();
+    bool circle_stable();
+    int num_stable() { return n_valid; }
     void add_frame (IplImage* src);
     void clear_frames () {
         for (int i = 0; i < N_FRAMES_TO_KEEP; i++)

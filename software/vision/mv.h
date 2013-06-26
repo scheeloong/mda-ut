@@ -73,6 +73,12 @@ public:
         this->color_int = other.color_int;
         return *this;
     }
+    float diff(MvCircle &other) {
+       const int RADIUS_WEIGHT = 5;
+       return abs (this->center.x - other.center.x)
+            + abs (this->center.y - other.center.y)
+            +fabsf(this->radius - other.radius) * RADIUS_WEIGHT;
+    }
 };
 class MvRotatedBox : public MvShape {
 public:
@@ -103,6 +109,12 @@ public:
         this->h1 = other.h1;  this->h2 = other.h2;  this->h3 = other.h3;
         this->color_int = other.color_int;
         return *this;    
+    }
+    float diff(MvRotatedBox &other) {
+       return abs (this->center.x - other.center.x)
+            + abs (this->center.y - other.center.y)
+            + abs (this->width - other.width);
+       // And more
     }
 };
 typedef std::vector<MvCircle> MvCircleVector;

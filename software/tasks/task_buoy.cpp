@@ -81,6 +81,11 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
 
         MDA_VISION_RETURN_CODE vision_code = buoy_vision.filter(frame);
 
+        // NEW CODE ALERT!!!
+        buoy_vision.add_frame(frame);
+        if (buoy_vision.circle_stable()) printf("Circle stable!!!\n");
+        // NEW CODE ALERT!!!
+
         // clear dwn image
         int down_frame_ready = image_input->ready_image(DWN_IMG);
         (void) down_frame_ready;
