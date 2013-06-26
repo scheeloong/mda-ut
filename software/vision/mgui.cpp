@@ -106,7 +106,7 @@ void show_HSV_call_back (int event, int x, int y, int flags, void* param) {
         unsigned char r = imgPtr[2];
         unsigned char h, s, v;
         tripletBGR2HSV(b, g, r, h, s, v);
-        printf ("(%3d,%3d): HSV: |%3hhu|%3hhu|%3hhu|BGR: |%3hhu|%3hhu|%3hhu|\r\n", x,y,h,s,v,b,g,r);
+        printf ("(%3d,%3d):  HSV:|%3hhu|%3hhu|%3hhu|  BGR:|%3hhu|%3hhu|%3hhu|\r\n", x,y,h,s,v,b,g,r);
         fflush(stdout);
     }
 

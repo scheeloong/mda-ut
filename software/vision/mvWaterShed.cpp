@@ -133,7 +133,7 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
             COLOR_TRIPLE ct (colorPtr[0], colorPtr[1], colorPtr[2], 0);;
             color_point_vector.push_back(std::make_pair(ct, cvPoint(xl,yl)));
             // 4.
-            cvCircle (ds_image_nonedge, cvPoint(x,y), ds_image_nonedge->width/15, CV_RGB(0,0,0), -1);          
+            cvCircle (ds_image_nonedge, cvPoint(x,y), 10, CV_RGB(0,0,0), -1);          
         }
     }
 
@@ -143,8 +143,7 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
             int dx = color_point_vector[i].second.x - color_point_vector[j].second.x;
             int dy = color_point_vector[i].second.y - color_point_vector[j].second.y;  
 
-            if (color_point_vector[i].first.diff(color_point_vector[j].first) < 20 &&
-                dx*dx + dy*dy < src->width*src->width/16)
+            if (color_point_vector[i].first.diff(color_point_vector[j].first) < 30 && dx*dx + dy*dy < 200)
             {
                 color_point_vector[i].first.merge(color_point_vector[j].first);
                 color_point_vector.erase(color_point_vector.begin()+j);

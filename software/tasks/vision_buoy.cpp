@@ -180,7 +180,7 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
     shift_frame_data (m_frame_data_vector, read_index, N_FRAMES_TO_KEEP);
 
     watershed_filter.watershed(src, gray_img);
-    window.showImage (gray_img);
+    window.showImage (src);
 
     COLOR_TRIPLE color;
     MvCircle circle;
@@ -188,24 +188,14 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
     MvRotatedBox rbox;
     MvRBoxVector rbox_vector;
 
-    //temp
-    cvZero (gray_img);
-
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
         if (contour_filter.match_circle(gray_img_2, &circle) > 0) {
-            circle.m1 = color.m1;
-            circle.m2 = color.m2;
-            circle.m3 = color.m3;
+            assign_color_to_shape (color, &circle);
             circle_vector.push_back(circle);            
         }
         if (contour_filter.match_rectangle(gray_img_2, &rbox, 2.5, 3.1) > 0) {
-            rbox.m1 = color.m1;
-            rbox.m2 = color.m2;
-            rbox.m3 = color.m3;
+            assign_color_to_shape (color, &rbox);
             rbox_vector.push_back(rbox);
-
-            //temp
-            contour_filter.drawOntoImage(gray_img);
         }
 
         //window2.showImage (gray_img_2);
@@ -251,7 +241,7 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
     }
 
     print_frames();
-    if (cvWaitKey(400) == 'q')
+    if (cvWaitKey(20) == 'q')
         exit(0);
 }
 
@@ -261,8 +251,28 @@ void MDA_VISION_MODULE_BUOY::print_frames () {
         int i2 = 0;
         do {
             printf ("Frame[%-2d]: ", i2);        
-            if (m_frame_data_vector[i].valid)
+            if (m_frame_data_vector[i].valid) {
                 printf ("%d Circles, %d Boxes\n", m_frame_data_vector[i].n_circles, m_frame_data_vector[i].n_boxes);
+                std::string color_str;
+                if (m_frame_data_vector[i].n_circles > 0) {
+                    color_str = color_int_to_string(m_frame_data_vector[i].m_frame_circle.color_int);
+                    printf ("Circle Color (%3d %3d %3d)->%s\n",
+                        m_frame_data_vector[i].m_frame_circle.h1,
+                        m_frame_data_vector[i].m_frame_circle.h2,
+                        m_frame_data_vector[i].m_frame_circle.h3,
+                        color_str.c_str()
+                    );
+                }
+                if (m_frame_data_vector[i].n_boxes > 0) {
+                    color_str = color_int_to_string(m_frame_data_vector[i].m_frame_box[0].color_int);
+                    printf ("RBox 1 Color (%3d %3d %3d)->%s\n",
+                        m_frame_data_vector[i].m_frame_box[0].h1,
+                        m_frame_data_vector[i].m_frame_box[0].h2,
+                        m_frame_data_vector[i].m_frame_box[0].h3,
+                        color_str.c_str()
+                    );
+                }
+            }
             else
                 printf ("Invalid\n");
 

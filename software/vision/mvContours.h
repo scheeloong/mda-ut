@@ -4,6 +4,7 @@
 #include <cv.h>
 #include "mv.h"
 #include "mgui.h"
+#include "mvColorFilter.h"
 
 typedef std::vector<double> HU_MOMENTS;
 static const int CONTOURS_MATCH_NORMAL = 0;
@@ -73,5 +74,8 @@ public:
     void drawOntoImage (IplImage* img) { draw_contours (m_contours, img); }        
 
 };
+
+int assign_color_to_shape (int m1, int m2, int m3, MvShape* shape);
+int assign_color_to_shape (COLOR_TRIPLE t, MvShape* shape);
 
 #endif
