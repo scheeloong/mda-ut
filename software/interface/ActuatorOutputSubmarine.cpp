@@ -61,9 +61,9 @@ void ActuatorOutputSubmarine::special_cmd(SPECIAL_COMMAND cmd)
       power_on();
       break;
     case (SUB_STARTUP_SEQUENCE):
+      SubmarineSingleton::get_instance().set_target_yaw(get_yaw());
+      SubmarineSingleton::get_instance().set_target_depth(get_depth());
       startup_sequence();
-      SubmarineSingleton::get_instance().set_target_yaw(SubmarineSingleton::get_instance().get_target_yaw());
-      SubmarineSingleton::get_instance().set_target_depth(SubmarineSingleton::get_instance().get_target_depth());
       break;
     case (SUB_POWER_OFF):
       power_off();
