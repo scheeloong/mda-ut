@@ -79,8 +79,8 @@ public:
 
     virtual int get_pixel_x() {return m_pixel_x;}
     virtual int get_pixel_y() {return m_pixel_y;}
-    virtual int get_angular_x() {return m_angular_x;}
-    virtual int get_angular_y() {return m_angular_y;}
+    virtual int get_angular_x() {return (int)m_angular_x;}
+    virtual int get_angular_y() {return (int)m_angular_y;}
     virtual int get_range() {return m_range;}
     virtual int get_angle() {return m_angle;}
 

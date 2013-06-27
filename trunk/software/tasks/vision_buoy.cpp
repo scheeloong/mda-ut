@@ -168,6 +168,9 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
     if (m_pixel_x == MV_UNDEFINED_VALUE || m_pixel_y == MV_UNDEFINED_VALUE || m_range == MV_UNDEFINED_VALUE)
         return NO_TARGET;
 
+    m_pixel_x -= gray_img->width/2;
+    m_pixel_y -= gray_img->height/2;
+
     m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / gray_img->width);
     m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
     DEBUG_PRINT ("Buoy: (%d,%d) (%5.2f,%5.2f). Range = %d\n", m_pixel_x, m_pixel_y, 
@@ -318,8 +321,6 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
     }
 
     print_frames();
-    if (cvWaitKey(20) == 'q')
-        exit(0);
 }
 
 void MDA_VISION_MODULE_BUOY::print_frames () {
