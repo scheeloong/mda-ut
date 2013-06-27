@@ -208,8 +208,8 @@ bool MDA_VISION_MODULE_BUOY::rbox_stable (float threshold) {
        range_sum = (RBOX_REAL_LENGTH * gray_img->width) / (sqrt(curr_rbox.length) * TAN_FOV_X);
     }
 
-    m_pixel_x = x_sum / n_valid;
-    m_pixel_y = y_sum / n_valid;
+    m_pixel_x = x_sum / n_valid - gray_img->width/2;
+    m_pixel_y = y_sum / n_valid - gray_img->height/2;
     m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / gray_img->width);
     m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
     m_range = range_sum / n_valid;
@@ -246,8 +246,8 @@ bool MDA_VISION_MODULE_BUOY::circle_stable (float threshold) {
        range_sum += (BUOY_REAL_DIAMETER * gray_img->width) / (2*curr_circle.radius * TAN_FOV_X);
     }
 
-    m_pixel_x = x_sum / n_valid;
-    m_pixel_y = y_sum / n_valid;
+    m_pixel_x = x_sum / n_valid - gray_img->width/2;
+    m_pixel_y = y_sum / n_valid - gray_img->height/2;
     m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / gray_img->width);
     m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
     m_range = range_sum / n_valid;
@@ -313,6 +313,10 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
                 best_validity = iter->validity;
             }
         }
+
+        m_pixel_x = m_frame_data_vector[read_index].m_frame_box[0].center.x;
+        m_pixel_y = m_frame_data_vector[read_index].m_frame_box[0].center.y;
+        m_range = (RBOX_REAL_LENGTH * gray_img->width) / (sqrt(m_frame_data_vector[read_index].m_frame_box[0].length) * TAN_FOV_X);
     }
 
     if (m_frame_data_vector[read_index].valid) {

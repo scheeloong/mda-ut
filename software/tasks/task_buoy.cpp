@@ -112,7 +112,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
                 int range = buoy_vision.get_range();
 
                 int depth_change = tan(ang_y*0.017453) * range; 
-                move(SINK, depth_change);
+                //move(SINK, depth_change);
 
                 // we cant use set_attitude_change to rise and fwd at the same time so we have to
                 // check if we are roughly pointing at the target, and decide what to do
