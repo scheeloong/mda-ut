@@ -257,7 +257,7 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
     static const char MDA_VISION_BUOY_SETTINGS[];
     static const float BUOY_REAL_DIAMETER = 23;
     static const float RBOX_REAL_DIAMETER = 10;
-    static const float RBOX_REAL_LENGTH = 25;
+    static const float RBOX_REAL_LENGTH = 37;
     static const float MIN_PIXEL_RADIUS_FACTOR = 0.04;
 
     // for contour shape/color matching
