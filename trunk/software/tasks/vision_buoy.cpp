@@ -273,7 +273,7 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
             assign_color_to_shape (color, &circle);
             circle_vector.push_back(circle);            
         }
-        if (contour_filter.match_rectangle(gray_img_2, &rbox, 2.5, 3.1) > 0) {
+        if (contour_filter.match_rectangle(gray_img_2, &rbox, 2.2, 3.5) > 0) {
             assign_color_to_shape (color, &rbox);
             rbox_vector.push_back(rbox);
         }
@@ -316,7 +316,7 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
 
         m_pixel_x = m_frame_data_vector[read_index].m_frame_box[0].center.x;
         m_pixel_y = m_frame_data_vector[read_index].m_frame_box[0].center.y;
-        m_range = (RBOX_REAL_LENGTH * gray_img->width) / (sqrt(m_frame_data_vector[read_index].m_frame_box[0].length) * TAN_FOV_X);
+        m_range = (RBOX_REAL_LENGTH * gray_img->width) / (m_frame_data_vector[read_index].m_frame_box[0].length * TAN_FOV_X);
     }
 
     if (m_frame_data_vector[read_index].valid) {
@@ -324,7 +324,7 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
         window2.showImage (gray_img_2);
     }
 
-    print_frames();
+    //print_frames();
 }
 
 void MDA_VISION_MODULE_BUOY::print_frames () {

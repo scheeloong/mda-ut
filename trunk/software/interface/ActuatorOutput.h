@@ -66,10 +66,12 @@ class ActuatorOutput {
           break;
         case RIGHT:
         case LEFT:
+          set_attitude_absolute(SPEED, 0);
           set_attitude_absolute(YAW, get_target_attitude(YAW) + delta);
           break;
         case SINK:
         case RISE:
+          set_attitude_absolute(SPEED, 0);
           set_attitude_absolute(DEPTH, get_target_attitude(DEPTH) + delta);
           break;
       }
