@@ -3,7 +3,7 @@
 #include <highgui.h>
 
 // initialize global variables
-int g_slider_position = 0; // trackbar position
+int g_slider_position = 1; // trackbar position
 CvCapture* g_capture = NULL; // structure to create a video input
 
 // routine to be called when user moves a trackbar slider
@@ -55,15 +55,15 @@ while(1) {
 frame = cvQueryFrame( g_capture );
 if( !frame ) break;
 // set trackbar to a current frame position
-//cvSetTrackbarPos("Position", argv[1], g_slider_position);
+cvSetTrackbarPos("Position", argv[1], g_slider_position);
 cvShowImage (argv[1], frame);
 g_slider_position++;
 
 char c = cvWaitKey(0);
-// quit if ESC is pressed
-if( c == 27 ) break;
 
-if( c == 'z') {
+if( c == 'q' )
+    break;
+else if( c == 'z') {
     cvSaveImage (argv[2], frame, 0);
     break;
 }
