@@ -123,6 +123,8 @@ fflush(stdout);
                     }   
                 }
                 else if (abs(depth_change) > 20) {
+                    if (depth_change > 40) depth_change = 40;
+                    if (depth_change < -40) depth_change = -40;
                     printf("Sinking %d cm\n", depth_change);
                     move(SINK, depth_change);
                 }
@@ -130,7 +132,6 @@ fflush(stdout);
                     if (ang_x > 20) ang_x = 20;
                     if (ang_x < -20) ang_x = -20;
                     printf("Turning %s %d degrees\n", (ang_x > 0) ? "right" : "left", abs(ang_x));
-fflush(stdout);
                     move(RIGHT, ang_x); 
                 }
             }
