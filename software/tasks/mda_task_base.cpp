@@ -1,27 +1,57 @@
 #include <cv.h>
 #include <highgui.h>
+#include <assert.h>
 
 #include "mda_tasks.h"
 
 void MDA_TASK_BASE::move(ATTITUDE_CHANGE_DIRECTION direction, int delta_accel)
 {
-  actuator_output->set_attitude_change(direction, delta_accel);  
   ATTITUDE_DIRECTION dir;
   switch (direction) {
     case LEFT:
     case RIGHT:
       dir = YAW;
+      printf("Turning %s %d degrees\n", (direction == LEFT && delta_accel > 0) || (direction == RIGHT && delta_accel < 0) ? "left" : "right", abs(delta_accel));
       break;
     case RISE:
     case SINK:
       dir = DEPTH;
+      printf("Moving %s %d cm\n", (direction == RISE && delta_accel > 0) || (direction == SINK && delta_accel < 0) ? "up" : "down", abs(delta_accel));
       break;
     default:
       dir = SPEED;
+      assert(delta_accel >= 0);
+      printf("Moving %s for %d seconds\n", (direction == FORWARD) ? "forward" : "in reverse", delta_accel);
       break;
   }
 
-  stabilize(dir);
+  fflush(stdout);
+
+  // Send the command
+  actuator_output->set_attitude_change(direction, delta_accel);  
+
+  // Forward or reverse unit is in seconds (use a timer)
+  if (dir == SPEED) {
+    time_t start_time = time(NULL);
+    while (1) {
+      image_input->ready_image(FWD_IMG);
+      image_input->ready_image(DWN_IMG);
+
+      char c = cvWaitKey(TASK_WK);
+      if (c != -1) {
+        CharacterStreamSingleton::get_instance().write_char(c);
+      }
+      if (c == 'q') {
+        return;
+      }
+
+      if (difftime(time(NULL), start_time) > (double)delta_accel) {
+        break;
+      }
+    }
+  } else {
+    stabilize(dir);
+  }
 }
 
 void MDA_TASK_BASE::set(ATTITUDE_DIRECTION dir, int val)
@@ -37,8 +67,6 @@ void MDA_TASK_BASE::stop()
 
 void MDA_TASK_BASE::stabilize(ATTITUDE_DIRECTION dir)
 {
-  fflush(stdout);
-
   if (dir == SPEED) {
     return; // No need to stabilize
   }

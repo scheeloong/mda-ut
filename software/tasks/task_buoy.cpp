@@ -38,24 +38,6 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_task() {
 MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
     puts("Press q to quit");
     
-    int starting_depth = 400;
-/*
-    char settings_file[50];
-    if (color == BUOY_RED) {
-        sprintf (settings_file, "vision_buoy_settings_red.csv");
-        starting_depth = 375;
-    }
-    else if (color == BUOY_YELLOW) {
-        sprintf (settings_file, "vision_buoy_settings_yellow.csv");
-        starting_depth = 400;
-    }
-    else if (color == BUOY_GREEN) {
-        sprintf (settings_file, "vision_buoy_settings_green.csv");
-        starting_depth = 475;
-    }
-    else 
-        exit (1);
-*/
     MDA_VISION_MODULE_BUOY buoy_vision;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
@@ -75,16 +57,6 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
 
         MDA_VISION_RETURN_CODE vision_code = buoy_vision.filter(frame);
 
-        // NEW CODE ALERT!!!
-        /*const int stable_threshold = 35.f; // TO TUNE!!
-        buoy_vision.add_frame(frame);
-        if (buoy_vision.circle_stable(stable_threshold)) {
-            printf("Circle stable: x: %d y: %d ang_x: %d ang_y: %d range: %d \n",
-                    buoy_vision.get_pixel_x(), buoy_vision.get_pixel_y(),
-                    buoy_vision.get_angular_x(), buoy_vision.get_angular_y(), buoy_vision.get_range());
-        }*/
-        // NEW CODE ALERT!!!
-
         // clear dwn image
         int down_frame_ready = image_input->ready_image(DWN_IMG);
         (void) down_frame_ready;
@@ -95,7 +67,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
                 break;
             }
             else if (vision_code == NO_TARGET) {
-                //actuator_output->set_attitude_change(FORWARD);
+                //set(SPEED, 1);
             }
             else if (vision_code == FULL_DETECT) {
                 // range is valid, so we can use it to calculate the right depth
@@ -108,15 +80,15 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
                 // we cant use set_attitude_change to rise and fwd at the same time so we have to
                 // check if we are roughly pointing at the target, and decide what to do
                 if (abs(ang_x) < 5 && abs(ang_y) < 50) {
-                    actuator_output->set_attitude_change(FORWARD);
+                    set(SPEED, 1);
 
                     // calculate an exponential moving average for range
                     //EMA_range = (EMA_range == -1) ? range : 0.1*range+0.9*EMA_range;
                     EMA_range = 0.5*range+0.5*EMA_range;
                     printf ("task_buoy: range = %d.  EMA_range = %d", range, EMA_range);
-fflush(stdout);
+                    fflush(stdout);
 
-                    // more forgiving on EMA_range
+                    // more forgiving on range
                     if (range < 70) {
                         done_buoy = true;
 			printf("\n\nBUOY TASK DONE\n\n\n");
@@ -125,13 +97,11 @@ fflush(stdout);
                 else if (abs(depth_change) > 20) {
                     if (depth_change > 40) depth_change = 40;
                     if (depth_change < -40) depth_change = -40;
-                    printf("Sinking %d cm\n", depth_change);
                     move(SINK, depth_change);
                 }
                 else {
                     if (ang_x > 20) ang_x = 20;
                     if (ang_x < -20) ang_x = -20;
-                    printf("Turning %s %d degrees\n", (ang_x > 0) ? "right" : "left", abs(ang_x));
                     move(RIGHT, ang_x); 
                 }
             }
@@ -142,22 +112,14 @@ fflush(stdout);
         }
         else { // done_buoy
             // charge forwards, then retreat back some number of meters, then realign sub to starting attitude
-            printf ("Ramming buoy\n");
-            actuator_output->set_attitude_change(FORWARD);
-            sleep (5);
+            printf("Ramming buoy\n");
+            move(FORWARD, 5);
 
             // retreat backwards
-            printf ("Resetting Position\n");
-            actuator_output->set_attitude_change(REVERSE);
-            sleep (5);
+            printf("Resetting Position\n");
+            move(REVERSE, 5);
 
-            actuator_output->set_attitude_change(FORWARD,0);
-
-            // clear stale webcam video cache
-            for (int i = 0; i < WEBCAM_CACHE; i++) {
-                image_input->ready_image();
-                image_input->ready_image(DWN_IMG);
-            }
+            stop();
 
             ret_code = TASK_DONE;
             break;
