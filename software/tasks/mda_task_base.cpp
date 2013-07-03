@@ -6,6 +6,8 @@
 
 void MDA_TASK_BASE::move(ATTITUDE_CHANGE_DIRECTION direction, int delta_accel)
 {
+  const int DEFAULT_SPEED = 1;
+
   ATTITUDE_DIRECTION dir;
   switch (direction) {
     case LEFT:
@@ -20,18 +22,16 @@ void MDA_TASK_BASE::move(ATTITUDE_CHANGE_DIRECTION direction, int delta_accel)
       break;
     default:
       dir = SPEED;
-      assert(delta_accel >= 0);
+      assert(delta_accel > 0);
       printf("Moving %s for %d seconds\n", (direction == FORWARD) ? "forward" : "in reverse", delta_accel);
       break;
   }
 
   fflush(stdout);
 
-  // Send the command
-  actuator_output->set_attitude_change(direction, delta_accel);  
-
   // Forward or reverse unit is in seconds (use a timer)
   if (dir == SPEED) {
+    actuator_output->set_attitude_change(direction, DEFAULT_SPEED);
     time_t start_time = time(NULL);
     while (1) {
       image_input->ready_image(FWD_IMG);
@@ -50,6 +50,8 @@ void MDA_TASK_BASE::move(ATTITUDE_CHANGE_DIRECTION direction, int delta_accel)
       }
     }
   } else {
+    // Send the command
+    actuator_output->set_attitude_change(direction, delta_accel);  
     stabilize(dir);
   }
 }
