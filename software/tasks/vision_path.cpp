@@ -20,10 +20,10 @@ const char MDA_VISION_MODULE_PATH::MDA_VISION_PATH_SETTINGS[] = "vision_path_set
 MDA_VISION_MODULE_PATH:: MDA_VISION_MODULE_PATH () :
 	window (mvWindow("Path Vision 1")),
     window2 (mvWindow("Path Vision 2")),
-    HSVFilter (mvHSVFilter(MDA_VISION_PATH_SETTINGS)),
+    //HSVFilter (mvHSVFilter(MDA_VISION_PATH_SETTINGS)),
     Morphology (mvBinaryMorphology(19, 19, MV_KERN_RECT)),
-    Morphology2 (mvBinaryMorphology(7, 7, MV_KERN_RECT)),
-    HoughLines (mvHoughLines(MDA_VISION_PATH_SETTINGS))
+    Morphology2 (mvBinaryMorphology(7, 7, MV_KERN_RECT))//,
+    //HoughLines (mvHoughLines(MDA_VISION_PATH_SETTINGS))
 {
     read_mv_setting (MDA_VISION_PATH_SETTINGS, "TARGET_BLUE", TARGET_BLUE);
     read_mv_setting (MDA_VISION_PATH_SETTINGS, "TARGET_GREEN", TARGET_GREEN);
@@ -40,21 +40,6 @@ MDA_VISION_MODULE_PATH:: ~MDA_VISION_MODULE_PATH () {
 }
 
 void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
-    //_HSVFilter.filter (src, gray_image);
-    /*AdvancedColorFilter.flood_image(src, gray_image);
-    gray_image->origin = src->origin;
-    lines.clearData ();
-    KMeans.clearData ();
-    
-    Morphology2.open(gray_image, gray_image);
-    Morphology.close(gray_image, gray_image);
-    Morphology2.gradient(gray_image, gray_image);
-    HoughLines.findLines (gray_image, &lines);
-    KMeans.cluster_auto (1, 4, &lines, 1);
-
-    KMeans.drawOntoImage (gray_image);
-    */
-
     watershed_filter.watershed(src, gray_img);
     window.showImage (gray_img);
 
@@ -434,4 +419,63 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
             m_angular_x, m_angle);
         
         return retval;
+}
+
+
+void MDA_VISION_MODULE_PATH::add_frame (IplImage* src) {
+    // shift the frames back by 1
+    shift_frame_data (m_frame_data_vector, read_index, N_FRAMES_TO_KEEP);
+
+    watershed_filter.watershed(src, gray_img);
+    window.showImage (src);
+
+    COLOR_TRIPLE color;
+    MvRotatedBox rbox;
+    MvRBoxVector rbox_vector;
+
+    while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
+        if (contour_filter.match_rectangle(gray_img_2, &rbox, 7.0, 9.0) > 0) {
+            int H,S,V;
+            tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
+
+            if (S >= 40 && V >= 20 /*&& H >= 160 || H < 20*/) { // check that the thing is "red", commented out for the sim
+                assign_color_to_shape (color, &rbox);
+                rbox_vector.push_back(rbox);
+            }
+            else {
+                printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
+            }
+        }
+
+        //window2.showImage (gray_img_2);
+    }
+
+    // debug only
+    cvCopy (gray_img, gray_img_2);
+
+    if (rbox_vector.size() > 0) {
+        MvRBoxVector::iterator iter = rbox_vector.begin();
+        MvRBoxVector::iterator iter_end = rbox_vector.end();
+        
+        // for now, frame will store rect with best validity
+        float best_validity = -1;
+        for (; iter != iter_end; ++iter) {
+            if (iter->validity > best_validity) {
+                m_frame_data_vector[read_index].assign_rbox(*iter);
+                best_validity = iter->validity;
+            }
+        }
+
+        m_pixel_x = m_frame_data_vector[read_index].m_frame_box[0].center.x;
+        m_pixel_y = m_frame_data_vector[read_index].m_frame_box[0].center.y;
+        m_range = (PATH_REAL_LENGTH * gray_img->width) / (m_frame_data_vector[read_index].m_frame_box[0].length * TAN_FOV_X);
+        m_angle = m_frame_data_vector[read_index].m_frame_box[0].angle;
+    }
+
+    if (m_frame_data_vector[read_index].valid) {
+        m_frame_data_vector[read_index].drawOntoImage(gray_img_2);
+        window2.showImage (gray_img_2);
+    }
+
+    //print_frames();
 }

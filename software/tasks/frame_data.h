@@ -70,6 +70,9 @@ public:
 };
 
 inline void shift_frame_data (MDA_FRAME_DATA frame_data_vector[], int &read_index, int num_frames) {
+    assert (read_index >= 0);
+    assert (read_index < num_frames);
+    
     read_index--;
     if (read_index < 0)
         read_index = num_frames-1;

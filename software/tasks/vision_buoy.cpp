@@ -18,9 +18,9 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY () :
     window (mvWindow("Buoy Vision Module")),
     window2 (mvWindow("Buoy Vision Module 2")),
     Morphology5 (mvBinaryMorphology(5, 5, MV_KERN_RECT)),
-    Morphology3 (mvBinaryMorphology(3, 3, MV_KERN_RECT)),
-    AdvancedCircles(MDA_VISION_BUOY_SETTINGS),
-    Rect ("Rect_settings.csv")
+    Morphology3 (mvBinaryMorphology(3, 3, MV_KERN_RECT))//,
+    //AdvancedCircles(MDA_VISION_BUOY_SETTINGS),
+    //Rect ("Rect_settings.csv")
 {
     read_mv_setting (MDA_VISION_BUOY_SETTINGS, "TARGET_BLUE", TARGET_BLUE);
     read_mv_setting (MDA_VISION_BUOY_SETTINGS, "TARGET_GREEN", TARGET_GREEN);
@@ -30,20 +30,15 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY () :
     gray_img = mvGetScratchImage();
     gray_img_2 = mvGetScratchImage2();
     //filtered_img = mvGetScratchImage (); // common size
-
-    read_index = 0;
-    n_valid_frames = 0;
-    n_valid_circle_frames = 0;
-    n_valid_box_frames = 0;
 }
 
 MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY (const char* settings_file) :
     window (mvWindow("Buoy Vision Module")),
     window2 (mvWindow("Buoy Vision Module 2")),
     Morphology5 (mvBinaryMorphology(5, 5, MV_KERN_RECT)),
-    Morphology3 (mvBinaryMorphology(3, 3, MV_KERN_RECT)),
-    AdvancedCircles(settings_file),
-    Rect ("Rect_settings.csv")
+    Morphology3 (mvBinaryMorphology(3, 3, MV_KERN_RECT))//,
+    //AdvancedCircles(settings_file),
+    //Rect ("Rect_settings.csv")
 {
     read_mv_setting (settings_file, "TARGET_BLUE", TARGET_BLUE);
     read_mv_setting (settings_file, "TARGET_GREEN", TARGET_GREEN);
@@ -52,11 +47,6 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY (const char* settings_file) :
     gray_img = mvGetScratchImage();
     gray_img_2 = mvGetScratchImage2();
     //filtered_img = mvGetScratchImage (); // common size
-    
-    read_index = 0;
-    n_valid_frames = 0;
-    n_valid_circle_frames = 0;
-    n_valid_box_frames = 0;
 }
 
 MDA_VISION_MODULE_BUOY:: ~MDA_VISION_MODULE_BUOY () {
@@ -65,22 +55,6 @@ MDA_VISION_MODULE_BUOY:: ~MDA_VISION_MODULE_BUOY () {
 }
 
 void MDA_VISION_MODULE_BUOY:: primary_filter (IplImage* src) {
-    /*AdvancedColorFilter.filter (src, filtered_img);
-    filtered_img->origin = src->origin;
-  
-    Morphology5.close(filtered_img, filtered_img);
-    Rect.find (filtered_img);
-    Rect.removeFromImage(filtered_img);
-
-    Morphology5.gradient(filtered_img, filtered_img);
-
-    AdvancedCircles.find (filtered_img);
-
-    Rect.drawOntoImage(filtered_img);
-    AdvancedCircles.drawOntoImage (filtered_img);
-
-    window.showImage (filtered_img);*/
-
     watershed_filter.watershed(src, gray_img);
     window.showImage (gray_img);
 
@@ -281,6 +255,7 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
         //window2.showImage (gray_img_2);
     }
 
+    // debug only
     cvCopy (gray_img, gray_img_2);
 
     if (circle_vector.size() > 0) {
@@ -327,30 +302,30 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
     //print_frames();
 }
 
-void MDA_VISION_MODULE_BUOY::print_frames () {
-        printf ("\nBUOY SAVED FRAMES\n");
-        int i = read_index;
-        int i2 = 0;
-        do {
-            printf ("Frame[%-2d]:\t", i2);        
-            if (m_frame_data_vector[i].valid) {
-                int n_circles = m_frame_data_vector[i].n_circles;
-                int n_boxes = m_frame_data_vector[i].n_boxes;
-                std::string color_str, color_str_2;
+void MDA_VISION_MODULE_BASE::print_frames () {
+    printf ("\nSAVED FRAMES\n");
+    int i = read_index;
+    int i2 = 0;
+    do {
+        printf ("Frame[%-2d]:\t", i2);        
+        if (m_frame_data_vector[i].valid) {
+            int n_circles = m_frame_data_vector[i].n_circles;
+            int n_boxes = m_frame_data_vector[i].n_boxes;
+            std::string color_str, color_str_2;
 
-                color_str = color_int_to_string(m_frame_data_vector[i].m_frame_circle.color_int);
-                printf ("%d Circles (%s)\t", n_circles, (n_circles > 0)?color_str.c_str():"---");
+            color_str = color_int_to_string(m_frame_data_vector[i].m_frame_circle.color_int);
+            printf ("%d Circles (%s)\t", n_circles, (n_circles > 0)?color_str.c_str():"---");
 
-                color_str = color_int_to_string(m_frame_data_vector[i].m_frame_box[0].color_int);
-                color_str_2 = color_int_to_string(m_frame_data_vector[i].m_frame_box[1].color_int);
-                printf ("%d Boxes (%s,%s)\n", m_frame_data_vector[i].n_boxes,
-                    (n_boxes > 0)?color_str.c_str():"---", (n_boxes > 1)?color_str_2.c_str():"---"
-                    );
-            }
-            else
-                printf ("Invalid\n");
+            color_str = color_int_to_string(m_frame_data_vector[i].m_frame_box[0].color_int);
+            color_str_2 = color_int_to_string(m_frame_data_vector[i].m_frame_box[1].color_int);
+            printf ("%d Boxes (%s,%s)\n", m_frame_data_vector[i].n_boxes,
+                (n_boxes > 0)?color_str.c_str():"---", (n_boxes > 1)?color_str_2.c_str():"---"
+                );
+        }
+        else
+            printf ("Invalid\n");
 
-            if (++i >= N_FRAMES_TO_KEEP) i = 0;
-            i2++;
-        } while (i != read_index && i2 < N_FRAMES_TO_KEEP);
-    }
+        if (++i >= N_FRAMES_TO_KEEP) i = 0;
+        i2++;
+    } while (i != read_index && i2 < N_FRAMES_TO_KEEP);
+}
