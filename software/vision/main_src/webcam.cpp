@@ -76,10 +76,15 @@ int main( int argc, char** argv ) {
     else
         camera = new mvCamera (argv[LOAD]);
 
-    mvVideoWriter* writer = NULL;
-    if (WRITE)
-        writer = new mvVideoWriter ("webcam.avi");
-    
+    mvVideoWriter* frame_writer = NULL;
+    mvVideoWriter* filter_writer_1 = NULL;
+    mvVideoWriter* filter_writer_2 = NULL;
+    if (WRITE) {
+        frame_writer = new mvVideoWriter ("frames.avi");
+        filter_writer_1 = new mvVideoWriter ("filtered_1.avi");
+        filter_writer_2 = new mvVideoWriter ("filtered_2.avi");
+    }
+
     // init windows
     mvWindow* win1 = new mvWindow ("webcam");
     mvWindow* win2 = new mvWindow ("win2");
@@ -126,10 +131,6 @@ int main( int argc, char** argv ) {
             continue;
         }
  
-        if (WRITE) {
-            writer->writeFrame (frame);
-        }
-
         cvCopy (frame, scratch_color);
         win1->showImage (scratch_color);
         
@@ -244,6 +245,14 @@ int main( int argc, char** argv ) {
             win3->showImage (filter_img);
         }
         */
+        if (WRITE) {
+            frame_writer->writeFrame (frame);
+            cvCvtColor (filter_img, scratch_color, CV_GRAY2BGR);
+            filter_writer_1->writeFrame (scratch_color);
+            cvCvtColor (filter_img_2, scratch_color, CV_GRAY2BGR);
+            filter_writer_2->writeFrame (scratch_color);
+        }
+
         nframes++;
         if (BREAK)
             c = cvWaitKey(0);
@@ -268,8 +277,9 @@ int main( int argc, char** argv ) {
     cvReleaseImage (&filter_img);
     cvReleaseImage (&filter_img_2);
     delete camera;
-    if (writer)
-        delete writer;
+    delete frame_writer;
+    delete filter_writer_1;
+    delete filter_writer_2;
     delete win1;
     delete win2;
     delete win3;

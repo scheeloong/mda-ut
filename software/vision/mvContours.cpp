@@ -253,7 +253,7 @@ float mvContours::match_rectangle (IplImage* img, MvRotatedBox* rbox, float min_
         angle += 90;
     }
 
-    printf ("length/width = %6.2f\n", length/width);    
+    DEBUG_PRINT ("length/width = %6.2f\n", length/width);    
     if (length/width < min_lw_ratio || length/width > max_lw_ratio) {
         return -1;
     }
