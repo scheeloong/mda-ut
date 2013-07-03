@@ -52,6 +52,16 @@ protected:
     float m_angular_x, m_angular_y;
     float m_angle;
 
+    // support for frame data
+    static const int N_FRAMES_TO_KEEP = 10;
+    static const int VALID_FRAMES = (N_FRAMES_TO_KEEP / 4);
+    MDA_FRAME_DATA m_frame_data_vector[N_FRAMES_TO_KEEP];
+    int read_index;
+    int n_valid_frames;
+    int n_valid_circle_frames;
+    int n_valid_box_frames;
+    int n_valid;
+
     void clear_data () {
         m_pixel_x = m_pixel_y = m_range = MV_UNDEFINED_VALUE;
         m_angular_x = m_angular_y = m_angle = MV_UNDEFINED_VALUE;
@@ -62,7 +72,7 @@ protected:
     virtual MDA_VISION_RETURN_CODE calc_vci () = 0;
     
 public:
-    MDA_VISION_MODULE_BASE () {}
+    MDA_VISION_MODULE_BASE () { read_index = n_valid_frames = n_valid_circle_frames = n_valid_box_frames = n_valid = 0; }
     virtual ~MDA_VISION_MODULE_BASE () {} 
 
     virtual MDA_VISION_RETURN_CODE filter (IplImage* src) {
@@ -83,7 +93,7 @@ public:
     virtual int get_angular_y() {return (int)m_angular_y;}
     virtual int get_range() {return m_range;}
     virtual int get_angle() {return m_angle;}
-
+    virtual void print_frames ();
 };
 /// ########################################################################
 /// ########################################################################
@@ -212,23 +222,36 @@ class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
 
     mvWindow window;
     mvWindow window2;
-    mvHSVFilter HSVFilter;
+    //mvHSVFilter HSVFilter;
     mvBinaryMorphology Morphology;
     mvBinaryMorphology Morphology2;    
     mvWatershedFilter watershed_filter;
     mvContours contour_filter;
-    mvHoughLines HoughLines;
-    mvKMeans KMeans;
-    mvLines lines;
+    //mvHoughLines HoughLines;
+    //mvKMeans KMeans;
+    //mvLines lines;
     
     IplImage* gray_img;
     IplImage* gray_img_2;
     
     IplImage* filtered_img;
 
+
 public:
     MDA_VISION_MODULE_PATH ();
     ~MDA_VISION_MODULE_PATH ();
+
+    MDA_VISION_RETURN_CODE filter (IplImage* src) {
+        assert (src != NULL);
+        assert (src->nChannels == 3);
+        
+        clear_data();
+        add_frame (src);
+        MDA_VISION_RETURN_CODE retval = calc_vci ();
+ 
+        assert (retval != FATAL_ERROR);
+        return retval;
+    };
 
     //Unless FULL_DETECT_PLUS or DOUBLE_DETECT are returned, the data in *_alt have undefined values
     virtual int get_pixel_x_alt() {return m_pixel_x_alt;}
@@ -246,6 +269,17 @@ public:
         printf ("MDA_VISION_MODULE_PATH does not support get_angular_y");
         exit (1);
     }
+
+    // functions to support frame data stuff
+    bool rbox_stable(float threshold);
+    bool circle_stable(float threshold);
+    int frame_is_valid() { return n_valid; }
+    void add_frame (IplImage* src);
+    void clear_frames () {
+        for (int i = 0; i < N_FRAMES_TO_KEEP; i++)
+            m_frame_data_vector[i].clear();
+        read_index = 0;
+    }  
 
     MDA_VISION_RETURN_CODE calc_vci ();
 };
@@ -272,21 +306,11 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
     mvBinaryMorphology Morphology3;
     mvWatershedFilter watershed_filter;
     mvContours contour_filter;
-    mvAdvancedCircles AdvancedCircles;
-
-    mvRect Rect;
+    //mvAdvancedCircles AdvancedCircles;
+    //mvRect Rect;
 
     IplImage* gray_img;
     IplImage* gray_img_2;
-
-    static const int N_FRAMES_TO_KEEP = 20;
-    static const int VALID_FRAMES = (N_FRAMES_TO_KEEP / 4);
-    MDA_FRAME_DATA m_frame_data_vector[N_FRAMES_TO_KEEP];
-    int read_index;
-    int n_valid_frames;
-    int n_valid_circle_frames;
-    int n_valid_box_frames;
-    int n_valid;
 
 public:
     MDA_VISION_MODULE_BUOY ();
@@ -313,14 +337,13 @@ public:
     // functions to support frame data stuff
     bool rbox_stable(float threshold);
     bool circle_stable(float threshold);
-    int num_stable() { return n_valid; }
+    int frame_is_valid() { return n_valid; }
     void add_frame (IplImage* src);
     void clear_frames () {
         for (int i = 0; i < N_FRAMES_TO_KEEP; i++)
             m_frame_data_vector[i].clear();
         read_index = 0;
     }  
-    void print_frames ();
 };
 
 /// ########################################################################
