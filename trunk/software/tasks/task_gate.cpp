@@ -37,7 +37,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                 break;
             }
             else if (vision_code == NO_TARGET || vision_code == UNKNOWN_TARGET) {
-                actuator_output->set_attitude_change(FORWARD);
+                set(SPEED, 1);
             }
             else if (vision_code == ONE_SEGMENT) {
                 int ang_x = gate_vision.get_angular_x();
@@ -45,14 +45,14 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                 move(RIGHT, ang_x);
 
                 if (fabs(ang_x) < 5.0) {
-                    actuator_output->set_attitude_change(FORWARD);
+                    set(SPEED, 1);
                 }
             } 
             else if (vision_code == FULL_DETECT) {
                 // if we can see full gate and range is less than 400 we are done the gate part
                 if (gate_vision.get_range() < 400) {
                     // go forward
-                    actuator_output->set_attitude_change(FORWARD);
+                    set(SPEED, 1);
                     done_gate = true;
                     continue;
                 }
@@ -62,7 +62,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                 move(RIGHT, ang_x);
 
                 if (fabs(ang_x) < 5.0) {
-                    actuator_output->set_attitude_change(FORWARD);
+                    set(SPEED, 1);
                 }
             }
             else {
