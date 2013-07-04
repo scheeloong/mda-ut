@@ -1,6 +1,12 @@
 #include "mda_tasks.h"
 #include "mda_vision.h"
 
+enum TASK_STATE {
+    STARTING,
+    AT_SEARCH_DEPTH,
+    AT_ALIGN_DEPTH
+};
+
 MDA_TASK_PATH:: MDA_TASK_PATH (AttitudeInput* a, ImageInput* i, ActuatorOutput* o) :
     MDA_TASK_BASE (a, i, o)
 {
@@ -11,9 +17,11 @@ MDA_TASK_PATH:: ~MDA_TASK_PATH ()
 {
 }
 
+static TASK_STATE state = STARTING;
+static TIMER timer;
+
 MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
     puts("Press q to quit");
-
 
     MDA_VISION_MODULE_PATH path_vision;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
@@ -21,14 +29,17 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
     bool done_path = false;
 
     // sink to starting depth
-    const int starting_depth = 300; 
-    set(DEPTH, starting_depth); // this is rough depth of the buoys
+    const int SEARCH_DEPTH = 250;
+    const int ALIGN_DEPTH = 400;
+    set(DEPTH, SEARCH_DEPTH);
+
+    // read the starting orientation
 
     // clear webcam cache
-    for (int i = 0; i < WEBCAM_CACHE; i++) {
+    /*for (int i = 0; i < WEBCAM_CACHE; i++) {
       image_input->ready_image();
       image_input->ready_image(DWN_IMG);
-    }
+    }*/
 
     while (1) {
         IplImage* frame = image_input->get_image(DWN_IMG);
@@ -39,100 +50,123 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
         MDA_VISION_RETURN_CODE vision_code = path_vision.filter(frame);
 
         // clear fwd image
-        int fwd_frame_ready = image_input->ready_image(FWD_IMG);
+        /*int fwd_frame_ready = image_input->ready_image(FWD_IMG);
         (void) fwd_frame_ready;
+        */
 
-        if (!done_path) {            
-            if (vision_code == NO_TARGET) {
-                actuator_output->set_attitude_change(FORWARD);           
+        /**
+        * Basic Algorithm:
+        *  - Remember the starting attitude
+        *  - Define 2 depths, search_depth and align_depth, for searching and aligning.
+        *  - Start at search_depth
+        *  - If can't see anything at search_depth, go to starting attitude and go foward
+        *  - If see something at search_depth, center self
+        *  - If centered, sink to align depth
+        *  - If see something at align depth, align
+        *  - If don't see anything at align depth, go back to search_depth
+        */
+
+
+
+        if (!done_path) {
+            // calculate some values that we will need
+            float xy_ang = path_vision.get_angular_x(); // angle equal to atan(x/y)
+            float pos_angle = path_vision.get_angle();  // PA, equal to orientation of the thing
+            int pix_x = path_vision.get_pixel_x();
+            int pix_y = path_vision.get_pixel_y();
+            int pix_distance = sqrt(pow(pix_y,2) + pow(pix_x,2));
+
+            printf("xy_distance = %d    xy_angle = %5.2f\n==============================\n", pix_distance, pos_angle);
+
+
+
+            if (state == STARTING) {
+                if (vision_code == NO_TARGET) {
+                    printf ("Starting: No target\n");
+                    set(SPEED,2);
+                    if (timer.get_time() > 40) { // timeout
+                        printf ("Timeout\n");
+                        return TASK_ERROR;
+                    }
+                }
+                else if (vision_code == UNKNOWN_TARGET) {
+                    printf ("Starting: Unknown target\n");
+                    timer.restart();
+                }
+                else {
+                    printf ("Starting: Good\n");
+                    stop();
+                    timer.restart();
+                    state = AT_SEARCH_DEPTH;
+                }
             }
-            else if (vision_code == UNKNOWN_TARGET) {
-                // the goal here is to try to place the path right in front of us
-                float xy_ang = path_vision.get_angular_x(); // this is its position equal to atan(x/y)
-                int pix_x = path_vision.get_pixel_x();
-                int pix_y = path_vision.get_pixel_y();
-                int xy_distance = sqrt(pow(pix_y,2) + pow(pix_x,2));
-
-                printf("xy_distance = %d    xy_angle = %5.2f\n==============================\n", xy_distance, xy_ang);
-
-                if(xy_distance > frame->height/5){
-                    if (abs(xy_ang) < 10){
-                        actuator_output->set_attitude_change(FORWARD);           
+            else if (state == AT_SEARCH_DEPTH){
+                if (vision_code == NO_TARGET) {
+                    printf ("Searching: No target\n");
+                    if (timer.get_time() > 10) { // timeout, go back to starting state
+                        printf ("Timeout\n");
+                        // set starting attitude!
+                        stop();
+                        timer.restart();
+                        state = STARTING;
                     }
-                    else {
-                        move(RIGHT, xy_ang);
-                        printf("Turning %s %d degrees (xy_ang)\n", (xy_ang > 0) ? "right" : "left", static_cast<int>(abs(xy_ang)));
+                    else if (timer.get_time() % 2 == 0) { // spin around a bit to try to re-aquire?
+                        //move (RIGHT, 45);
+                    }
+                    else { // just wait
                     }
                 }
-                else{
-                    // TODO: set depth based on range, not a hard-coded value
-                    actuator_output->set_attitude_absolute(DEPTH, DEPTH_TARGET);
+                else if (vision_code == UNKNOWN_TARGET) {
+                    printf ("Searching: Unknown target\n");
+                    timer.restart();
                 }
-            }
-            else if (vision_code == ONE_SEGMENT || vision_code == FULL_DETECT || vision_code == FULL_DETECT_PLUS 
-                || vision_code == DOUBLE_DETECT || vision_code == TWO_SEGMENT) {
-                // here we want to position over the path, then sink and reorient ourselves
-                int pix_x = path_vision.get_pixel_x();
-                int pix_y = path_vision.get_pixel_y();
-                float xy_ang = 0;
-                int pos_ang = 0;
-
-                //If there are 2 fully defined paths, pick the one closest to the last path we followed
-                if(vision_code != ONE_SEGMENT && vision_code != FULL_DETECT){
-                    int pix_x_alt = path_vision.get_pixel_x_alt();
-                    int pix_y_alt = path_vision.get_pixel_y_alt();
-                
-                    if(sqrt(pow(pix_y_alt - pix_y_old,2) + pow(pix_x_alt - pix_x_old,2)) < sqrt(pow(pix_y - pix_y_old,2) + pow(pix_x - pix_x_old,2))){
-                        xy_ang = path_vision.get_angular_x_alt(); // this is its position equal to atan(x/y)
-                        pos_ang = path_vision.get_angle_alt(); // this is the orientation of the path
-                        pix_x = pix_x_alt;
-                        pix_y = pix_y_alt;
-                    }
-                    else{
-                        xy_ang = path_vision.get_angular_x(); // this is its position equal to atan(x/y)
-                        pos_ang = path_vision.get_angle(); // this is the orientation of the path
-                    }
-                }
-                else{
-                    xy_ang = path_vision.get_angular_x(); // this is its position equal to atan(x/y)
-                    pos_ang = path_vision.get_angle(); // this is the orientation of the path
-                }
-                int xy_distance = sqrt(pow(pix_y,2) + pow(pix_x,2));
-
-                pix_x_old = pix_x;
-                pix_y_old = pix_y;
-
-                printf("xy_distance = %d    xy_angle = %5.2f\n==============================\n", xy_distance, xy_ang);
-
-                if (xy_distance < frame->height/6) {
-                    // if we are oriented over the path, we can sink
-                    actuator_output->set_attitude_absolute(DEPTH, DEPTH_TARGET);
-
-                    if(attitude_input->depth() > DEPTH_TARGET-5 && attitude_input->depth() < DEPTH_TARGET+5){
-                        move(RIGHT,pos_ang);
-                        printf("Turning %s %d (pos_ang) degrees\n", (pos_ang > 0) ? "right" : "left", abs(pos_ang));
-                        if(abs(pos_ang) < 5){
-                            done_path = true;
-                            // settle for 2s
-                            sleep(2);
-                            break;
+                else {
+                    timer.restart();
+                    printf ("Searching: Good\n");
+                    if(pix_distance > frame->height/5){ // move over the path
+                        if (abs(xy_ang) < 10) {
+                            printf ("Set speed foward\n");
+                            set(SPEED,1);
+                        }
+                        else {
+                            printf("Turning %s %d degrees (xy_ang)\n", (xy_ang > 0) ? "Right" : "Left", static_cast<int>(abs(xy_ang)));
+                            stop();
+                            move(RIGHT, xy_ang);
                         }
                     }
-                } 
-                else {
-                    // if we are not oriented over the path, put the path in front of us and go fwd
-                    if (abs(xy_ang) < 10){
-                        actuator_output->set_attitude_change(FORWARD);
-                    } 
-                    else {
-                        move(RIGHT, xy_ang);
-                        printf("Turning %s %d (xy_ang2) degrees\n", (xy_ang > 0) ? "right" : "left", static_cast<int>(abs(xy_ang)));
+                    else {                              // we are over the path, sink and try align state
+                        stop();
+                        move(SINK, 200);
+                        timer.restart();
+                        state = AT_ALIGN_DEPTH;
+                    }
+                }   
+            }
+            else if (state == AT_ALIGN_DEPTH) {
+                if (vision_code == NO_TARGET) {     // wait for timeout
+                    printf ("Aligning: No target\n");
+                    if (timer.get_time() > 6) { // timeout
+                        printf ("Timeout\n");
+                        move(RISE, 200);
+                        timer.restart();
+                        state = AT_SEARCH_DEPTH;
                     }
                 }
-            }
-            else {
-                printf ("Error: %s: line %d\ntask module recieved an unhandled vision code.\n", __FILE__, __LINE__);
-                exit(1);
+                else if (vision_code == UNKNOWN_TARGET) {
+                    printf ("Aligning: Unknown target\n");
+                    timer.restart();
+                }
+                else {
+                    if (abs(pos_angle) >= 10) {
+                        move(RIGHT, pos_angle);
+                        timer.restart();
+                    }
+                    else {
+                        done_path = true;
+                        break;
+                        timer.restart();
+                    }
+                }
             }
         }
 
