@@ -2,6 +2,7 @@
 #define __MDA_TASK__MDA_TASK__
 
 #include <time.h>
+#include <sys/time.h>
 
 #include "mda_vision.h"
 #include "AttitudeInput.h"
@@ -25,6 +26,21 @@ enum MDA_TASK_RETURN_CODE {
 	TASK_MISSING,
 	TASK_QUIT
 };
+
+// simple timer class 
+class TIMER {
+    unsigned long long starting_time;
+    unsigned long long gettimeofday2 () {
+	    struct timeval T;
+	    gettimeofday (&T, NULL);
+	    return (T.tv_sec*1000000 + T.tv_usec);
+	}
+public:
+    TIMER() { restart(); }
+    void restart() { starting_time = gettimeofday2(); }
+    int get_time() { return static_cast<int>((gettimeofday2()-starting_time)/1000000); }
+};
+
 
 class MDA_TASK_BASE {
 protected:

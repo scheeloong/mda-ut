@@ -406,8 +406,11 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
         if (m_pixel_x == MV_UNDEFINED_VALUE || m_pixel_y == MV_UNDEFINED_VALUE || m_angle == MV_UNDEFINED_VALUE)
             return NO_TARGET;
 
+        m_pixel_x -= gray_img->width/2;
+        m_pixel_y = gray_img->height/2 - m_pixel_y; // something feels wrong here, must test on camera
+
         retval = FULL_DETECT;
-        m_angular_x = RAD_TO_DEG * atan((float)m_pixel_x / m_pixel_y);
+        m_angular_x = RAD_TO_DEG * atan((float) m_pixel_x / m_pixel_y);
         if (m_pixel_y < 0) {
             if (m_pixel_x > 0)
                 m_angular_x += 180;
@@ -468,7 +471,8 @@ void MDA_VISION_MODULE_PATH::add_frame (IplImage* src) {
 
         m_pixel_x = m_frame_data_vector[read_index].m_frame_box[0].center.x;
         m_pixel_y = m_frame_data_vector[read_index].m_frame_box[0].center.y;
-        m_range = (PATH_REAL_LENGTH * gray_img->width) / (m_frame_data_vector[read_index].m_frame_box[0].length * TAN_FOV_X);
+        //m_range = (PATH_REAL_LENGTH * gray_img->width) / (m_frame_data_vector[read_index].m_frame_box[0].length * TAN_FOV_X);
+        m_range = (PATH_REAL_WIDTH * gray_img->width) / (m_frame_data_vector[read_index].m_frame_box[0].width * TAN_FOV_X);
         m_angle = m_frame_data_vector[read_index].m_frame_box[0].angle;
     }
 
