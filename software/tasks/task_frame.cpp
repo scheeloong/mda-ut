@@ -18,9 +18,6 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
 
     bool done_frame = false;
 
-    // Sink to the approximate height
-    actuator_output->set_attitude_absolute(DEPTH, 590);
-
     // clear webcam cache
     for (int i = 0; i < WEBCAM_CACHE; i++) {
       image_input->ready_image();
@@ -45,7 +42,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
                 break;
             }
             else if (vision_code == NO_TARGET || vision_code == UNKNOWN_TARGET) {
-                actuator_output->set_attitude_change(FORWARD);
+                set(SPEED, 1);
             }
             else if (vision_code == ONE_SEGMENT) {
                 int ang_x = frame_vision.get_angular_x();
@@ -53,15 +50,15 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
                 int range = frame_vision.get_range();
                 int depth_change = tan(ang_y*0.017453) * range; 
 
-                if(fabs(ang_y) > 5.0) actuator_output->set_attitude_change(SINK,depth_change);
-                else if(abs(ang_x) > 5.0) actuator_output->set_attitude_change(RIGHT, ang_x);
-                else actuator_output->set_attitude_change(FORWARD);
+                if(fabs(ang_y) > 10.0) move(SINK,depth_change);
+                else if(abs(ang_x) > 5.0) move(RIGHT, ang_x);
+                else set(SPEED, 1);
             } 
             else if (vision_code == FULL_DETECT) {
                 // if we can see full frame and range is less than 400 we are done the frame part
                 if (frame_vision.get_range() < 400) {
                     // set target yaw to current yaw and go forward
-                    actuator_output->stop();
+                    stop();
                     done_frame = true;
                     ret_code = TASK_DONE;
                     break;
@@ -73,9 +70,9 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
                 int depth_change = tan(ang_y*0.017453) * range; 
 
 
-                if(fabs(ang_y) > 10.0) actuator_output->set_attitude_change(SINK, depth_change);
-                else if(abs(ang_x) > 5.0) actuator_output->set_attitude_change(RIGHT, ang_x);
-                else actuator_output->set_attitude_change(FORWARD);
+                if(fabs(ang_y) > 10.0) move(SINK, depth_change);
+                else if(abs(ang_x) > 5.0) move(RIGHT, ang_x);
+                else set(SPEED, 1);
             }
             else {
                 printf ("Error: %s: line %d\ntask module recieved an unhandled vision code.\n", __FILE__, __LINE__);
@@ -91,7 +88,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
             CharacterStreamSingleton::get_instance().write_char(c);
         }
         if (CharacterStreamSingleton::get_instance().wait_key(1) == 'q'){
-            actuator_output->stop();
+            stop();
             ret_code = TASK_QUIT;
             break;
         }
