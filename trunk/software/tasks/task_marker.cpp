@@ -40,7 +40,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_MARKER:: run_task() {
             break;
         }
         else if (vision_code == NO_TARGET || vision_code == UNKNOWN_TARGET) {
-            actuator_output->set_attitude_change(FORWARD);
+            set(SPEED, 1);
         }
         else if (vision_code == FULL_DETECT) {
             bool *targets_found = marker_vision.getFound();
@@ -55,7 +55,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_MARKER:: run_task() {
             if (new_target) {
                 printf("Dropping marker here.\n");
                 fflush(stdout);
-                actuator_output->stop();
+                stop();
                 sleep(2);
             }
 
@@ -78,7 +78,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_MARKER:: run_task() {
             CharacterStreamSingleton::get_instance().write_char(c);
         }
         if (CharacterStreamSingleton::get_instance().wait_key(1) == 'q'){
-            actuator_output->stop();
+            stop();
             ret_code = TASK_QUIT;
             break;
         }

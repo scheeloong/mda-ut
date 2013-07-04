@@ -299,7 +299,7 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
         window2.showImage (gray_img_2);
     }
 
-    //print_frames();
+    print_frames();
 }
 
 void MDA_VISION_MODULE_BASE::print_frames () {
