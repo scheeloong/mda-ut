@@ -10,6 +10,8 @@
     #define DEBUG_PRINT(format, ...)
 #endif
 
+//#define SEED_IMAGE_RANDOM 
+
 // used in sorting color difference color triples
 bool m3_less_than (COLOR_TRIPLE T1, COLOR_TRIPLE T2) {
     return T1.m3 < T2.m3;
@@ -113,6 +115,7 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
     }
     */
     color_point_vector.clear();
+#ifdef SEED_IMAGE_RANDOM
     cvSet (ds_image_nonedge, CV_RGB(1,1,1));
     // sample the image like this
     // 1. randomly generate an x,y coordinate.
@@ -136,6 +139,27 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
             cvCircle (ds_image_nonedge, cvPoint(x,y), 10, CV_RGB(0,0,0), -1);          
         }
     }
+#else
+    int step = 5;
+    COLOR_TRIPLE ct_prev;
+
+    for (int y = step/2; y < src->height; y += step) {
+        unsigned char* colorPtr = (unsigned char*)src->imageData + y*src->widthStep + 3*step/2;
+
+        for (int x = step/2; x < src->width; x += step) {
+            COLOR_TRIPLE ct (colorPtr[0], colorPtr[1], colorPtr[2], 0);
+            
+            if (ct.diff(ct_prev) >= 30) {
+                color_point_vector.push_back(std::make_pair(ct, cvPoint(x,y)));
+                ct_prev = ct;
+                //x += step;
+                //colorPtr += 3*step;
+            }
+
+            colorPtr += 3*step;
+        }
+    }
+#endif
 
     // the color point vector will have too many pixels that are really similar - get rid of some by merging
     for (unsigned i = 0; i < color_point_vector.size(); i++) {
@@ -143,10 +167,18 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
             int dx = color_point_vector[i].second.x - color_point_vector[j].second.x;
             int dy = color_point_vector[i].second.y - color_point_vector[j].second.y;  
 
-            if (color_point_vector[i].first.diff(color_point_vector[j].first) < 30 && dx*dx + dy*dy < 200)
+            if (color_point_vector[i].first.diff(color_point_vector[j].first) < 30 /*&& dx*dx + dy*dy < 10000*/)
             {
-                color_point_vector[i].first.merge(color_point_vector[j].first);
-                color_point_vector.erase(color_point_vector.begin()+j);
+                if (rand() % 2 == 0) {
+                    color_point_vector[i].first.merge(color_point_vector[j].first);
+                    color_point_vector.erase(color_point_vector.begin()+j);
+                }
+                else {
+                    color_point_vector[j].first.merge(color_point_vector[i].first);
+                    color_point_vector.erase(color_point_vector.begin()+i);
+                    i--;
+                    break;    
+                }
             }
         }
     }
@@ -320,8 +352,10 @@ void mvWatershedFilter::watershed_process_markers_internal2 (int method) {
                     float d2 = center1[2] - center2[2];
 
                     double cluster_dist = d0*d0 + d1*d1 + d2*d2;
-                    assert (cluster_dist != 0);
-                    
+                    //assert (cluster_dist != 0);
+                    if (cluster_dist == 0) // two clusters just happen to coincide?
+                        continue;
+
                     switch (method) {
                         case 0: // find the min cluster dist
                             if (min_cluster_dist == 0 || cluster_dist < min_cluster_dist)

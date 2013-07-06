@@ -58,18 +58,19 @@ void MDA_VISION_MODULE_BUOY:: primary_filter (IplImage* src) {
     watershed_filter.watershed(src, gray_img);
     window.showImage (gray_img);
 
+    int H,S,V;
     COLOR_TRIPLE color;
-    MvCircle circle;
     MvCircleVector circle_vector;
     
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
-        if (contour_filter.match_circle(gray_img_2, &circle) < 0)
+        tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
+        if (S < 30 || V < 20) {
+            //printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
             continue;
+        }
 
-        circle.m1 = color.m1;
-        circle.m2 = color.m2;
-        circle.m3 = color.m3;
-        circle_vector.push_back(circle);
+        contour_filter.match_circle(gray_img_2, &circle_vector, color);
+        //window2.showImage (gray_img_2);
     }
 
     if (circle_vector.size() > 0) {
@@ -158,9 +159,9 @@ bool MDA_VISION_MODULE_BUOY::rbox_stable (float threshold) {
     int i = read_index;
     std::vector<MvRotatedBox> rboxes;
     do {
-        if (m_frame_data_vector[i].valid) {
+        if (m_frame_data_vector[i].is_valid()) {
             n_valid++;
-            rboxes.push_back(m_frame_data_vector[i].m_frame_box[0]);
+            rboxes.push_back(m_frame_data_vector[i].m_frame_boxes[0]);
         }
         if (++i >= N_FRAMES_TO_KEEP) i = 0;
     } while (i != read_index);
@@ -196,7 +197,7 @@ bool MDA_VISION_MODULE_BUOY::circle_stable (float threshold) {
     int i = read_index;
     std::vector<MvCircle> circles;
     do {
-        if (m_frame_data_vector[i].valid) {
+        if (m_frame_data_vector[i].is_valid()) {
             n_valid++;
             circles.push_back(m_frame_data_vector[i].m_frame_circle);
         }
@@ -237,38 +238,33 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
     window.showImage (src);
 
     COLOR_TRIPLE color;
+    int H,S,V;
     MvCircle circle;
     MvCircleVector circle_vector;
     MvRotatedBox rbox;
     MvRBoxVector rbox_vector;
 
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
-        if (contour_filter.match_circle(gray_img_2, &circle) > 0) {
-            assign_color_to_shape (color, &circle);
-            circle_vector.push_back(circle);            
+        cvCopy (gray_img_2, gray_img);
+        tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
+        if (S < 30 || V < 20) {
+            //printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
+            continue;
         }
-        if (contour_filter.match_rectangle(gray_img_2, &rbox, 2.2, 3.5) > 0) {
-            assign_color_to_shape (color, &rbox);
-            rbox_vector.push_back(rbox);
-        }
+
+        contour_filter.match_circle(gray_img_2, &circle_vector, color);
+        contour_filter.match_rectangle(gray_img, &rbox_vector, color, 2.2, 3.5);        
 
         //window2.showImage (gray_img_2);
     }
-
-    // debug only
-    cvCopy (gray_img, gray_img_2);
 
     if (circle_vector.size() > 0) {
         MvCircleVector::iterator iter = circle_vector.begin();
         MvCircleVector::iterator iter_end = circle_vector.end();
         
         // for now, frame will store circle with best validity
-        float best_validity = -1;
         for (; iter != iter_end; ++iter) {
-            if (iter->validity > best_validity) {
-                m_frame_data_vector[read_index].assign_circle(*iter);
-                best_validity = iter->validity;
-            }
+            m_frame_data_vector[read_index].assign_circle_by_validity(*iter);
         }
 
         m_pixel_x = m_frame_data_vector[read_index].m_frame_circle.center.x;
@@ -281,25 +277,21 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
         MvRBoxVector::iterator iter_end = rbox_vector.end();
         
         // for now, frame will store rect with best validity
-        float best_validity = -1;
         for (; iter != iter_end; ++iter) {
-            if (iter->validity > best_validity) {
-                m_frame_data_vector[read_index].assign_rbox(*iter);
-                best_validity = iter->validity;
-            }
+            m_frame_data_vector[read_index].assign_rbox_by_validity(*iter);
         }
 
-        m_pixel_x = m_frame_data_vector[read_index].m_frame_box[0].center.x;
-        m_pixel_y = m_frame_data_vector[read_index].m_frame_box[0].center.y;
-        m_range = (RBOX_REAL_LENGTH * gray_img->width) / (m_frame_data_vector[read_index].m_frame_box[0].length * TAN_FOV_X);
+        m_pixel_x = m_frame_data_vector[read_index].m_frame_boxes[0].center.x;
+        m_pixel_y = m_frame_data_vector[read_index].m_frame_boxes[0].center.y;
+        m_range = (RBOX_REAL_LENGTH * gray_img->width) / (m_frame_data_vector[read_index].m_frame_boxes[0].length * TAN_FOV_X);
     }
 
-    if (m_frame_data_vector[read_index].valid) {
+    if (m_frame_data_vector[read_index].is_valid()) {
         m_frame_data_vector[read_index].drawOntoImage(gray_img_2);
         window2.showImage (gray_img_2);
     }
 
-    print_frames();
+    //print_frames();
 }
 
 void MDA_VISION_MODULE_BASE::print_frames () {
@@ -308,17 +300,17 @@ void MDA_VISION_MODULE_BASE::print_frames () {
     int i2 = 0;
     do {
         printf ("Frame[%-2d]:\t", i2);        
-        if (m_frame_data_vector[i].valid) {
-            int n_circles = m_frame_data_vector[i].n_circles;
-            int n_boxes = m_frame_data_vector[i].n_boxes;
+        if (m_frame_data_vector[i].is_valid()) {
+            int n_circles = m_frame_data_vector[i].circle_valid?1:0;
+            int n_boxes = (m_frame_data_vector[i].rboxes_valid[0]?1:0) + (m_frame_data_vector[i].rboxes_valid[1]?1:0);
             std::string color_str, color_str_2;
 
             color_str = color_int_to_string(m_frame_data_vector[i].m_frame_circle.color_int);
             printf ("%d Circles (%s)\t", n_circles, (n_circles > 0)?color_str.c_str():"---");
 
-            color_str = color_int_to_string(m_frame_data_vector[i].m_frame_box[0].color_int);
-            color_str_2 = color_int_to_string(m_frame_data_vector[i].m_frame_box[1].color_int);
-            printf ("%d Boxes (%s,%s)\n", m_frame_data_vector[i].n_boxes,
+            color_str = color_int_to_string(m_frame_data_vector[i].m_frame_boxes[0].color_int);
+            color_str_2 = color_int_to_string(m_frame_data_vector[i].m_frame_boxes[1].color_int);
+            printf ("%d Boxes (%s,%s)\n", n_boxes,
                 (n_boxes > 0)?color_str.c_str():"---", (n_boxes > 1)?color_str_2.c_str():"---"
                 );
         }

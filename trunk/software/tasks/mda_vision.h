@@ -147,13 +147,16 @@ class MDA_VISION_MODULE_GATE : public MDA_VISION_MODULE_BASE {
     static const float GATE_WIDTH_TO_HEIGHT_RATIO = 2.50;
 
     mvWindow window;
-    mvHSVFilter HSVFilter;
+    mvWindow window2;
+    mvWatershedFilter watershed_filter;
+    mvContours contour_filter;
     mvHoughLines HoughLines;
     mvKMeans KMeans;
 
     mvLines lines;
     
-    IplImage* filtered_img;
+    IplImage* gray_img;
+    IplImage* gray_img_2;
 
 public:
     MDA_VISION_MODULE_GATE ();

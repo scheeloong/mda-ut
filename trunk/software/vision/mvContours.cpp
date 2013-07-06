@@ -1,7 +1,7 @@
 #include "mvContours.h"
 
 //#define MATCH_CONTOURS_DEBUG
-//#define M_DEBUG
+#define M_DEBUG
 #ifdef M_DEBUG
     #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
 #else
@@ -130,7 +130,7 @@ void mvContours::get_hu_moments (CvSeq* contour1, HU_MOMENTS &hu_moments) {
     hu_moments = std::vector<double>(hus, hus+sizeof(hus)/sizeof(double));
 }
 
-void mvContours::find_contour_and_check_errors(IplImage* img) {
+int mvContours::find_contour_and_check_errors(IplImage* img) {
     if (m_contours != NULL) {
         cvClearSeq(m_contours);
         m_contours = NULL;
@@ -138,7 +138,7 @@ void mvContours::find_contour_and_check_errors(IplImage* img) {
 
     // find the contours
     bin_contours.start();
-    cvFindContours (
+    int n_contours = cvFindContours (
         img,
         m_storage,
         &m_contours,
@@ -147,20 +147,12 @@ void mvContours::find_contour_and_check_errors(IplImage* img) {
         CV_CHAIN_APPROX_SIMPLE
     );
 
-    int last_x=-1, last_y=-1;
-    double area;
-    if (m_contours == NULL || m_contours->total <= 6) {
-        DEBUG_PRINT ("find_countour: contour too short, returning.\n");
+    //int last_x=-1, last_y=-1;
+    //double area;
+    if (m_contours == NULL) {
         goto FIND_CONTOUR_ERROR;
     }
     
-    // check the contour's area to make sure it isnt too small
-    area = cvContourArea(m_contours);
-    if (area < img->width*img->height/600) {
-        DEBUG_PRINT ("find_countour: contour area too small, returning.\n");
-        goto FIND_CONTOUR_ERROR;
-    }
-
     // check that the contour does not coincide with the sides of the image for more than 20% of its perimeter
     /*
     for (int i = 0; i < m_contours->total; i++) {
@@ -179,7 +171,7 @@ void mvContours::find_contour_and_check_errors(IplImage* img) {
     }
     */
     bin_contours.stop();
-    return;
+    return n_contours;
 
     FIND_CONTOUR_ERROR:
     if (m_contours != NULL) {
@@ -187,6 +179,7 @@ void mvContours::find_contour_and_check_errors(IplImage* img) {
         m_contours = NULL;
     }
     bin_contours.stop();
+    return -1;
 }
 
 void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_index, double &best_match_diff, int method, std::vector<HU_MOMENTS> hu_moments_vector) {
@@ -229,133 +222,196 @@ void mvContours::match_contour_with_database (CvSeq* contour1, int &best_match_i
     DEBUG_PRINT ("Best Match Diff = %9.6lf\n", best_match_diff);
 }
 
-float mvContours::match_rectangle (IplImage* img, MvRotatedBox* rbox, float min_lw_ratio, float max_lw_ratio, int method) {
+float mvContours::match_rectangle (IplImage* img, MvRBoxVector* rbox_vector, COLOR_TRIPLE color, float min_lw_ratio, float max_lw_ratio, int method) {
     assert (img != NULL);
     assert (img->nChannels == 1);
 
-    find_contour_and_check_errors (img);
-    if (m_contours == NULL)
+    int n_contours = find_contour_and_check_errors (img);
+    if (n_contours <= 0 || m_contours == NULL)
         return -1;
 
     bin_calc.start();
+    CvSeq* c_contour = m_contours;
+    int n_boxes = 0;
 
-    double perimeter = cvArcLength (m_contours, CV_WHOLE_SEQ, 1);
-    double area = cvContourArea (m_contours);
+    // debug
+    //mvWindow window("contours");
 
-    CvBox2D Rect = cvMinAreaRect2(m_contours, m_storage);
-    float angle = Rect.angle;
-    float length = Rect.size.height;
-    float width = Rect.size.width;
-    // depending on which is the long side we assign the sides and angle differently    
-    if (length < width) {
-        length = Rect.size.width;
-        width = Rect.size.height;
-        angle += 90;
+    // examine each contour, put the passing ones into the circle_vector
+    for (int C = 0; C < n_contours; C++, c_contour = c_contour->h_next) {   
+        // debug
+        /*cvZero (img);
+        draw_contours (c_contour, img);
+        //window.showImage (img);
+        cvWaitKey(0);*/
+
+        // check that there are at least 6 points
+        if (c_contour->total < 6) {
+            DEBUG_PRINT ("Rect Fail: Contour has less than 6 points\n");
+            continue;
+        }
+
+        // check the contour's area to make sure it isnt too small
+        double area = cvContourArea(c_contour);
+        if (area < img->width*img->height/600) {
+            DEBUG_PRINT ("Rect Fail: Contour too small!\n");
+            continue;
+        }
+
+        CvBox2D Rect = cvMinAreaRect2(c_contour, m_storage);
+        float angle = Rect.angle;
+        float length = Rect.size.height;
+        float width = Rect.size.width;
+        // depending on which is the long side we assign the sides and angle differently    
+        if (length < width) {
+            length = Rect.size.width;
+            width = Rect.size.height;
+            angle += 90;
+        }
+
+        if (length/width < min_lw_ratio || length/width > max_lw_ratio) {
+            DEBUG_PRINT ("Rect Fail: length/width = %6.2f\n", length/width);    
+            continue;
+        }
+
+        double perimeter = cvArcLength (c_contour, CV_WHOLE_SEQ, 1);
+        double perimeter_ratio = perimeter / (2*length+2*width);
+        double area_ratio = area / (length*width);
+        if (area_ratio < 0.7 || perimeter_ratio > 1.2 || perimeter_ratio < 0.85) {
+            DEBUG_PRINT ("Rect Fail: Area / Peri:    %6.2lf / %6.2lf\n", area_ratio, perimeter_ratio);
+            continue;
+        }
+
+        MvRotatedBox rbox;
+        rbox.center.x = Rect.center.x;
+        rbox.center.y = Rect.center.y;
+        rbox.length = length;
+        rbox.width = width;
+        rbox.angle = angle;
+        rbox.m1 = color.m1;
+        rbox.m2 = color.m2;
+        rbox.m3 = color.m3;
+        assign_color_to_shape (color, &rbox);
+        rbox.validity = area_ratio;
+        rbox_vector->push_back(rbox);
+
+        // draw a line to indicate the angle
+        /*CvPoint p0, p1;
+        int delta_x = length/2 * -sin(angle*CV_PI/180.f);
+        int delta_y = length/2 * cos(angle*CV_PI/180.f);
+        p0.x = x - delta_x;  p0.y = y - delta_y;
+        p1.x = x + delta_x;  p1.y = y + delta_y;
+        cvLine (img, p0, p1, CV_RGB(50,50,50), 2);
+        */
+        n_boxes++;
     }
 
-    DEBUG_PRINT ("length/width = %6.2f\n", length/width);    
-    if (length/width < min_lw_ratio || length/width > max_lw_ratio) {
-        return -1;
-    }
-
-    double perimeter_ratio = perimeter / (2*length+2*width);
-    double area_ratio = area / (length*width);
-    printf ("Rect: Area / Peri:    %6.2lf / %6.2lf\n", area_ratio, perimeter_ratio);
-    if (area_ratio < 0.7 || perimeter_ratio > 1.2 || perimeter_ratio < 0.85) {
-        return -1;
-    }
-
-    rbox->center.x = Rect.center.x;
-    rbox->center.y = Rect.center.y;
-    rbox->length = length;
-    rbox->width = width;
-    rbox->angle = angle;
-    rbox->validity = area_ratio;
-    
-    // draw a line to indicate the angle
-    /*CvPoint p0, p1;
-    int delta_x = length/2 * -sin(angle*CV_PI/180.f);
-    int delta_y = length/2 * cos(angle*CV_PI/180.f);
-    p0.x = x - delta_x;  p0.y = y - delta_y;
-    p1.x = x + delta_x;  p1.y = y + delta_y;
-    cvLine (img, p0, p1, CV_RGB(50,50,50), 2);
-    */
     bin_calc.stop();
-
-    return area_ratio;
+    return n_boxes;
 }
 
-float mvContours::match_circle (IplImage* img, MvCircle* circle, int method) {
+float mvContours::match_circle (IplImage* img, MvCircleVector* circle_vector, COLOR_TRIPLE color, int method) {
     assert (img != NULL);
     assert (img->nChannels == 1);
 
-    find_contour_and_check_errors(img);
-    if (m_contours == NULL)
+    int n_contours = find_contour_and_check_errors(img);
+    if (n_contours < 1 || m_contours == NULL)
         return -1;
 
     bin_calc.start();
+    CvSeq* c_contour = m_contours;
+    int n_circles = 0;
 
-    // do some kind of matching to ensure the contour is a circle
-    CvMoments moments;
-    cvContourMoments (m_contours, &moments);
-    cv::Moments cvmoments(moments);
+    // debug
+    //mvWindow window("contours");
 
-    double nu11 = cvmoments.nu11;
-    double nu20 = cvmoments.nu02;
-    double nu02 = cvmoments.nu20;
-    double nu21 = cvmoments.nu21;
-    double nu12 = cvmoments.nu12;
-    double nu03 = cvmoments.nu03;
-    double nu30 = cvmoments.nu30;
+    // examine each contour, put the passing ones into the circle_vector
+    for (int C = 0; C < n_contours; C++, c_contour = c_contour->h_next) {
+        // debug
+        /*cvZero (img);
+        draw_contours (c_contour, img);
+        //window.showImage (img);
+        cvWaitKey(0);*/
 
-    double r03 = fabs(nu30 / nu03);
-    r03 = (r03 > 1) ? r03 : 1.0/r03;
-    double r12 = fabs(nu12 / nu21);
-    r12 = (r12 > 1) ? r12 : 1.0/r12;
-    double r02 = fabs(nu02 / nu20);
-    r02 = (r02 > 1) ? r02 : 1.0/r02;
+        // check that there are at least 6 points
+        if (c_contour->total < 6) {
+            continue;
+        }
 
-    double r11 = fabs( MEAN2(nu02,nu20) / nu11);
-    double R = MEAN2(nu20,nu02) / std::max((MEAN2(nu21,nu12)), (MEAN2(nu30,nu03)));
-    bool pass = (r03 <= 25.0) && (r12 <= 12.0) && (r02 <= 12.0) && (r11 > 2.5) && (R > 25);
+        // check the contour's area to make sure it isnt too small
+        double area = cvContourArea(c_contour);
+        if (area < img->width*img->height/600) {
+            DEBUG_PRINT ("Circle Fail: Contour too small!\n");
+            continue;
+        }
+    
+        // do some kind of matching to ensure the contour is a circle
+        CvMoments moments;
+        cvContourMoments (c_contour, &moments);
+        cv::Moments cvmoments(moments);
 
-    //printf ("Circle Contours: nu11=%lf, nu20=%lf, nu02=%lf, nu21=%lf, nu12=%lf, nu30=%lf, nu03=%lf\n",
-    //    nu11, nu20, nu02, nu21, nu12, nu30, nu03);
-    //printf ("Circle Contours: \tn30/n03=%3.1lf, n21/n12=%3.1lf, nu20/nu02=%3.1lf, r11=%3.1f, R=%3.1f. %s\n", r03, r12, r02, r11, R, pass?"PASS!":"FAIL!");
-    if (!pass) {
-        return -1;
+        double nu11 = cvmoments.nu11;
+        double nu20 = cvmoments.nu02;
+        double nu02 = cvmoments.nu20;
+        double nu21 = cvmoments.nu21;
+        double nu12 = cvmoments.nu12;
+        double nu03 = cvmoments.nu03;
+        double nu30 = cvmoments.nu30;
+
+        double r03 = fabs(nu30 / nu03);
+        r03 = (r03 > 1) ? r03 : 1.0/r03;
+        double r12 = fabs(nu12 / nu21);
+        r12 = (r12 > 1) ? r12 : 1.0/r12;
+        double r02 = fabs(nu02 / nu20);
+        r02 = (r02 > 1) ? r02 : 1.0/r02;
+
+        double r11 = fabs( MEAN2(nu02,nu20) / nu11);
+        double R = MEAN2(nu20,nu02) / std::max((MEAN2(nu21,nu12)), (MEAN2(nu30,nu03)));
+        bool pass = (r03 <= 25.0) && (r12 <= 12.0) && (r02 <= 12.0) && (r11 > 2.5) && (R > 25);
+
+        if (!pass) {
+            //DEBUG_PRINT ("Circle Moms: nu11=%lf, nu20=%lf, nu02=%lf, nu21=%lf, nu12=%lf, nu30=%lf, nu03=%lf\n", nu11, nu20, nu02, nu21, nu12, nu30, nu03);
+            DEBUG_PRINT ("Circle Fail: \tn30/n03=%3.1lf, n21/n12=%3.1lf, nu20/nu02=%3.1lf, r11=%3.1f, R=%3.1f!\n", r03, r12, r02, r11, R);
+            continue;
+        }
+        
+        // get area and perimeter of the contour
+        //double perimeter = cvArcLength (c_contour, CV_WHOLE_SEQ, 1);
+        
+        // get min enclosing circle and radius
+        CvPoint2D32f centroid32f;
+        float radius;
+        cvMinEnclosingCircle(c_contour, &centroid32f, &radius);
+        if (radius > img->width/2 || radius < 0) {
+            continue;
+        }
+
+        // do checks on area and perimeter
+        double area_ratio = area / (CV_PI*radius*radius);
+        //double perimeter_ratio = perimeter / (2*CV_PI*radius);
+        if (area_ratio < 0.7) {
+            DEBUG_PRINT ("Circle Fail: Area: %6.2lf\n", area_ratio);
+            continue;
+        }
+        
+        MvCircle circle;
+        circle.center.x = static_cast<int>(centroid32f.x);
+        circle.center.y = static_cast<int>(centroid32f.y);
+        circle.radius = radius;
+        circle.m1 = color.m1;
+        circle.m2 = color.m2;
+        circle.m3 = color.m3;
+        assign_color_to_shape (color, &circle);
+        circle.validity = area_ratio;
+        circle_vector->push_back(circle);
+        
+        //cvCircle (img, cvPoint(x,y), static_cast<int>(radius), CV_RGB(50,50,50), 2);
+        n_circles++;
     }
     
-    // get area and perimeter of the contour
-    //double perimeter = cvArcLength (m_contours, CV_WHOLE_SEQ, 1);
-    double area = cvContourArea (m_contours);
-
-    // get min enclosing circle and radius
-    CvPoint2D32f centroid32f;
-    float radius;
-    cvMinEnclosingCircle(m_contours, &centroid32f, &radius);
-    if (radius > img->width/2 || radius < 0) {
-        return -1;
-    }
-
-    // do checks on area and perimeter
-    double area_ratio = area / (CV_PI*radius*radius);
-    //double perimeter_ratio = perimeter / (2*CV_PI*radius);
-    //printf ("Circle: Area/Peri:    %6.2lf / %6.2lf\n", area_ratio, perimeter_ratio);
-    if (area_ratio < 0.7) {
-        return -1;
-    }
-    
-    circle->center.x = static_cast<int>(centroid32f.x);
-    circle->center.y = static_cast<int>(centroid32f.y);
-    circle->radius = radius;
-    circle->validity = area_ratio;
-    
-    //cvCircle (img, cvPoint(x,y), static_cast<int>(radius), CV_RGB(50,50,50), 2);
-
     bin_calc.stop();
 
-    return area_ratio;
+    return n_circles;
 }
 
 

@@ -43,18 +43,21 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
     watershed_filter.watershed(src, gray_img);
     window.showImage (gray_img);
 
+    int H,S,V;
     COLOR_TRIPLE color;
     MvRotatedBox rbox;
     MvRBoxVector rbox_vector;
 
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
-        if (contour_filter.match_rectangle(gray_img_2, &rbox) < 0)
+        // check that the segment is roughly red
+        tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
+        if (S < 30 || V < 20 || !(H >= 150 || H < 80)) {
+            //printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
             continue;
+        }
 
-        rbox.m1 = color.m1;
-        rbox.m2 = color.m2;
-        rbox.m3 = color.m3;
-        rbox_vector.push_back(rbox);
+        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 3.0, 8.0);
+        //window2.showImage (gray_img_2);
     }
 
     if (rbox_vector.size() > 0) {
@@ -433,23 +436,19 @@ void MDA_VISION_MODULE_PATH::add_frame (IplImage* src) {
     window.showImage (src);
 
     COLOR_TRIPLE color;
+    int H,S,V;
     MvRotatedBox rbox;
     MvRBoxVector rbox_vector;
 
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
-        if (contour_filter.match_rectangle(gray_img_2, &rbox, 7.0, 9.0) > 0) {
-            int H,S,V;
-            tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
-
-            if (S >= 40 && V >= 20 /*&& H >= 160 || H < 20*/) { // check that the thing is "red", commented out for the sim
-                assign_color_to_shape (color, &rbox);
-                rbox_vector.push_back(rbox);
-            }
-            else {
-                printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
-            }
+        // check that the segment is roughly red
+        tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
+        if (S < 40 || V < 20/* || !(H >= 150 || H < 80)*/) {
+            printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
+            continue;
         }
 
+        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 5.0, 10.0);
         //window2.showImage (gray_img_2);
     }
 
@@ -461,22 +460,18 @@ void MDA_VISION_MODULE_PATH::add_frame (IplImage* src) {
         MvRBoxVector::iterator iter_end = rbox_vector.end();
         
         // for now, frame will store rect with best validity
-        float best_validity = -1;
         for (; iter != iter_end; ++iter) {
-            if (iter->validity > best_validity) {
-                m_frame_data_vector[read_index].assign_rbox(*iter);
-                best_validity = iter->validity;
-            }
+            m_frame_data_vector[read_index].assign_rbox_by_validity(*iter);
         }
 
-        m_pixel_x = m_frame_data_vector[read_index].m_frame_box[0].center.x;
-        m_pixel_y = m_frame_data_vector[read_index].m_frame_box[0].center.y;
-        //m_range = (PATH_REAL_LENGTH * gray_img->width) / (m_frame_data_vector[read_index].m_frame_box[0].length * TAN_FOV_X);
-        m_range = (PATH_REAL_WIDTH * gray_img->width) / (m_frame_data_vector[read_index].m_frame_box[0].width * TAN_FOV_X);
-        m_angle = m_frame_data_vector[read_index].m_frame_box[0].angle;
+        m_pixel_x = m_frame_data_vector[read_index].m_frame_boxes[0].center.x;
+        m_pixel_y = m_frame_data_vector[read_index].m_frame_boxes[0].center.y;
+        //m_range = (PATH_REAL_LENGTH * gray_img->width) / (m_frame_data_vector[read_index].m_frame_boxes[0].length * TAN_FOV_X);
+        m_range = (PATH_REAL_WIDTH * gray_img->width) / (m_frame_data_vector[read_index].m_frame_boxes[0].width * TAN_FOV_X);
+        m_angle = m_frame_data_vector[read_index].m_frame_boxes[0].angle;
     }
 
-    if (m_frame_data_vector[read_index].valid) {
+    if (m_frame_data_vector[read_index].is_valid()) {
         m_frame_data_vector[read_index].drawOntoImage(gray_img_2);
         window2.showImage (gray_img_2);
     }
