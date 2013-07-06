@@ -11,6 +11,7 @@
 #endif
 
 //#define SEED_IMAGE_RANDOM 
+#define USE_AVERAGE_INTER_CLUSTER_DIST
 
 // used in sorting color difference color triples
 bool m3_less_than (COLOR_TRIPLE T1, COLOR_TRIPLE T2) {
@@ -76,7 +77,7 @@ void mvWatershedFilter::watershed(IplImage* src, IplImage* dst) {
     curr_segment_index = 0;
 }
 
-void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
+void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src, std::vector<CvPoint>* seed_vector) {
 // This function generates a bunch of markers and puts them into color_point_vector
     // massively downsample - this smoothes the image
     cvCvtColor (src, scratch_image, CV_BGR2GRAY);
@@ -140,7 +141,7 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
         }
     }
 #else
-    int step = 5;
+    const int step = 10;
     COLOR_TRIPLE ct_prev;
 
     for (int y = step/2; y < src->height; y += step) {
@@ -149,7 +150,7 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
         for (int x = step/2; x < src->width; x += step) {
             COLOR_TRIPLE ct (colorPtr[0], colorPtr[1], colorPtr[2], 0);
             
-            if (ct.diff(ct_prev) >= 30) {
+            if (ct.diff(ct_prev) >= 20) {
                 color_point_vector.push_back(std::make_pair(ct, cvPoint(x,y)));
                 ct_prev = ct;
                 //x += step;
@@ -161,12 +162,12 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src) {
     }
 #endif
 
-    // the color point vector will have too many pixels that are really similar - get rid of some by merging
+    // the color point vector will have too many pixels that are really similar - get rid of some by merging    
     for (unsigned i = 0; i < color_point_vector.size(); i++) {
         for (unsigned j = i+1; j < color_point_vector.size(); j++) {
             int dx = color_point_vector[i].second.x - color_point_vector[j].second.x;
             int dy = color_point_vector[i].second.y - color_point_vector[j].second.y;  
-
+            
             if (color_point_vector[i].first.diff(color_point_vector[j].first) < 30 /*&& dx*dx + dy*dy < 10000*/)
             {
                 if (rand() % 2 == 0) {
@@ -293,7 +294,7 @@ void mvWatershedFilter::watershed_process_markers_internal () {
     }
 }
 
-void mvWatershedFilter::watershed_process_markers_internal2 (int method) {
+void mvWatershedFilter::watershed_process_markers_internal2 () {
     // Use cvKMeans2 to cluster the colors
     int num_pixels = color_point_vector.size();
     assert (num_pixels > 0);
@@ -356,24 +357,21 @@ void mvWatershedFilter::watershed_process_markers_internal2 (int method) {
                     if (cluster_dist == 0) // two clusters just happen to coincide?
                         continue;
 
-                    switch (method) {
-                        case 0: // find the min cluster dist
-                            if (min_cluster_dist == 0 || cluster_dist < min_cluster_dist)
-                                min_cluster_dist = cluster_dist;
-                            break;
-                        case 1:
-                            min_cluster_dist += cluster_dist;
-                            num_cluster_dists++;
-                            break;
-                        default:
-                            printf ("paramenter 'method' is invalid in watershed_process_markers_internal2\n");
-                            exit(1);
-                    }
+                    #ifdef USE_AVERAGE_INTER_CLUSTER_DIST
+                        // find the average inter cluster dist
+                        min_cluster_dist += cluster_dist;
+                        num_cluster_dists++;
+                    #else
+                        // find the min cluster dist
+                        if (min_cluster_dist == 0 || cluster_dist < min_cluster_dist)
+                            min_cluster_dist = cluster_dist;
+                    #endif
                 }
             }
 
-            if (method == 1)
+            #ifdef USE_AVERAGE_INTER_CLUSTER_DIST
                 min_cluster_dist /= num_cluster_dists;
+            #endif
         }
 
         double validity = compactness / min_cluster_dist;
