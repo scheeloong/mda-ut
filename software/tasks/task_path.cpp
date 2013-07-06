@@ -30,7 +30,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
 
     // sink to starting depth
     const int SEARCH_DEPTH = 250;
-    const int ALIGN_DEPTH = 400;
+    const int DEPTH_TO_SINK = 200;
     set(DEPTH, SEARCH_DEPTH);
 
     // read the starting orientation
@@ -136,7 +136,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     }
                     else {                              // we are over the path, sink and try align state
                         stop();
-                        move(SINK, 200);
+                        move(SINK, DEPTH_TO_SINK);
                         timer.restart();
                         state = AT_ALIGN_DEPTH;
                     }
@@ -147,7 +147,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     printf ("Aligning: No target\n");
                     if (timer.get_time() > 6) { // timeout
                         printf ("Timeout\n");
-                        move(RISE, 200);
+                        move(RISE, DEPTH_TO_SINK);
                         timer.restart();
                         state = AT_SEARCH_DEPTH;
                     }

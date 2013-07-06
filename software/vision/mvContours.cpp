@@ -1,7 +1,7 @@
 #include "mvContours.h"
 
 //#define MATCH_CONTOURS_DEBUG
-#define M_DEBUG
+//#define M_DEBUG
 #ifdef M_DEBUG
     #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
 #else
@@ -148,7 +148,6 @@ int mvContours::find_contour_and_check_errors(IplImage* img) {
     );
 
     //int last_x=-1, last_y=-1;
-    //double area;
     if (m_contours == NULL) {
         goto FIND_CONTOUR_ERROR;
     }
@@ -173,7 +172,7 @@ int mvContours::find_contour_and_check_errors(IplImage* img) {
     bin_contours.stop();
     return n_contours;
 
-    FIND_CONTOUR_ERROR:
+FIND_CONTOUR_ERROR:
     if (m_contours != NULL) {
         cvClearSeq(m_contours);
         m_contours = NULL;
@@ -242,9 +241,8 @@ float mvContours::match_rectangle (IplImage* img, MvRBoxVector* rbox_vector, COL
         // debug
         /*cvZero (img);
         draw_contours (c_contour, img);
-        //window.showImage (img);
-        cvWaitKey(0);*/
-
+        window.showImage (img);*/
+        
         // check that there are at least 6 points
         if (c_contour->total < 6) {
             DEBUG_PRINT ("Rect Fail: Contour has less than 6 points\n");
@@ -277,7 +275,7 @@ float mvContours::match_rectangle (IplImage* img, MvRBoxVector* rbox_vector, COL
         double perimeter = cvArcLength (c_contour, CV_WHOLE_SEQ, 1);
         double perimeter_ratio = perimeter / (2*length+2*width);
         double area_ratio = area / (length*width);
-        if (area_ratio < 0.7 || perimeter_ratio > 1.2 || perimeter_ratio < 0.85) {
+        if (area_ratio < 0.75 || perimeter_ratio > 1.2 || perimeter_ratio < 0.85) {
             DEBUG_PRINT ("Rect Fail: Area / Peri:    %6.2lf / %6.2lf\n", area_ratio, perimeter_ratio);
             continue;
         }

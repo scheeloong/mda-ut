@@ -167,7 +167,7 @@ public:
 // ##################################################################################################
 class COLOR_TRIPLE {
 public:
-    unsigned m1, m2, m3;
+    int m1, m2, m3;
     unsigned n_pixels;
     unsigned index_number;
 
@@ -197,9 +197,9 @@ public:
         unsigned char H,S,V;
         tripletBGR2HSV (static_cast<unsigned char>(m1),static_cast<unsigned char>(m2),static_cast<unsigned char>(m3)
                         ,H,S,V); // m1,m2,m3 are actually in BGR
-        m1 = static_cast<unsigned>(H);
-        m2 = static_cast<unsigned>(S);
-        m3 = static_cast<unsigned>(V);
+        m1 = static_cast<int>(H);
+        m2 = static_cast<int>(S);
+        m3 = static_cast<int>(V);
     }
     void merge (COLOR_TRIPLE B) {
         unsigned total = n_pixels + B.n_pixels;
@@ -215,14 +215,12 @@ public:
         n_pixels++;
     }
     int diff (COLOR_TRIPLE T) {
-        return (abs(static_cast<int>(m1)-static_cast<int>(T.m1))
-              + abs(static_cast<int>(m2)-static_cast<int>(T.m2)) 
-              + abs(static_cast<int>(m3)-static_cast<int>(T.m3)));
+        return (abs(m1-T.m1) + abs(m2-T.m2) + abs(m3-T.m3));
     }
     int sqr_diff (COLOR_TRIPLE T) {
-        int d1 = static_cast<int>(m1) - static_cast<int>(T.m1);
-        int d2 = static_cast<int>(m2) - static_cast<int>(T.m2);
-        int d3 = static_cast<int>(m3) - static_cast<int>(T.m3);
+        int d1 = m1 - T.m1;
+        int d2 = m2 - T.m2;
+        int d3 = m3 - T.m3;
         return (d1*d1 + d2*d2 + d3*d3);
     }
     void print () {
@@ -390,10 +388,10 @@ class mvWatershedFilter {
     PROFILE_BIN bin_Filter;
 
     // generate markers from image, place them into color_point_vector
-    void watershed_generate_markers_internal (IplImage* src);
+    void watershed_generate_markers_internal (IplImage* src, std::vector<CvPoint>* seed_vector=NULL);
     // assign index number to markers - similar colored markers get similar indices
     void watershed_process_markers_internal ();
-    void watershed_process_markers_internal2 (int method=0);
+    void watershed_process_markers_internal2 ();
     // draw markers onto marker_img_32s and ready the segment_color_hash
     void watershed_place_markers_internal (IplImage* src);
     // calls cvWatershed
