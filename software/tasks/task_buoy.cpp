@@ -83,7 +83,12 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
                     done_buoy = true;
                     printf("\n\nBUOY TASK DONE\n\n\n");
 		}
-                else if (abs(ang_x) <= 5 && abs(ang_y) < 50) {
+                /*else if (abs(depth_change) > 20 && range > 200) {
+                    if (depth_change > 40) depth_change = 40;
+                    if (depth_change < -40) depth_change = -40;
+                    move(SINK, depth_change);
+                }*/
+                else if (abs(ang_x) <= 5) {
                     set(SPEED, 1);
 
                     // calculate an exponential moving average for range
@@ -91,11 +96,6 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
                     EMA_range = 0.5*range+0.5*EMA_range;
                     printf ("task_buoy: range = %d.  EMA_range = %d", range, EMA_range);
                     fflush(stdout);
-                }
-                else if (abs(depth_change) > 20 && range > 200) {
-                    if (depth_change > 40) depth_change = 40;
-                    if (depth_change < -40) depth_change = -40;
-                    move(SINK, depth_change);
                 }
                 else {
                     if (ang_x > 20) ang_x = 20;
