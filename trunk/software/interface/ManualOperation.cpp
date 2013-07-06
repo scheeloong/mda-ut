@@ -35,12 +35,13 @@ void ManualOperation::display_start_message()
          "  v    - enter vision mode\n"
          "  #    - input exact target attitude\n"
          "\n"
-         "  0    - run test task\n"
          "  1    - run gate task\n"
          "  2    - run path task\n"
          "  3    - run buoy task\n"
          "  4    - run frame task\n"
          "  5    - run marker dropper task\n"
+         "  9    - run surface task\n"
+         "  0    - run test task\n"
          "  m    - run mission\n"
          "\n"
          "Simulator only commands:\n"
@@ -371,6 +372,32 @@ void ManualOperation::work()
          message_hold("Selected marker dropper vision module\n");
          vision_module = new MDA_VISION_MODULE_MARKER();
          use_fwd_img = false;
+         break;
+      case '9':
+         if (mode != VISION) {
+           endwin();
+
+           MDA_TASK_RETURN_CODE ret_code;
+           // Scope task so that it is destructed before display_start_message
+           {
+             MDA_TASK_SURFACE surface_task(attitude_input, image_input, actuator_output);
+             ret_code = surface_task.run_task();
+           }
+
+           display_start_message();
+
+           switch(ret_code) {
+             case TASK_DONE:
+                message_hold("Surface task completed successfully");
+                break;
+             case TASK_QUIT:
+                message_hold("Surface task quit by user");
+                break;
+             default:
+                message_hold("Surface task errored out");
+                break;
+           }
+         }
          break;
       case 'x':
          if (mode == NORMAL) {

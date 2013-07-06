@@ -4,6 +4,9 @@
 
 #include "mda_tasks.h"
 
+// Default starting depth (target to surface to)
+int MDA_TASK_BASE::starting_depth = 275;
+
 void MDA_TASK_BASE::move(ATTITUDE_CHANGE_DIRECTION direction, int delta_accel)
 {
   const int DEFAULT_SPEED = 1;
