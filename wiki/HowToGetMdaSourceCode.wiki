@@ -37,6 +37,12 @@ If you see something like libcv2.3 pop up, then type:
 sudo apt-get install libopencv-dev libcv-dev libcv2.3 libcvaux-dev libcvaux2.3 libhighgui-dev libhighgui2.3
 }}}
 
+To be able to compile the technical paper:
+
+{{{
+sudo apt-get install texlive-base texlive-fonts-recommended texlive-latex-base texlive-latex-recommended texlive-latex-extra
+}}}
+
 == Become a Member ==
 This should be easy. Email one of the execs at mech.design@utoronto.ca.
 
