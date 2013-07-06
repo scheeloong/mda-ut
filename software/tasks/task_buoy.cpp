@@ -79,7 +79,11 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
 
                 // we cant use set_attitude_change to rise and fwd at the same time so we have to
                 // check if we are roughly pointing at the target, and decide what to do
-                if (abs(ang_x) < 5 && abs(ang_y) < 50) {
+                if (abs(ang_x) < 15 && range < 70) {
+                    done_buoy = true;
+                    printf("\n\nBUOY TASK DONE\n\n\n");
+		}
+                else if (abs(ang_x) <= 5 && abs(ang_y) < 50) {
                     set(SPEED, 1);
 
                     // calculate an exponential moving average for range
@@ -87,14 +91,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
                     EMA_range = 0.5*range+0.5*EMA_range;
                     printf ("task_buoy: range = %d.  EMA_range = %d", range, EMA_range);
                     fflush(stdout);
-
-                    // more forgiving on range
-                    if (range < 70) {
-                        done_buoy = true;
-			printf("\n\nBUOY TASK DONE\n\n\n");
-                    }   
                 }
-                else if (abs(depth_change) > 20) {
+                else if (abs(depth_change) > 20 && range > 200) {
                     if (depth_change > 40) depth_change = 40;
                     if (depth_change < -40) depth_change = -40;
                     move(SINK, depth_change);
