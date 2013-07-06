@@ -54,6 +54,8 @@ protected:
 	void stop();
 	void stabilize (ATTITUDE_DIRECTION dir);
 
+	static int starting_depth;
+
 // Wait for user to press a key
 #ifdef DEBUG_FRAME_BY_FRAME
 	static const int TASK_WK = 0;
@@ -158,6 +160,15 @@ public:
 	~MDA_TASK_FRAME ();
 
 	MDA_TASK_RETURN_CODE run_task ();
+};
+
+class MDA_TASK_SURFACE : public MDA_TASK_BASE {
+
+public:
+	MDA_TASK_SURFACE (AttitudeInput* a, ImageInput* i, ActuatorOutput* o);
+	~MDA_TASK_SURFACE ();
+
+	MDA_TASK_RETURN_CODE run_task();
 };
 
 #endif

@@ -33,13 +33,14 @@ bool Mission::startup()
 void Mission::work()
 {
   // Tasks
-  MDA_TASK_GATE   gate(attitude_input, image_input, actuator_output);
-  MDA_TASK_BUOY   buoy(attitude_input, image_input, actuator_output);
-  MDA_TASK_FRAME frame(attitude_input, image_input, actuator_output);
-  MDA_TASK_PATH   path(attitude_input, image_input, actuator_output);
+  MDA_TASK_GATE    gate(attitude_input, image_input, actuator_output);
+  MDA_TASK_BUOY    buoy(attitude_input, image_input, actuator_output);
+//MDA_TASK_FRAME   frame(attitude_input, image_input, actuator_output);
+  MDA_TASK_PATH    path(attitude_input, image_input, actuator_output);
+  MDA_TASK_SURFACE surface(attitude_input, image_input, actuator_output);
 
   // List of tasks to be performed in order (NULL-terminated)
-  MDA_TASK_BASE *tasks[] = {&gate, &path, &buoy, &path, &frame, &path, NULL};
+  MDA_TASK_BASE *tasks[] = {&gate, &path, &buoy, &path, &surface, NULL};
 
   // Pointer to current task
   MDA_TASK_BASE **task_ptr = tasks;

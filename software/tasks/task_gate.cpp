@@ -20,6 +20,10 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
     bool done_gate = false;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
+    MDA_TASK_BASE::starting_depth = attitude_input->depth();
+
+    move(SINK, 50);
+
     while (1) {
         if (!done_gate) {
             IplImage* frame = image_input->get_image();

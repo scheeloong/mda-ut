@@ -50,6 +50,13 @@ task_path.o: task_path.cpp mda_tasks.h mda_vision.h ../vision/mgui.h \
  ../vision/mvColorFilter.h frame_data.h ../interface/AttitudeInput.h \
  ../interface/ImageInput.h ../interface/ActuatorOutput.h \
  ../interface/CharacterStreamSingleton.h
+task_surface.o: task_surface.cpp mda_tasks.h mda_vision.h \
+ ../vision/mgui.h ../vision/profile_bin.h ../vision/mv.h ../vision/mgui.h \
+ ../vision/mvColorFilter.h ../vision/mv.h ../vision/mvLines.h \
+ ../vision/mvShapes.h ../vision/mvLines.h ../vision/mvContours.h \
+ ../vision/mvColorFilter.h frame_data.h ../interface/AttitudeInput.h \
+ ../interface/ImageInput.h ../interface/ActuatorOutput.h \
+ ../interface/CharacterStreamSingleton.h
 task_test.o: task_test.cpp mda_tasks.h mda_vision.h ../vision/mgui.h \
  ../vision/profile_bin.h ../vision/mv.h ../vision/mgui.h \
  ../vision/mvColorFilter.h ../vision/mv.h ../vision/mvLines.h \
