@@ -2,79 +2,78 @@
 
 \section{Electronics}
 Our electronics were designed to handle all low-level tasks that are
-required to move AquaTux, acquire sensor data and trigger
-electrical systems like the  marker droppers. The main goal
-of the electronics is to allow the AUV to be driven with only
+required to move AquaTux, acquire sensor data from the IMU and depth sensors. 
+The main goal of the electronics is to allow the AUV to be driven with only
 high-level heading and depth commands. The electronics are responsible for
 executing the commands and controlling their results (e.g. depth or
 heading) in a ``black box'' fashion. The electronics are managed by the embedded
 system described in the next section, giving access to each electronic peripheral.
 
-\subsection{Motor Board}
+Aquatux's electronics are arranged in two stacks of PCBs, one dedicated to power 
+distribution and management, and the ``main stack'', which breaks out the on board 
+FPGA's I/Os to any number of children.
 
-The motor drivers are used to control the Seabotix BTD150 Thrusters
-used on AquaTux.  There are a total of five motor drivers, one for
-each thruster used on the AUV (Figure~\ref{mstack}). The motor drivers are based around the NXP
-LPC2129 MCU which has number of features ideally suited to our
-application, including a 4 channel SAR ADC, a 6-channel dual edge
-triggered PWM module, a CAN module and a simple serial boot-loader.
-The thrusters are controlled via current control, and other safety
-features such as current limiting, and acceleration control are
-implemented.  By receiving commands through the CAN bus, these Motor
-Boards will ensure that the thrusters are never harmed by excessive
-current during operation.
+\subsection{Main Stack}
+At the heart of Aquatux's electronic subsystem is a Terasic DE0-Nano, a small 
+form-factor FPGA development board, containing an Altera Cyclone IV FPGA. The 
+DE0 mates directly to the ``Interface Board'' which breaks out all of the 
+available I/0s to a 120 pin board to board connector (Figure~\ref{mstack}). Any number of new PCBs 
+can be mated, by providing the mating male and female connectors. These 
+connectors form a wide bus between the FPGA and the mating boards, which when 
+coupled with the reconfigurability of an FPGA, makes it very easy to incorporate 
+new PCBs without having to physically rewire parts of the submarine -- a Quartus 
+recompile is all that's required. The interface board also connects to the IMU, 
+a VectorNav VN-100 Rugged, which performs its own sensor signal processing to 
+output attitude data to the FPGA.
 
 \begin{figure}
 \begin{center}
- \includegraphics[width=1.5in]{fig/dsc06472} %1.34
+ \includegraphics[width=3in]{fig/main_stack.png} %1.34
 \vspace{.05in}
 \hrule
-\caption{Stack of motor control boards on a CAN bus.}\label{mstack}
+\caption{The main stack connector. Top, the interface board and DE0 nano. Below, two 6 channel motor drivers.}\label{mstack}
 \end{center}
 \end{figure}
 
+\subsection{Motor Board}
 
-The motor controller hardware is centered around a pair of Linear
-Technology LT1160 half-bridge drivers which include high side charge
-pumps, shoot through protection and undervoltage lockout. A number of
-additional components were added to increase the bridge robustness
-including TVS diodes, anti-parallel gate diodes and large on-board
-bulk capacitors. Two types of sensors were integrated into the motor
-board in order to sense motor function. Back EMF measurement
-capability as well as motor current circuits were added. An active-RC
-filter similar to that on the navigation board was used coupled with a
-high side sense resistor and INA168 to measure the motor current.
-Motor current measurement is critical as it must be kept below 4A to
-prevent motor damage.
+The motor boards are used to control the Seabotix BTD150 Thrusters used on AquaTux 
+and other actuators internal to the submarine. Each motor board (Figure~\ref{motorb}) consists of 6 NMOS 
+high-side half bridges driven by Linear Technologies LT1660 half-bridge drivers. 
+Each half bridge has a sister with which it can be used a full bridge, by soldering 
+the output connector in the correct position. Complementary PWM inputs to each driver 
+can be sourced from one of three sets of I/Os provided via the main stack connector, 
+allowing a multiplicity of boards to be mated to the stack. Presently, two of three 
+boards are used, providing the five full bridges required to drive Aquatux's motors. 
+The final board is provision to drive internal peripherals such as marker droppers in 
+future competitions.
 
-\section{Power Distribution}
-AquaTux is powered by three 24V NiMH battery packs.  The three battery
-packs each power a different section of the AUV.  Two packs directly
-feed into the Motor Boards: one pack is used to power the three
-vertical thrusters, and a second pack provides power for the two
-horizontal thrusters.  The last battery pack provides power for the
-rest of AquaTux after being conditioned by Switch Mode Power Supplies
-(SMPS) to create two separate bus voltages. A 5V SMPS feeds the
-Kontron SpeedMopsLcdPM PC104+ computer, while a 12V SMPS provides power to
-all other modules of the AUV, which includes the navigation board,
-cameras, and all other sensors. If other voltages are required for the
-electronics, linear regulators are used to produce them.  In case of
-emergency, relays toggled by magnetic switches are used to disconnect
-the batteries from the rest of the AUV. Circuit breakers are also put
-inline with the battery to act as both the fuse, and the power
-switches for the AUV. The power architecture was designed to keep
-board to board wiring simple by minimizing the number of bus voltages.
+\begin{figure}
+\begin{center}
+ \includegraphics[width=3in]{fig/motor_board.png} %1.34
+\vspace{.05in}
+\hrule
+\caption{A motor board, configured with 3 full bridges.}\label{motorb}
+\end{center}
+\end{figure}
+
+\subsection{Power Distribution}
+Power for Aquatux's electronic systems, excluding the netbook, is provided by 
+two 24V NiMH battery packs. The power distribution board switches the battery 
+voltage with a relay, which is controlled by the FPGA's soft-processor. 
+Throwing the kill switch (by removing the velcroed handle on the side of the 
+hull) opens a reed switch which breaks the relay's coil current. Three DC/DC 
+converters (3.3V, 5V, 12V) source from this voltage, and form a stack of PCBs 
+with the power management board above them. LC output filters on power management 
+board remove switching harmonics, before breaking out the rail voltages to the 
+submarine through a series of copper bus-bars. Four pairs of analog comparators 
+alert the FPGA when any of the rails over or under-volts by 5 percent of their nominal 
+voltage. As a final baseline precaution, breakers have been inserted between the 
+batteries and relay, and between the power management board and bus-bars for each rail.
 
 \subsection{Power Source}
 The NiMH battery packs were custom designed by our team: each pack is
-composed of 20 SY136T Sanyo nickel metal hydride batteries.  All
+composed of 20 SY136T Sanyo nickel metal hydride batteries. All
 batteries are connected in series to form a 24V nominal battery pack
-with a capacity of 4100mAh.  Each pack has its own protection
-circuitry that utilizes an Atmega48p AVR as its MCU.  A gas gauging IC, BQ2013,
-from Texas Instruments is used to track the charge status of the
-battery. %BQ2013
-For safety, the pack has a disconnect FET on the high side of the
-battery.  This FET will disconnect the pack when the pack is drained
-or at a temperature greater than 80 degrees Celsius. All battery packs
-are connected to the I2C bus on the navigation board, allowing for
-remote monitoring of the batteries at all time.
+with a capacity of 4100mAh. Temperature sensors embedded in each pack allow 
+the FPGA to kill the sub if any one pack overheats.
