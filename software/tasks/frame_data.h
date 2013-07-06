@@ -8,62 +8,80 @@
 class MDA_FRAME_DATA {
 public:
     // valid if one or more objects found
-    bool valid;
-    int n_circles;  // 0 or 1
-    int n_boxes;    // 0, 1, or 2
+    bool circle_valid;
+    bool rboxes_valid[2];
 
     // each buoy frame can have a single circle
     MvCircle m_frame_circle;
     
-    // each buoy frame can have 2 boxes. If one box is found it always goes into m_frame_box[0]
+    // each buoy frame can have 2 boxes. If one box is found it always goes into m_frame_boxes[0]
     // otherwise the left box goes in [0] and right box goes in [1]
-    MvRotatedBox m_frame_box[2];
+    MvRotatedBox m_frame_boxes[2];
 
-    MDA_FRAME_DATA () { valid = false; n_circles = n_boxes = 0; }
+    MDA_FRAME_DATA () { circle_valid = false; rboxes_valid[0] = false; rboxes_valid[1] = false; }
     
     MDA_FRAME_DATA& operator = (MDA_FRAME_DATA right) {
-        this->valid = right.valid;
-        this->n_circles = right.n_circles;
-        this->n_boxes = right.n_boxes;
+        this->circle_valid = right.circle_valid;
+        this->rboxes_valid[0] = right.rboxes_valid[0];
+        this->rboxes_valid[1] = right.rboxes_valid[1];
         this->m_frame_circle = right.m_frame_circle;
-        this->m_frame_box[0] = right.m_frame_box[0];
-        this->m_frame_box[1] = right.m_frame_box[1];
+        this->m_frame_boxes[0] = right.m_frame_boxes[0];
+        this->m_frame_boxes[1] = right.m_frame_boxes[1];
         return *this;
     }
 
-    void assign_circle (MvCircle circle) {
-        m_frame_circle = circle;
-        n_circles = 1;
-        valid = true;
+    // assignment by checking validity
+    // a newly created circle/rect has validity of -1
+    bool assign_circle_by_validity (MvCircle circle) {
+        if (circle.validity > m_frame_circle.validity) {
+            m_frame_circle = circle;
+            circle_valid = true;
+            return true;
+        }
+        return false;
     }
-    void assign_rbox (MvRotatedBox rbox) {
-        if (n_boxes > 0) {
-            m_frame_box[1] = rbox;
-            if (n_boxes < 2)
-                n_boxes = 2;
+    bool assign_rbox_by_validity (MvRotatedBox rbox) {
+        if (rbox.validity > m_frame_boxes[0].validity) {
+            m_frame_boxes[1] = m_frame_boxes[0];
+            rboxes_valid[1] = rboxes_valid[0];
+            m_frame_boxes[0] = rbox;
+            rboxes_valid[0] = true;
+            return true;
         }
-        else {
-            m_frame_box[0] = rbox;
-            n_boxes = 1;
+        else if (rbox.validity > m_frame_boxes[1].validity) {
+            m_frame_boxes[1] = rbox;
+            rboxes_valid[1] = true;
+            return true;
         }
-        valid = true;
+        return false;
+    }
+    void sort_rbox_by_x () {
+        if (rboxes_valid[0] && rboxes_valid[1] && m_frame_boxes[0].center.x > m_frame_boxes[1].center.x) {
+            MvRotatedBox B = m_frame_boxes[0];
+            m_frame_boxes[0] = m_frame_boxes[1];
+            m_frame_boxes[1] = B;
+        }
+    }
+    bool is_valid () {
+        return (circle_valid || rboxes_valid[0] || rboxes_valid[1]);
     }
     void clear () {
-        valid = false;
-        n_circles = n_boxes = 0;
+        circle_valid = false;
+        rboxes_valid[0] = false;
+        rboxes_valid[1] = false;
     }
 
     void drawOntoImage (IplImage* img) {
-        if (n_circles > 0)
+        if (circle_valid)
             m_frame_circle.drawOntoImage(img);
-        if (n_boxes > 0)
-            m_frame_box[0].drawOntoImage(img);
-        if (n_boxes > 1)
-            m_frame_box[1].drawOntoImage(img);
+        if (rboxes_valid[0])
+            m_frame_boxes[0].drawOntoImage(img);
+        if (rboxes_valid[1])
+            m_frame_boxes[1].drawOntoImage(img);
     }
     void print () {
-        if (valid)
-            printf ("FRAME_DATA: %d Circles, %d Boxes\n", n_circles, n_boxes);
+        if (is_valid())
+            printf ("FRAME_DATA: (Circ/Box0/Box1) = (%d, %d, %d)\n", circle_valid?1:0, rboxes_valid[0]?1:0, rboxes_valid[1]?1:0);
         else
             printf ("FRAME_DATA: Invalid\n");
     }

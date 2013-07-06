@@ -41,7 +41,7 @@ private:
             ); 
     }
 
-    void find_contour_and_check_errors (IplImage* img);
+    int find_contour_and_check_errors (IplImage* img);
     void get_rect_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &length, float &angle);
     void get_circle_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &radius);
 
@@ -59,7 +59,7 @@ private:
                     img,
                     contours_to_draw,
                     cvScalar(200,200,200),  // contour color
-                    cvScalar(100,100,100),        // background color
+                    cvScalar(200,200,200),  // background color
                     0                       // max contours level
             );
     }
@@ -68,8 +68,8 @@ public:
     mvContours ();
     ~mvContours ();
 
-    float match_rectangle (IplImage* img, MvRotatedBox* rbox, float min_lw_ratio=1, float max_lw_ratio=100, int method=CONTOURS_MATCH_RECIP);
-    float match_circle (IplImage* img, MvCircle* circle, int method=CONTOURS_MATCH_RECIP);
+    float match_rectangle (IplImage* img, MvRBoxVector* rbox_vector, COLOR_TRIPLE color, float min_lw_ratio=1, float max_lw_ratio=100, int method=CONTOURS_MATCH_RECIP);
+    float match_circle (IplImage* img, MvCircleVector* circle_vector, COLOR_TRIPLE color, int method=CONTOURS_MATCH_RECIP);
 
     void drawOntoImage (IplImage* img) { draw_contours (m_contours, img); }        
 

@@ -14,92 +14,120 @@ const char MDA_VISION_MODULE_GATE::MDA_VISION_GATE_SETTINGS[] = "vision_gate_set
 /// ########################################################################
 MDA_VISION_MODULE_GATE:: MDA_VISION_MODULE_GATE () :
 	window (mvWindow("Gate Vision Module")),
-	HSVFilter (mvHSVFilter(MDA_VISION_GATE_SETTINGS)),
+    window2 (mvWindow("Gate Vision Module 2")),
 	HoughLines (mvHoughLines(MDA_VISION_GATE_SETTINGS)),
 	lines (mvLines())
 {
-    filtered_img = mvGetScratchImage (); // common size
+    gray_img = mvGetScratchImage();
+    gray_img_2 = mvGetScratchImage2();
 }
 
 MDA_VISION_MODULE_GATE:: ~MDA_VISION_MODULE_GATE () {
     mvReleaseScratchImage();
+    mvReleaseScratchImage2();
 }
 
 void MDA_VISION_MODULE_GATE:: primary_filter (IplImage* src) {
-    HSVFilter.filter (src, filtered_img);
-    filtered_img->origin = src->origin;
-    lines.clearData ();
-    KMeans.clearData ();
-    
-    HoughLines.findLines (filtered_img, &lines);
-    KMeans.cluster_auto (1, 2, &lines);
-    KMeans.drawOntoImage (filtered_img);
+    // shift the frames back by 1
+    shift_frame_data (m_frame_data_vector, read_index, N_FRAMES_TO_KEEP);
 
-    window.showImage (filtered_img);
+    watershed_filter.watershed(src, gray_img);
+    window.showImage (gray_img);
+
+    COLOR_TRIPLE color;
+    int H,S,V;
+    MvRotatedBox rbox;
+    MvRBoxVector rbox_vector;
+
+    while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
+        // check that the segment is roughly red
+        tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
+        if (S < 40 || V < 20 || !(H >= 150 || H < 80)) {
+            //printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
+            continue;
+        }
+
+        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 6.0, 20.0);
+        //window2.showImage (gray_img_2);
+    }
+
+    // debug only
+    cvCopy (gray_img, gray_img_2);
+
+    printf ("rbox_vector size = %d\n", static_cast<int>(rbox_vector.size()));
+    if (rbox_vector.size() > 0) {
+        MvRBoxVector::iterator iter = rbox_vector.begin();
+        MvRBoxVector::iterator iter_end = rbox_vector.end();
+        
+        // this stores the rects with 2 best validity
+        for (; iter != iter_end; ++iter) {
+            m_frame_data_vector[read_index].assign_rbox_by_validity(*iter); 
+        }
+    }
+
+    m_frame_data_vector[read_index].sort_rbox_by_x();
+
+    if (m_frame_data_vector[read_index].is_valid()) {
+        m_frame_data_vector[read_index].drawOntoImage(gray_img_2);
+        window2.showImage (gray_img_2);
+    }
+
+    //print_frames();
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE:: calc_vci () {
     MDA_VISION_RETURN_CODE retval = FATAL_ERROR;
-    unsigned nClusters = KMeans.nClusters();
+    unsigned nboxes = (m_frame_data_vector[read_index].rboxes_valid[0]?1:0) + (m_frame_data_vector[read_index].rboxes_valid[1]?1:0);
 
-    if (nClusters == 0) {
-        printf ("Gate: No clusters =(\n");
+    if (nboxes == 0) {
+        printf ("Gate: No segments =(\n");
         return NO_TARGET;
     }
-    else if (nClusters == 1) {
+    else if (nboxes == 1) {
         /// single line, not much we can do but return its center and estimate range
-        DEBUG_PRINT ("Gate: 1 cluster =|\n");
-        int x00 = KMeans[0][0].x,   y00 = KMeans[0][0].y;
-        int x01 = KMeans[0][1].x,   y01 = KMeans[0][1].y;
-        m_pixel_x = (x00 + x01 - filtered_img->width)*0.5;       // centroid of line
-        m_pixel_y = (y00 + y01 - filtered_img->height)*0.5;
-        unsigned line_height = abs(y01 - y00);
-        unsigned line_width = abs(x01 - x00);
+        DEBUG_PRINT ("Gate: 1 segment =|\n");
+
+        MvRotatedBox Box = m_frame_data_vector[read_index].m_frame_boxes[0];
+        m_pixel_x = Box.center.x;
+        m_pixel_y = Box.center.y;
 
         /// check that the line is at least vertical
-        if (line_height < 9.5*line_width) { // this is like +- 6 degrees
+        if (abs(Box.angle) > 10) {
             DEBUG_PRINT ("Gate Sanity Failure: Single line not vertical enough\n");
             retval = UNKNOWN_TARGET;
             goto RETURN_CENTROID;   
         }
     
         /// calculate range if we pass sanity check
-        m_range = (GATE_REAL_HEIGHT * filtered_img->height) / (line_height * TAN_FOV_Y);
+        m_range = (GATE_REAL_HEIGHT * gray_img->height) / (Box.length * TAN_FOV_Y);
         DEBUG_PRINT ("Gate Range: %d\n", m_range);
 
         retval = ONE_SEGMENT;       
         goto RETURN_CENTROID;
     }
     else {
-        assert (nClusters == 2);
-        DEBUG_PRINT ("Gate: 2 clusters =)\n");
-        int x00 = KMeans[0][0].x,   y00 = KMeans[0][0].y;
-        int x01 = KMeans[0][1].x,   y01 = KMeans[0][1].y;
-        int x10 = KMeans[1][0].x,   y10 = KMeans[1][0].y;
-        int x11 = KMeans[1][1].x,   y11 = KMeans[1][1].y;
-        m_pixel_x = (int)((x00+x01+x10+x11)*0.25 - filtered_img->width*0.5);
-        m_pixel_y = (int)((y00+y01+y10+y11)*0.25 - filtered_img->height*0.5); 
+        assert (nboxes == 2);
+        DEBUG_PRINT ("Gate: 2 segments =)\n"); 
         
-        /// sanity checks
-        float gate_height_0 = abs(y01 - y00); // height of first 1ine
-        float gate_height_1 = abs(y11 - y10); // height of second line
-        float gate_width = (abs(x01 - x00) + abs(x11 - x10)) / 2;
-        
-        if (gate_height_0 > 1.3*gate_height_1 || 1.3*gate_height_0 < gate_height_1) {
-            DEBUG_PRINT ("Gate Sanity Failure: Lines too dissimilar\n");
-            retval = UNKNOWN_TARGET;
-            goto RETURN_CENTROID;
-        }
-        if (gate_height_0 < 9.5*gate_width) { // this is like +- 6 degrees
-            DEBUG_PRINT ("Gate Sanity Failure: Lines not vertical enough\n");
-            retval = UNKNOWN_TARGET;
-            goto RETURN_CENTROID;
-        }
-        
-        /// calculations, treat center of image as 0,0   
-        int gate_pixel_width = (int)( abs(x00+x01-x10-x11) * 0.5);
-        int gate_pixel_height = (int)( (abs(y00-y01) + abs(y10-y11)) * 0.5);
+        MvRotatedBox Box1 = m_frame_data_vector[read_index].m_frame_boxes[0];
+        MvRotatedBox Box2 = m_frame_data_vector[read_index].m_frame_boxes[1];
+        m_pixel_x = (Box1.center.x + Box2.center.x) / 2;
+        m_pixel_y = (Box1.center.y + Box2.center.y) / 2;        
+        int gate_pixel_width = abs(Box2.center.x - Box1.center.x);
+        int gate_pixel_height = (Box1.length + Box2.length) / 2;
         float gate_width_to_height_ratio = abs((float)gate_pixel_width / gate_pixel_height);
+
+        /// sanity checks
+        if (abs(Box1.angle) > 10 || abs(Box2.angle) > 10) {
+            DEBUG_PRINT ("Gate Sanity Failure: One of the segments is not vertical enough\n");
+            retval = UNKNOWN_TARGET;
+            goto RETURN_CENTROID;   
+        } 
+        if (Box1.length > 1.3*Box2.length || 1.3*Box1.length < Box2.length) {
+            DEBUG_PRINT ("Gate Sanity Failure: Segments too dissimilar\n");
+            retval = UNKNOWN_TARGET;
+            goto RETURN_CENTROID;
+        } 
         if (gate_width_to_height_ratio > 1.3*GATE_WIDTH_TO_HEIGHT_RATIO || 1.3*gate_width_to_height_ratio < GATE_WIDTH_TO_HEIGHT_RATIO) {
             DEBUG_PRINT ("Gate Sanity Failure: Gate dimensions inconsistent with data\n");
             retval = UNKNOWN_TARGET;
@@ -107,7 +135,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE:: calc_vci () {
         }
 
         // calculate real distances
-        m_range = (GATE_REAL_WIDTH * filtered_img->width) / (gate_pixel_width * TAN_FOV_X);
+        m_range = (GATE_REAL_WIDTH * gray_img->width) / (gate_pixel_width * TAN_FOV_X);
         DEBUG_PRINT ("Gate Range: %d\n", m_range);
         
         retval = FULL_DETECT;
@@ -116,8 +144,8 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE:: calc_vci () {
 
     /// if we encounter any sort of sanity error, we will return only the centroid
     RETURN_CENTROID:
-        m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / filtered_img->width);
-        m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / filtered_img->height);
+        m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / gray_img->width);
+        m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
         DEBUG_PRINT ("Gate: (%d,%d) (%5.2f,%5.2f)\n", m_pixel_x, m_pixel_y, 
             m_angular_x, m_angular_y); 
         return retval;
