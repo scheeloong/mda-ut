@@ -18,15 +18,9 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
 
     const int sink_depth = 450;
     const int rise_depth = 300;
-    const int fwd_timesteps = 25;
-    const int speed = 1;
 
     enum state {SINK_STATE, FWD_STATE, RISE_STATE, REV_STATE};
     enum state cur_state = SINK_STATE;
-
-    int counter = 0;
-
-    printf("Sinking\n");
 
     while (1) {
         IplImage* frame = image_input->get_image(FWD_IMG);
@@ -41,36 +35,24 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
           case SINK_STATE:
             set(DEPTH, sink_depth);
             cur_state = FWD_STATE;
-            counter = 0;
             move(LEFT, 20);
             move(RIGHT, 40);
             move(LEFT, 20);
             break;
           case FWD_STATE:
-            move(FORWARD, speed);
-            printf("Current timestep: %d Maximum timestep: %d\n", counter, fwd_timesteps);
-            counter++;
-            if (counter == fwd_timesteps) {
-              printf("Rising\n");
-              cur_state = RISE_STATE;
-            }
+            move(FORWARD, 5); // 5 seconds
+            cur_state = RISE_STATE;
             break;
           case RISE_STATE:
             set(DEPTH, rise_depth);
             cur_state = REV_STATE;
-            counter = 0;
             move(RIGHT, 20);
             move(LEFT, 40);
             move(RIGHT, 20);
             break;
           case REV_STATE:
-            move(REVERSE, speed);
-            printf("Current timestep: %d Maximum timestep: %d\n", counter, fwd_timesteps);
-            counter++;
-            if (counter == fwd_timesteps) {
-              printf("Sinking\n");
-              cur_state = SINK_STATE;
-            }
+            move(REVERSE, 5); // 5 seconds
+            cur_state = SINK_STATE;
             break;
         }
 

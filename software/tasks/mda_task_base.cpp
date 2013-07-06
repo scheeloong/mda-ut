@@ -4,6 +4,8 @@
 
 #include "mda_tasks.h"
 
+#define DEPTH_INTERVAL 50
+
 // Default starting depth (target to surface to)
 int MDA_TASK_BASE::starting_depth = 275;
 
@@ -52,6 +54,17 @@ void MDA_TASK_BASE::move(ATTITUDE_CHANGE_DIRECTION direction, int delta_accel)
         break;
       }
     }
+  } else if (dir == DEPTH) {
+    if (delta_accel < 0) {
+      direction = (direction == SINK) ? RISE : SINK;
+      delta_accel *= -1;
+    }
+    // Change the depth by increments
+    while (delta_accel != 0) {
+      actuator_output->set_attitude_change(direction, std::min(DEPTH_INTERVAL, delta_accel));
+      delta_accel -= std::min(DEPTH_INTERVAL, delta_accel);
+      stabilize(dir);
+    }
   } else {
     // Send the command
     actuator_output->set_attitude_change(direction, delta_accel);  
@@ -61,8 +74,12 @@ void MDA_TASK_BASE::move(ATTITUDE_CHANGE_DIRECTION direction, int delta_accel)
 
 void MDA_TASK_BASE::set(ATTITUDE_DIRECTION dir, int val)
 {
-  actuator_output->set_attitude_absolute(dir, val);  
-  stabilize(dir);
+  if (dir == DEPTH) {
+    move(SINK, val - attitude_input->depth());
+  } else {
+    actuator_output->set_attitude_absolute(dir, val);  
+    stabilize(dir);
+  }
 }
 
 void MDA_TASK_BASE::stop()
