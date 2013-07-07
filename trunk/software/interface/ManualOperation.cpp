@@ -446,6 +446,10 @@ void ManualOperation::work()
   // close ncurses
   endwin();
 
+  // Surface
+  MDA_TASK_SURFACE surface(attitude_input, image_input, actuator_output);
+  surface.run_task();
+
   actuator_output->special_cmd(SUB_POWER_OFF);
 }
 
