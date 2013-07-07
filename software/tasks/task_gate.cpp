@@ -43,7 +43,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
             else if (vision_code == NO_TARGET || vision_code == UNKNOWN_TARGET) {
                 set(SPEED, 1);
             }
-            else if (vision_code == ONE_SEGMENT) {
+            /*else if (vision_code == ONE_SEGMENT) {
                 int ang_x = gate_vision.get_angular_x();
 
                 move(RIGHT, ang_x);
@@ -51,7 +51,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                 if (fabs(ang_x) < 5.0) {
                     set(SPEED, 1);
                 }
-            } 
+            }*/
             else if (vision_code == FULL_DETECT) {
                 // if we can see full gate and range is less than 400 we are done the gate part
                 if (gate_vision.get_range() < 400) {

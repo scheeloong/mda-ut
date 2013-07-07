@@ -29,7 +29,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
     bool done_path = false;
 
     // sink to starting depth
-    const int SEARCH_DEPTH = 250;
+    const int SEARCH_DEPTH = 300;
     const int DEPTH_TO_SINK = 200;
     set(DEPTH, SEARCH_DEPTH);
 
@@ -83,8 +83,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
             if (state == STARTING) {
                 if (vision_code == NO_TARGET) {
                     printf ("Starting: No target\n");
-                    set(SPEED,2);
-                    if (timer.get_time() > 40) { // timeout
+                    set(SPEED,1);
+                    if (timer.get_time() > 120) { // timeout
                         printf ("Timeout\n");
                         return TASK_ERROR;
                     }

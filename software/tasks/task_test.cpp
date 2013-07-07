@@ -56,8 +56,6 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
             break;
         }
 
-        printf("Yaw: %d Depth %d\n", attitude_input->yaw(), attitude_input->depth());
-
         // Ensure debug messages are printed
         fflush(stdout);
         // Exit if instructed to
