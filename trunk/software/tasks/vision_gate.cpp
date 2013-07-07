@@ -42,12 +42,12 @@ void MDA_VISION_MODULE_GATE:: primary_filter (IplImage* src) {
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
         // check that the segment is roughly red
         tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
-        if (S < 40 || V < 20 || !(H >= 150 || H < 80)) {
+        /*if (S < 40 || V < 20 || !(H >= 150 || H < 80)) {
             //printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
             continue;
-        }
+        }*/
 
-        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 6.0, 20.0);
+        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 9.0, 15.0);
         //window2.showImage (gray_img_2);
     }
 
@@ -92,7 +92,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE:: calc_vci () {
         m_pixel_y = Box.center.y;
 
         /// check that the line is at least vertical
-        if (abs(Box.angle) > 10) {
+        if (abs(Box.angle) > 20) {
             DEBUG_PRINT ("Gate Sanity Failure: Single line not vertical enough\n");
             retval = UNKNOWN_TARGET;
             goto RETURN_CENTROID;   
@@ -118,7 +118,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE:: calc_vci () {
         float gate_width_to_height_ratio = abs((float)gate_pixel_width / gate_pixel_height);
 
         /// sanity checks
-        if (abs(Box1.angle) > 10 || abs(Box2.angle) > 10) {
+        if (abs(Box1.angle) > 20 || abs(Box2.angle) > 20) {
             DEBUG_PRINT ("Gate Sanity Failure: One of the segments is not vertical enough\n");
             retval = UNKNOWN_TARGET;
             goto RETURN_CENTROID;   

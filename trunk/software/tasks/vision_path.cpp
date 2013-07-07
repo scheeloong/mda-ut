@@ -51,12 +51,12 @@ void MDA_VISION_MODULE_PATH:: primary_filter (IplImage* src) {
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
         // check that the segment is roughly red
         tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
-        if (S < 30 || V < 20 || !(H >= 150 || H < 80)) {
+        if (S < 30 || V < 20 /*|| !(H >= 150 || H < 80)*/) {
             //printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
             continue;
         }
 
-        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 3.0, 8.0);
+        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 2.0, 3.2);
         //window2.showImage (gray_img_2);
     }
 
@@ -433,7 +433,7 @@ void MDA_VISION_MODULE_PATH::add_frame (IplImage* src) {
     shift_frame_data (m_frame_data_vector, read_index, N_FRAMES_TO_KEEP);
 
     watershed_filter.watershed(src, gray_img);
-    window.showImage (src);
+    //window.showImage (src);
 
     COLOR_TRIPLE color;
     int H,S,V;
@@ -443,13 +443,14 @@ void MDA_VISION_MODULE_PATH::add_frame (IplImage* src) {
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
         // check that the segment is roughly red
         tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
-        if (S < 40 || V < 20/* || !(H >= 150 || H < 80)*/) {
-            printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
+        if (S < 20 || V < 50 || !(H >= 150 || H < 80)) {
+            //printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
             continue;
         }
 
-        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 5.0, 10.0);
-        //window2.showImage (gray_img_2);
+        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 7.0, 12.0);
+        contour_filter.drawOntoImage(gray_img_2);
+	window.showImage (gray_img_2);
     }
 
     // debug only

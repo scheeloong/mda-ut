@@ -147,13 +147,13 @@ int mvContours::find_contour_and_check_errors(IplImage* img) {
         CV_CHAIN_APPROX_SIMPLE
     );
 
-    //int last_x=-1, last_y=-1;
+    int last_x=-1, last_y=-1;
     if (m_contours == NULL) {
         goto FIND_CONTOUR_ERROR;
     }
     
     // check that the contour does not coincide with the sides of the image for more than 20% of its perimeter
-    /*
+    
     for (int i = 0; i < m_contours->total; i++) {
         CvPoint* p = CV_GET_SEQ_ELEM (CvPoint, m_contours, i);
         if (p->x == last_x && abs(p->y-last_y) > img->height/3) {
@@ -168,7 +168,7 @@ int mvContours::find_contour_and_check_errors(IplImage* img) {
         last_x = p->x;
         last_y = p->y;
     }
-    */
+    
     bin_contours.stop();
     return n_contours;
 
@@ -251,10 +251,10 @@ float mvContours::match_rectangle (IplImage* img, MvRBoxVector* rbox_vector, COL
 
         // check the contour's area to make sure it isnt too small
         double area = cvContourArea(c_contour);
-        if (area < img->width*img->height/600) {
+        /*if (area < img->width*img->height/600) {
             DEBUG_PRINT ("Rect Fail: Contour too small!\n");
             continue;
-        }
+        }*/
 
         CvBox2D Rect = cvMinAreaRect2(c_contour, m_storage);
         float angle = Rect.angle;
