@@ -18,13 +18,13 @@ MDA_TASK_PATH:: ~MDA_TASK_PATH ()
 }
 
 static TASK_STATE state = STARTING;
-static TIMER timer;
 
 MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
     puts("Press q to quit");
 
     MDA_VISION_MODULE_PATH path_vision;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
+    TIMER timer;
 
     bool done_path = false;
 
@@ -34,12 +34,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
     set(DEPTH, SEARCH_DEPTH);
 
     // read the starting orientation
-
-    // clear webcam cache
-    /*for (int i = 0; i < WEBCAM_CACHE; i++) {
-      image_input->ready_image();
-      image_input->ready_image(DWN_IMG);
-    }*/
+    int starting_yaw = attitude_input->yaw();
+    printf("Starting yaw: %d\n", starting_yaw);
 
     while (1) {
         IplImage* frame = image_input->get_image(DWN_IMG);
@@ -86,7 +82,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     set(SPEED,1);
                     if (timer.get_time() > 120) { // timeout
                         printf ("Timeout\n");
-                        return TASK_ERROR;
+                        return TASK_MISSING;
                     }
                 }
                 else if (vision_code == UNKNOWN_TARGET) {

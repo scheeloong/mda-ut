@@ -40,7 +40,13 @@ void Mission::work()
   MDA_TASK_SURFACE surface(attitude_input, image_input, actuator_output);
 
   // List of tasks to be performed in order (NULL-terminated)
-  MDA_TASK_BASE *tasks[] = {&gate, &path, &buoy, &path, &surface, NULL};
+  MDA_TASK_BASE *tasks[] = {
+    &gate,
+    &path,
+    &buoy,
+    &path,
+    &surface,
+    NULL};
 
   // Pointer to current task
   MDA_TASK_BASE **task_ptr = tasks;
@@ -56,6 +62,7 @@ void Mission::work()
   while (*task_ptr) {
     ret_code = (*task_ptr)->run_task();
     if (ret_code == TASK_QUIT) {
+      surface.run_task();
       break;
     }
     task_ptr++;
