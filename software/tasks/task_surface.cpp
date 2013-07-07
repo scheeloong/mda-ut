@@ -11,7 +11,9 @@ MDA_TASK_SURFACE:: ~MDA_TASK_SURFACE ()
 }
 
 MDA_TASK_RETURN_CODE MDA_TASK_SURFACE:: run_task() {
-    set(DEPTH, MDA_TASK_BASE::starting_depth);
+    if (attitude_input->depth() > MDA_TASK_BASE::starting_depth) {
+      set(DEPTH, MDA_TASK_BASE::starting_depth);
+    }
 
     return TASK_DONE;
 }
