@@ -68,18 +68,37 @@ class ImageInput {
     {
       bool ret = ready_internal_image(dir);
 
-      // May still want to get the image to write to video file
-      if ((writer_fwd && dir == FWD_IMG) || (writer_dwn && dir == DWN_IMG)) {
-        IplImage *frame = get_internal_image(dir);
-        if (!frame) {
-          return ret;
-        }
-
-        mvVideoWriter *writer = (dir == FWD_IMG) ? writer_fwd : writer_dwn;
-        writer->writeFrame(frame);
+      if (!ret) {
+        return ret;
       }
+
+      if (   (dir == FWD_IMG && !window_fwd && !writer_fwd)
+          || (dir == DWN_IMG && !window_dwn && !writer_dwn)) {
+        return ret;
+      }
+
+      IplImage *frame = get_internal_image(dir);
+
+      // show, write image if configured to
+      if (dir == FWD_IMG) {
+        if (window_fwd) {
+          window_fwd->showImage(frame);
+        }
+        if (writer_fwd) {
+          writer_fwd->writeFrame(frame);
+        }
+      } else if (dir == DWN_IMG) {
+        if (window_dwn) {
+          window_dwn->showImage(frame);
+        }
+        if (writer_dwn) {
+          writer_dwn->writeFrame(frame);
+        }
+      }
+
       return ret;
     }
+
     IplImage* get_image(ImageDirection dir = FWD_IMG)
     {
       if (!ready_internal_image(dir)) {
