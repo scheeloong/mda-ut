@@ -72,8 +72,8 @@ class ImageInput {
         return ret;
       }
 
-      if (   (dir == FWD_IMG && !window_fwd && !writer_fwd)
-          || (dir == DWN_IMG && !window_dwn && !writer_dwn)) {
+      if (   (dir == FWD_IMG && !writer_fwd)
+          || (dir == DWN_IMG && !writer_dwn)) {
         return ret;
       }
 
