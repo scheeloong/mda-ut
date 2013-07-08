@@ -136,6 +136,7 @@ void write_and_flush_term (char *cmd)
     if (result != 0) {
       endwin();
       fprintf(stderr, "No longer connected to nios2-terminal, exiting\n");
+      fprintf(stderr, "Make sure the FPGA has been programmed by running 'make dl_both' in mda-ut/fpga\n");
       exit(1);
     }
 
