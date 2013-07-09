@@ -1,6 +1,10 @@
 #include "mda_tasks.h"
 #include "mda_vision.h"
 
+// Global declarations
+const int SEARCH_DEPTH = 300;
+const int DEPTH_TO_SINK = 200;
+
 enum TASK_STATE {
     STARTING,
     AT_SEARCH_DEPTH,
@@ -17,7 +21,6 @@ MDA_TASK_PATH:: ~MDA_TASK_PATH ()
 {
 }
 
-static TASK_STATE state = STARTING;
 
 MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
     puts("Press q to quit");
@@ -26,11 +29,10 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
     TIMER timer;
 
+    TASK_STATE state = STARTING;
     bool done_path = false;
 
     // sink to starting depth
-    const int SEARCH_DEPTH = 300;
-    const int DEPTH_TO_SINK = 200;
     set(DEPTH, SEARCH_DEPTH);
 
     // read the starting orientation
