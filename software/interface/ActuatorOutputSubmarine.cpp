@@ -1,4 +1,5 @@
 #include "ActuatorOutput.h"
+#include "CharacterStreamSingleton.h"
 #include "SubmarineSingleton.h"
 #include "../scripts/scripts.h"
 
@@ -65,6 +66,9 @@ void ActuatorOutputSubmarine::special_cmd(SPECIAL_COMMAND cmd)
       SubmarineSingleton::get_instance().set_target_depth(get_depth());
       startup_sequence();
       break;
+    case (SUB_MISSION_STARTUP_SEQUENCE):
+      mission_startup_sequence();
+      break;
     case (SUB_POWER_OFF):
       power_off();
       break;
@@ -91,4 +95,29 @@ void ActuatorOutputSubmarine::set_roll_constants(double P, double I, double D, d
 void ActuatorOutputSubmarine::set_yaw_constants(double P, double I, double D, double Alpha)
 {
   set_pid_yaw(P, I, D, Alpha);
+}
+
+// Poll power until available, then start up
+void ActuatorOutputSubmarine::mission_startup_sequence()
+{
+  bool power_available = false;
+
+  while (!power_available) {
+    // Wait for 2 seconds to see if power stays on
+    special_cmd(SUB_POWER_ON);
+    char c = CharacterStreamSingleton::get_instance().wait_key(2000);
+    if (c == 'q') {
+      CharacterStreamSingleton::get_instance().write_char(c);
+      return;
+    }
+
+    // Flush terminal so it can detect if power failed
+    get_depth();
+
+    if (get_power()) {
+      power_available = true;
+    }
+  }
+
+  special_cmd(SUB_STARTUP_SEQUENCE);
 }

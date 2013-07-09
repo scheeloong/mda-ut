@@ -25,6 +25,7 @@ enum ATTITUDE_DIRECTION {
 enum SPECIAL_COMMAND {
   SUB_POWER_ON,
   SUB_STARTUP_SEQUENCE,
+  SUB_MISSION_STARTUP_SEQUENCE,
   SUB_POWER_OFF,
   SIM_MOVE_FWD,
   SIM_MOVE_REV,
@@ -119,6 +120,9 @@ class ActuatorOutputSubmarine : public ActuatorOutput {
     void set_pitch_constants(double, double, double, double);
     void set_roll_constants(double, double, double, double);
     void set_yaw_constants(double, double, double, double);
+
+  protected:
+    void mission_startup_sequence();
 };
 
 #endif

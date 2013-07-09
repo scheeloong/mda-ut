@@ -8,22 +8,10 @@ Mission::~Mission()
 // Turn controllers on once the submarine is in the water using a depth threshold
 bool Mission::startup()
 {
-  static const int STARTUP_DEPTH_THRESHOLD = 10;
+  actuator_output->special_cmd(SUB_MISSION_STARTUP_SEQUENCE);
 
-  actuator_output->special_cmd(SUB_POWER_ON);
-
-  while (attitude_input->depth() < STARTUP_DEPTH_THRESHOLD) {
-    if (CharacterStreamSingleton::get_instance().wait_key(1) == 'q') {
-      return false;
-    }
-  }
-
-  actuator_output->special_cmd(SUB_STARTUP_SEQUENCE);
-
-  // clear webcam cache
-  for (int i = 0; i < WEBCAM_CACHE; i++) {
-    image_input->ready_image();
-    image_input->ready_image(DWN_IMG);
+  if (CharacterStreamSingleton::get_instance().wait_key(1) == 'q') {
+    return false;
   }
 
   // startup successful
