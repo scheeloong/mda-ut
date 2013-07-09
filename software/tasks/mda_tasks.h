@@ -118,7 +118,6 @@ public:
 /// Path
 /// ########################################################################
 class MDA_TASK_PATH : public MDA_TASK_BASE {
-	static const int DEPTH_TARGET = 350;
 	int pix_x_old;
 	int pix_y_old;
 
@@ -130,10 +129,22 @@ public:
 };
 
 /// ########################################################################
+/// Skip until path is out of view
+/// ########################################################################
+class MDA_TASK_PATH_SKIP : public MDA_TASK_BASE {
+
+public:
+	MDA_TASK_PATH_SKIP (AttitudeInput* a, ImageInput* i, ActuatorOutput* o);
+	~MDA_TASK_PATH_SKIP ();
+
+	MDA_TASK_RETURN_CODE run_task ();
+};
+
+/// ########################################################################
 /// Buoy
 /// ########################################################################
 class MDA_TASK_BUOY : public MDA_TASK_BASE {
-	static const int BUOY_RANGE_WHEN_DONE = 40; // range to the buoy to consider the tracking finished, in cm
+	static const int BUOY_RANGE_WHEN_DONE = 70; // range to the buoy to consider the tracking finished, in cm
 
 	enum BUOY_COLOR {
 		BUOY_RED,

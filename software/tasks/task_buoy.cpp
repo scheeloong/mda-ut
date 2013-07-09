@@ -79,7 +79,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(BUOY_COLOR color) {
 
                 // we cant use set_attitude_change to rise and fwd at the same time so we have to
                 // check if we are roughly pointing at the target, and decide what to do
-                if (abs(ang_x) < 15 && range < 70) {
+                if (abs(ang_x) < 15 && range < BUOY_RANGE_WHEN_DONE) {
                     done_buoy = true;
                     printf("\n\nBUOY TASK DONE\n\n\n");
 		}

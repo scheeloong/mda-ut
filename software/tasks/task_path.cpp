@@ -48,9 +48,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
         MDA_VISION_RETURN_CODE vision_code = path_vision.filter(frame);
 
         // clear fwd image
-        /*int fwd_frame_ready = image_input->ready_image(FWD_IMG);
-        (void) fwd_frame_ready;
-        */
+        image_input->ready_image(FWD_IMG);
 
         /**
         * Basic Algorithm:
@@ -183,6 +181,66 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
     }
 
     if(done_path){
+        ret_code = TASK_DONE;
+    }
+
+    return ret_code;
+}
+
+MDA_TASK_PATH_SKIP:: MDA_TASK_PATH_SKIP (AttitudeInput* a, ImageInput* i, ActuatorOutput* o) :
+    MDA_TASK_BASE (a, i, o)
+{
+}
+
+MDA_TASK_PATH_SKIP:: ~MDA_TASK_PATH_SKIP ()
+{
+}
+
+
+MDA_TASK_RETURN_CODE MDA_TASK_PATH_SKIP:: run_task() {
+    puts("Press q to quit");
+
+    MDA_VISION_MODULE_PATH path_vision;
+    MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
+
+    bool done_skip = false;
+
+    // sink to starting depth
+    set(DEPTH, SEARCH_DEPTH);
+
+    while (1) {
+        IplImage* frame = image_input->get_image(DWN_IMG);
+        if (!frame) {
+            ret_code = TASK_ERROR;
+            break;
+        }
+        MDA_VISION_RETURN_CODE vision_code = path_vision.filter(frame);
+
+        // clear fwd image
+        image_input->ready_image(FWD_IMG);
+
+        if (vision_code == FULL_DETECT) {
+            // Get path out of vision
+            move(FORWARD, 1);
+        } else {
+            done_skip = true;
+        }
+
+        // Ensure debug messages are printed
+        fflush(stdout);
+        // Exit if instructed to
+        char c = cvWaitKey(TASK_WK);
+        if (c != -1) {
+            CharacterStreamSingleton::get_instance().write_char(c);
+        }
+        if (CharacterStreamSingleton::get_instance().wait_key(1) == 'q'){
+            stop();
+            ret_code = TASK_QUIT;
+            break;
+        }
+    }
+
+    if(done_skip){
         ret_code = TASK_DONE;
     }
 
