@@ -8,7 +8,7 @@ cd ../..
 cd software/interface && ./aquatux aquatux_submarine.csv | tee aquatux.txt
 cd ../..
 
-dir=tests/`date +%H_%M`
+dir=tests/`date +%b_%d,%H:%M`
 mkdir -p $dir
 cp  software/interface/aquatux.txt $dir
 cp  software/interface/log.txt $dir
