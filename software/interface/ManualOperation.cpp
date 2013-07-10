@@ -40,6 +40,7 @@ void ManualOperation::display_start_message()
          "  3    - run buoy task\n"
          "  4    - run frame task\n"
          "  5    - run marker dropper task\n"
+         "  8    - run path skip task\n"
          "  9    - run surface task\n"
          "  0    - run test task\n"
          "  m    - run mission\n"
@@ -372,6 +373,32 @@ void ManualOperation::work()
          message_hold("Selected marker dropper vision module\n");
          vision_module = new MDA_VISION_MODULE_MARKER();
          use_fwd_img = false;
+         break;
+      case '8':
+         if (mode != VISION) {
+           endwin();
+
+           MDA_TASK_RETURN_CODE ret_code;
+           // Scope task so that it is destructed before display_start_message
+           {
+             MDA_TASK_PATH_SKIP path_skip(attitude_input, image_input, actuator_output);
+             ret_code = path_skip.run_task();
+           }
+
+           display_start_message();
+
+           switch(ret_code) {
+             case TASK_DONE:
+                message_hold("Path skip task completed successfully");
+                break;
+             case TASK_QUIT:
+                message_hold("Path skip task quit by user");
+                break;
+             default:
+                message_hold("Path skip task errored out");
+                break;
+           }
+         }
          break;
       case '9':
          if (mode != VISION) {
