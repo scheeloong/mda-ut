@@ -13,9 +13,7 @@ MDA_TASK_GATE:: ~MDA_TASK_GATE ()
 MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
     puts("Press q to quit");
 
-    // Use gate and path vision
     MDA_VISION_MODULE_GATE gate_vision;
-    MDA_VISION_MODULE_PATH path_vision;
 
     bool done_gate = false;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
@@ -72,25 +70,6 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
             else {
                 printf ("Error: %s: line %d\ntask module recieved an unhandled vision code.\n", __FILE__, __LINE__);
                 exit(1);
-            }
-        }
-        else {
-            IplImage* down_frame = image_input->get_image(DWN_IMG);
-
-            // if done gate, we look for path
-            if (!down_frame) {
-                ret_code = TASK_ERROR;
-                break;
-            }
-            MDA_VISION_RETURN_CODE vision_code = path_vision.filter(down_frame);
-
-            // clear fwd image
-            image_input->ready_image();
-
-            if (vision_code == ONE_SEGMENT || vision_code == FULL_DETECT || vision_code == UNKNOWN_TARGET) {
-                ret_code = TASK_DONE;
-                stop();
-                break;
             }
         }
 
