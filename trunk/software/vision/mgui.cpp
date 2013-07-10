@@ -9,7 +9,7 @@ static bool WINDOWS_ARRAY[NUM_SUPPORTED_WINDOWS] = {false,false,false,false};
 bool mvWindow::show_image_val = true;
 
 mvWindow:: mvWindow (const char name[]) :
-    bin_showImage ("mvWindow - showImage")
+    bin_showImage ("mvWindow - showImage"), _window_number(-1)
 { // this has to be the h file
     assert (strlen(name) < WINDOW_NAME_LEN);
     sprintf (_name, "%s", name);
@@ -34,7 +34,9 @@ mvWindow:: mvWindow (const char name[]) :
 
 mvWindow:: ~mvWindow () { 
     cvDestroyWindow (_name); 
-    WINDOWS_ARRAY[_window_number] = false;
+    if (_window_number != -1) {
+        WINDOWS_ARRAY[_window_number] = false;
+    }
 }
 
 /** mvVideoWriter methods */
