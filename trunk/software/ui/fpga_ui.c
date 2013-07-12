@@ -105,16 +105,6 @@ void spawn_term (char *proc)
         proc = nios2_shell_path;
     }
 
-    if (child_pid != 0) {
-      // Child may already exist, check child status
-      int status;
-      pid_t result = waitpid(child_pid, &status, WNOHANG);
-      if (result == 0) {
-        // Child exists
-        return;
-      }
-    }
-
     int inh = 0, outh = 0;
     child_pid = popen2(proc, &inh, &outh);
     infp = fdopen(inh, "w");
