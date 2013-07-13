@@ -1,5 +1,6 @@
 # Kill nicely
 pkill -2 aquatux
+sleep 1
 #Force kill
 pkill -9 aquatux
 pkill -9 nios2-terminal
