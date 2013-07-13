@@ -26,12 +26,19 @@ inline void int_handler(int signal)
     return;
   }
 
+  // Second Ctrl+C will be raised to a kill
+  static bool killed = false;
+  if (killed) {
+    raise(SIGKILL);
+  }
+
+  killed = true;
+
   // If the power is already off, just kill child and exit
   if (!get_power()) {
     kill_child();
     exit(0);
   }
-
 
   // Calling the int_handler will kill the child process (nios2-terminal)
   // Respawn it, then exit_safe
@@ -52,10 +59,6 @@ inline void init_fpga()
 
   // Call int_handler on SIGINT (Ctrl+C)
   signal(SIGINT, int_handler);
-  // Call on segmentations faults, broken pipes or hangups too
-  signal(SIGSEGV, int_handler);
-  signal(SIGHUP, int_handler);
-  signal(SIGPIPE, int_handler);
   // Call int_handler on SIGCHLD as well
   signal(SIGCHLD, int_handler);
 
