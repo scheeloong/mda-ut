@@ -18,6 +18,7 @@ MDA_VISION_MODULE_GATE:: MDA_VISION_MODULE_GATE () :
 	HoughLines (mvHoughLines(MDA_VISION_GATE_SETTINGS)),
 	lines (mvLines())
 {
+    N_FRAMES_TO_KEEP = 12;
     gray_img = mvGetScratchImage();
     gray_img_2 = mvGetScratchImage2();
 }
@@ -31,8 +32,8 @@ void MDA_VISION_MODULE_GATE::primary_filter (IplImage* src) {
     // shift the frames back by 1
     shift_frame_data (m_frame_data_vector, read_index, N_FRAMES_TO_KEEP);
 
-    watershed_filter.watershed(src, gray_img);
-    window.showImage (gray_img);
+    watershed_filter.watershed(src, gray_img, 1);
+    window.showImage (src);
 
     COLOR_TRIPLE color;
     int H,S,V;
@@ -47,7 +48,7 @@ void MDA_VISION_MODULE_GATE::primary_filter (IplImage* src) {
             continue;
         }*/
 
-        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 6.0, 15.0);
+        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 7.0, 18.0, 1);
         //window2.showImage (gray_img_2);
     }
 
@@ -61,7 +62,9 @@ void MDA_VISION_MODULE_GATE::primary_filter (IplImage* src) {
         
         // this stores the rects with 2 best validity
         for (; iter != iter_end; ++iter) {
-            m_frame_data_vector[read_index].assign_rbox_by_validity(*iter); 
+            if (abs(iter->angle) < 20) {
+                m_frame_data_vector[read_index].assign_rbox_by_validity(*iter);
+            }
         }
     }
 
@@ -85,8 +88,8 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
     int num_one_seg = 0;
     int num_two_seg = 0;
     for (int i = 0; i < N_FRAMES_TO_KEEP; i++) {
-        if (!m_frame_data_vector[i].has_data())
-            return NO_TARGET;
+        //if (!m_frame_data_vector[i].has_data())
+        //    return NO_TARGET;
 
         bool valid0 = m_frame_data_vector[i].rboxes_valid[0];
         bool valid1 = m_frame_data_vector[i].rboxes_valid[1];
@@ -96,7 +99,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
             num_one_seg++;
     }
 
-    if (num_two_seg >= N_FRAMES_TO_KEEP/4) {
+    if (num_two_seg >= 2) {
         DEBUG_PRINT ("FGate: 2 segments =)\n"); 
         
         // calculate average values for x,y,height, width
@@ -111,7 +114,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
                 MvRotatedBox Box2 = m_frame_data_vector[read_index].m_frame_boxes[1];
                 
                 // if segment is vertical
-                if (abs(Box1.angle) > 10 || abs(Box2.angle) > 10) {
+                if (abs(Box1.angle) > 20 || abs(Box2.angle) > 20) {
                     continue;
                 }
                 // similarity of the segments
@@ -127,26 +130,28 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
             }
         }
         if (nboxes == 0) {
-            goto CLEAR_FRAMES_AND_RETURN_NO_TARGET;
         }
-        m_pixel_x /= nboxes;
-        m_pixel_y /= nboxes;
-        gate_pixel_height /= nboxes;
-        gate_pixel_width /= nboxes;
-        
-        float gate_width_to_height_ratio = abs((float)gate_pixel_width / gate_pixel_height);
-        if (gate_width_to_height_ratio > 1.3*GATE_WIDTH_TO_HEIGHT_RATIO || 1.3*gate_width_to_height_ratio < GATE_WIDTH_TO_HEIGHT_RATIO) {
-            goto CLEAR_FRAMES_AND_RETURN_NO_TARGET;
-        }
+        else {
+            m_pixel_x /= nboxes;
+            m_pixel_y /= nboxes;
+            gate_pixel_height /= nboxes;
+            gate_pixel_width /= nboxes;
+            
+            float gate_width_to_height_ratio = abs((float)gate_pixel_width / gate_pixel_height);
+            if (gate_width_to_height_ratio > 1.3*GATE_WIDTH_TO_HEIGHT_RATIO || 1.3*gate_width_to_height_ratio < GATE_WIDTH_TO_HEIGHT_RATIO) {
+                goto CLEAR_FRAMES_AND_RETURN_NO_TARGET;
+            }
 
-        // calculate real distances
-        m_range = (GATE_REAL_WIDTH * gray_img->width) / (gate_pixel_width * TAN_FOV_X);
-        DEBUG_PRINT ("Gate Range: %d\n", m_range);
-        
-        retval = FULL_DETECT;
-        goto CLEAR_FRAMES_AND_RETURN_TARGET;
+            // calculate real distances
+            m_range = (GATE_REAL_WIDTH * gray_img->width) / (gate_pixel_width * TAN_FOV_X);
+            DEBUG_PRINT ("Gate Range: %d\n", m_range);
+            
+            retval = FULL_DETECT;
+            goto CLEAR_FRAMES_AND_RETURN_TARGET;
+        }
     }
-    else if (num_one_seg >= N_FRAMES_TO_KEEP/3) {
+
+    if (num_one_seg >= 4) {
         DEBUG_PRINT ("FGate: 1 segment =|\n");
 
         // calculate average values for x,y,height
@@ -159,7 +164,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
                 MvRotatedBox Box = m_frame_data_vector[read_index].m_frame_boxes[0];
                     
                 // if segment is vertical
-                if (abs(Box.angle) <= 10) {
+                if (abs(Box.angle) <= 20) {
                     m_pixel_x += Box.center.x;
                     m_pixel_y += Box.center.y;
                     gate_pixel_height += Box.length;
@@ -183,10 +188,10 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
     }
 
 CLEAR_FRAMES_AND_RETURN_NO_TARGET:
-    clear_frames();
     return NO_TARGET;
 CLEAR_FRAMES_AND_RETURN_TARGET:
-    clear_frames();
+    m_pixel_x -= gray_img->width/2;
+    m_pixel_y -= gray_img->height/2;
     m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / gray_img->width);
     m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
     DEBUG_PRINT ("FGate: (%d,%d) (%5.2f,%5.2f)\n", m_pixel_x, m_pixel_y, m_angular_x, m_angular_y); 

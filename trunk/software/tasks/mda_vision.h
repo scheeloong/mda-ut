@@ -51,16 +51,16 @@ protected:
     float m_angle;
 
     // support for frame data
-    static const int N_FRAMES_TO_KEEP = 10;
-    static const int VALID_FRAMES = (N_FRAMES_TO_KEEP / 4);
-    MDA_FRAME_DATA m_frame_data_vector[N_FRAMES_TO_KEEP];
+    int N_FRAMES_TO_KEEP;
+    int VALID_FRAMES;
+    MDA_FRAME_DATA m_frame_data_vector[21];
     int read_index;
     int n_valid_frames;
     int n_valid_circle_frames;
     int n_valid_box_frames;
     int n_valid;
     void clear_frames () {
-        for (int i = 0; i < N_FRAMES_TO_KEEP; i++)
+        for (int i = 0; i < 21; i++)
             m_frame_data_vector[i].clear();
         read_index = 0;
     }
@@ -75,7 +75,11 @@ protected:
     virtual MDA_VISION_RETURN_CODE calc_vci () = 0;
     
 public:
-    MDA_VISION_MODULE_BASE () { read_index = n_valid_frames = n_valid_circle_frames = n_valid_box_frames = n_valid = 0; }
+    MDA_VISION_MODULE_BASE () {
+        read_index = n_valid_frames = n_valid_circle_frames = n_valid_box_frames = n_valid = 0;
+        N_FRAMES_TO_KEEP = 10;
+        VALID_FRAMES = 3;
+    }
     virtual ~MDA_VISION_MODULE_BASE () {} 
 
     virtual MDA_VISION_RETURN_CODE filter (IplImage* src) {
