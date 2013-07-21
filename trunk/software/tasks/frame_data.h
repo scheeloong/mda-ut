@@ -10,6 +10,7 @@ public:
     // valid if one or more objects found
     bool circle_valid;
     bool rboxes_valid[2];
+    bool frame_has_data;
 
     // each buoy frame can have a single circle
     MvCircle m_frame_circle;
@@ -18,7 +19,7 @@ public:
     // otherwise the left box goes in [0] and right box goes in [1]
     MvRotatedBox m_frame_boxes[2];
 
-    MDA_FRAME_DATA () { circle_valid = false; rboxes_valid[0] = false; rboxes_valid[1] = false; }
+    MDA_FRAME_DATA () { frame_has_data = circle_valid = rboxes_valid[0] = rboxes_valid[1] = false; }
     
     MDA_FRAME_DATA& operator = (MDA_FRAME_DATA right) {
         this->circle_valid = right.circle_valid;
@@ -33,6 +34,7 @@ public:
     // assignment by checking validity
     // a newly created circle/rect has validity of -1
     bool assign_circle_by_validity (MvCircle circle) {
+        frame_has_data = true;
         if (circle.validity > m_frame_circle.validity) {
             m_frame_circle = circle;
             circle_valid = true;
@@ -41,6 +43,7 @@ public:
         return false;
     }
     bool assign_rbox_by_validity (MvRotatedBox rbox) {
+        frame_has_data = true;
         if (rbox.validity > m_frame_boxes[0].validity) {
             m_frame_boxes[1] = m_frame_boxes[0];
             rboxes_valid[1] = rboxes_valid[0];
@@ -62,10 +65,14 @@ public:
             m_frame_boxes[1] = B;
         }
     }
+    bool has_data () {
+        return frame_has_data;
+    }
     bool is_valid () {
         return (circle_valid || rboxes_valid[0] || rboxes_valid[1]);
     }
     void clear () {
+        frame_has_data = false;
         circle_valid = false;
         rboxes_valid[0] = false;
         rboxes_valid[1] = false;
