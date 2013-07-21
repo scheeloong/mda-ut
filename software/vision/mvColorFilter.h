@@ -388,7 +388,7 @@ class mvWatershedFilter {
     PROFILE_BIN bin_Filter;
 
     // generate markers from image, place them into color_point_vector
-    void watershed_generate_markers_internal (IplImage* src, std::vector<CvPoint>* seed_vector=NULL);
+    void watershed_generate_markers_internal (IplImage* src, int method=0, std::vector<CvPoint>* seed_vector=NULL);
     // assign index number to markers - similar colored markers get similar indices
     void watershed_process_markers_internal ();
     void watershed_process_markers_internal2 ();
@@ -401,7 +401,7 @@ public:
     mvWatershedFilter ();
     mvWatershedFilter (const char* settings_file); //constructor
     ~mvWatershedFilter(); // destructor
-    void watershed(IplImage* src, IplImage* dst);
+    void watershed(IplImage* src, IplImage* dst, int method=0);
     bool get_next_watershed_segment (IplImage* binary_img, COLOR_TRIPLE &T);    
 };
 

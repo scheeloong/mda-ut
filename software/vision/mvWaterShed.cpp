@@ -51,7 +51,7 @@ mvWatershedFilter::~mvWatershedFilter() {
     cvReleaseImage(&marker_img_32s);
 }
 
-void mvWatershedFilter::watershed(IplImage* src, IplImage* dst) {
+void mvWatershedFilter::watershed(IplImage* src, IplImage* dst, int method) {
 // attemps to use cvWaterShed to segment the image
     assert (src->nChannels == 3);
     assert (dst->nChannels == 1);
@@ -59,7 +59,7 @@ void mvWatershedFilter::watershed(IplImage* src, IplImage* dst) {
     cvCopy (src, scratch_image_3c);
 
     bin_SeedGen.start();
-    watershed_generate_markers_internal(src);
+    watershed_generate_markers_internal(src, method);
     bin_SeedGen.stop();
 
     bin_SeedPlace.start();
@@ -77,7 +77,7 @@ void mvWatershedFilter::watershed(IplImage* src, IplImage* dst) {
     curr_segment_index = 0;
 }
 
-void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src, std::vector<CvPoint>* seed_vector) {
+void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src, int method, std::vector<CvPoint>* seed_vector) {
 // This function generates a bunch of markers and puts them into color_point_vector
     // massively downsample - this smoothes the image
     cvCvtColor (src, scratch_image, CV_BGR2GRAY);
@@ -116,7 +116,7 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src, std:
     }
     */
     color_point_vector.clear();
-#ifdef SEED_IMAGE_RANDOM
+if (method < 0) {
     cvSet (ds_image_nonedge, CV_RGB(1,1,1));
     // sample the image like this
     // 1. randomly generate an x,y coordinate.
@@ -140,8 +140,11 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src, std:
             cvCircle (ds_image_nonedge, cvPoint(x,y), 10, CV_RGB(0,0,0), -1);          
         }
     }
-#else
-    const int step = 10;
+}
+else {
+    int step = 10;
+    if (method == 1) 
+        step = 5;
     COLOR_TRIPLE ct_prev;
 
     for (int y = step/2; y < src->height; y += step) {
@@ -160,7 +163,7 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src, std:
             colorPtr += 3*step;
         }
     }
-#endif
+}
 
     // the color point vector will have too many pixels that are really similar - get rid of some by merging    
     for (unsigned i = 0; i < color_point_vector.size(); i++) {
@@ -168,7 +171,7 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src, std:
             int dx = color_point_vector[i].second.x - color_point_vector[j].second.x;
             int dy = color_point_vector[i].second.y - color_point_vector[j].second.y;  
             
-            if (color_point_vector[i].first.diff(color_point_vector[j].first) < 30 /*&& dx*dx + dy*dy < 10000*/)
+            if (color_point_vector[i].first.diff(color_point_vector[j].first) < 30 && dx*dx + dy*dy < 10000)
             {
                 if (rand() % 2 == 0) {
                     color_point_vector[i].first.merge(color_point_vector[j].first);

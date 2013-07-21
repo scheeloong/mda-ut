@@ -1,7 +1,7 @@
 #include "mvContours.h"
 
 //#define MATCH_CONTOURS_DEBUG
-//#define M_DEBUG
+#define M_DEBUG
 #ifdef M_DEBUG
     #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
 #else
@@ -147,14 +147,13 @@ int mvContours::find_contour_and_check_errors(IplImage* img) {
         CV_CHAIN_APPROX_SIMPLE
     );
 
-    int last_x=-1, last_y=-1;
+//    int last_x=-1, last_y=-1;
     if (m_contours == NULL) {
         goto FIND_CONTOUR_ERROR;
     }
     
     // check that the contour does not coincide with the sides of the image for more than 20% of its perimeter
-    
-    for (int i = 0; i < m_contours->total; i++) {
+/*    for (int i = 0; i < m_contours->total; i++) {
         CvPoint* p = CV_GET_SEQ_ELEM (CvPoint, m_contours, i);
         if (p->x == last_x && abs(p->y-last_y) > img->height/3) {
             DEBUG_PRINT ("find_contour: contour shares vertical side with image (x=%d). Discarding.\n", last_x);
@@ -168,7 +167,7 @@ int mvContours::find_contour_and_check_errors(IplImage* img) {
         last_x = p->x;
         last_y = p->y;
     }
-    
+*/    
     bin_contours.stop();
     return n_contours;
 
@@ -241,8 +240,9 @@ float mvContours::match_rectangle (IplImage* img, MvRBoxVector* rbox_vector, COL
         // debug
         /*cvZero (img);
         draw_contours (c_contour, img);
-        window.showImage (img);*/
-        
+        window.showImage (img);
+        cvWaitKey(0);
+        */
         // check that there are at least 6 points
         if (c_contour->total < 6) {
             DEBUG_PRINT ("Rect Fail: Contour has less than 6 points\n");
@@ -251,10 +251,12 @@ float mvContours::match_rectangle (IplImage* img, MvRBoxVector* rbox_vector, COL
 
         // check the contour's area to make sure it isnt too small
         double area = cvContourArea(c_contour);
-        /*if (area < img->width*img->height/600) {
-            DEBUG_PRINT ("Rect Fail: Contour too small!\n");
-            continue;
-        }*/
+        if (method == 0) {
+            if (area < img->width*img->height/600) {
+                DEBUG_PRINT ("Rect Fail: Contour too small!\n");
+                continue;
+            }
+        }
 
         CvBox2D Rect = cvMinAreaRect2(c_contour, m_storage);
         float angle = Rect.angle;
@@ -275,9 +277,17 @@ float mvContours::match_rectangle (IplImage* img, MvRBoxVector* rbox_vector, COL
         double perimeter = cvArcLength (c_contour, CV_WHOLE_SEQ, 1);
         double perimeter_ratio = perimeter / (2*length+2*width);
         double area_ratio = area / (length*width);
-        if (area_ratio < 0.75 || perimeter_ratio > 1.2 || perimeter_ratio < 0.85) {
-            DEBUG_PRINT ("Rect Fail: Area / Peri:    %6.2lf / %6.2lf\n", area_ratio, perimeter_ratio);
-            continue;
+        if (method == 0) {
+            if (area_ratio < 0.75 || perimeter_ratio > 1.2 || perimeter_ratio < 0.85) {
+                DEBUG_PRINT ("Rect Fail: Area / Peri:    %6.2lf / %6.2lf\n", area_ratio, perimeter_ratio);
+                continue;
+            }
+        }
+        else if (method == 1) {
+            if (area_ratio < 0.55 || perimeter_ratio > 1.4 || perimeter_ratio < 0.75) {
+                DEBUG_PRINT ("Rect Fail: Area / Peri:    %6.2lf / %6.2lf\n", area_ratio, perimeter_ratio);
+                continue;
+            }
         }
 
         MvRotatedBox rbox;

@@ -27,8 +27,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
 
     MDA_VISION_MODULE_PATH path_vision;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
-    TIMER timer;
-
+    
     TASK_STATE state = STARTING;
     bool done_path = false;
 
@@ -39,6 +38,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
     int starting_yaw = attitude_input->yaw();
     printf("Starting yaw: %d\n", starting_yaw);
 
+    TIMER timer;
+
     while (1) {
         IplImage* frame = image_input->get_image(DWN_IMG);
         if (!frame) {
@@ -47,8 +48,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
         }
         MDA_VISION_RETURN_CODE vision_code = path_vision.filter(frame);
 
-        // clear fwd image
-        image_input->ready_image(FWD_IMG);
+        // clear fwd image. RZ - do we need this?
+        //image_input->ready_image(FWD_IMG);
 
         /**
         * Basic Algorithm:
@@ -61,8 +62,6 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
         *  - If see something at align depth, align
         *  - If don't see anything at align depth, go back to search_depth
         */
-
-
 
         if (!done_path) {
             // calculate some values that we will need
