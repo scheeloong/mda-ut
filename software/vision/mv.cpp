@@ -485,7 +485,5 @@ void mvBGR2HSV(IplImage* src, IplImage* dst) {
     	    dstPtr +=3;  
 	    }
     }
-    
   return;
-  
 }

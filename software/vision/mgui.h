@@ -45,11 +45,11 @@ inline void read_common_mv_setting (const char setting_name[], std::string &valu
 #define NUM_SUPPORTED_WINDOWS 4 
 #define WINDOW_NAME_LEN 50
 class mvWindow {
+    PROFILE_BIN bin_showImage;
+    
     char _name[WINDOW_NAME_LEN];
     int _window_number;
 
-    PROFILE_BIN bin_showImage;
-    
     public:
     mvWindow (const char name[]);
     ~mvWindow (); 

@@ -1,7 +1,7 @@
 #include "mvContours.h"
 
 //#define MATCH_CONTOURS_DEBUG
-#define M_DEBUG
+//#define M_DEBUG
 #ifdef M_DEBUG
     #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
 #else
@@ -421,7 +421,6 @@ float mvContours::match_circle (IplImage* img, MvCircleVector* circle_vector, CO
 
     return n_circles;
 }
-
 
 int assign_color_to_shape (int B, int G, int R, MvShape* shape) {
     int H,S,V;

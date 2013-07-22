@@ -74,7 +74,7 @@ public:
         return *this;
     }
     float diff(MvCircle &other) {
-       const int RADIUS_WEIGHT = 5;
+       const int RADIUS_WEIGHT = 2;
        return abs (this->center.x - other.center.x)
             + abs (this->center.y - other.center.y)
             +fabsf(this->radius - other.radius) * RADIUS_WEIGHT;
@@ -113,7 +113,7 @@ public:
     float diff(MvRotatedBox &other) {
        return abs (this->center.x - other.center.x)
             + abs (this->center.y - other.center.y)
-            + abs (this->angle - other.angle)
+            //+ abs (this->angle - other.angle)
             + abs (this->length - other.length)
             + abs (this->width - other.width);
     }
