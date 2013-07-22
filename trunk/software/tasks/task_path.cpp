@@ -49,7 +49,9 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
         MDA_VISION_RETURN_CODE vision_code = path_vision.filter(frame);
 
         // clear fwd image. RZ - do we need this?
-        //image_input->ready_image(FWD_IMG);
+        // This ensures the other camera is properly logged
+        // and that the webcam cache is cleared so it stays in sync - VZ
+        image_input->ready_image(FWD_IMG);
 
         /**
         * Basic Algorithm:
