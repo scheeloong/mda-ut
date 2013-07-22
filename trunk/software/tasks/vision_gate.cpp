@@ -28,7 +28,7 @@ MDA_VISION_MODULE_GATE:: ~MDA_VISION_MODULE_GATE () {
     mvReleaseScratchImage2();
 }
 
-void MDA_VISION_MODULE_GATE::primary_filter (IplImage* src) {
+void MDA_VISION_MODULE_GATE::add_frame (IplImage* src) {
     // shift the frames back by 1
     shift_frame_data (m_frame_data_vector, read_index, N_FRAMES_TO_KEEP);
 
@@ -79,7 +79,7 @@ void MDA_VISION_MODULE_GATE::primary_filter (IplImage* src) {
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
-    // loop thru each frame, if at least 1 invalid, return NO_TARGET
+    // loop thru each frame
     // if some number of double segment, calc and return FULL_DETECT
     // else if some number of one segment, calc and return ONE_SEGMENT
     // else return NO_TARGET

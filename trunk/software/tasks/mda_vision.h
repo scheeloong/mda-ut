@@ -59,11 +59,6 @@ protected:
     int n_valid_circle_frames;
     int n_valid_box_frames;
     int n_valid;
-    void clear_frames () {
-        for (int i = 0; i < 21; i++)
-            m_frame_data_vector[i].clear();
-        read_index = 0;
-    }
 
     void clear_data () {
         m_pixel_x = m_pixel_y = m_range = MV_UNDEFINED_VALUE;
@@ -101,6 +96,11 @@ public:
     virtual int get_range() {return m_range;}
     virtual int get_angle() {return m_angle;}
     virtual void print_frames ();
+    void clear_frames () {
+        for (int i = 0; i < N_FRAMES_TO_KEEP; i++)
+            m_frame_data_vector[i].clear();
+        read_index = 0;
+    }
 };
 /// ########################################################################
 /// ########################################################################
@@ -174,15 +174,16 @@ public:
         assert (src->nChannels == 3);
         
         clear_data();
-        primary_filter (src);
+        add_frame (src);
         MDA_VISION_RETURN_CODE retval = frame_calc ();
  
         assert (retval != FATAL_ERROR);
         return retval;
     };
     
-    void primary_filter (IplImage* src);
-    MDA_VISION_RETURN_CODE calc_vci ();
+    void primary_filter (IplImage* src) {exit(1);} // not defined
+    MDA_VISION_RETURN_CODE calc_vci (); // not used
+    void add_frame (IplImage* src);
     MDA_VISION_RETURN_CODE frame_calc ();
 
     virtual int get_angle() {printf ("VISION_MODULE_GATE - get_angle not allowed\n"); exit(1); return 0;}
@@ -283,7 +284,7 @@ public:
     virtual int get_range_alt() {return m_range_alt;}
     virtual int get_angle_alt() {return m_angle_alt;}
     
-    void primary_filter (IplImage* src);
+    void primary_filter (IplImage* src); // not defined
     virtual int get_angular_y() {
         printf ("MDA_VISION_MODULE_PATH does not support get_angular_y");
         exit (1);
@@ -294,8 +295,8 @@ public:
     }
 
     // functions to support frame data stuff
-    bool rbox_stable(float threshold);
-    bool circle_stable(float threshold);
+    //bool rbox_stable(float threshold);
+    //bool circle_stable(float threshold);
     int frame_is_valid() { return n_valid; }
     void add_frame (IplImage* src);  
 
@@ -324,19 +325,20 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
     mvBinaryMorphology Morphology3;
     mvWatershedFilter watershed_filter;
     mvContours contour_filter;
-    //mvAdvancedCircles AdvancedCircles;
-    //mvRect Rect;
 
     IplImage* gray_img;
     IplImage* gray_img_2;
+
+    int m_color;
 
 public:
     MDA_VISION_MODULE_BUOY ();
     MDA_VISION_MODULE_BUOY (const char* settings_file);
     ~MDA_VISION_MODULE_BUOY ();
     
-    void primary_filter (IplImage* src);
-    MDA_VISION_RETURN_CODE calc_vci ();
+    void primary_filter (IplImage* src) {exit(1);} // not defined
+    MDA_VISION_RETURN_CODE calc_vci (); // not defined
+    MDA_VISION_RETURN_CODE frame_calc ();
 
     MDA_VISION_RETURN_CODE filter (IplImage* src) {
         assert (src != NULL);
@@ -344,6 +346,9 @@ public:
         
         clear_data();
         add_frame (src);
+        //circle_stable(10000);
+        //rbox_stable(0, 10000);
+        //rbox_stable(1, 10000);
         MDA_VISION_RETURN_CODE retval = calc_vci ();
  
         assert (retval != FATAL_ERROR);
@@ -351,17 +356,13 @@ public:
     };
 
     virtual int get_angle() {printf ("VISION_MODULE_BUOY- get_angle not allowed\n"); exit(1); return 0;}
+    int get_color() { return m_color; }
 
     // functions to support frame data stuff
-    bool rbox_stable(float threshold);
+    bool rbox_stable(int rbox_index, float threshold);
     bool circle_stable(float threshold);
     int frame_is_valid() { return n_valid; }
     void add_frame (IplImage* src);
-    void clear_frames () {
-        for (int i = 0; i < N_FRAMES_TO_KEEP; i++)
-            m_frame_data_vector[i].clear();
-        read_index = 0;
-    }  
 };
 
 /// ########################################################################

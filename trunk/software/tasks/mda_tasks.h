@@ -157,7 +157,7 @@ public:
 	~MDA_TASK_BUOY ();
 
 	MDA_TASK_RETURN_CODE run_task ();
-	MDA_TASK_RETURN_CODE run_single_buoy (BUOY_COLOR color);
+	MDA_TASK_RETURN_CODE run_single_buoy (int buoy_index, BUOY_COLOR color);
 
 };
 

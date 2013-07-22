@@ -1,6 +1,6 @@
 #include "mda_vision.h"
 
-#define M_DEBUG
+//#define M_DEBUG
 #ifdef M_DEBUG
     #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
 #else
@@ -52,48 +52,6 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY (const char* settings_file) :
 MDA_VISION_MODULE_BUOY:: ~MDA_VISION_MODULE_BUOY () {
     mvReleaseScratchImage();
     mvReleaseScratchImage2();
-}
-
-void MDA_VISION_MODULE_BUOY:: primary_filter (IplImage* src) {
-    watershed_filter.watershed(src, gray_img);
-    window.showImage (gray_img);
-
-    int H,S,V;
-    COLOR_TRIPLE color;
-    MvCircleVector circle_vector;
-    
-    while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
-        tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
-        if (S < 30 || V < 20) {
-            //printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
-            continue;
-        }
-
-        contour_filter.match_circle(gray_img_2, &circle_vector, color);
-        //window2.showImage (gray_img_2);
-    }
-
-    if (circle_vector.size() > 0) {
-        MvCircleVector::iterator iter = circle_vector.begin();
-        MvCircleVector::iterator iter_end = circle_vector.end();
-        int index = 0;
-        cvZero (gray_img_2);
-
-        printf ("vision_buoy: %d Circles Detected:\n", static_cast<int>(circle_vector.size()));
-        for (; iter != iter_end; ++iter) {
-            printf ("\tCircle #%d: (%3d,%3d), Rad=%5.1f, <%3d,%3d,%3d>\n", ++index,
-                iter->center.x, iter->center.y, iter->radius, iter->m1, iter->m2, iter->m3);
-            iter->drawOntoImage(gray_img_2);
-        }
-
-        // for now best circle is first circle
-        MvCircle* best_circle = &(circle_vector.front());
-        m_pixel_x = best_circle->center.x;
-        m_pixel_y = best_circle->center.y;
-        m_range = (BUOY_REAL_DIAMETER * gray_img->width) / (2*best_circle->radius * TAN_FOV_X);
-    }
-
-    window2.showImage (gray_img_2);
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
@@ -154,33 +112,53 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
     return FULL_DETECT;
 }
 
-bool MDA_VISION_MODULE_BUOY::rbox_stable (float threshold) {
+bool MDA_VISION_MODULE_BUOY::rbox_stable (int rbox_index, float threshold) {
+    assert (rbox_index >= 0 && rbox_index <= 1);
+
     n_valid = 0;
     int i = read_index;
     std::vector<MvRotatedBox> rboxes;
+    
+    // pull all the valid objects into an array
     do {
-        if (m_frame_data_vector[i].is_valid()) {
+        if (m_frame_data_vector[i].has_data() && m_frame_data_vector[i].rboxes_valid[rbox_index]) {
             n_valid++;
-            rboxes.push_back(m_frame_data_vector[i].m_frame_boxes[0]);
+            rboxes.push_back(m_frame_data_vector[i].m_frame_boxes[rbox_index]);
         }
         if (++i >= N_FRAMES_TO_KEEP) i = 0;
     } while (i != read_index);
-
-    printf("rbox: n_valid %d VALID_FRAMES %d\n", n_valid, VALID_FRAMES);
+    // check that we have enough valid objects
+    DEBUG_PRINT("rbox_stable[%d]: n_valid=%d VALID_FRAMES=%d\n", rbox_index, n_valid, VALID_FRAMES);
     if (n_valid < VALID_FRAMES) return false;
 
+    // diff each object wrt the previous one, exit if difference too large
+    // otherwise find the average of position and range
     MvRotatedBox last_rbox = rboxes.back();
     int x_sum = 0, y_sum = 0, range_sum = 0;
+    n_valid = 0; // recompute n_valid
     for (std::vector<MvRotatedBox>::iterator cit = rboxes.begin(); cit != rboxes.end(); ++cit) {
-       MvRotatedBox curr_rbox = *cit;
-       float difference = curr_rbox.diff(last_rbox);
-       printf("difference %f\n", difference);
-       if (difference > threshold) return false;
-       last_rbox = curr_rbox;
+        MvRotatedBox curr_rbox = *cit;
+        if (curr_rbox.color_int != last_rbox.color_int) {
+            DEBUG_PRINT ("rbox_stable: non-matching color! %s!=%s\n", 
+                color_int_to_string(curr_rbox.color_int).c_str(), color_int_to_string(last_rbox.color_int).c_str());
+            continue;
+        }
+        float difference = curr_rbox.diff(last_rbox);
+        DEBUG_PRINT("\tdifference %f\n", difference);
+        if (difference > threshold) {
+            DEBUG_PRINT ("\texceeds threshold of %f.\n", threshold);
+            continue;
+        }
+        last_rbox = curr_rbox;
 
-       x_sum += curr_rbox.center.x;
-       y_sum += curr_rbox.center.y;
-       range_sum = (RBOX_REAL_LENGTH * gray_img->width) / (sqrt(curr_rbox.length) * TAN_FOV_X);
+        x_sum += curr_rbox.center.x;
+        y_sum += curr_rbox.center.y;
+        range_sum = (RBOX_REAL_LENGTH * gray_img->width) / (sqrt(curr_rbox.length) * TAN_FOV_X);
+        n_valid++;
+    }
+
+    if (n_valid < 2) {
+        return false;
     }
 
     m_pixel_x = x_sum / n_valid - gray_img->width/2;
@@ -188,6 +166,10 @@ bool MDA_VISION_MODULE_BUOY::rbox_stable (float threshold) {
     m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / gray_img->width);
     m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
     m_range = range_sum / n_valid;
+    m_color = last_rbox.color_int;
+
+    printf ("rbox_stable[%d]: OK: (%d, %d) range=%d, color=%s\n", rbox_index, m_pixel_x, m_pixel_y, m_range, 
+        color_int_to_string(m_color).c_str());
 
     return true;
 }
@@ -196,6 +178,8 @@ bool MDA_VISION_MODULE_BUOY::circle_stable (float threshold) {
     n_valid = 0;
     int i = read_index;
     std::vector<MvCircle> circles;
+
+    // pull all the valid objects into an array
     do {
         if (m_frame_data_vector[i].is_valid()) {
             n_valid++;
@@ -203,22 +187,31 @@ bool MDA_VISION_MODULE_BUOY::circle_stable (float threshold) {
         }
         if (++i >= N_FRAMES_TO_KEEP) i = 0;
     } while (i != read_index);
-
-    printf("circle: n_valid %d VALID_FRAMES %d\n", n_valid, VALID_FRAMES);
+    // check that we have enough valid objects
+    DEBUG_PRINT("circle_stable: n_valid %d VALID_FRAMES %d\n", n_valid, VALID_FRAMES);
     if (n_valid < VALID_FRAMES) return false;
 
+    // diff each object wrt the previous one, exit if difference too large
+    // otherwise find the average of position and range
     MvCircle last_circle = circles.back();
     int x_sum = 0, y_sum = 0, range_sum = 0;
     for (std::vector<MvCircle>::iterator cit = circles.begin(); cit != circles.end(); ++cit) {
-       MvCircle curr_circle = *cit;
-       float difference = curr_circle.diff(last_circle);
-       printf("difference %f\n", difference);
-       if (difference > threshold) return false;
-       last_circle = curr_circle;
+        MvCircle curr_circle = *cit;
+        if (curr_circle.color_int != last_circle.color_int) {
+            DEBUG_PRINT ("circle_stable: non-matching color! %s!=%s\n", 
+                color_int_to_string(curr_circle.color_int).c_str(), color_int_to_string(last_circle.color_int).c_str());
+        }
+        float difference = curr_circle.diff(last_circle);
+        DEBUG_PRINT("\tdifference %f\n", difference);
+        if (difference > threshold) {
+            DEBUG_PRINT ("\texceeds threshold of %f.\n", threshold);
+            return false;
+        }
+        last_circle = curr_circle;
 
-       x_sum += curr_circle.center.x;
-       y_sum += curr_circle.center.y;
-       range_sum += (BUOY_REAL_DIAMETER * gray_img->width) / (2*curr_circle.radius * TAN_FOV_X);
+        x_sum += curr_circle.center.x;
+        y_sum += curr_circle.center.y;
+        range_sum += (BUOY_REAL_DIAMETER * gray_img->width) / (2*curr_circle.radius * TAN_FOV_X);
     }
 
     m_pixel_x = x_sum / n_valid - gray_img->width/2;
@@ -226,6 +219,10 @@ bool MDA_VISION_MODULE_BUOY::circle_stable (float threshold) {
     m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / gray_img->width);
     m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
     m_range = range_sum / n_valid;
+    m_color = last_circle.color_int;
+
+    printf ("circle_stable: OK: (%d, %d) range=%d, color=%s\n", m_pixel_x, m_pixel_y, m_range, 
+        color_int_to_string(m_color).c_str());
 
     return true;
 }
@@ -278,7 +275,9 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
         
         // for now, frame will store rect with best validity
         for (; iter != iter_end; ++iter) {
-            m_frame_data_vector[read_index].assign_rbox_by_validity(*iter);
+            if (abs(iter->angle) <= 30 ) { // dont add if angle > 30 degree
+                m_frame_data_vector[read_index].assign_rbox_by_validity(*iter);
+            }
         }
 
         m_pixel_x = m_frame_data_vector[read_index].m_frame_boxes[0].center.x;
@@ -286,12 +285,21 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
         m_range = (RBOX_REAL_LENGTH * gray_img->width) / (m_frame_data_vector[read_index].m_frame_boxes[0].length * TAN_FOV_X);
     }
 
+    m_frame_data_vector[read_index].sort_rbox_by_x();
+
     if (m_frame_data_vector[read_index].is_valid()) {
         m_frame_data_vector[read_index].drawOntoImage(gray_img_2);
         window2.showImage (gray_img_2);
     }
 
     //print_frames();
+}
+
+MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY::frame_calc () {
+    if (m_frame_data_vector[read_index].is_valid()) {
+        return FULL_DETECT;
+    }
+    return UNKNOWN_TARGET;
 }
 
 void MDA_VISION_MODULE_BASE::print_frames () {

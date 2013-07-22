@@ -28,14 +28,16 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
     MDA_TASK_BASE::starting_depth = attitude_input->depth();
 
     // gate depth
-    move(SINK, 50);
+    set (DEPTH, starting_depth+50);
 
     // read the starting orientation
     int starting_yaw = attitude_input->yaw();
     printf("Starting yaw: %d\n", starting_yaw);
 
-    TIMER timer; // keeps track of time spent in each state
-    TIMER master_timer; // keeps track of time spent not having found the target
+    static TIMER timer; // keeps track of time spent in each state
+    static TIMER master_timer; // keeps track of time spent not having found the target
+    timer.restart();
+    master_timer.restart();
 
     while (1) {
         IplImage* frame = image_input->get_image();
@@ -65,6 +67,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                 if (timer.get_time() > 1) {
                     set (SPEED, 0);
                     timer.restart();
+                    gate_vision.clear_frames();
                     state = STOPPED;
                 }
             }
