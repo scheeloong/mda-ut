@@ -225,6 +225,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH_SKIP:: run_task() {
             move(FORWARD, 1);
         } else {
             done_skip = true;
+            break;
         }
 
         // Ensure debug messages are printed
@@ -235,11 +236,12 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH_SKIP:: run_task() {
             CharacterStreamSingleton::get_instance().write_char(c);
         }
         if (CharacterStreamSingleton::get_instance().wait_key(1) == 'q'){
-            stop();
             ret_code = TASK_QUIT;
             break;
         }
     }
+
+    stop();
 
     if(done_skip){
         ret_code = TASK_DONE;
