@@ -204,6 +204,9 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH_SKIP:: run_task() {
     MDA_VISION_MODULE_PATH path_vision;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
+    const int num_images_to_check = 5;
+
+    int images_checked = 0;
     bool done_skip = false;
 
     // sink to starting depth
@@ -223,9 +226,14 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH_SKIP:: run_task() {
         if (vision_code == FULL_DETECT) {
             // Get path out of vision
             move(FORWARD, 1);
+            // Reset back to 0
+            images_checked = 0;
         } else {
-            done_skip = true;
-            break;
+            images_checked++;
+            if (images_checked >= num_images_to_check) {
+                done_skip = true;
+                break;
+            }
         }
 
         // Ensure debug messages are printed
