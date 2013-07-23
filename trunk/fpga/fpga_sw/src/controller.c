@@ -22,6 +22,8 @@
 
 #define MAX_YAW 360
 
+#define PRIORITIZE_PITCH_OVER_DEPTH
+
 // Structures used by the PD controller for stabilization
 struct orientation target_orientation = {};
 struct orientation current_orientation = {};
@@ -146,12 +148,13 @@ double motor_force_to_pwm (double force) {
 // It ensures motors are balanced and no motor exceeds 0.8*FULL_PWM by reducing 
 // the force if any motor pwm does exceed the limit.
 #define MAX_FORCE_BALANCING_LOOPS 10
-void stabilizing_motors_force_to_pwm (
+bool stabilizing_motors_force_to_pwm (
         double f_1, double f_2, double f_3,
         double *m_1, double *m_2, double *m_3
 )
 {
     unsigned loops;
+    bool out_of_bound = false;
 
     for (loops = 0; loops < MAX_FORCE_BALANCING_LOOPS; loops++) {
         // calculate the pwms
@@ -172,11 +175,13 @@ void stabilizing_motors_force_to_pwm (
             f_1 *= FORCE_REDUCTION_FACTOR;
             f_2 *= FORCE_REDUCTION_FACTOR;
             f_3 *= FORCE_REDUCTION_FACTOR;
+            out_of_bound = true;
         }
         else {
             break;
         }
     }
+    return out_of_bound;
 }
 
 void calculate_pid()
@@ -228,7 +233,16 @@ void calculate_pid()
       &m_right,
       NULL
    );
-
+#ifdef PRIORITIZE_PITCH_OVER_DEPTH
+   bool out_of_bound = stabilizing_motors_force_to_pwm ( // this calculates the pwms for pitch and roll motors
+      0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed, // m_front_left
+      -0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed, // m_front_right
+      -0.5*Pitch_Force_Needed, // m_rear
+      &m_front_left,
+      &m_front_right,
+      &m_rear
+   );
+   if (!out_of_bound) {
    stabilizing_motors_force_to_pwm ( // this calculates the pwms for pitch and roll motors
       0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_left
       -0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_right
@@ -237,6 +251,17 @@ void calculate_pid()
       &m_front_right,
       &m_rear
    );
+   }
+#else
+   stabilizing_motors_force_to_pwm ( // this calculates the pwms for pitch and roll motors
+      0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_left
+      -0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_right
+      -0.5*Pitch_Force_Needed + 0.5*Depth_Force_Needed, // m_rear
+      &m_front_left,
+      &m_front_right,
+      &m_rear
+   );
+#endif
 
    M_FRONT_LEFT = (int)m_front_left;
    M_FRONT_RIGHT = (int)m_front_right;
