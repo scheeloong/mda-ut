@@ -73,7 +73,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
             }
             if (state == STOPPED) {
                 // if havent spent 1 second in this state, keep staring
-                if (timer.get_time() < 1) {
+                if (timer.get_time() < 0) {
                     printf ("Stopped: Collecting Frames\n");
                 }
                 else {
@@ -93,14 +93,20 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                         printf ("Stopped: One Segment\n");
                         int ang_x = gate_vision.get_angular_x();
 
+                        // if segment too close just finish
+                        if (gate_vision.get_range() < 350) {
+                            done_gate = true;
+                            return TASK_DONE;
+                        }
+
                         // only execute turn if the segment is close to out of view (check ang and range)
                         if (ang_x >= 35) {
-                            ang_x -= 35;
+                            ang_x -= 30;
                             printf ("Moving Left on One Segment %d Degrees\n", ang_x);
                             move (RIGHT, ang_x);
                         }
                         else if (ang_x <= -35) {
-                            ang_x += 35;
+                            ang_x += 30;
                             printf ("Moving Left on One Segment %d Degrees\n", ang_x);
                             move (RIGHT, ang_x);
                         }
@@ -114,9 +120,9 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                         int ang_x = gate_vision.get_angular_x();
                         move (RIGHT, ang_x);
 
-                        if (gate_vision.get_range() < 300) {
+                        if (gate_vision.get_range() < 420) {
                             done_gate = true;
-                            return TASK_DONE;
+                            printf ("Range = %d, Approaching Gate\n", gate_vision.get_range());
                         }
 
                         timer.restart();
@@ -129,6 +135,20 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                     }
                 }
             }   
+        } // done_gate
+        else {
+            // charge foward for 2 secs
+            timer.restart();
+            while (timer.get_time() < 2) {
+                set(SPEED, 2);
+            }
+            set(SPEED, 0);
+            timer.restart();
+            while (timer.get_time() < 1) {
+                set(SPEED, 2);
+            }
+            printf ("Gate Task Done!!\n");
+            return TASK_DONE;
         }
 
         // Ensure debug messages are printed

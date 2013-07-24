@@ -28,7 +28,7 @@ MDA_VISION_MODULE_PATH:: MDA_VISION_MODULE_PATH () :
     read_mv_setting (MDA_VISION_PATH_SETTINGS, "TARGET_BLUE", TARGET_BLUE);
     read_mv_setting (MDA_VISION_PATH_SETTINGS, "TARGET_GREEN", TARGET_GREEN);
     read_mv_setting (MDA_VISION_PATH_SETTINGS, "TARGET_RED", TARGET_RED);
-    read_mv_setting (MDA_VISION_PATH_SETTINGS, "DIFF_THRESHOLD", DIFF_THRESHOLD_SETTING);
+    //read_mv_setting (MDA_VISION_PATH_SETTINGS, "DIFF_THRESHOLD", DIFF_THRESHOLD_SETTING);
 
     gray_img = mvGetScratchImage();
     gray_img_2 = mvGetScratchImage2();
@@ -478,4 +478,65 @@ void MDA_VISION_MODULE_PATH::add_frame (IplImage* src) {
     }
 
     //print_frames();
+}
+
+
+MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH::frame_calc () {
+    // returns: NO_TARGET, FULL_DETECT
+    //MDA_VISION_RETURN_CODE retval = FATAL_ERROR;
+
+    n_valid = 0;
+    int i = read_index;
+    std::vector<MvRotatedBox> paths;
+    
+    // pull all the valid objects into an array
+    do {
+        if (m_frame_data_vector[i].has_data() && m_frame_data_vector[i].rboxes_valid[0]) {
+            n_valid++;
+            paths.push_back(m_frame_data_vector[i].m_frame_boxes[0]);
+        }
+        if (++i >= N_FRAMES_TO_KEEP) i = 0;
+    } while (i != read_index);
+    // check that we have enough valid objects
+    if (n_valid < 3) {
+        return NO_TARGET;
+    }
+
+    // diff each object wrt the previous one, exit if difference too large
+    // otherwise find the average of position and range
+    MvRotatedBox last_path = paths.back();
+    int x_sum = 0, y_sum = 0, range_sum = 0;
+    n_valid = 0; // recompute n_valid
+    for (std::vector<MvRotatedBox>::iterator cit = paths.begin(); cit != paths.end(); ++cit) {
+        MvRotatedBox curr_path = *cit;
+        int color_diff = curr_path.color_diff(last_path);
+        if (color_diff > 120) {
+            DEBUG_PRINT ("\tcolor_diff=%d exceeds 120.\n", color_diff);
+            continue;
+        }
+        int center_diff = curr_path.center_diff(last_path);
+        if (center_diff > 80) {
+            DEBUG_PRINT ("\tcenter_diff=%d exceeds threshold of 80.\n", center_diff);
+            continue;
+        }
+        last_path = curr_path;
+
+        x_sum += curr_path.center.x;
+        y_sum += curr_path.center.y;
+        range_sum += (RBOX_REAL_LENGTH * gray_img->width) / (curr_path.length * TAN_FOV_X);
+        n_valid++;
+    }
+
+    if (n_valid < 2) {
+        return NO_TARGET;
+    }
+
+    m_pixel_x = x_sum / n_valid - gray_img->width/2;
+    m_pixel_y = y_sum / n_valid - gray_img->height/2;
+    m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / gray_img->width);
+    m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
+    m_range = range_sum / n_valid;
+    m_angle = last_path.angle;
+    m_color = last_path.color_int;
+    return FULL_DETECT;
 }

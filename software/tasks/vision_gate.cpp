@@ -40,6 +40,8 @@ void MDA_VISION_MODULE_GATE::add_frame (IplImage* src) {
     MvRotatedBox rbox;
     MvRBoxVector rbox_vector;
 
+    //float length_to_width = 1.d/GATE_REAL_SLENDERNESS;
+
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
         // check that the segment is roughly red
         tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
@@ -85,6 +87,8 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
     // else return NO_TARGET
     // always clear frames
     MDA_VISION_RETURN_CODE retval = FATAL_ERROR;
+
+    int ANGLE_LIMIT = 30;
     int num_one_seg = 0;
     int num_two_seg = 0;
     for (int i = 0; i < N_FRAMES_TO_KEEP; i++) {
@@ -114,7 +118,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
                 MvRotatedBox Box2 = m_frame_data_vector[read_index].m_frame_boxes[1];
                 
                 // if segment is vertical
-                if (abs(Box1.angle) > 20 || abs(Box2.angle) > 20) {
+                if (abs(Box1.angle) > ANGLE_LIMIT || abs(Box2.angle) > ANGLE_LIMIT) {
                     continue;
                 }
                 // similarity of the segments
@@ -164,7 +168,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
                 MvRotatedBox Box = m_frame_data_vector[read_index].m_frame_boxes[0];
                     
                 // if segment is vertical
-                if (abs(Box.angle) <= 20) {
+                if (abs(Box.angle) <= ANGLE_LIMIT) {
                     m_pixel_x += Box.center.x;
                     m_pixel_y += Box.center.y;
                     gate_pixel_height += Box.length;

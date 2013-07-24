@@ -19,19 +19,11 @@ enum TASK_STATE {
 };
 
 MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_task() {
-    MDA_TASK_RETURN_CODE code;
-
-    code = run_single_buoy(0, BUOY_RED);
-    if (code != TASK_DONE) {
-        printf ("Something wrong in task_buoy 0!\n");
-        return TASK_ERROR;
+    static int buoy_index = 0;
+    MDA_TASK_RETURN_CODE code = run_single_buoy(buoy_index, BUOY_RED);
+    if (code == TASK_DONE) {
+        buoy_index = 1;
     }
-    code = run_single_buoy(1, BUOY_RED);
-    if (code != TASK_DONE) {
-        printf ("Something wrong in task_buoy 1!\n");
-        return TASK_ERROR;
-    }
-
     return TASK_DONE;
 }
 
@@ -121,7 +113,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(int buoy_index, BUOY_COLOR 
                 }
             }
             else if (state == STOPPED) {
-                if (timer.get_time() < 1) {
+                if (timer.get_time() < 0) {
                     printf ("Stopped: Collecting Frames\n");
                 }
                 else {
@@ -152,6 +144,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(int buoy_index, BUOY_COLOR 
                         timer.restart();
                         master_timer.restart();
                         prev_color = color[curr_index];
+                        prev_time = -1;
                         buoy_vision.clear_frames();
                         n_valid_color_find_frames = 0;
                         state = FIND_COLOR;
@@ -161,8 +154,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(int buoy_index, BUOY_COLOR 
             else if (state == FIND_COLOR) {
                 // stare for 6 seconds, check if the buoy color changes
                 int t = timer.get_time();
-                if (t >= 5) {
-                    if (n_valid_color_find_frames <= 3) {
+                if (t >= 4) {
+                    if (n_valid_color_find_frames <= 2) {
                         printf ("Find Color: Not enough good frames (%d).\n", n_valid_color_find_frames);
                         timer.restart();
                         master_timer.restart();
@@ -197,12 +190,9 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(int buoy_index, BUOY_COLOR 
             else if (state == APPROACH) {
                 get_data_from_frame (&buoy_vision, valid, ang_x, ang_y, range, color, curr_index);
                 if (valid[curr_index]) {
-                    printf ("Approach: range=%d\n", range[curr_index]);
-                    if (range[curr_index] < 50) { // task is done as we are close to buoy
-                        done_buoy = true;
-                    }
-                    else if (range[curr_index] > 100) { // long range = more freedom to turn/sink
-                        if (abs(ang_x[curr_index]) > 10) {
+                    printf ("Approach[%d]: range=%d, ang_x=%d\n", curr_index, range[curr_index], ang_x[curr_index]);
+                    if (range[curr_index] > 100) { // long range = more freedom to turn/sink
+                        if (abs(ang_x[curr_index]) > 5) {
                             set(SPEED, 0);
                             move(RIGHT, ang_x[curr_index]);
                             buoy_vision.clear_frames();
@@ -216,13 +206,13 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(int buoy_index, BUOY_COLOR 
                         }
                     }
                     else {
-                        if (abs(ang_x[curr_index]) > 25) {
+                        if (abs(ang_x[curr_index]) > 10) {
                             set(SPEED, 0);
                             move(RIGHT, ang_x[curr_index]);
                             buoy_vision.clear_frames();
                         }
                         else {
-                            set(SPEED, 1);
+                            done_buoy = true;
                         }   
                     }
 
@@ -239,35 +229,19 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(int buoy_index, BUOY_COLOR 
                 }
             }
         } // done_buoy
-
-/*
-                else if (abs(ang_x) <= 5) {
-                    set(SPEED, 1);
-
-                    // calculate an exponential moving average for range
-                    printf ("task_buoy: range = %d.\n", range);
-                    fflush(stdout);
-                }
-                else {
-                    if (ang_x > 20) ang_x = 20;
-                    if (ang_x < -20) ang_x = -20;
-                    move(RIGHT, ang_x); 
-                }
-            }
-            else {
-                printf ("Error: %s: line %d\ntask module recieved an unhandled vision code.\n", __FILE__, __LINE__);
-                exit(1);
-            }
-        }*/
         else { // done_buoy
             // charge forwards, then retreat back some number of meters, then realign sub to starting attitude
             printf("Ramming buoy\n");
-            move(FORWARD, 5);
+            timer.restart();
+            while (timer.get_time() < 2)
+                move(FORWARD, 2);
+            stop();
 
             // retreat backwards
-            printf("Resetting Position\n");
-            move(REVERSE, 5);
-
+            printf("Reseting Position\n");
+            timer.restart();
+            while (timer.get_time() < 3)
+                move(REVERSE, 2);
             stop();
 
             ret_code = TASK_DONE;

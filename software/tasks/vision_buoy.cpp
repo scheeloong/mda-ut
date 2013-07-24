@@ -1,6 +1,6 @@
 #include "mda_vision.h"
 
-//#define M_DEBUG
+#define M_DEBUG
 #ifdef M_DEBUG
     #define DEBUG_PRINT(format, ...) printf(format, ##__VA_ARGS__)
 #else
@@ -55,49 +55,6 @@ MDA_VISION_MODULE_BUOY:: ~MDA_VISION_MODULE_BUOY () {
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
-/*    MDA_VISION_RETURN_CODE retval = FATAL_ERROR;
-
-    // We assume most of the time we have 1 circle. If we have >1 circle we take the first
-    // circle in the list (which is the strongest) and return UNKNOWN_TARGET
-    // We cant trust range if circle is too small, so in that case also return UNKNOWN_TARGET
-    // and range is not valid if UNKNOWN_TARGET is returned
-
-    unsigned nCircles = AdvancedCircles.ncircles();
-
-    if (nCircles == 0) {
-        printf ("Circles: No circles found =(\n");
-        return NO_TARGET;
-    }
-*/
-    /*
-    printf ("ncircles = %d\n", AdvancedCircles.ncircles());
-    for (int i = 0; i < AdvancedCircles.ncircles(); i++) {
-        printf ("Circle #%d: (%d,%d, %f)\n", i+1, AdvancedCircles[i].x, AdvancedCircles[i].y, AdvancedCircles[i].rad);
-    }*/
-/*
-    m_pixel_x = AdvancedCircles[0].x - filtered_img->width/2;
-    m_pixel_y = AdvancedCircles[0].y - filtered_img->height/2;
-    unsigned rad = AdvancedCircles[0].rad;
-
-    assert (rad != 0);
-    
-    m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / filtered_img->width);
-    m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / filtered_img->height);
-
-    if (nCircles == 1 && rad > MIN_PIXEL_RADIUS_FACTOR*filtered_img->height) {
-        m_range = (BUOY_REAL_DIAMETER * filtered_img->width) / (2*rad * TAN_FOV_X);
-        DEBUG_PRINT ("Buoy: (%d,%d) (%5.2f,%5.2f). Color = %s. Range = %d\n", m_pixel_x, m_pixel_y, 
-            m_angular_x, m_angular_y, color_int_to_string(AdvancedCircles[0].color).c_str(), m_range);
-
-        retval = FULL_DETECT;
-    }
-    else {
-        DEBUG_PRINT ("Buoy: (%d,%d) (%5.2f,%5.2f). Color = %s. Range = Unknown\n", m_pixel_x, m_pixel_y, 
-            m_angular_x, m_angular_y, color_int_to_string(AdvancedCircles[0].color).c_str());
-
-        retval = UNKNOWN_TARGET;
-    }
-*/
     if (m_pixel_x == MV_UNDEFINED_VALUE || m_pixel_y == MV_UNDEFINED_VALUE || m_range == MV_UNDEFINED_VALUE)
         return NO_TARGET;
 
@@ -128,7 +85,6 @@ bool MDA_VISION_MODULE_BUOY::rbox_stable (int rbox_index, float threshold) {
         if (++i >= N_FRAMES_TO_KEEP) i = 0;
     } while (i != read_index);
     // check that we have enough valid objects
-    DEBUG_PRINT("rbox_stable[%d]: n_valid=%d VALID_FRAMES=%d\n", rbox_index, n_valid, VALID_FRAMES);
     if (n_valid < VALID_FRAMES) return false;
 
     // diff each object wrt the previous one, exit if difference too large
@@ -144,16 +100,16 @@ bool MDA_VISION_MODULE_BUOY::rbox_stable (int rbox_index, float threshold) {
             continue;
         }
         float difference = curr_rbox.diff(last_rbox);
-        DEBUG_PRINT("\tdifference %f\n", difference);
+        DEBUG_PRINT("\tcurr_rbox(%d,%d).  difference %f\n", curr_rbox.center.x, curr_rbox.center.y, difference);
         if (difference > threshold) {
             DEBUG_PRINT ("\texceeds threshold of %f.\n", threshold);
             continue;
         }
-        last_rbox = curr_rbox;
+        //last_rbox = curr_rbox;
 
         x_sum += curr_rbox.center.x;
         y_sum += curr_rbox.center.y;
-        range_sum = (RBOX_REAL_LENGTH * gray_img->width) / (sqrt(curr_rbox.length) * TAN_FOV_X);
+        range_sum += (RBOX_REAL_LENGTH * gray_img->width) / (curr_rbox.length * TAN_FOV_X);
         n_valid++;
     }
 
@@ -231,8 +187,8 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
     // shift the frames back by 1
     shift_frame_data (m_frame_data_vector, read_index, N_FRAMES_TO_KEEP);
 
-    watershed_filter.watershed(src, gray_img);
-    window.showImage (src);
+    watershed_filter.watershed(src, gray_img, 1);
+    window.showImage (gray_img);
 
     COLOR_TRIPLE color;
     int H,S,V;
@@ -240,6 +196,8 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
     MvCircleVector circle_vector;
     MvRotatedBox rbox;
     MvRBoxVector rbox_vector;
+
+    float length_to_width = RBOX_REAL_LENGTH / RBOX_REAL_DIAMETER;
 
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
         cvCopy (gray_img_2, gray_img);
@@ -250,7 +208,7 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
         }
 
         contour_filter.match_circle(gray_img_2, &circle_vector, color);
-        contour_filter.match_rectangle(gray_img, &rbox_vector, color, 2.2, 3.5);        
+        contour_filter.match_rectangle(gray_img, &rbox_vector, color, length_to_width-0.5, length_to_width+0.8);        
 
         //window2.showImage (gray_img_2);
     }
@@ -263,10 +221,6 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
         for (; iter != iter_end; ++iter) {
             m_frame_data_vector[read_index].assign_circle_by_validity(*iter);
         }
-
-        m_pixel_x = m_frame_data_vector[read_index].m_frame_circle.center.x;
-        m_pixel_y = m_frame_data_vector[read_index].m_frame_circle.center.y;
-        m_range = (BUOY_REAL_DIAMETER * gray_img->width) / (2*m_frame_data_vector[read_index].m_frame_circle.radius * TAN_FOV_X);
     }
 
     if (rbox_vector.size() > 0) {
@@ -279,10 +233,6 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
                 m_frame_data_vector[read_index].assign_rbox_by_validity(*iter);
             }
         }
-
-        m_pixel_x = m_frame_data_vector[read_index].m_frame_boxes[0].center.x;
-        m_pixel_y = m_frame_data_vector[read_index].m_frame_boxes[0].center.y;
-        m_range = (RBOX_REAL_LENGTH * gray_img->width) / (m_frame_data_vector[read_index].m_frame_boxes[0].length * TAN_FOV_X);
     }
 
     m_frame_data_vector[read_index].sort_rbox_by_x();

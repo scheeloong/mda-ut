@@ -49,11 +49,11 @@ public:
     int color_int;
     int validity;
     MvShape () { validity = -1; center.x=center.y=0; m1=m2=m3=0; color_int = MV_UNCOLORED; }
-    CvPoint center_diff (MvShape first, MvShape second) {
-        return cvPoint (first.center.x-second.center.x, first.center.y-second.center.y);
+    virtual int center_diff (MvShape second) {
+        return (abs(center.x-second.center.x) + abs(center.y-second.center.y));
     }
-    int color_diff (MvShape first, MvShape second) {
-        return abs(first.m1-second.m1)+abs(first.m2-second.m2)+abs(first.m3-second.m3);
+    virtual int color_diff (MvShape second) {
+        return abs(m1-second.m1)+abs(m2-second.m2)+abs(m3-second.m3);
     }
 };
 class MvCircle : public MvShape {
@@ -113,9 +113,10 @@ public:
     float diff(MvRotatedBox &other) {
        return abs (this->center.x - other.center.x)
             + abs (this->center.y - other.center.y)
-            //+ abs (this->angle - other.angle)
-            + abs (this->length - other.length)
-            + abs (this->width - other.width);
+            ///+ abs (this->angle - other.angle)
+            //+ abs (this->length - other.length)
+            //+ abs (this->width - other.width)
+            ;
     }
 };
 typedef std::vector<MvCircle> MvCircleVector;
