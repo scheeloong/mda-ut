@@ -65,9 +65,14 @@ protected:
         m_angular_x = m_angular_y = m_angle = MV_UNDEFINED_VALUE;
     }
 
-    /// you must implement these yourself!
-    virtual void primary_filter (IplImage* src) = 0;
-    virtual MDA_VISION_RETURN_CODE calc_vci () = 0;
+    virtual void primary_filter (IplImage* src) {
+        printf ("Do not use primary_filter from VISION_MODULE_BASE!\n");
+        exit(1);
+    }
+    virtual MDA_VISION_RETURN_CODE calc_vci () {
+        printf ("Do not use primary_filter from VISION_MODULE_BASE!\n");
+        exit(1);
+    }
     
 public:
     MDA_VISION_MODULE_BASE () {
@@ -181,40 +186,11 @@ public:
         return retval;
     };
     
-    void primary_filter (IplImage* src) {exit(1);} // not defined
-    MDA_VISION_RETURN_CODE calc_vci (); // not used
     void add_frame (IplImage* src);
     MDA_VISION_RETURN_CODE frame_calc ();
 
     virtual int get_angle() {printf ("VISION_MODULE_GATE - get_angle not allowed\n"); exit(1); return 0;}
 };
-
-
-/// ########################################################################
-/// this class is for the marker dropper
-/// ########################################################################
-class MDA_VISION_MODULE_MARKER : public MDA_VISION_MODULE_BASE {
-    static const char MDA_VISION_MARKER_SETTINGS[];
-    static const float HU_THRESH = 0.005;
-
-    mvWindow window;
-    mvHSVFilter HSVFilter;
-    
-    IplImage* filtered_img;
-
-public:
-    MDA_VISION_MODULE_MARKER ();
-    ~MDA_VISION_MODULE_MARKER ();
-    
-    void primary_filter (IplImage* src);
-    MDA_VISION_RETURN_CODE calc_vci ();
-
-    bool* getFound() { return targets_found; }
-
-private:
-    bool targets_found[2];
-};
-
 
 /// ########################################################################
 /// this class is for the path
@@ -281,7 +257,6 @@ public:
     virtual int get_range_alt() {return m_range_alt;}
     virtual int get_angle_alt() {return m_angle_alt;}
     
-    void primary_filter (IplImage* src); // not defined
     virtual int get_angular_y() {
         printf ("MDA_VISION_MODULE_PATH does not support get_angular_y");
         exit (1);
@@ -296,7 +271,6 @@ public:
     //bool circle_stable(float threshold);
     int frame_is_valid() { return n_valid; }
     void add_frame (IplImage* src);  
-
     MDA_VISION_RETURN_CODE calc_vci ();
     MDA_VISION_RETURN_CODE frame_calc ();
 };
@@ -334,10 +308,6 @@ public:
     MDA_VISION_MODULE_BUOY (const char* settings_file);
     ~MDA_VISION_MODULE_BUOY ();
     
-    void primary_filter (IplImage* src) {exit(1);} // not defined
-    MDA_VISION_RETURN_CODE calc_vci (); // not defined
-    MDA_VISION_RETURN_CODE frame_calc ();
-
     MDA_VISION_RETURN_CODE filter (IplImage* src) {
         assert (src != NULL);
         assert (src->nChannels == 3);
@@ -361,6 +331,7 @@ public:
     bool circle_stable(float threshold);
     int frame_is_valid() { return n_valid; }
     void add_frame (IplImage* src);
+    MDA_VISION_RETURN_CODE frame_calc ();
 };
 
 /// ########################################################################
@@ -404,5 +375,31 @@ public:
     virtual int get_angle() {printf ("VISION_MODULE_FRAME - get_angle not allowed\n"); exit(1); return 0;}
     int is_red() { return IsRed; } // 0 means no, 1 means yes, -1 means dunno
 };
+
+/// ########################################################################
+/// this class is for the marker dropper
+/// ########################################################################
+class MDA_VISION_MODULE_MARKER : public MDA_VISION_MODULE_BASE {
+    static const char MDA_VISION_MARKER_SETTINGS[];
+    static const float HU_THRESH = 0.005;
+
+    mvWindow window;
+    mvHSVFilter HSVFilter;
+    
+    IplImage* filtered_img;
+
+public:
+    MDA_VISION_MODULE_MARKER ();
+    ~MDA_VISION_MODULE_MARKER ();
+    
+    void primary_filter (IplImage* src);
+    MDA_VISION_RETURN_CODE calc_vci ();
+
+    bool* getFound() { return targets_found; }
+
+private:
+    bool targets_found[2];
+};
+
 
 #endif
