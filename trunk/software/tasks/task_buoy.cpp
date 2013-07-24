@@ -84,9 +84,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(int buoy_index, BUOY_COLOR 
         MDA_VISION_RETURN_CODE vision_code = buoy_vision.filter(frame);
         (void) vision_code;
         // clear dwn image - RZ: do we need this?
-        // This ensures the other camera is properly logged
-        // and that the webcam cache is cleared so it stays in sync - VZ
-        image_input->ready_image(DWN_IMG);
+        //int down_frame_ready = image_input->ready_image(DWN_IMG);
+        //(void) down_frame_ready;
 
         bool valid[2] = {false, false};
         int ang_x[2], ang_y[2];

@@ -62,9 +62,9 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
         if (!done_gate) {
             if (state == STARTING) {
                 printf ("Starting: Moving Foward for 1 meter\n");
-                move (FORWARD, 1);
+                set (SPEED, 6);
 
-                if (timer.get_time() > 1) {
+                if (timer.get_time() > 3) {
                     set (SPEED, 0);
                     timer.restart();
                     gate_vision.clear_frames();
@@ -139,13 +139,13 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
         else {
             // charge foward for 2 secs
             timer.restart();
-            while (timer.get_time() < 2) {
-                set(SPEED, 2);
+            while (timer.get_time() < 6) {
+                set(SPEED, 10);
             }
             set(SPEED, 0);
             timer.restart();
             while (timer.get_time() < 1) {
-                set(SPEED, 2);
+                set(SPEED, 0);
             }
             printf ("Gate Task Done!!\n");
             return TASK_DONE;
