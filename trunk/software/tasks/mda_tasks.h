@@ -50,6 +50,11 @@ protected:
 
 	// Move or set attitude until stable
 	void move (ATTITUDE_CHANGE_DIRECTION direction, int delta_accel);
+	void set_yaw_change (int delta) {
+		//int curr_yaw = actuator_output->get_target_attitude(YAW);
+    	int curr_yaw = attitude_input->yaw();
+    	actuator_output->set_attitude_absolute(YAW, curr_yaw+delta);
+	}
 	void set (ATTITUDE_DIRECTION dir, int val);
 	void stop();
 	void stabilize (ATTITUDE_DIRECTION dir);

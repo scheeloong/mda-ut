@@ -45,12 +45,12 @@ void MDA_VISION_MODULE_GATE::add_frame (IplImage* src) {
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
         // check that the segment is roughly red
         tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
-        if (S < 40 || V < 30 || !(H >= 170 || H < 120)) {
+        if (S < 20 || V < 20 || !(H >= 160 || H < 130)) {
             DEBUG_PRINT ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
             continue;
         }
 
-        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 7.0, 18.0, 1);
+        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 5.0, 15.0, 1);
         //window2.showImage (gray_img_2);
     }
 
