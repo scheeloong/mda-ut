@@ -10,6 +10,7 @@
 #include "mvLines.h"
 #include "mvShapes.h"
 #include "mvContours.h"
+#include "../../tasks/mda_vision.h"
 #include "profile_bin.h"
 
 unsigned CAM_NUMBER=0;
@@ -23,6 +24,10 @@ unsigned CIRCLE=0;
 unsigned RECT=0;
 unsigned LOAD=0;
 unsigned BREAK=0;
+unsigned GATE=0;
+unsigned PATH=0;
+unsigned BUOY=0;
+
 
 int main( int argc, char** argv ) {
     unsigned long nframes = 0, t_start, t_end;
@@ -51,6 +56,12 @@ int main( int argc, char** argv ) {
             CIRCLE = 1;
         else if (!strcmp (argv[i], "--rect"))
             RECT = 1;
+        else if (!strcmp (argv[i], "--gate"))
+            GATE = 1;
+        else if (!strcmp (argv[i], "--path"))
+            PATH = 1;
+        else if (!strcmp (argv[i], "--buoy"))
+            BUOY = 1;
         else if (!strcmp (argv[i], "--load")) {
             LOAD = i+1; // put the next argument index into LOAD
             i++;        // skip next arg
@@ -103,6 +114,10 @@ int main( int argc, char** argv ) {
     mvWatershedFilter watershed_filter;
     mvContours contour_filter;
 
+    MDA_VISION_MODULE_GATE* gate=GATE? new MDA_VISION_MODULE_GATE : 0;
+    MDA_VISION_MODULE_PATH* path=PATH? new MDA_VISION_MODULE_PATH : 0;
+    MDA_VISION_MODULE_BUOY* buoy=BUOY? new MDA_VISION_MODULE_BUOY : 0;
+
     // declare images we need
     IplImage* scratch_color = mvCreateImage_Color();
     IplImage* scratch_color_2 = mvCreateImage_Color();
@@ -147,6 +162,15 @@ int main( int argc, char** argv ) {
             Morphology7.close(filter_img, filter_img);
             
             win2->showImage (filter_img);
+        }
+        else if (GATE) {
+            gate->filter (frame);
+        }
+        else if (PATH) {
+            path->filter (frame);
+        }
+        else if (BUOY) {
+            buoy->filter (frame);
         }
         else if (WATERSHED) {
             watershed_filter.watershed(frame, filter_img);
