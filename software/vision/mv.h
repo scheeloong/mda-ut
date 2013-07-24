@@ -48,7 +48,8 @@ public:
     int h1,h2,h3;
     int color_int;
     int validity;
-    MvShape () { validity = -1; center.x=center.y=0; m1=m2=m3=0; color_int = MV_UNCOLORED; }
+    int count;
+    MvShape () { validity = -1; count = 1; center.x=center.y=0; m1=m2=m3=0; color_int = MV_UNCOLORED; }
     virtual int center_diff (MvShape second) {
         return (abs(center.x-second.center.x) + abs(center.y-second.center.y));
     }
@@ -78,6 +79,16 @@ public:
        return abs (this->center.x - other.center.x)
             + abs (this->center.y - other.center.y)
             +fabsf(this->radius - other.radius) * RADIUS_WEIGHT;
+    }
+    void shape_merge (MvCircle second) {
+        int total_count = count + second.count;
+        m1 = (count*m1 + second.count*second.m1) / total_count;
+        m2 = (count*m2 + second.count*second.m2) / total_count;
+        m3 = (count*m3 + second.count*second.m3) / total_count;
+        center.x = (count*center.x + second.count*second.center.x) / total_count;
+        center.y = (count*center.y + second.count*second.center.y) / total_count;
+        radius = (count*radius + second.count*second.radius) / total_count;
+        count = total_count;
     }
 };
 class MvRotatedBox : public MvShape {
@@ -117,6 +128,17 @@ public:
             //+ abs (this->length - other.length)
             //+ abs (this->width - other.width)
             ;
+    }
+    void shape_merge (MvRotatedBox second) {
+        int total_count = count + second.count;
+        m1 = (count*m1 + second.count*second.m1) / total_count;
+        m2 = (count*m2 + second.count*second.m2) / total_count;
+        m3 = (count*m3 + second.count*second.m3) / total_count;
+        center.x = (count*center.x + second.count*second.center.x) / total_count;
+        center.y = (count*center.y + second.count*second.center.y) / total_count;
+        length = (count*length + second.count*second.length) / total_count;
+        width = (count*width + second.count*second.width) / total_count;
+        count = total_count;
     }
 };
 typedef std::vector<MvCircle> MvCircleVector;
