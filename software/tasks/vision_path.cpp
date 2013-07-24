@@ -12,6 +12,9 @@ float absf(float f){
     else return f;
 }
 
+const float LEN_TO_WIDTH_MAX = 8.0;
+const float LEN_TO_WIDTH_MIN = 2.0;
+
 const char MDA_VISION_MODULE_PATH::MDA_VISION_PATH_SETTINGS[] = "vision_path_settings.csv";
 
 /// ########################################################################
@@ -30,6 +33,7 @@ MDA_VISION_MODULE_PATH:: MDA_VISION_MODULE_PATH () :
     read_mv_setting (MDA_VISION_PATH_SETTINGS, "TARGET_RED", TARGET_RED);
     //read_mv_setting (MDA_VISION_PATH_SETTINGS, "DIFF_THRESHOLD", DIFF_THRESHOLD_SETTING);
 
+    N_FRAMES_TO_KEEP = 6;
     gray_img = mvGetScratchImage();
     gray_img_2 = mvGetScratchImage2();
 }
@@ -43,7 +47,7 @@ void MDA_VISION_MODULE_PATH::add_frame (IplImage* src) {
     // shift the frames back by 1
     shift_frame_data (m_frame_data_vector, read_index, N_FRAMES_TO_KEEP);
 
-    watershed_filter.watershed(src, gray_img);
+    watershed_filter.watershed(src, gray_img, 1);
     //window.showImage (src);
 
     COLOR_TRIPLE color;
@@ -54,12 +58,12 @@ void MDA_VISION_MODULE_PATH::add_frame (IplImage* src) {
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
         // check that the segment is roughly red
         tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
-        if (S < 20 || V < 50 || !(H >= 150 || H < 80)) {
+        if (S < 30 || V < 30 || !(H >= 160 || H <= 120)) {
             //printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
             continue;
         }
 
-        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 7.0, 12.0);
+        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, LEN_TO_WIDTH_MIN, LEN_TO_WIDTH_MAX);
         contour_filter.drawOntoImage(gray_img_2);
     window.showImage (gray_img_2);
     }
@@ -91,85 +95,75 @@ void MDA_VISION_MODULE_PATH::add_frame (IplImage* src) {
     //print_frames();
 }
 
-MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH:: calc_vci () {
+MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH::frame_calc () {
     MDA_VISION_RETURN_CODE retval = FATAL_ERROR;
    
-        if (m_pixel_x == MV_UNDEFINED_VALUE || m_pixel_y == MV_UNDEFINED_VALUE || m_angle == MV_UNDEFINED_VALUE)
-            return NO_TARGET;
-
-        m_pixel_x -= gray_img->width/2;
-        m_pixel_y = gray_img->height/2 - m_pixel_y; // something feels wrong here, must test on camera
-
-        retval = FULL_DETECT;
-        m_angular_x = RAD_TO_DEG * atan((float) m_pixel_x / m_pixel_y);
-        if (m_pixel_y < 0) {
-            if (m_pixel_x > 0)
-                m_angular_x += 180;
-            else
-                m_angular_x -= 180;
-        }
-
-        DEBUG_PRINT ("Path: (%d,%d) angular_pos=%5.2f, angle=%5.2f\n", m_pixel_x, m_pixel_y, 
-            m_angular_x, m_angle);
-        
-        return retval;
-}
-
-MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH::frame_calc () {
-    // returns: NO_TARGET, FULL_DETECT
-    //MDA_VISION_RETURN_CODE retval = FATAL_ERROR;
-
-    n_valid = 0;
-    int i = read_index;
-    std::vector<MvRotatedBox> paths;
-    
-    // pull all the valid objects into an array
+    // go thru each frame and pull all individual segments into a vector
+    // set i to point to the element 1 past read_index
+    int i = read_index + 1;
+    if (i >= N_FRAMES_TO_KEEP) i = 0;
+    MvRBoxVector segment_vector;
     do {
         if (m_frame_data_vector[i].has_data() && m_frame_data_vector[i].rboxes_valid[0]) {
-            n_valid++;
-            paths.push_back(m_frame_data_vector[i].m_frame_boxes[0]);
+            segment_vector.push_back(m_frame_data_vector[i].m_frame_boxes[0]);
         }
         if (++i >= N_FRAMES_TO_KEEP) i = 0;
     } while (i != read_index);
-    // check that we have enough valid objects
-    if (n_valid < 3) {
+
+    // bin the frames
+    for (unsigned i = 0; i < segment_vector.size(); i++) {
+        for (unsigned j = i+1; j < segment_vector.size(); j++) {
+            CvPoint center1 = segment_vector[i].center;
+            CvPoint center2 = segment_vector[j].center;
+            
+            if (abs(center1.x-center2.x)+abs(center1.y-center2.y) < 50 && abs(segment_vector[i].length-segment_vector[j].length) < 25)
+            {
+                segment_vector[i].shape_merge(segment_vector[j]);
+                segment_vector.erase(segment_vector.begin()+j);
+            }
+        }
+    }
+
+    // sort by count
+    std::sort (segment_vector.begin(), segment_vector.end(), shape_count_greater_than);
+
+    // debug
+    for (unsigned i = 0; i<=1 && i<segment_vector.size(); i++) {
+        printf ("\tSegment %d (%3d,%3d) height=%3.0f, width=%3.0f   count=%d\n", i, segment_vector[i].center.x, segment_vector[i].center.y,
+            segment_vector[i].length, segment_vector[i].width, segment_vector[i].count);
+    }
+#ifdef M_DEBUG
+    for (unsigned i = 0; i<=1 && i<segment_vector.size(); i++)
+        segment_vector[i].drawOntoImage(gray_img);
+      window2.showImage(gray_img);
+#endif
+
+    if (segment_vector.size() == 0 || segment_vector[0].count < 2) { // not enough good segments, return no target
+        printf ("Path: No Target\n");
         return NO_TARGET;
     }
-
-    // diff each object wrt the previous one, exit if difference too large
-    // otherwise find the average of position and range
-    MvRotatedBox last_path = paths.back();
-    int x_sum = 0, y_sum = 0, range_sum = 0;
-    n_valid = 0; // recompute n_valid
-    for (std::vector<MvRotatedBox>::iterator cit = paths.begin(); cit != paths.end(); ++cit) {
-        MvRotatedBox curr_path = *cit;
-        int color_diff = curr_path.color_diff(last_path);
-        if (color_diff > 120) {
-            DEBUG_PRINT ("\tcolor_diff=%d exceeds 120.\n", color_diff);
-            continue;
+    else { // first segment is good enough, use that only
+        printf ("Path: Segment found\n");
+        
+        // check path length to width
+        float length_to_width = static_cast<float>(segment_vector[0].length) / segment_vector[0].width;
+        if (length_to_width < LEN_TO_WIDTH_MIN || length_to_width > LEN_TO_WIDTH_MAX) {
+            DEBUG_PRINT("Path: length to width check failed\n");
+            return NO_TARGET;
         }
-        int center_diff = curr_path.center_diff(last_path);
-        if (center_diff > 80) {
-            DEBUG_PRINT ("\tcenter_diff=%d exceeds threshold of 80.\n", center_diff);
-            continue;
-        }
-        last_path = curr_path;
 
-        x_sum += curr_path.center.x;
-        y_sum += curr_path.center.y;
-        range_sum += (PATH_REAL_LENGTH * gray_img->width) / (curr_path.length * TAN_FOV_X);
-        n_valid++;
+        m_pixel_x = segment_vector[0].center.x;
+        m_pixel_y = segment_vector[0].center.x;
+        m_range = (PATH_REAL_LENGTH * gray_img->height) / (segment_vector[0].length * TAN_FOV_Y);
+        m_angle = segment_vector[0].angle;
+
+        retval = FULL_DETECT;
     }
 
-    if (n_valid < 2) {
-        return NO_TARGET;
-    }
-
-    m_pixel_x = x_sum / n_valid - gray_img->width/2;
-    m_pixel_y = y_sum / n_valid - gray_img->height/2;
+    m_pixel_x -= gray_img->width/2;
+    m_pixel_y -= gray_img->height/2;
     m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / gray_img->width);
     m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
-    m_range = range_sum / n_valid;
-    m_angle = last_path.angle;
-    return FULL_DETECT;
+    printf ("Path (%3d,%3d) (%5.2f,%5.2f) angle=%3.0f  range=%d\n", m_pixel_x, m_pixel_y, m_angular_x, m_angular_y, m_angle, m_range);
+    return retval;
 }

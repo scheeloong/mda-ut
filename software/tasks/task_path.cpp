@@ -2,8 +2,9 @@
 #include "mda_vision.h"
 
 // Global declarations
-const int SEARCH_DEPTH = 300;
-const int DEPTH_TO_SINK = 200;
+const int PATH_DELTA_DEPTH = 50;
+const int MASTER_TIMEOUT = 30;
+const int ALIGN_DELTA_DEPTH = 0;
 
 enum TASK_STATE {
     STARTING,
@@ -32,12 +33,14 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
     bool done_path = false;
 
     // sink to starting depth
-    set(DEPTH, SEARCH_DEPTH);
-
+    //set (DEPTH, MDA_TASK_BASE::starting_depth+PATH_DELTA_DEPTH);
+    set (DEPTH, 100);
+    
     // read the starting orientation
     int starting_yaw = attitude_input->yaw();
     printf("Starting yaw: %d\n", starting_yaw);
 
+    //TIMER master_timer;
     TIMER timer;
 
     while (1) {
@@ -55,14 +58,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
 
         /**
         * Basic Algorithm:
-        *  - Remember the starting attitude
-        *  - Define 2 depths, search_depth and align_depth, for searching and aligning.
-        *  - Start at search_depth
-        *  - If can't see anything at search_depth, go to starting attitude and go foward
-        *  - If see something at search_depth, center self
-        *  - If centered, sink to align depth
-        *  - If see something at align depth, align
-        *  - If don't see anything at align depth, go back to search_depth
+        *  - Go to path
+        *  - Align with path
         */
 
         if (!done_path) {
@@ -80,9 +77,9 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
             if (state == STARTING) {
                 if (vision_code == NO_TARGET) {
                     printf ("Starting: No target\n");
-                    set(SPEED,1);
-                    if (timer.get_time() > 120) { // timeout
-                        printf ("Timeout\n");
+                    set(SPEED,3);
+                    if (timer.get_time() > MASTER_TIMEOUT) { // timeout
+                        printf ("Master Timeout\n");
                         return TASK_MISSING;
                     }
                 }
@@ -102,9 +99,10 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     printf ("Searching: No target\n");
                     if (timer.get_time() > 10) { // timeout, go back to starting state
                         printf ("Timeout\n");
-                        // set starting attitude!
+                        set (YAW, starting_yaw);
                         stop();
                         timer.restart();
+                        path_vision.clear_frames();
                         state = STARTING;
                     }
                     else if (timer.get_time() % 2 == 0) { // spin around a bit to try to re-aquire?
@@ -123,18 +121,20 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     if(pix_distance > frame->height/5){ // move over the path
                         if (abs(xy_ang) < 10) {
                             printf ("Set speed foward\n");
-                            set(SPEED,1);
+                            set(SPEED, 3);
                         }
                         else {
                             printf("Turning %s %d degrees (xy_ang)\n", (xy_ang > 0) ? "Right" : "Left", static_cast<int>(abs(xy_ang)));
                             stop();
                             move(RIGHT, xy_ang);
+                            path_vision.clear_frames();
                         }
                     }
                     else {                              // we are over the path, sink and try align state
                         stop();
-                        move(SINK, DEPTH_TO_SINK);
+                        move(SINK, ALIGN_DELTA_DEPTH);
                         timer.restart();
+                        path_vision.clear_frames();
                         state = AT_ALIGN_DEPTH;
                     }
                 }   
@@ -144,8 +144,9 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     printf ("Aligning: No target\n");
                     if (timer.get_time() > 6) { // timeout
                         printf ("Timeout\n");
-                        move(RISE, DEPTH_TO_SINK);
+                        move(RISE, ALIGN_DELTA_DEPTH);
                         timer.restart();
+                        path_vision.clear_frames();
                         state = AT_SEARCH_DEPTH;
                     }
                 }
@@ -156,15 +157,25 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                 else {
                     if (abs(pos_angle) >= 10) {
                         move(RIGHT, pos_angle);
+                        path_vision.clear_frames();
                         timer.restart();
                     }
                     else {
                         done_path = true;
-                        break;
-                        timer.restart();
                     }
                 }
             }
+        } // done_path
+        else {
+            // charge foward for 2 secs
+            timer.restart();
+            while (timer.get_time() < 2) {
+                set(SPEED, 4);
+            }
+            set(SPEED, 0);
+            printf ("Path Task Done!!\n");
+            return TASK_DONE;
+
         }
 
         // Ensure debug messages are printed
@@ -210,7 +221,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH_SKIP:: run_task() {
     bool done_skip = false;
 
     // sink to starting depth
-    set(DEPTH, SEARCH_DEPTH);
+    //set (DEPTH, MDA_TASK_BASE::starting_depth+PATH_DELTA_DEPTH);
+    set (DEPTH, 100);
 
     while (1) {
         IplImage* frame = image_input->get_image(DWN_IMG);

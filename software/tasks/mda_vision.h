@@ -248,7 +248,7 @@ public:
         
         clear_data();
         add_frame (src);
-        MDA_VISION_RETURN_CODE retval = calc_vci ();
+        MDA_VISION_RETURN_CODE retval = frame_calc ();
  
         assert (retval != FATAL_ERROR);
         return retval;
@@ -274,8 +274,7 @@ public:
     //bool rbox_stable(float threshold);
     //bool circle_stable(float threshold);
     int frame_is_valid() { return n_valid; }
-    void add_frame (IplImage* src);  
-    MDA_VISION_RETURN_CODE calc_vci ();
+    void add_frame (IplImage* src);
     MDA_VISION_RETURN_CODE frame_calc ();
 };
 

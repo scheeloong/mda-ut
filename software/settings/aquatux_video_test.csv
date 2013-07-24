@@ -2,7 +2,7 @@
 
 IMAGE_INPUT VIDEO
 VIDEO_FWD ../San_Diego_Tuesday_2/Tues_gate_21_17.avi
-VIDEO_DWN ../San_Diego_Tuesday_2/Tues_buoy_21_24.avi
+VIDEO_DWN ../San_Diego_Tuesday_2/Tues_path_21_24.avi
 IMAGE_SHOW_RAW 1
 WRITE_TO_VIDEO 0
 
