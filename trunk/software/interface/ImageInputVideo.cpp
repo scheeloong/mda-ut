@@ -33,9 +33,11 @@ bool ImageInputVideo::ready_internal_image (ImageDirection dir)
 IplImage *ImageInputVideo::get_internal_image(ImageDirection dir)
 {
     if (dir == FWD_IMG) {
+        usleep(100000);
         return cam_fwd ? cam_fwd->retrieveFrameResized() : NULL;
     }
     if (dir == DWN_IMG) {
+        usleep(100000);
         return cam_dwn ? cam_dwn->retrieveFrameResized() : NULL;
     }
     return NULL;

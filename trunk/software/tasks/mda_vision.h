@@ -25,6 +25,9 @@ enum MDA_VISION_RETURN_CODE  {
     DOUBLE_DETECT
 };
 
+inline bool shape_count_greater_than (MvShape S1, MvShape S2) {
+    return S1.count > S2.count;
+}
 
 /// ########################################################################
 /** This is the base class for a vision module. Every vision module needs to implement
@@ -162,11 +165,10 @@ class MDA_VISION_MODULE_GATE : public MDA_VISION_MODULE_BASE {
     mvWindow window2;
     mvWatershedFilter watershed_filter;
     mvContours contour_filter;
-    mvHoughLines HoughLines;
-    mvKMeans KMeans;
+    //mvHoughLines HoughLines;
+    //mvKMeans KMeans;
+    //mvLines lines;
 
-    mvLines lines;
-    
     IplImage* gray_img;
     IplImage* gray_img_2;
 
@@ -188,6 +190,8 @@ public:
     
     void add_frame (IplImage* src);
     MDA_VISION_RETURN_CODE frame_calc ();
+    bool latest_frame_is_valid () {return m_frame_data_vector[read_index].is_valid();}
+    bool latest_frame_is_two_segment () {return m_frame_data_vector[read_index].rboxes_valid[0] && m_frame_data_vector[read_index].rboxes_valid[1];}
 
     virtual int get_angle() {printf ("VISION_MODULE_GATE - get_angle not allowed\n"); exit(1); return 0;}
 };

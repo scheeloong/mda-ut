@@ -15,7 +15,7 @@ void ActuatorOutputSimulator::set_attitude_absolute(ATTITUDE_DIRECTION dir, int 
 {
   switch(dir) {
     case SPEED:
-      SimulatorSingleton::get_instance().set_target_accel(val);
+      SimulatorSingleton::get_instance().set_target_accel(val/2);
       break;
     case YAW:
       SimulatorSingleton::get_instance().set_target_yaw(val);
