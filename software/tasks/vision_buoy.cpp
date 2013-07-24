@@ -54,20 +54,103 @@ MDA_VISION_MODULE_BUOY:: ~MDA_VISION_MODULE_BUOY () {
     mvReleaseScratchImage2();
 }
 
-MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY:: calc_vci () {
-    if (m_pixel_x == MV_UNDEFINED_VALUE || m_pixel_y == MV_UNDEFINED_VALUE || m_range == MV_UNDEFINED_VALUE)
-        return NO_TARGET;
+void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
+    // shift the frames back by 1
+    shift_frame_data (m_frame_data_vector, read_index, N_FRAMES_TO_KEEP);
 
-    m_pixel_x -= gray_img->width/2;
-    m_pixel_y -= gray_img->height/2;
+    watershed_filter.watershed(src, gray_img, 1);
+    window.showImage (gray_img);
 
-    m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / gray_img->width);
-    m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
-    DEBUG_PRINT ("Buoy: (%d,%d) (%5.2f,%5.2f). Range = %d\n", m_pixel_x, m_pixel_y, 
-            m_angular_x, m_angular_y, m_range);
+    COLOR_TRIPLE color;
+    int H,S,V;
+    MvCircle circle;
+    MvCircleVector circle_vector;
+    MvRotatedBox rbox;
+    MvRBoxVector rbox_vector;
 
-    return FULL_DETECT;
+    float length_to_width = RBOX_REAL_LENGTH / RBOX_REAL_DIAMETER;
+
+    while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
+        cvCopy (gray_img_2, gray_img);
+        tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
+        if (S < 30 || V < 20) {
+            //printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
+            continue;
+        }
+
+        contour_filter.match_circle(gray_img_2, &circle_vector, color);
+        contour_filter.match_rectangle(gray_img, &rbox_vector, color, length_to_width-0.5, length_to_width+0.8);        
+
+        //window2.showImage (gray_img_2);
+    }
+
+    if (circle_vector.size() > 0) {
+        MvCircleVector::iterator iter = circle_vector.begin();
+        MvCircleVector::iterator iter_end = circle_vector.end();
+        
+        // for now, frame will store circle with best validity
+        for (; iter != iter_end; ++iter) {
+            m_frame_data_vector[read_index].assign_circle_by_validity(*iter);
+        }
+    }
+
+    if (rbox_vector.size() > 0) {
+        MvRBoxVector::iterator iter = rbox_vector.begin();
+        MvRBoxVector::iterator iter_end = rbox_vector.end();
+        
+        // for now, frame will store rect with best validity
+        for (; iter != iter_end; ++iter) {
+            if (abs(iter->angle) <= 30 ) { // dont add if angle > 30 degree
+                m_frame_data_vector[read_index].assign_rbox_by_validity(*iter);
+            }
+        }
+    }
+
+    m_frame_data_vector[read_index].sort_rbox_by_x();
+
+    if (m_frame_data_vector[read_index].is_valid()) {
+        m_frame_data_vector[read_index].drawOntoImage(gray_img_2);
+        window2.showImage (gray_img_2);
+    }
+
+    //print_frames();
 }
+
+MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY::frame_calc () {
+    if (m_frame_data_vector[read_index].is_valid()) {
+        return FULL_DETECT;
+    }
+    return UNKNOWN_TARGET;
+}
+
+void MDA_VISION_MODULE_BASE::print_frames () {
+    printf ("\nSAVED FRAMES\n");
+    int i = read_index;
+    int i2 = 0;
+    do {
+        printf ("Frame[%-2d]:\t", i2);        
+        if (m_frame_data_vector[i].is_valid()) {
+            int n_circles = m_frame_data_vector[i].circle_valid?1:0;
+            int n_boxes = (m_frame_data_vector[i].rboxes_valid[0]?1:0) + (m_frame_data_vector[i].rboxes_valid[1]?1:0);
+            std::string color_str, color_str_2;
+
+            color_str = color_int_to_string(m_frame_data_vector[i].m_frame_circle.color_int);
+            printf ("%d Circles (%s)\t", n_circles, (n_circles > 0)?color_str.c_str():"---");
+
+            color_str = color_int_to_string(m_frame_data_vector[i].m_frame_boxes[0].color_int);
+            color_str_2 = color_int_to_string(m_frame_data_vector[i].m_frame_boxes[1].color_int);
+            printf ("%d Boxes (%s,%s)\n", n_boxes,
+                (n_boxes > 0)?color_str.c_str():"---", (n_boxes > 1)?color_str_2.c_str():"---"
+                );
+        }
+        else
+            printf ("Invalid\n");
+
+        if (++i >= N_FRAMES_TO_KEEP) i = 0;
+        i2++;
+    } while (i != read_index && i2 < N_FRAMES_TO_KEEP);
+}
+
 
 bool MDA_VISION_MODULE_BUOY::rbox_stable (int rbox_index, float threshold) {
     assert (rbox_index >= 0 && rbox_index <= 1);
@@ -181,101 +264,4 @@ bool MDA_VISION_MODULE_BUOY::circle_stable (float threshold) {
         color_int_to_string(m_color).c_str());
 
     return true;
-}
-
-void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
-    // shift the frames back by 1
-    shift_frame_data (m_frame_data_vector, read_index, N_FRAMES_TO_KEEP);
-
-    watershed_filter.watershed(src, gray_img, 1);
-    window.showImage (gray_img);
-
-    COLOR_TRIPLE color;
-    int H,S,V;
-    MvCircle circle;
-    MvCircleVector circle_vector;
-    MvRotatedBox rbox;
-    MvRBoxVector rbox_vector;
-
-    float length_to_width = RBOX_REAL_LENGTH / RBOX_REAL_DIAMETER;
-
-    while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
-        cvCopy (gray_img_2, gray_img);
-        tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
-        if (S < 30 || V < 20) {
-            //printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
-            continue;
-        }
-
-        contour_filter.match_circle(gray_img_2, &circle_vector, color);
-        contour_filter.match_rectangle(gray_img, &rbox_vector, color, length_to_width-0.5, length_to_width+0.8);        
-
-        //window2.showImage (gray_img_2);
-    }
-
-    if (circle_vector.size() > 0) {
-        MvCircleVector::iterator iter = circle_vector.begin();
-        MvCircleVector::iterator iter_end = circle_vector.end();
-        
-        // for now, frame will store circle with best validity
-        for (; iter != iter_end; ++iter) {
-            m_frame_data_vector[read_index].assign_circle_by_validity(*iter);
-        }
-    }
-
-    if (rbox_vector.size() > 0) {
-        MvRBoxVector::iterator iter = rbox_vector.begin();
-        MvRBoxVector::iterator iter_end = rbox_vector.end();
-        
-        // for now, frame will store rect with best validity
-        for (; iter != iter_end; ++iter) {
-            if (abs(iter->angle) <= 30 ) { // dont add if angle > 30 degree
-                m_frame_data_vector[read_index].assign_rbox_by_validity(*iter);
-            }
-        }
-    }
-
-    m_frame_data_vector[read_index].sort_rbox_by_x();
-
-    if (m_frame_data_vector[read_index].is_valid()) {
-        m_frame_data_vector[read_index].drawOntoImage(gray_img_2);
-        window2.showImage (gray_img_2);
-    }
-
-    //print_frames();
-}
-
-MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY::frame_calc () {
-    if (m_frame_data_vector[read_index].is_valid()) {
-        return FULL_DETECT;
-    }
-    return UNKNOWN_TARGET;
-}
-
-void MDA_VISION_MODULE_BASE::print_frames () {
-    printf ("\nSAVED FRAMES\n");
-    int i = read_index;
-    int i2 = 0;
-    do {
-        printf ("Frame[%-2d]:\t", i2);        
-        if (m_frame_data_vector[i].is_valid()) {
-            int n_circles = m_frame_data_vector[i].circle_valid?1:0;
-            int n_boxes = (m_frame_data_vector[i].rboxes_valid[0]?1:0) + (m_frame_data_vector[i].rboxes_valid[1]?1:0);
-            std::string color_str, color_str_2;
-
-            color_str = color_int_to_string(m_frame_data_vector[i].m_frame_circle.color_int);
-            printf ("%d Circles (%s)\t", n_circles, (n_circles > 0)?color_str.c_str():"---");
-
-            color_str = color_int_to_string(m_frame_data_vector[i].m_frame_boxes[0].color_int);
-            color_str_2 = color_int_to_string(m_frame_data_vector[i].m_frame_boxes[1].color_int);
-            printf ("%d Boxes (%s,%s)\n", n_boxes,
-                (n_boxes > 0)?color_str.c_str():"---", (n_boxes > 1)?color_str_2.c_str():"---"
-                );
-        }
-        else
-            printf ("Invalid\n");
-
-        if (++i >= N_FRAMES_TO_KEEP) i = 0;
-        i2++;
-    } while (i != read_index && i2 < N_FRAMES_TO_KEEP);
 }
