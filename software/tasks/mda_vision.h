@@ -345,7 +345,7 @@ public:
         clear_data();
         add_frame (src);
         //circle_stable(10000);
-        rbox_stable(0, 30);
+        //rbox_stable(0, 30);
         //rbox_stable(1, 30);
         MDA_VISION_RETURN_CODE retval = FULL_DETECT; //calc_vci ();
 
