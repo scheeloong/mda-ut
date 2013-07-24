@@ -179,11 +179,11 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                 printf ("Panning\n");
                 int t = timer.get_time();
                 if (t < PAN_TIME_HALF && t != prev_t) { // pan left for first 6 secs
-                    move (LEFT, 10);
+                    set_yaw_change (-20);
                     prev_t = timer.get_time();
                 }
                 else if (t < 3*PAN_TIME_HALF && t != prev_t) { // pan right for next 10 secs
-                    move (RIGHT, 10);
+                    set_yaw_change (20);
                     prev_t = timer.get_time();
                 }
                 else if (t >= 3*PAN_TIME_HALF) { // stop pan and reset
@@ -196,7 +196,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                 }
                 else if (gate_vision.latest_frame_is_two_segment()) {
                     printf ("Two segment frame found - stopping pan\n");
-                    stop();
+                    set_yaw_change (0);
                     gate_vision.clear_frames();
                     master_timer.restart();
                     full_detect_timer.restart();
