@@ -85,13 +85,17 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
     const int ANGLE_LIMIT = 25;
 
     // go thru each frame and pull all individual segments into a vector
+    // set i to point to the element 1 past read_index
+    int i = read_index + 1;
+    if (i >= N_FRAMES_TO_KEEP) i = 0;
     MvRBoxVector segment_vector;
-    for (int i = 0; i < N_FRAMES_TO_KEEP; i++) {
-        if(m_frame_data_vector[i].rboxes_valid[0])
+    do {
+        if (m_frame_data_vector[i].has_data() && m_frame_data_vector[i].rboxes_valid[0]) {
             segment_vector.push_back(m_frame_data_vector[i].m_frame_boxes[0]);
-        if(m_frame_data_vector[i].rboxes_valid[1])
-            segment_vector.push_back(m_frame_data_vector[i].m_frame_boxes[1]);
-    }
+        }
+        if (++i >= N_FRAMES_TO_KEEP) i = 0;
+    } while (i != read_index);
+
 
     // bin the frames
     for (unsigned i = 0; i < segment_vector.size(); i++) {

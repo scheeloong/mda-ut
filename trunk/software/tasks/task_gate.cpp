@@ -1,8 +1,9 @@
 #include "mda_tasks.h"
 #include "mda_vision.h"
 
-#define PAN_TIME_HALF 6
-#define MASTER_TIMEOUT 40
+const int PAN_TIME_HALF = 6;
+const int MASTER_TIMEOUT = 40;
+const int GATE_DELTA_DEPTH = 50;
 
 MDA_TASK_GATE:: MDA_TASK_GATE (AttitudeInput* a, ImageInput* i, ActuatorOutput* o) :
     MDA_TASK_BASE (a, i, o)
@@ -31,9 +32,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
     MDA_TASK_BASE::starting_depth = attitude_input->depth();
-
     // gate depth
-    set (DEPTH, starting_depth+50);
+    set (DEPTH, MDA_TASK_BASE::starting_depth+GATE_DELTA_DEPTH);
 
     // read the starting orientation
     int starting_yaw = attitude_input->yaw();
@@ -215,10 +215,6 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                 set(SPEED, 6);
             }
             set(SPEED, 0);
-            timer.restart();
-            while (timer.get_time() < 1) {
-                set(SPEED, 0);
-            }
             printf ("Gate Task Done!!\n");
             return TASK_DONE;
         }
