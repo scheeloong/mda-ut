@@ -499,26 +499,27 @@ void do_buoys()
       if (BUOY_CYLINDRICAL[i]) {
         glTranslatef(0, 0, -0.25);
         gluCylinder(buoys[2 * i],
-                  /*BASE_RADIUS*/ .1,//double size
-                  /*TOP_RADIUS*/ .1,
-                  /*HEIGHT*/ .5,
+                  /*BASE_RADIUS*/ .05,//double size
+                  /*TOP_RADIUS*/ .05,
+                  /*HEIGHT*/ .25,
                   /*SLICES*/ 30,
                   /*STACKS*/ 5);
       }
       else {
         gluSphere(buoys[2 * i],
-                /* radius*/ .23,//double size
+                /* radius*/ .12,//double size
                 /* slices*/ 40,
                 /* stacks*/ 40);
       }
-      
+      // supports
+      // RZ - remove for now
       glColor3f ( 0.0f, 0.0f, 0.0f );
-      gluCylinder(buoys[2 * i + 1],
-                  /*BASE_RADIUS*/ .01,
-                  /*TOP_RADIUS*/ .01,
-                  /*HEIGHT*/ buoys_v[i].y,
-                  /*SLICES*/ 10,
-                  /*STACKS*/ 10);
+      //gluCylinder(buoys[2 * i + 1],
+      //            /*BASE_RADIUS*/ .01,
+      //            /*TOP_RADIUS*/ .01,
+      //            /*HEIGHT*/ buoys_v[i].y,
+      //            /*SLICES*/ 10,
+      //            /*STACKS*/ 10);
       glRotatef(-90, 1.0, 0.0, 0.0);
       glTranslatef(-buoys_v[i].x, -buoys_v[i].y, -buoys_v[i].z);
    }

@@ -22,8 +22,8 @@ enum MDA_TASK {
 enum MDA_TASK_RETURN_CODE {
 	TASK_ERROR, 
 	TASK_DONE,
-	TASK_REDO,
 	TASK_MISSING,
+	TASK_REDO,
 	TASK_QUIT
 };
 
@@ -162,7 +162,7 @@ public:
 };
 
 /// ########################################################################
-/// U shaped Frame
+/// Frame task
 /// ########################################################################
 class MDA_TASK_FRAME : public MDA_TASK_BASE {
 
@@ -173,6 +173,9 @@ public:
 	MDA_TASK_RETURN_CODE run_task ();
 };
 
+/// ########################################################################
+/// Other tasks
+/// ########################################################################
 class MDA_TASK_SURFACE : public MDA_TASK_BASE {
 
 public:
@@ -180,6 +183,19 @@ public:
 	~MDA_TASK_SURFACE ();
 
 	MDA_TASK_RETURN_CODE run_task();
+};
+
+
+class MDA_TASK_RESET : public MDA_TASK_BASE {
+
+public:
+	MDA_TASK_RESET (AttitudeInput* a, ImageInput* i, ActuatorOutput* o);
+	~MDA_TASK_RESET ();
+
+	MDA_TASK_RETURN_CODE run_task(int depth_in_mv, int yaw, int fwd_movement_time);
+	MDA_TASK_RETURN_CODE run_task() {
+		return run_task(MDA_TASK_BASE::starting_depth, 0, 0);
+	}	
 };
 
 #endif

@@ -3,7 +3,7 @@
 #include "SubmarineSingleton.h"
 #include "../scripts/scripts.h"
 
-#define SPEED_FACTOR 15 /* Tune the submarine speed offset to sort of resemble the simulator */
+#define SPEED_FACTOR 6 /* Tune the submarine speed offset to sort of resemble the simulator */
 
 ActuatorOutputSubmarine::ActuatorOutputSubmarine()
 {

@@ -235,9 +235,6 @@ class MDA_VISION_MODULE_PATH : public MDA_VISION_MODULE_BASE {
     static const float K_DIS = 2.0;
 
     // for contour shape/color matching
-    static const double COLOR_DIVISION_FACTOR = 2000;
-    static const double DIFF_THRESHOLD = 1.8 + 80/200; // shape diff + color diff
-    double DIFF_THRESHOLD_SETTING;
     int TARGET_BLUE, TARGET_GREEN, TARGET_RED;
 
     int m_pixel_x_alt, m_pixel_y_alt, m_range_alt;
@@ -301,6 +298,7 @@ public:
     void add_frame (IplImage* src);  
 
     MDA_VISION_RETURN_CODE calc_vci ();
+    MDA_VISION_RETURN_CODE frame_calc ();
 };
 
 /// ########################################################################
@@ -310,7 +308,7 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
     static const char MDA_VISION_BUOY_SETTINGS[];
     static const float BUOY_REAL_DIAMETER = 23;
     static const float RBOX_REAL_DIAMETER = 10;
-    static const float RBOX_REAL_LENGTH = 37;
+    static const float RBOX_REAL_LENGTH = 25;
     static const float MIN_PIXEL_RADIUS_FACTOR = 0.04;
 
     // for contour shape/color matching
@@ -347,10 +345,10 @@ public:
         clear_data();
         add_frame (src);
         //circle_stable(10000);
-        //rbox_stable(0, 10000);
-        //rbox_stable(1, 10000);
-        MDA_VISION_RETURN_CODE retval = calc_vci ();
- 
+        rbox_stable(0, 30);
+        //rbox_stable(1, 30);
+        MDA_VISION_RETURN_CODE retval = FULL_DETECT; //calc_vci ();
+
         assert (retval != FATAL_ERROR);
         return retval;
     };

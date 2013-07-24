@@ -23,19 +23,19 @@ void Mission::work()
   // Tasks
   MDA_TASK_GATE       gate(attitude_input, image_input, actuator_output);
   MDA_TASK_BUOY       buoy(attitude_input, image_input, actuator_output);
-//MDA_TASK_FRAME      frame(attitude_input, image_input, actuator_output);
+  //MDA_TASK_FRAME      frame(attitude_input, image_input, actuator_output);
   MDA_TASK_PATH       path(attitude_input, image_input, actuator_output);
-  MDA_TASK_PATH_SKIP  path_skip(attitude_input, image_input, actuator_output);
+  //MDA_TASK_PATH_SKIP  path_skip(attitude_input, image_input, actuator_output);
   MDA_TASK_SURFACE    surface(attitude_input, image_input, actuator_output);
-
+  MDA_TASK_RESET      reset(attitude_input, image_input, actuator_output);
   // List of tasks to be performed in order (NULL-terminated)
   MDA_TASK_BASE *tasks[] = {
     &gate,
     &path,
     &buoy,
-    &path,
-    &path_skip,
-    &path,
+    //&path,
+    //&path_skip,
+    //&path,
     &surface,
     NULL};
 
@@ -51,11 +51,22 @@ void Mission::work()
 
   // Run each task until the list of tasks is complete
   while (*task_ptr) {
+    int starting_yaw = attitude_input->yaw();
+    int starting_depth = attitude_input->depth();
+
     ret_code = (*task_ptr)->run_task();
+
+    if (ret_code == TASK_REDO || ret_code == TASK_ERROR || ret_code == TASK_MISSING) {
+      // reset position, go back to orig depth, orig yaw, then retreat for 2 seconds
+      reset.run_task(starting_depth, starting_yaw, -2);
+      // rerun task
+      ret_code = (*task_ptr)->run_task();  
+    }
     if (ret_code == TASK_QUIT) {
       surface.run_task();
       break;
     }
+    
     task_ptr++;
   }
 }
