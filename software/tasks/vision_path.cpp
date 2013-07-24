@@ -523,7 +523,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH::frame_calc () {
 
         x_sum += curr_path.center.x;
         y_sum += curr_path.center.y;
-        range_sum += (RBOX_REAL_LENGTH * gray_img->width) / (curr_path.length * TAN_FOV_X);
+        range_sum += (PATH_REAL_LENGTH * gray_img->width) / (curr_path.length * TAN_FOV_X);
         n_valid++;
     }
 
@@ -537,6 +537,5 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH::frame_calc () {
     m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
     m_range = range_sum / n_valid;
     m_angle = last_path.angle;
-    m_color = last_path.color_int;
     return FULL_DETECT;
 }
