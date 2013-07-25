@@ -305,6 +305,8 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
     IplImage* gray_img_2;
 
     int m_color;
+    MvRBoxVector m_rbox_segment_vector;
+    MvCircleVector m_circle_segment_vector;
 
 public:
     MDA_VISION_MODULE_BUOY ();

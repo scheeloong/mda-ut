@@ -119,7 +119,6 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                 // if path vision saw something, go do the path task
                 if (vision_code != NO_TARGET) {
                     printf ("\nSaw Path! Going to Path vision!");
-                    cvWaitKey(1000);
                     done_gate = true;
                     set(SPEED, 0);
                     set(YAW, starting_yaw);
