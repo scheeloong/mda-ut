@@ -234,34 +234,24 @@ void calculate_pid()
       NULL
    );
 #ifdef PRIORITIZE_PITCH_OVER_DEPTH
-   bool out_of_bound = stabilizing_motors_force_to_pwm ( // this calculates the pwms for pitch and roll motors
-      0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed, // m_front_left
-      -0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed, // m_front_right
-      -0.5*Pitch_Force_Needed, // m_rear
-      &m_front_left,
-      &m_front_right,
-      &m_rear
-   );
-   if (!out_of_bound) {
-   stabilizing_motors_force_to_pwm ( // this calculates the pwms for pitch and roll motors
-      0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_left
-      -0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_right
-      -0.5*Pitch_Force_Needed + 0.5*Depth_Force_Needed, // m_rear
-      &m_front_left,
-      &m_front_right,
-      &m_rear
-   );
+   if (ABS(current_orientation.pitch) > 30) {
+      Depth_Force_Needed *= 0.6;
    }
-#else
+   else if (ABS(current_orientation.pitch) > 35) {
+      Depth_Force_Needed *= 0.4;
+   }
+   else if (ABS(current_orientation.pitch) > 40) {
+      Depth_Force_Needed *= 0.2;
+   }
+#endif
    stabilizing_motors_force_to_pwm ( // this calculates the pwms for pitch and roll motors
-      0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_left
-      -0.5*Roll_Force_Needed + 0.25*Pitch_Force_Needed + 0.25*Depth_Force_Needed, // m_front_right
+      0.5*Roll_Force_Needed + 0.2*Pitch_Force_Needed + 0.2*Depth_Force_Needed, // m_front_left
+      -0.5*Roll_Force_Needed + 0.2*Pitch_Force_Needed + 0.2*Depth_Force_Needed, // m_front_right
       -0.5*Pitch_Force_Needed + 0.5*Depth_Force_Needed, // m_rear
       &m_front_left,
       &m_front_right,
       &m_rear
    );
-#endif
 
    M_FRONT_LEFT = (int)m_front_left;
    M_FRONT_RIGHT = (int)m_front_right;
