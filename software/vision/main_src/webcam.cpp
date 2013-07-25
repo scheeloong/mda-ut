@@ -27,6 +27,7 @@ unsigned BREAK=0;
 unsigned GATE=0;
 unsigned PATH=0;
 unsigned BUOY=0;
+unsigned TIMEOUT=0;
 
 
 int main( int argc, char** argv ) {
@@ -62,6 +63,8 @@ int main( int argc, char** argv ) {
             PATH = 1;
         else if (!strcmp (argv[i], "--buoy"))
             BUOY = 1;
+        else if (!strcmp (argv[i], "--timeout"))
+            TIMEOUT = atoi(argv[++i]);
         else if (!strcmp (argv[i], "--load")) {
             LOAD = i+1; // put the next argument index into LOAD
             i++;        // skip next arg
@@ -135,6 +138,11 @@ int main( int argc, char** argv ) {
         if (LOAD) {
             usleep(17000);
         }
+	if (TIMEOUT > 0) {
+	    if ((clock() - t_start)/CLOCKS_PER_SEC > TIMEOUT) {
+	         break;
+            }
+	}
 
         if (!frame) {
             printf ("Video Finished.\n");
