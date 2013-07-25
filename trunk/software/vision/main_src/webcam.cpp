@@ -164,13 +164,19 @@ int main( int argc, char** argv ) {
             win2->showImage (filter_img);
         }
         else if (GATE) {
-            gate->filter (frame);
+            if (gate->filter (frame) == FULL_DETECT) {
+                cvWaitKey(200);
+            }
         }
         else if (PATH) {
-            path->filter (frame);
+            if (path->filter (frame) == FULL_DETECT) {
+                cvWaitKey(00);
+            }
         }
         else if (BUOY) {
-            buoy->filter (frame);
+            if (buoy->filter (frame) == FULL_DETECT) {
+                cvWaitKey(200);
+            }
         }
         else if (WATERSHED) {
             watershed_filter.watershed(frame, filter_img);

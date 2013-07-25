@@ -74,7 +74,6 @@ void mvContours::init_contour_template_database (const char** image_database_vec
 void mvContours::get_rect_parameters (IplImage* img, CvSeq* contour1, CvPoint &centroid, float &length, float &angle) {
     assert (contour1->total > 6); // needed by cvFitEllipse2
 
-    //CvBox2D Rect = cvFitEllipse2(contour1);
     CvBox2D Rect = cvMinAreaRect2(contour1, m_storage);
     angle = Rect.angle;
     int height = Rect.size.height;
@@ -147,27 +146,30 @@ int mvContours::find_contour_and_check_errors(IplImage* img) {
         CV_CHAIN_APPROX_SIMPLE
     );
 
-//    int last_x=-1, last_y=-1;
+    int last_x=-1, last_y=-1;
     if (m_contours == NULL) {
         goto FIND_CONTOUR_ERROR;
     }
     
     // check that the contour does not coincide with the sides of the image for more than 20% of its perimeter
-/*    for (int i = 0; i < m_contours->total; i++) {
+    for (int i = 0; i < m_contours->total; i++) {
         CvPoint* p = CV_GET_SEQ_ELEM (CvPoint, m_contours, i);
-        if (p->x == last_x && abs(p->y-last_y) > img->height/3) {
-            DEBUG_PRINT ("find_contour: contour shares vertical side with image (x=%d). Discarding.\n", last_x);
-            goto FIND_CONTOUR_ERROR;
+        if (p->x == 1 || p->x == 398) {
+            if (p->x == last_x && abs(p->y-last_y) > img->height/3) {
+                DEBUG_PRINT ("find_contour: contour shares vertical side with image (x=%d). Discarding.\n", last_x);
+                goto FIND_CONTOUR_ERROR;
+            }
         }
-        if (p->y == last_y && abs(p->x-last_x) > img->width/3) {
-            DEBUG_PRINT ("find_contour: contour shares horizontal side with image (y=%d). Discarding.\n", last_y);
-            goto FIND_CONTOUR_ERROR;
+        if ((p->y == 1) || (p->y == 298)) {
+            if (p->y == last_y && abs(p->x-last_x) > img->width/3) {
+                DEBUG_PRINT ("find_contour: contour shares horizontal side with image (y=%d). Discarding.\n", last_y);
+                goto FIND_CONTOUR_ERROR;
+            }
         }
 
         last_x = p->x;
         last_y = p->y;
     }
-*/    
     bin_contours.stop();
     return n_contours;
 

@@ -12,8 +12,8 @@ float absf(float f){
     else return f;
 }
 
-const float LEN_TO_WIDTH_MAX = 8.0;
-const float LEN_TO_WIDTH_MIN = 2.0;
+const float LEN_TO_WIDTH_MAX = 9.0;
+const float LEN_TO_WIDTH_MIN = 4.0;
 
 const char MDA_VISION_MODULE_PATH::MDA_VISION_PATH_SETTINGS[] = "vision_path_settings.csv";
 
@@ -47,8 +47,28 @@ void MDA_VISION_MODULE_PATH::add_frame (IplImage* src) {
     // shift the frames back by 1
     shift_frame_data (m_frame_data_vector, read_index, N_FRAMES_TO_KEEP);
 
+    // HSV hack!
+    unsigned char *srcptr;
+    int zeros = 0;
+    for (int i = 0; i < src->height; i++) {
+        srcptr = (unsigned char*)src->imageData + i*src->widthStep;
+        for (int j = 0; j < src->width; j++) {
+            if (srcptr[2] < 15) {
+                srcptr[0] = 0;
+                srcptr[1] = 0;
+                srcptr[2] = 0;
+                zeros++;
+            }
+            srcptr += 3;
+        }
+    }
+    if (zeros > 0.999 * 400*300) {
+        printf ("Path: add_frame: not enough pixels\n");
+        return;
+    }
+
+    window.showImage (src);
     watershed_filter.watershed(src, gray_img, 1);
-    //window.showImage (src);
 
     COLOR_TRIPLE color;
     int H,S,V;
@@ -58,14 +78,14 @@ void MDA_VISION_MODULE_PATH::add_frame (IplImage* src) {
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
         // check that the segment is roughly red
         tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
-        if (S < 30 || V < 40 || !(H >= 160 || H <= 120)) {
+        /*if (S < 30 || V < 40 || !(H >= 160 || H <= 120)) {
             //printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
             continue;
-        }
+        }*/
 
         contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, LEN_TO_WIDTH_MIN, LEN_TO_WIDTH_MAX);
         contour_filter.drawOntoImage(gray_img_2);
-    window.showImage (gray_img_2);
+        //window.showImage (gray_img_2);
     }
 
     // debug only
@@ -74,17 +94,18 @@ void MDA_VISION_MODULE_PATH::add_frame (IplImage* src) {
     if (rbox_vector.size() > 0) {
         MvRBoxVector::iterator iter = rbox_vector.begin();
         MvRBoxVector::iterator iter_end = rbox_vector.end();
-        
+     
+
         // for now, frame will store rect with best validity
         for (; iter != iter_end; ++iter) {
+            if (iter->length * iter->width < 40*20 || iter->length * iter->width > 300*10)
+                continue;
+            /*if (iter->center.x - iter->width/2 == 1 || iter->center.x + iter->width/2 == 398)
+                continue;
+            if (iter->center.y - iter->width/2 == 1 || iter->center.y + iter->width/2 == 298)
+                continue;*/
             m_frame_data_vector[read_index].assign_rbox_by_validity(*iter);
         }
-
-        m_pixel_x = m_frame_data_vector[read_index].m_frame_boxes[0].center.x;
-        m_pixel_y = m_frame_data_vector[read_index].m_frame_boxes[0].center.y;
-        //m_range = (PATH_REAL_LENGTH * gray_img->width) / (m_frame_data_vector[read_index].m_frame_boxes[0].length * TAN_FOV_X);
-        m_range = (PATH_REAL_WIDTH * gray_img->width) / (m_frame_data_vector[read_index].m_frame_boxes[0].width * TAN_FOV_X);
-        m_angle = m_frame_data_vector[read_index].m_frame_boxes[0].angle;
     }
 
     if (m_frame_data_vector[read_index].is_valid()) {
@@ -117,9 +138,9 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH::frame_calc () {
             CvPoint center2 = segment_vector[j].center;
             int angle_delta = static_cast<int>(segment_vector[i].angle-segment_vector[j].angle);
             
-            if (abs(center1.x-center2.x)+abs(center1.y-center2.y) < 40 && 
-                abs(segment_vector[i].length-segment_vector[j].length) < 20 &&
-                (abs(angle_delta) < 20 || abs(180-angle_delta) < 20)
+            if (abs(center1.x-center2.x)+abs(center1.y-center2.y) < 50 && 
+                abs(segment_vector[i].length-segment_vector[j].length) < 35 &&
+                (abs(angle_delta) < 25 || abs(180-angle_delta) < 25)
             )
             {
                 segment_vector[i].shape_merge(segment_vector[j]);
@@ -160,9 +181,8 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH::frame_calc () {
     }
 
 #ifdef M_DEBUG
-    for (unsigned i = 0; i<=1 && i<segment_vector.size(); i++)
-        segment_vector[i].drawOntoImage(gray_img);
-      window2.showImage(gray_img);
+    segment_vector[0].drawOntoImage(gray_img);
+    window2.showImage(gray_img);
 #endif
 
     m_pixel_x -= gray_img->width/2;
