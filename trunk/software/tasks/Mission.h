@@ -9,7 +9,10 @@ class Mission : public Operation {
     Mission(AttitudeInput *a, ImageInput *i, ActuatorOutput *o) : Operation(a, i, o) {}
     virtual ~Mission();
 
-    virtual void work();
+    virtual void work_internal(bool show_image=false);
+    virtual void work() {
+        work_internal();
+    }
   private:
     bool startup();
 };

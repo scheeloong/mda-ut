@@ -3,7 +3,7 @@
 
 // Global declarations
 const int PATH_DELTA_DEPTH = 50;
-const int MASTER_TIMEOUT = 30;
+const int MASTER_TIMEOUT = 200;
 const int ALIGN_DELTA_DEPTH = 0;
 
 enum TASK_STATE {
@@ -34,7 +34,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
 
     // sink to starting depth
     //set (DEPTH, MDA_TASK_BASE::starting_depth+PATH_DELTA_DEPTH);
-    set (DEPTH, 100);
+    set (DEPTH, 300);
     
     // read the starting orientation
     int starting_yaw = attitude_input->yaw();

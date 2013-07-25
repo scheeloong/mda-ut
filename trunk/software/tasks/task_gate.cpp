@@ -2,7 +2,7 @@
 #include "mda_vision.h"
 
 const int PAN_TIME_HALF = 6;
-const int MASTER_TIMEOUT = 40;
+const int MASTER_TIMEOUT = 200;
 const int GATE_DELTA_DEPTH = 50;
 
 MDA_TASK_GATE:: MDA_TASK_GATE (AttitudeInput* a, ImageInput* i, ActuatorOutput* o) :
@@ -19,7 +19,7 @@ enum TASK_STATE {
     SLOW_FOWARD,
     STOPPED,
     PANNING,
-    PANNING_STOPPED
+    APPROACH
 };
 
 MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
@@ -31,13 +31,14 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
     bool done_gate = false;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
+    int starting_yaw = attitude_input->yaw();
     MDA_TASK_BASE::starting_depth = attitude_input->depth();
     // gate depth
-    set (DEPTH, MDA_TASK_BASE::starting_depth+GATE_DELTA_DEPTH);
+    set (DEPTH, 400/*MDA_TASK_BASE::starting_depth+GATE_DELTA_DEPTH*/);
 
     // read the starting orientation
-    int starting_yaw = attitude_input->yaw();
     printf("Starting yaw: %d\n", starting_yaw);
+    //set (YAW, starting_yaw);
 
     static TIMER timer; // keeps track of time spent in each state
     static TIMER master_timer; // keeps track of time spent not having found the target
@@ -73,28 +74,56 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
         if (!done_gate) {
             if (state == STARTING) {
                 printf ("Starting: Moving Foward at High Speed\n");
-                set (SPEED, 6);
+                set (SPEED, 9);
 
                 if (master_timer.get_time() > MASTER_TIMEOUT) {
                     printf ("Master Timer Timeout!!\n");
                     return TASK_MISSING;
                 }
-                if (gate_vision.latest_frame_is_valid()) {
+                else if (vision_code == FULL_DETECT) {
+                    printf ("FAST Foward: Full Detect\n");
+                    int ang_x = gate_vision.get_angular_x();
+                    //set_yaw_change(ang_x);
+
+                    if (gate_vision.get_range() < 420) {
+                        done_gate = true;
+                        printf ("Range = %d, Approaching Gate\n", gate_vision.get_range());
+                    }
+
+                    timer.restart();
+                    full_detect_timer.restart();
+                    master_timer.restart();
+                }
+                /*if (gate_vision.latest_frame_is_valid()) {
                     set (SPEED, 0);
                     master_timer.restart();
                     timer.restart();
                     gate_vision.clear_frames();
-                    state = STOPPED;
-                }
+                    state = SLOW_FOWARD;
+                }*/
             }
             else if (state == SLOW_FOWARD) {
                 printf ("Slow Foward: Moving foward a little\n");
-                set (SPEED, 2);
+                set (SPEED, 4);
 
-                if (timer.get_time() > 2) {
+                if (timer.get_time() > 3) {
                     timer.restart();
                     gate_vision.clear_frames();
-                    state = STOPPED;
+                    state = PANNING;
+                }
+                else if (vision_code == FULL_DETECT) {
+                    printf ("Slow Foward: Full Detect\n");
+                    int ang_x = gate_vision.get_angular_x();
+                    set_yaw_change(ang_x);
+
+                    if (gate_vision.get_range() < 420) {
+                        done_gate = true;
+                        printf ("Range = %d, Approaching Gate\n", gate_vision.get_range());
+                    }
+
+                    timer.restart();
+                    full_detect_timer.restart();
+                    master_timer.restart();
                 }
                 if (master_timer.get_time() > MASTER_TIMEOUT) {
                     printf ("Master Timer Timeout!!\n");
@@ -128,14 +157,14 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                             printf ("One Segment with range too low. Ending task.\n");
                             done_gate = true;
                         }
-                        else if (gate_vision.get_range() < 470 && full_detect_timer.get_time() > 6) {
+                        else if (gate_vision.get_range() < 470 && full_detect_timer.get_time() > 10) {
                             timer.restart();
                             master_timer.restart();
                             prev_t = -1;
                             state = PANNING;
                         }
                         // only execute turn if the segment is close to out of view and no other options
-                        else if (ang_x >= 40) {
+                        /*else if (ang_x >= 40) {
                             ang_x -= 20;
                             printf ("Moving Left on One Segment %d Degrees\n", ang_x);
                             move (RIGHT, ang_x);
@@ -146,7 +175,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                             printf ("Moving Left on One Segment %d Degrees\n", ang_x);
                             move (RIGHT, ang_x);
                             gate_vision.clear_frames();
-                        }
+                        }*/
 
                         if (timer.get_time() > 2) {
                             timer.restart();
@@ -176,7 +205,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                 //} // collecting frames
             } // state
             else if (state == PANNING) { // pan and look for a frame with 2 segments
-                printf ("Panning\n");
+                /*printf ("Panning\n");
                 int t = timer.get_time();
                 if (t < PAN_TIME_HALF && t != prev_t) { // pan left for first 6 secs
                     set_yaw_change (-20);
@@ -202,9 +231,9 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
                     full_detect_timer.restart();
                     timer.restart();
                     state = STOPPED;
-                }
+                }*/
             }
-            else if (state == PANNING_STOPPED) {
+            else if (state == APPROACH) {
             }
         } // done_gate
         else {

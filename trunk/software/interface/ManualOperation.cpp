@@ -182,6 +182,16 @@ void ManualOperation::work()
          // Scope mission so that it is destructed before display_start_message
          {
            Mission m(attitude_input, image_input, actuator_output);
+           m.work_internal(true);
+         }
+         display_start_message();
+         message_hold("Mission complete!");
+         break;
+      case 'M': // same as mission, but force turn off show_image
+         endwin();
+         // Scope mission so that it is destructed before display_start_message
+         {
+           Mission m(attitude_input, image_input, actuator_output);
            m.work();
          }
          display_start_message();
