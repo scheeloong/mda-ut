@@ -17,5 +17,6 @@ bool ImageInputSimulator::ready_internal_image(ImageDirection dir)
 
 IplImage *ImageInputSimulator::get_internal_image(ImageDirection dir)
 {
+  usleep(100000); // simulate the actual framerate of the webcam images
   return SimulatorSingleton::get_instance().get_image(dir);
 }
