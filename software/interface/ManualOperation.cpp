@@ -58,8 +58,8 @@ void ManualOperation::display_start_message()
   refresh();
 }
 
-#define SPEED_CHG 3
-#define YAW_CHG_IN_DEG 10
+#define SPEED_CHG 18
+#define YAW_CHG_IN_DEG 15
 #define DEPTH_CHG_IN_CM 50
 
 #define REFRESH_RATE_IN_HZ 10
