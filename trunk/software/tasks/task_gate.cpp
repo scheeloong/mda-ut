@@ -31,14 +31,17 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
     bool done_gate = false;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
+    // read the starting orientation
     int starting_yaw = attitude_input->yaw();
+    printf("Starting yaw: %d\n", starting_yaw);
+    
     MDA_TASK_BASE::starting_depth = attitude_input->depth();
     // gate depth
-    set (DEPTH, 400/*MDA_TASK_BASE::starting_depth+GATE_DELTA_DEPTH*/);
+    set (DEPTH, HARDCODED_DEPTH-50/*MDA_TASK_BASE::starting_depth+GATE_DELTA_DEPTH*/);
+    set (DEPTH, HARDCODED_DEPTH/*MDA_TASK_BASE::starting_depth+GATE_DELTA_DEPTH*/);
 
-    // read the starting orientation
-    printf("Starting yaw: %d\n", starting_yaw);
-    //set (YAW, starting_yaw);
+    // go to the starting orientation in case sinking changed it
+    set (YAW, starting_yaw);
 
     static TIMER timer; // keeps track of time spent in each state
     static TIMER master_timer; // keeps track of time spent not having found the target
@@ -238,7 +241,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_GATE:: run_task() {
         } // done_gate
         else {
             // charge foward for 2 secs
-            set(YAW, starting_yaw);
+            //set(YAW, starting_yaw);
             timer.restart();
             while (timer.get_time() < 2) {
                 set(SPEED, 6);

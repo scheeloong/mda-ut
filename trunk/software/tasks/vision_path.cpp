@@ -58,7 +58,7 @@ void MDA_VISION_MODULE_PATH::add_frame (IplImage* src) {
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
         // check that the segment is roughly red
         tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
-        if (S < 30 || V < 30 || !(H >= 160 || H <= 120)) {
+        if (S < 30 || V < 40 || !(H >= 160 || H <= 120)) {
             //printf ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
             continue;
         }
@@ -116,7 +116,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH::frame_calc () {
             CvPoint center1 = segment_vector[i].center;
             CvPoint center2 = segment_vector[j].center;
             
-            if (abs(center1.x-center2.x)+abs(center1.y-center2.y) < 50 && abs(segment_vector[i].length-segment_vector[j].length) < 25)
+            if (abs(center1.x-center2.x)+abs(center1.y-center2.y) < 40 && abs(segment_vector[i].length-segment_vector[j].length) < 20)
             {
                 segment_vector[i].shape_merge(segment_vector[j]);
                 segment_vector.erase(segment_vector.begin()+j);
@@ -132,11 +132,6 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH::frame_calc () {
         printf ("\tSegment %d (%3d,%3d) height=%3.0f, width=%3.0f   count=%d\n", i, segment_vector[i].center.x, segment_vector[i].center.y,
             segment_vector[i].length, segment_vector[i].width, segment_vector[i].count);
     }
-#ifdef M_DEBUG
-    for (unsigned i = 0; i<=1 && i<segment_vector.size(); i++)
-        segment_vector[i].drawOntoImage(gray_img);
-      window2.showImage(gray_img);
-#endif
 
     if (segment_vector.size() == 0 || segment_vector[0].count < 2) { // not enough good segments, return no target
         printf ("Path: No Target\n");
@@ -159,6 +154,12 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH::frame_calc () {
 
         retval = FULL_DETECT;
     }
+
+#ifdef M_DEBUG
+    for (unsigned i = 0; i<=1 && i<segment_vector.size(); i++)
+        segment_vector[i].drawOntoImage(gray_img);
+      window2.showImage(gray_img);
+#endif
 
     m_pixel_x -= gray_img->width/2;
     m_pixel_y -= gray_img->height/2;

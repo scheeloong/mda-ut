@@ -117,40 +117,108 @@ void MDA_VISION_MODULE_BUOY::add_frame (IplImage* src) {
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY::frame_calc () {
-    if (m_frame_data_vector[read_index].is_valid()) {
-        return FULL_DETECT;
-    }
-    return UNKNOWN_TARGET;
-}
+    
+    MDA_VISION_RETURN_CODE retval = FATAL_ERROR;
+    const int ANGLE_LIMIT = 35;
 
-void MDA_VISION_MODULE_BASE::print_frames () {
-    printf ("\nSAVED FRAMES\n");
-    int i = read_index;
-    int i2 = 0;
+    // go thru each frame and pull all individual segments into a vector
+    // set i to point to the element 1 past read_index
+    int i = read_index + 1;
+    if (i >= N_FRAMES_TO_KEEP) i = 0;
+    MvRBoxVector segment_vector;
     do {
-        printf ("Frame[%-2d]:\t", i2);        
-        if (m_frame_data_vector[i].is_valid()) {
-            int n_circles = m_frame_data_vector[i].circle_valid?1:0;
-            int n_boxes = (m_frame_data_vector[i].rboxes_valid[0]?1:0) + (m_frame_data_vector[i].rboxes_valid[1]?1:0);
-            std::string color_str, color_str_2;
-
-            color_str = color_int_to_string(m_frame_data_vector[i].m_frame_circle.color_int);
-            printf ("%d Circles (%s)\t", n_circles, (n_circles > 0)?color_str.c_str():"---");
-
-            color_str = color_int_to_string(m_frame_data_vector[i].m_frame_boxes[0].color_int);
-            color_str_2 = color_int_to_string(m_frame_data_vector[i].m_frame_boxes[1].color_int);
-            printf ("%d Boxes (%s,%s)\n", n_boxes,
-                (n_boxes > 0)?color_str.c_str():"---", (n_boxes > 1)?color_str_2.c_str():"---"
-                );
+        if (m_frame_data_vector[i].has_data() && m_frame_data_vector[i].rboxes_valid[0]) {
+            segment_vector.push_back(m_frame_data_vector[i].m_frame_boxes[0]);
         }
-        else
-            printf ("Invalid\n");
-
         if (++i >= N_FRAMES_TO_KEEP) i = 0;
-        i2++;
-    } while (i != read_index && i2 < N_FRAMES_TO_KEEP);
-}
+    } while (i != read_index);
 
+
+    // bin the frames
+    for (unsigned i = 0; i < segment_vector.size(); i++) {
+        for (unsigned j = i+1; j < segment_vector.size(); j++) {
+            CvPoint center1 = segment_vector[i].center;
+            CvPoint center2 = segment_vector[j].center;  
+            
+            if (abs(center1.x-center2.x)+abs(center1.y-center2.y) < 30 && 
+                abs(segment_vector[i].length-segment_vector[j].length) < 30 &&
+                abs(segment_vector[i].width-segment_vector[j].width) < 20
+            )
+            {
+                segment_vector[i].shape_merge(segment_vector[j]);
+                segment_vector.erase(segment_vector.begin()+j);
+            }
+        }
+    }
+
+    // sort by count
+    std::sort (segment_vector.begin(), segment_vector.end(), shape_count_greater_than);
+
+    // debug
+    for (unsigned i = 0; i<=1 && i<segment_vector.size(); i++) {
+        printf ("\tSegment %d (%3d,%3d) height=%3.0f, width=%3.0f   count=%d\n", i, segment_vector[i].center.x, segment_vector[i].center.y,
+            segment_vector[i].length, segment_vector[i].width, segment_vector[i].count);
+    }
+#ifdef M_DEBUG
+    for (unsigned i = 0; i<=1 && i<segment_vector.size(); i++)
+        segment_vector[i].drawOntoImage(gray_img);
+      window2.showImage(gray_img);
+#endif
+
+    if (segment_vector.size() == 0 || segment_vector[0].count < 2) { // not enough good segments, return no target
+        printf ("Buoy: No Target\n");
+        return NO_TARGET;
+    }
+    else if (segment_vector.size() > 1 && segment_vector[1].count < 2) { // first segment is good enough, use that only
+        printf ("Buoy: ONE_SEGMENT\n");
+        int buoy_pixel_height = segment_vector[0].length;
+        
+        // check segment is vertical
+        if (abs(segment_vector[0].angle) > ANGLE_LIMIT) {
+            DEBUG_PRINT("One Segment: angle outside limit\n");
+            return NO_TARGET;            
+        }
+
+        m_pixel_x = segment_vector[0].center.x;
+        m_pixel_y = segment_vector[0].center.x;
+        m_range = (RBOX_REAL_LENGTH * gray_img->height) / (buoy_pixel_height * TAN_FOV_Y);
+
+        retval = ONE_SEGMENT;
+    }
+    else if (segment_vector.size() > 1) { // full detect, return both segments
+        int buoy_pixel_height = (segment_vector[0].length + segment_vector[1].length) / 2;
+        //const int BUOY_HEIGHT_TO_WIDTH_RATIO = RBOX_REAL_LENGTH / RBOX_REAL_DIAMETER;
+
+        // check segment is vertical
+        if (abs(segment_vector[0].angle) > ANGLE_LIMIT || abs(segment_vector[1].angle) > ANGLE_LIMIT) {
+            DEBUG_PRINT("Full Detect: angle outside limit\n");
+            return NO_TARGET;            
+        }
+        // check length similarity
+        if (segment_vector[0].length > 1.3*segment_vector[1].length || 1.3*segment_vector[0].length < segment_vector[1].length) {
+            DEBUG_PRINT("Full Detect: similarity check failed\n");
+            return NO_TARGET;            
+        }
+        /*if (gate_width_to_height_ratio > 1.3*BUOY_HEIGHT_TO_WIDTH_RATIO || 1.3*gate_width_to_height_ratio < BUOY_HEIGHT_TO_WIDTH_RATIO) {
+            DEBUG_PRINT("Full Detect: gate width to height check failed\n");
+            return NO_TARGET  ; 
+        }*/
+
+        m_pixel_x = (segment_vector[0].center.x + segment_vector[1].center.x) / 2;
+        m_pixel_y = (segment_vector[0].center.y + segment_vector[1].center.y) / 2;
+        m_range = (RBOX_REAL_LENGTH * gray_img->height) / (buoy_pixel_height * TAN_FOV_Y);
+
+        printf ("Buoy: FULL_DETECT\n");
+        retval = FULL_DETECT;
+    }
+
+    m_pixel_x -= gray_img->width/2;
+    m_pixel_y -= gray_img->height/2;
+    m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / gray_img->width);
+    m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
+    printf ("Buoy (%3d,%3d) (%5.2f,%5.2f) range=%d\n", m_pixel_x, m_pixel_y, m_angular_x, m_angular_y, m_range);
+    return retval;
+}
 
 bool MDA_VISION_MODULE_BUOY::rbox_stable (int rbox_index, float threshold) {
     assert (rbox_index >= 0 && rbox_index <= 1);
@@ -264,4 +332,32 @@ bool MDA_VISION_MODULE_BUOY::circle_stable (float threshold) {
         color_int_to_string(m_color).c_str());
 
     return true;
+}
+
+void MDA_VISION_MODULE_BASE::print_frames () {
+    printf ("\nSAVED FRAMES\n");
+    int i = read_index;
+    int i2 = 0;
+    do {
+        printf ("Frame[%-2d]:\t", i2);        
+        if (m_frame_data_vector[i].is_valid()) {
+            int n_circles = m_frame_data_vector[i].circle_valid?1:0;
+            int n_boxes = (m_frame_data_vector[i].rboxes_valid[0]?1:0) + (m_frame_data_vector[i].rboxes_valid[1]?1:0);
+            std::string color_str, color_str_2;
+
+            color_str = color_int_to_string(m_frame_data_vector[i].m_frame_circle.color_int);
+            printf ("%d Circles (%s)\t", n_circles, (n_circles > 0)?color_str.c_str():"---");
+
+            color_str = color_int_to_string(m_frame_data_vector[i].m_frame_boxes[0].color_int);
+            color_str_2 = color_int_to_string(m_frame_data_vector[i].m_frame_boxes[1].color_int);
+            printf ("%d Boxes (%s,%s)\n", n_boxes,
+                (n_boxes > 0)?color_str.c_str():"---", (n_boxes > 1)?color_str_2.c_str():"---"
+                );
+        }
+        else
+            printf ("Invalid\n");
+
+        if (++i >= N_FRAMES_TO_KEEP) i = 0;
+        i2++;
+    } while (i != read_index && i2 < N_FRAMES_TO_KEEP);
 }

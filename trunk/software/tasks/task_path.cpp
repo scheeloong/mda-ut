@@ -7,7 +7,8 @@ const int MASTER_TIMEOUT = 200;
 const int ALIGN_DELTA_DEPTH = 0;
 
 enum TASK_STATE {
-    STARTING,
+    STARTING_GATE,
+    STARTING_PATH,
     AT_SEARCH_DEPTH,
     AT_ALIGN_DEPTH
 };
@@ -27,34 +28,55 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
     puts("Press q to quit");
 
     MDA_VISION_MODULE_PATH path_vision;
+    MDA_VISION_MODULE_GATE gate_vision;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
     
-    TASK_STATE state = STARTING;
+    TASK_STATE state = STARTING_GATE;
+    bool done_gate = false;
     bool done_path = false;
 
-    // sink to starting depth
-    //set (DEPTH, MDA_TASK_BASE::starting_depth+PATH_DELTA_DEPTH);
-    set (DEPTH, 300);
-    
     // read the starting orientation
     int starting_yaw = attitude_input->yaw();
     printf("Starting yaw: %d\n", starting_yaw);
+    
+    // gate depth
+    //set (DEPTH, HARDCODED_DEPTH-50);
+    //set (DEPTH, HARDCODED_DEPTH);
+    set(DEPTH, 100);
+
+    // go to the starting orientation in case sinking changed it
+    set (YAW, starting_yaw);
 
     //TIMER master_timer;
     TIMER timer;
+    timer.restart();
 
     while (1) {
-        IplImage* frame = image_input->get_image(DWN_IMG);
+
+        IplImage* frame = NULL;
+        MDA_VISION_RETURN_CODE vision_code = NO_TARGET;
+        MDA_VISION_RETURN_CODE gate_vision_code = NO_TARGET;
+
+        if (!done_gate) {
+            frame = image_input->get_image(FWD_IMG);
+            if (!frame) {
+                ret_code = TASK_ERROR;
+                break;
+            }
+            gate_vision_code = gate_vision.filter(frame);
+        }
+
+        frame = image_input->get_image(DWN_IMG);
         if (!frame) {
             ret_code = TASK_ERROR;
             break;
         }
-        MDA_VISION_RETURN_CODE vision_code = path_vision.filter(frame);
-
+        vision_code = path_vision.filter(frame);
+        
         // clear fwd image. RZ - do we need this?
         // This ensures the other camera is properly logged
         // and that the webcam cache is cleared so it stays in sync - VZ
-        image_input->ready_image(FWD_IMG);
+        //image_input->ready_image(FWD_IMG);
 
         /**
         * Basic Algorithm:
@@ -62,7 +84,53 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
         *  - Align with path
         */
 
-        if (!done_path) {
+        if (!done_gate) {
+            if (state == STARTING_GATE) {
+                printf ("Starting Gate: Moving Foward at High Speed\n");
+                set (SPEED, 8);
+
+                if (timer.get_time() > MASTER_TIMEOUT) {
+                    printf ("Starting Gate: Master Timer Timeout!!\n");
+                    return TASK_MISSING;
+                }
+                else if (gate_vision_code == FULL_DETECT) {
+                    printf ("Starting Gate: Full Detect\n");
+                    int ang_x = gate_vision.get_angular_x();
+                    set_yaw_change(ang_x);
+
+                    if (gate_vision.get_range() < 420) { // finished the gate
+                        printf ("Range = %d, Approaching Gate\n", gate_vision.get_range());
+                        timer.restart();
+                        while (timer.get_time() < 3) {
+                            set(SPEED, 6);
+                        }
+                        set(SPEED, 0);
+                        printf ("Gate Task Done!!\n");
+
+                        // get ready for path task
+                        done_gate = true;
+                        set(YAW, starting_yaw);
+                        state = STARTING_PATH;
+                    }
+
+                    timer.restart();
+                }
+
+                // if path vision saw something, go do the path task
+                if (vision_code != NO_TARGET) {
+                    printf ("\nSaw Path! Going to Path vision!");
+                    cvWaitKey(1000);
+                    done_gate = true;
+                    set(SPEED, 0);
+                    set(YAW, starting_yaw);
+                    timer.restart();
+                    state = STARTING_PATH;
+                }
+            }
+        }
+
+
+        else if (!done_path) {
             // calculate some values that we will need
             float xy_ang = path_vision.get_angular_x(); // angle equal to atan(x/y)
             float pos_angle = path_vision.get_angle();  // PA, equal to orientation of the thing
@@ -72,9 +140,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
 
             printf("xy_distance = %d    xy_angle = %5.2f\n==============================\n", pix_distance, pos_angle);
 
-
-
-            if (state == STARTING) {
+            if (state == STARTING_PATH) {
                 if (vision_code == NO_TARGET) {
                     printf ("Starting: No target\n");
                     set(SPEED,3);
@@ -89,7 +155,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                 }
                 else {
                     printf ("Starting: Good\n");
-                    stop();
+                    set(SPEED, 0);
                     timer.restart();
                     state = AT_SEARCH_DEPTH;
                 }
@@ -99,11 +165,10 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     printf ("Searching: No target\n");
                     if (timer.get_time() > 10) { // timeout, go back to starting state
                         printf ("Timeout\n");
-                        set (YAW, starting_yaw);
-                        stop();
+                        //set (YAW, starting_yaw);
                         timer.restart();
                         path_vision.clear_frames();
-                        state = STARTING;
+                        state = STARTING_PATH;
                     }
                     else if (timer.get_time() % 2 == 0) { // spin around a bit to try to re-aquire?
                         //move (RIGHT, 45);
@@ -125,13 +190,13 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                         }
                         else {
                             printf("Turning %s %d degrees (xy_ang)\n", (xy_ang > 0) ? "Right" : "Left", static_cast<int>(abs(xy_ang)));
-                            stop();
+                            set(SPEED, 0);
                             move(RIGHT, xy_ang);
                             path_vision.clear_frames();
                         }
                     }
                     else {                              // we are over the path, sink and try align state
-                        stop();
+                        set(SPEED, 0);
                         move(SINK, ALIGN_DELTA_DEPTH);
                         timer.restart();
                         path_vision.clear_frames();
