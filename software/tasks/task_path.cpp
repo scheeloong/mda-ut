@@ -40,9 +40,12 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
     printf("Starting yaw: %d\n", starting_yaw);
     
     // gate depth
-    //set (DEPTH, HARDCODED_DEPTH-50);
-    //set (DEPTH, HARDCODED_DEPTH);
-    set(DEPTH, 100);
+    if (HARDCODED_DEPTH > 350)
+        set (DEPTH, 350);
+    if (HARDCODED_DEPTH > 400)
+        set (DEPTH, 400);
+    set (DEPTH, HARDCODED_DEPTH);
+    //set(DEPTH, 100);
 
     // go to the starting orientation in case sinking changed it
     set (YAW, starting_yaw);
