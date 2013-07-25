@@ -39,7 +39,7 @@ void Mission::work_internal(bool show_image)
   MDA_TASK_BASE *tasks[] = {
     //&gate,
     &path,
-    &buoy,
+    //&buoy,
     //&path,
     //&path_skip,
     //&path,

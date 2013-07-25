@@ -115,8 +115,12 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_PATH::frame_calc () {
         for (unsigned j = i+1; j < segment_vector.size(); j++) {
             CvPoint center1 = segment_vector[i].center;
             CvPoint center2 = segment_vector[j].center;
+            int angle_delta = static_cast<int>(segment_vector[i].angle-segment_vector[j].angle);
             
-            if (abs(center1.x-center2.x)+abs(center1.y-center2.y) < 40 && abs(segment_vector[i].length-segment_vector[j].length) < 20)
+            if (abs(center1.x-center2.x)+abs(center1.y-center2.y) < 40 && 
+                abs(segment_vector[i].length-segment_vector[j].length) < 20 &&
+                (abs(angle_delta) < 20 || abs(180-angle_delta) < 20)
+            )
             {
                 segment_vector[i].shape_merge(segment_vector[j]);
                 segment_vector.erase(segment_vector.begin()+j);
