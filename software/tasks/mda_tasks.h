@@ -59,6 +59,7 @@ protected:
 	void stop();
 	void stabilize (ATTITUDE_DIRECTION dir);
 
+	static const int HARDCODED_DEPTH = 400;
 
 // Wait for user to press a key
 #ifdef DEBUG_FRAME_BY_FRAME

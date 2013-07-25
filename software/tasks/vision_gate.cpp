@@ -45,7 +45,7 @@ void MDA_VISION_MODULE_GATE::add_frame (IplImage* src) {
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
         // check that the segment is roughly red
         tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
-        if (S < 20 || V < 20 || !(H >= 160 || H < 130)) {
+        if (S < 20 || V < 30 || !(H >= 160 || H < 130)) {
             DEBUG_PRINT ("VISION_BUOY: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
             continue;
         }
@@ -119,11 +119,6 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
         printf ("\tSegment %d (%3d,%3d) height=%3.0f, width=%3.0f   count=%d\n", i, segment_vector[i].center.x, segment_vector[i].center.y,
             segment_vector[i].length, segment_vector[i].width, segment_vector[i].count);
     }
-#ifdef M_DEBUG
-    for (unsigned i = 0; i<=1 && i<segment_vector.size(); i++)
-        segment_vector[i].drawOntoImage(gray_img);
-      window2.showImage(gray_img);
-#endif
 
     if (segment_vector.size() == 0 || segment_vector[0].count < 3) { // not enough good segments, return no target
         printf ("Gate: No Target\n");
@@ -172,6 +167,12 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
         printf ("Gate: FULL_DETECT\n");
         retval = FULL_DETECT;
     }
+
+#ifdef M_DEBUG
+    for (unsigned i = 0; i<=1 && i<segment_vector.size(); i++)
+        segment_vector[i].drawOntoImage(gray_img);
+      window2.showImage(gray_img);
+#endif
 
     m_pixel_x -= gray_img->width/2;
     m_pixel_y -= gray_img->height/2;

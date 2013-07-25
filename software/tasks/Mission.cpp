@@ -28,7 +28,7 @@ void Mission::work_internal(bool show_image)
   }
 
   // Tasks
-  MDA_TASK_GATE       gate(attitude_input, image_input, actuator_output);
+  //MDA_TASK_GATE       gate(attitude_input, image_input, actuator_output);
   MDA_TASK_BUOY       buoy(attitude_input, image_input, actuator_output);
   //MDA_TASK_FRAME      frame(attitude_input, image_input, actuator_output);
   MDA_TASK_PATH       path(attitude_input, image_input, actuator_output);
@@ -37,7 +37,7 @@ void Mission::work_internal(bool show_image)
   MDA_TASK_RESET      reset(attitude_input, image_input, actuator_output);
   // List of tasks to be performed in order (NULL-terminated)
   MDA_TASK_BASE *tasks[] = {
-    &gate,
+    //&gate,
     &path,
     &buoy,
     //&path,
