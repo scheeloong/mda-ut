@@ -1,5 +1,7 @@
 #include "ImageInput.h"
 
+#include <unistd.h>
+
 ImageInputVideo::ImageInputVideo(const char* settings_file) : ImageInput(settings_file)
 {
     std::string video_fwd, video_dwn;
