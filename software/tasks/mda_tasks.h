@@ -59,7 +59,6 @@ protected:
 	void stop();
 	void stabilize (ATTITUDE_DIRECTION dir);
 
-	static int starting_depth;
 
 // Wait for user to press a key
 #ifdef DEBUG_FRAME_BY_FRAME
@@ -79,6 +78,7 @@ public:
 
 	// the following function loops until it completes the task and returns
 	virtual MDA_TASK_RETURN_CODE run_task () = 0; 
+	static int starting_depth;
 };
 
 /// ########################################################################

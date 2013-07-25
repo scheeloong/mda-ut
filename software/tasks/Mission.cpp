@@ -9,7 +9,7 @@ Mission::~Mission()
 bool Mission::startup()
 {
   actuator_output->special_cmd(SUB_MISSION_STARTUP_SEQUENCE);
-
+  
   if (CharacterStreamSingleton::get_instance().wait_key(1) == 'q') {
     return false;
   }
@@ -18,8 +18,15 @@ bool Mission::startup()
   return true;
 }
 
-void Mission::work()
+void Mission::work_internal(bool show_image)
 {
+  mvWindow::setShowImage(show_image);
+  
+  MDA_TASK_BASE::starting_depth = 260;//attitude_input->depth();
+  if (!startup()) {
+    return;
+  }
+
   // Tasks
   MDA_TASK_GATE       gate(attitude_input, image_input, actuator_output);
   MDA_TASK_BUOY       buoy(attitude_input, image_input, actuator_output);
@@ -45,10 +52,8 @@ void Mission::work()
   // Result of a task
   MDA_TASK_RETURN_CODE ret_code;
 
-  if (!startup()) {
-    return;
-  }
-
+  printf ("Running a %s mission!\n", show_image?"test":"Real");
+  
   // Run each task until the list of tasks is complete
   while (*task_ptr) {
     int starting_yaw = attitude_input->yaw();

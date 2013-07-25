@@ -105,7 +105,7 @@ void ActuatorOutputSubmarine::mission_startup_sequence()
   while (!power_available) {
     // Wait for 2 seconds to see if power stays on
     special_cmd(SUB_POWER_ON);
-    char c = CharacterStreamSingleton::get_instance().wait_key(2000);
+    char c = CharacterStreamSingleton::get_instance().wait_key(5000);
     if (c == 'q') {
       CharacterStreamSingleton::get_instance().write_char(c);
       return;
