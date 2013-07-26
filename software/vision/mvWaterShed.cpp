@@ -176,6 +176,7 @@ else {
                 if (rand() % 2 == 0) {
                     color_point_vector[i].first.merge(color_point_vector[j].first);
                     color_point_vector.erase(color_point_vector.begin()+j);
+                    j--;
                 }
                 else {
                     color_point_vector[j].first.merge(color_point_vector[i].first);
