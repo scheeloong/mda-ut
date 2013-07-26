@@ -28,6 +28,7 @@ unsigned GATE=0;
 unsigned PATH=0;
 unsigned BUOY=0;
 unsigned TIMEOUT=0;
+unsigned POS=0;
 
 
 int main( int argc, char** argv ) {
@@ -65,10 +66,10 @@ int main( int argc, char** argv ) {
             BUOY = 1;
         else if (!strcmp (argv[i], "--timeout"))
             TIMEOUT = atoi(argv[++i]);
-        else if (!strcmp (argv[i], "--load")) {
-            LOAD = i+1; // put the next argument index into LOAD
-            i++;        // skip next arg
-        }
+        else if (!strcmp (argv[i], "--pos"))
+            POS = atoi(argv[++i]); 
+        else if (!strcmp (argv[i], "--load"))
+            LOAD = ++i; // put the next argument index into LOAD
         else if (!strcmp (argv[i], "--help")) {
             printf ("OpenCV based webcam program. Hit 'q' to exit. Defaults to cam0, writes to \"webcam.avi\"\n");
             printf ("Put any integer as an argument (without --) to use that as camera number\n\n");
@@ -85,10 +86,15 @@ int main( int argc, char** argv ) {
     /// initialization
     // init camera
     mvCamera* camera = NULL;
-    if (LOAD == 0)
+    if (LOAD == 0) {
         camera = new mvCamera (CAM_NUMBER);
-    else
+    }
+    else {
         camera = new mvCamera (argv[LOAD]);
+    }
+    if (camera != 0 && POS > 0) {
+        camera->set_relative_position(static_cast<double>(POS)/1000);
+    }
 
     mvVideoWriter* frame_writer = NULL;
     mvVideoWriter* filter_writer_1 = NULL;
@@ -283,7 +289,7 @@ int main( int argc, char** argv ) {
         if (BREAK)
             c = cvWaitKey(0);
         else if (LOAD)
-            c = cvWaitKey(66); // go for about 15 frames per sec
+            c = cvWaitKey(3); // go for about 15 frames per sec
         else
             c = cvWaitKey(5);
 
