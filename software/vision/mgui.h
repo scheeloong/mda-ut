@@ -161,7 +161,13 @@ class mvCamera {
     IplImage* getFrameResized () {
         if (!grabFrame()) return NULL;
         return retrieveFrameResized();
-    } 
+    }
+
+    int set_relative_position (float pos) {
+        if (!_capture) return -1;
+        assert (pos >= 0 && pos <= 1);
+        return cvSetCaptureProperty(_capture, CV_CAP_PROP_POS_AVI_RATIO, pos);
+    }
 };
 
 #endif
