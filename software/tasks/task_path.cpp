@@ -186,12 +186,20 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     timer.restart();
                     printf ("Searching: Good\n");
                     if(pix_distance > frame->height/5){ // move over the path
-                        if (abs(xy_ang) < 10) {
-                            printf ("Set speed foward\n");
-                            set(SPEED, 3);
+                        if (abs(xy_ang) < 10) { 
+                            if (pix_y >= 0) { 
+                                printf ("Set speed foward\n");
+                                set(SPEED, 3);
+                            } else { 
+                                printf ("Set speed reverse\n");
+                                set(SPEED, -3);
+                            }
                         }
                         else {
-                            printf("Turning %s %d degrees (xy_ang)\n", (xy_ang > 0) ? "Right" : "Left", static_cast<int>(abs(xy_ang)));
+                            if (abs(xy_ang) > 90 ) {
+                                xy_ang = (xy_ang > 0) ? xy_ang - 180 : xy_ang + 180; 
+                            } 
+                            printf("Turning %s %d degrees (xy_ang)\n", (abs(xy_ang) > 0) ? "Right" : "Left", static_cast<int>(abs(xy_ang)));
                             set(SPEED, 0);
                             move(RIGHT, xy_ang);
                             path_vision.clear_frames();
