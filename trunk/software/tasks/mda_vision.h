@@ -321,9 +321,9 @@ public:
 
         MvRBoxVector temp;
         rbox_calc(&temp, 50);
-
         MvCircleVector temp2;
         circle_calc(&temp2, 50);
+        
         MDA_VISION_RETURN_CODE retval = FULL_DETECT; //frame_calc ();
 
         assert (retval != FATAL_ERROR);
