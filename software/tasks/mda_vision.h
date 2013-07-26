@@ -56,7 +56,7 @@ protected:
     // support for frame data
     int N_FRAMES_TO_KEEP;
     int VALID_FRAMES;
-    MDA_FRAME_DATA m_frame_data_vector[21];
+    MDA_FRAME_DATA m_frame_data_vector[61];
     int read_index;
     int n_valid_frames;
     int n_valid_circle_frames;
@@ -310,7 +310,6 @@ class MDA_VISION_MODULE_BUOY : public MDA_VISION_MODULE_BASE {
 
 public:
     MDA_VISION_MODULE_BUOY ();
-    MDA_VISION_MODULE_BUOY (const char* settings_file);
     ~MDA_VISION_MODULE_BUOY ();
     
     MDA_VISION_RETURN_CODE filter (IplImage* src) {
@@ -319,10 +318,13 @@ public:
         
         clear_data();
         add_frame (src);
-        //circle_stable(10000);
-        //rbox_stable(0, 30);
-        //rbox_stable(1, 30);
-        MDA_VISION_RETURN_CODE retval = FULL_DETECT; //calc_vci ();
+
+        MvRBoxVector temp;
+        rbox_calc(&temp, 50);
+
+        MvCircleVector temp2;
+        circle_calc(&temp2, 50);
+        MDA_VISION_RETURN_CODE retval = FULL_DETECT; //frame_calc ();
 
         assert (retval != FATAL_ERROR);
         return retval;
@@ -337,6 +339,9 @@ public:
     int frame_is_valid() { return n_valid; }
     void add_frame (IplImage* src);
     MDA_VISION_RETURN_CODE frame_calc ();
+
+    void rbox_calc (MvRBoxVector* rboxes_returned, int nframes=8);
+    void circle_calc (MvCircleVector* circles_returned, int nframes=8);
 };
 
 /// ########################################################################
