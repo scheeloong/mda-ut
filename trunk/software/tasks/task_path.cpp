@@ -3,7 +3,7 @@
 
 // Global declarations
 const int PATH_DELTA_DEPTH = 50;
-const int MASTER_TIMEOUT = 200;
+const int MASTER_TIMEOUT = 120;
 const int ALIGN_DELTA_DEPTH = 0;
 
 enum TASK_STATE {
@@ -44,7 +44,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
         set (DEPTH, 350);
     if (HARDCODED_DEPTH > 400)
         set (DEPTH, 400);
-    set (DEPTH, HARDCODED_DEPTH);
+    set (DEPTH, 450);
     //set(DEPTH, 100);
 
     // go to the starting orientation in case sinking changed it
@@ -59,15 +59,15 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
         IplImage* frame = NULL;
         MDA_VISION_RETURN_CODE vision_code = NO_TARGET;
         MDA_VISION_RETURN_CODE gate_vision_code = NO_TARGET;
-
-        if (!done_gate) {
+        (void) gate_vision_code;
+        /*if (!done_gate) {
             frame = image_input->get_image(FWD_IMG);
             if (!frame) {
                 ret_code = TASK_ERROR;
                 break;
             }
             gate_vision_code = gate_vision.filter(frame);
-        }
+        }*/
 
         frame = image_input->get_image(DWN_IMG);
         if (!frame) {
@@ -96,7 +96,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     printf ("Starting Gate: Master Timer Timeout!!\n");
                     return TASK_MISSING;
                 }
-                else if (gate_vision_code == FULL_DETECT) {
+                /*else if (gate_vision_code == FULL_DETECT) {
                     printf ("Starting Gate: Full Detect\n");
                     int ang_x = gate_vision.get_angular_x();
                     set_yaw_change(ang_x);
@@ -117,7 +117,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     }
 
                     timer.restart();
-                }
+                }*/
 
                 // if path vision saw something, go do the path task
                 if (vision_code != NO_TARGET) {
@@ -290,15 +290,22 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH_SKIP:: run_task() {
     MDA_VISION_MODULE_PATH path_vision;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
-    const int num_images_to_check = 5;
-
-    int images_checked = 0;
     bool done_skip = false;
+
+    TIMER t;
 
     // sink to starting depth
     //set (DEPTH, MDA_TASK_BASE::starting_depth+PATH_DELTA_DEPTH);
-    set (DEPTH, 100);
+    set (DEPTH, 500);
+    set (DEPTH, 600);
+    set (DEPTH, 750);
 
+    t.restart();
+    while (t.get_time() < 6) {
+        set (SPEED, 10);
+    }
+    set (SPEED, 0);
+/*
     while (1) {
         IplImage* frame = image_input->get_image(DWN_IMG);
         if (!frame) {
@@ -335,7 +342,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH_SKIP:: run_task() {
             break;
         }
     }
-
+*/
     stop();
 
     if(done_skip){

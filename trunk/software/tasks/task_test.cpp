@@ -16,11 +16,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
 
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
-    const int sink_depth = 450;
-    const int rise_depth = 300;
-
     enum state {SINK_STATE, FWD_STATE, RISE_STATE, REV_STATE};
-    enum state cur_state = SINK_STATE;
 
     MDA_VISION_MODULE_BUOY vision_buoy;
     TIMER t;

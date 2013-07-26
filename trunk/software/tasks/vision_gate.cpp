@@ -125,23 +125,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
         printf ("Gate: No Target\n");
         return NO_TARGET;
     }
-    else if (segment_vector.size() > 1 && segment_vector[1].count < 3) { // first segment is good enough, use that only
-        printf ("Gate: ONE_SEGMENT\n");
-        int gate_pixel_height = segment_vector[0].length;
-        
-        // check segment is vertical
-        if (abs(segment_vector[0].angle) > ANGLE_LIMIT) {
-            DEBUG_PRINT("One Segment: angle outside limit\n");
-            return NO_TARGET;            
-        }
-
-        m_pixel_x = segment_vector[0].center.x;
-        m_pixel_y = segment_vector[0].center.x;
-        m_range = (GATE_REAL_HEIGHT * gray_img->height) / (gate_pixel_height * TAN_FOV_Y);
-
-        retval = ONE_SEGMENT;
-    }
-    else if (segment_vector.size() > 1) { // full detect, return both segments
+    else if (segment_vector.size() >= 2 && segment_vector[1].count >= 3) { // full detect, return both segments
         int gate_pixel_height = (segment_vector[0].length + segment_vector[1].length) / 2;
         int gate_pixel_width = abs(segment_vector[0].center.x - segment_vector[1].center.x);
         float gate_width_to_height_ratio = abs(static_cast<float>(gate_pixel_width)/gate_pixel_height);
@@ -167,6 +151,25 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
 
         printf ("Gate: FULL_DETECT\n");
         retval = FULL_DETECT;
+    }
+    else if (segment_vector.size() >= 1 && segment_vector[0].count >= 3) { // first segment is good enough, use that only
+        printf ("Gate: ONE_SEGMENT\n");
+        int gate_pixel_height = segment_vector[0].length;
+        
+        // check segment is vertical
+        if (abs(segment_vector[0].angle) > ANGLE_LIMIT) {
+            DEBUG_PRINT("One Segment: angle outside limit\n");
+            return NO_TARGET;            
+        }
+
+        m_pixel_x = segment_vector[0].center.x;
+        m_pixel_y = segment_vector[0].center.x;
+        m_range = (GATE_REAL_HEIGHT * gray_img->height) / (gate_pixel_height * TAN_FOV_Y);
+
+        retval = ONE_SEGMENT;
+    }
+    else {
+	return NO_TARGET;
     }
 
 #ifdef M_DEBUG
