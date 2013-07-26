@@ -487,3 +487,49 @@ void mvBGR2HSV(IplImage* src, IplImage* dst) {
     }
   return;
 }
+
+int remove_background (IplImage* src) {
+    CvScalar mean, stdev;
+    cvAvgSdv (src, &mean, &stdev);
+    int stdev_int = 1.5*(stdev.val[0] + stdev.val[1] + stdev.val[2]);
+    /*unsigned low0 = mean.val[0] - stdev.val[0];
+    unsigned low1 = mean.val[1] - stdev.val[1];
+    unsigned low2 = mean.val[2] - stdev.val[2];
+    unsigned hi0 = mean.val[0] + stdev.val[0];
+    unsigned hi1 = mean.val[1] + stdev.val[1];
+    unsigned hi2 = mean.val[2] + stdev.val[2];
+*/
+    unsigned char* srcPtr;
+    int zeros = 0;
+    for (int i =0; i < src->height; i++) {
+        srcPtr = (unsigned char*)src->imageData + i*src->widthStep;
+        for (int j = 0; j < src->width; j++) {
+            /*if (srcPtr[0] > low0 && srcPtr[0] < hi0 && 
+                srcPtr[1] > low1 && srcPtr[1] < hi1 && 
+                srcPtr[2] > low2 && srcPtr[2] < hi2)
+            {
+                srcPtr[0] = srcPtr[1] = srcPtr[2] = 0;
+                zeros++;
+            }*/
+            if (abs(srcPtr[0]-mean.val[0]) + abs(srcPtr[1]-mean.val[1]) + abs(srcPtr[2]-mean.val[2])
+                    < stdev_int)
+            {
+                srcPtr[0] = srcPtr[1] = srcPtr[2] = 0;
+                zeros++;
+            }
+            srcPtr += 3;
+        }
+    }
+
+    return zeros;
+
+    /*const int FIRST_Y = src->height/10;
+    const int LAST_Y = src->height - src->height/10;
+    const int STEP_Y = 40;
+
+    unsigned char* srcPtr;
+    for (int i =FIRST_Y; i < LAST_Y; i++) {
+        for (int j = 0; j < src->width; j++) {
+        }
+    }*/
+}

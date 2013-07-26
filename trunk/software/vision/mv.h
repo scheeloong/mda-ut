@@ -41,6 +41,8 @@ inline std::string color_int_to_string (int color) {
     return std::string("UNKNOWN");
 }
 
+int remove_background (IplImage* src);
+
 class MvShape {
 public:
     CvPoint center;

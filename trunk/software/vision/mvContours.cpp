@@ -350,9 +350,13 @@ float mvContours::match_circle (IplImage* img, MvCircleVector* circle_vector, CO
 
         // check the contour's area to make sure it isnt too small
         double area = cvContourArea(c_contour);
-        if (area < img->width*img->height/600) {
-            DEBUG_PRINT ("Circle Fail: Contour too small!\n");
-            continue;
+        if (method == 1) {
+        }
+        else {
+            if (area < img->width*img->height/600) {
+                DEBUG_PRINT ("Circle Fail: Contour too small!\n");
+                continue;
+            }
         }
     
         // do some kind of matching to ensure the contour is a circle
@@ -377,7 +381,13 @@ float mvContours::match_circle (IplImage* img, MvCircleVector* circle_vector, CO
 
         double r11 = fabs( MEAN2(nu02,nu20) / nu11);
         double R = MEAN2(nu20,nu02) / std::max((MEAN2(nu21,nu12)), (MEAN2(nu30,nu03)));
-        bool pass = (r03 <= 25.0) && (r12 <= 12.0) && (r02 <= 12.0) && (r11 > 2.5) && (R > 25);
+        bool pass = true;
+        if (method == 1) {
+            pass = true; //(r03 <= 50.0) && (r12 <= 30.0) && (r02 <= 30.0) && (r11 > 6.0) && (R > 100);
+        }
+        else {
+            pass = (r03 <= 25.0) && (r12 <= 12.0) && (r02 <= 12.0) && (r11 > 2.5) && (R > 25);
+        }
 
         if (!pass) {
             //DEBUG_PRINT ("Circle Moms: nu11=%lf, nu20=%lf, nu02=%lf, nu21=%lf, nu12=%lf, nu30=%lf, nu03=%lf\n", nu11, nu20, nu02, nu21, nu12, nu30, nu03);
@@ -399,9 +409,17 @@ float mvContours::match_circle (IplImage* img, MvCircleVector* circle_vector, CO
         // do checks on area and perimeter
         double area_ratio = area / (CV_PI*radius*radius);
         //double perimeter_ratio = perimeter / (2*CV_PI*radius);
-        if (area_ratio < 0.7) {
-            DEBUG_PRINT ("Circle Fail: Area: %6.2lf\n", area_ratio);
-            continue;
+        if (method == 1) {
+            if (area_ratio < 0.3) {
+                DEBUG_PRINT ("Circle Fail: Area: %6.2lf\n", area_ratio);
+                continue;
+            }
+        }
+        else {
+            if (area_ratio < 0.7) {
+                DEBUG_PRINT ("Circle Fail: Area: %6.2lf\n", area_ratio);
+                continue;
+            }
         }
         
         MvCircle circle;
