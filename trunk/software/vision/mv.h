@@ -56,6 +56,9 @@ public:
     virtual int color_diff (MvShape second) {
         return abs(m1-second.m1)+abs(m2-second.m2)+abs(m3-second.m3);
     }
+    virtual int color_check (MvShape second, int limit) {
+        return (abs(m1-second.m1)<limit && abs(m2-second.m2)<limit && abs(m3-second.m3)<limit);
+    }
 };
 class MvCircle : public MvShape {
 public:

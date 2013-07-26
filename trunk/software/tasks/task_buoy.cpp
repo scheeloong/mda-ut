@@ -1,6 +1,9 @@
 #include "mda_vision.h"
 #include "mda_tasks.h"
 
+const float LEN_TO_WIDTH_MAX = 9.0;
+const float LEN_TO_WIDTH_MIN = 4.0;
+
 MDA_TASK_BUOY:: MDA_TASK_BUOY (AttitudeInput* a, ImageInput* i, ActuatorOutput* o) :
     MDA_TASK_BASE (a, i, o)
 {
