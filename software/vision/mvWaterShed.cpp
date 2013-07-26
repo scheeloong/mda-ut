@@ -116,7 +116,7 @@ void mvWatershedFilter::watershed_generate_markers_internal (IplImage* src, int 
     }
     */
     color_point_vector.clear();
-if (method < 0) {
+if (method & 0xFFFF) {
     cvSet (ds_image_nonedge, CV_RGB(1,1,1));
     // sample the image like this
     // 1. randomly generate an x,y coordinate.
@@ -143,7 +143,7 @@ if (method < 0) {
 }
 else {
     int step = 10;
-    if (method == 1) 
+    if (method & 0x1) 
         step = 5;
     COLOR_TRIPLE ct_prev;
 
@@ -165,13 +165,17 @@ else {
     }
 }
 
+    int diff_limit = 30;
+    if (method & 0x2) {
+        diff_limit = 50;
+    }
     // the color point vector will have too many pixels that are really similar - get rid of some by merging    
     for (unsigned i = 0; i < color_point_vector.size(); i++) {
         for (unsigned j = i+1; j < color_point_vector.size(); j++) {
             int dx = color_point_vector[i].second.x - color_point_vector[j].second.x;
             int dy = color_point_vector[i].second.y - color_point_vector[j].second.y;  
             
-            if (color_point_vector[i].first.diff(color_point_vector[j].first) < 30 && dx*dx + dy*dy < 10000)
+            if (color_point_vector[i].first.diff(color_point_vector[j].first) < diff_limit && dx*dx + dy*dy < 10000)
             {
                 if (rand() % 2 == 0) {
                     color_point_vector[i].first.merge(color_point_vector[j].first);
