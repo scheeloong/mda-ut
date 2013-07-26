@@ -107,6 +107,7 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_GATE::frame_calc () {
             {
                 segment_vector[i].shape_merge(segment_vector[j]);
                 segment_vector.erase(segment_vector.begin()+j);
+                j--;
             }
         }
     }

@@ -22,6 +22,9 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
     enum state {SINK_STATE, FWD_STATE, RISE_STATE, REV_STATE};
     enum state cur_state = SINK_STATE;
 
+    MDA_VISION_MODULE_BUOY vision_buoy;
+    TIMER t;
+
     while (1) {
         IplImage* frame = image_input->get_image(FWD_IMG);
         if (!frame) {
@@ -31,29 +34,10 @@ MDA_TASK_RETURN_CODE MDA_TASK_TEST:: run_task() {
 
         image_input->ready_image(DWN_IMG);
 
-        switch (cur_state) {
-          case SINK_STATE:
-            set(DEPTH, sink_depth);
-            cur_state = FWD_STATE;
-            move(LEFT, 20);
-            move(RIGHT, 40);
-            move(LEFT, 20);
-            break;
-          case FWD_STATE:
-            move(FORWARD, 5); // 5 seconds
-            cur_state = RISE_STATE;
-            break;
-          case RISE_STATE:
-            set(DEPTH, rise_depth);
-            cur_state = REV_STATE;
-            move(RIGHT, 20);
-            move(LEFT, 40);
-            move(RIGHT, 20);
-            break;
-          case REV_STATE:
-            move(REVERSE, 5); // 5 seconds
-            cur_state = SINK_STATE;
-            break;
+        vision_buoy.filter(frame);
+        if (t.get_time() > 6) {
+            t.restart();
+            vision_buoy.clear_frames();
         }
 
         // Ensure debug messages are printed

@@ -10,6 +10,8 @@
 const int ANGLE_LIMIT = 35;
 const float LEN_TO_WIDTH_MAX = 4.0;
 const float LEN_TO_WIDTH_MIN = 1.5;
+const int FRAMES_TO_KEEP = 60;
+const int FRAMES_THRESHOLD_FRACTION = 6;
 
 const char MDA_VISION_MODULE_BUOY::MDA_VISION_BUOY_SETTINGS[] = "vision_buoy_settings_new.csv";
 
@@ -32,7 +34,7 @@ MDA_VISION_MODULE_BUOY:: MDA_VISION_MODULE_BUOY () :
     gray_img = mvGetScratchImage();
     gray_img_2 = mvGetScratchImage2();
     //filtered_img = mvGetScratchImage (); // common size
-    N_FRAMES_TO_KEEP = 60;
+    N_FRAMES_TO_KEEP = FRAMES_TO_KEEP;
 }
 
 MDA_VISION_MODULE_BUOY:: ~MDA_VISION_MODULE_BUOY () {
@@ -130,8 +132,11 @@ void MDA_VISION_MODULE_BUOY::rbox_calc(MvRBoxVector* rboxes_returned, int nframe
     int i = read_index + 1;
     if (i >= N_FRAMES_TO_KEEP) i = 0;
     do {
-        if (m_frame_data_vector[i].has_data() && m_frame_data_vector[i].rboxes_valid[0]) {
-            m_rbox_segment_vector.push_back(m_frame_data_vector[i].m_frame_boxes[0]);
+        if (m_frame_data_vector[i].has_data()) {
+            if (m_frame_data_vector[i].rboxes_valid[0])
+                m_rbox_segment_vector.push_back(m_frame_data_vector[i].m_frame_boxes[0]);
+            if (m_frame_data_vector[i].rboxes_valid[1])
+                m_rbox_segment_vector.push_back(m_frame_data_vector[i].m_frame_boxes[1]);
         }
         if (++i >= N_FRAMES_TO_KEEP) i = 0;
     } while (i != read_index);
@@ -145,14 +150,15 @@ void MDA_VISION_MODULE_BUOY::rbox_calc(MvRBoxVector* rboxes_returned, int nframe
             
             if (abs(center1.x-center2.x) < 25 &&
                 abs(center1.y-center2.y) < 25 && 
-                fabs(static_cast<float>(m_rbox_segment_vector[i].length)/m_rbox_segment_vector[j].length) < 1.5 &&
-                fabs(static_cast<float>(m_rbox_segment_vector[i].width)/m_rbox_segment_vector[j].width) < 1.5 &&
+                abs(m_rbox_segment_vector[i].length-m_rbox_segment_vector[j].length) < 40 &&
+                abs(m_rbox_segment_vector[i].width-m_rbox_segment_vector[j].width) < 30 &&
                 m_rbox_segment_vector[i].color_check(m_rbox_segment_vector[j], 20)
                 //m_rbox_segment_vector[i].color_int == m_rbox_segment_vector[j].color_int
             )
             {
                 m_rbox_segment_vector[i].shape_merge(m_rbox_segment_vector[j]);
                 m_rbox_segment_vector.erase(m_rbox_segment_vector.begin()+j);
+                j--;
             }
         }
     }
@@ -172,14 +178,22 @@ void MDA_VISION_MODULE_BUOY::rbox_calc(MvRBoxVector* rboxes_returned, int nframe
                 )
             {
                 m_rbox_segment_vector[i].shape_merge(m_rbox_segment_vector[j]);
-                m_rbox_segment_vector.erase(m_rbox_segment_vector.begin()+j);;
+                m_rbox_segment_vector.erase(m_rbox_segment_vector.begin()+j);
+                j--;
                 num_other_colors++;
             }
         }
         if (num_other_colors >= 2) {
             m_rbox_segment_vector[i].color_int = MV_UNCOLORED;
         }
-    } 
+    }
+
+    for (unsigned i = 0; i < m_rbox_segment_vector.size(); i++) {
+        if (m_rbox_segment_vector[i].count < nframes/FRAMES_THRESHOLD_FRACTION) {
+            m_rbox_segment_vector.erase(m_rbox_segment_vector.begin()+i);
+            i--;
+        }
+    }
 
     // sort by count
     std::sort (m_rbox_segment_vector.begin(), m_rbox_segment_vector.end(), shape_count_greater_than);
@@ -187,13 +201,11 @@ void MDA_VISION_MODULE_BUOY::rbox_calc(MvRBoxVector* rboxes_returned, int nframe
     // debug
     printf ("Buoy: rbox_calc segments:\n");
     for (unsigned i = 0; i < m_rbox_segment_vector.size(); i++) {
-        printf ("\tSegment %d (%3d,%3d) h=%2.0f,w=%2.0f clr=%s  count=%d\n", i, 
+        printf ("\tSegment %d (%3d,%3d) h=%1.0f,w=%1.0f color=%s  count=%d\n", i, 
             m_rbox_segment_vector[i].center.x, m_rbox_segment_vector[i].center.y,
             m_rbox_segment_vector[i].length, m_rbox_segment_vector[i].width, 
             color_int_to_string(m_rbox_segment_vector[i].color_int).c_str(), m_rbox_segment_vector[i].count);
     }
-
-    //cvWaitKey(0);
 
     // put the best 2 rbox into the result for now
     if (0) {
@@ -201,19 +213,76 @@ void MDA_VISION_MODULE_BUOY::rbox_calc(MvRBoxVector* rboxes_returned, int nframe
     }
     else {
         rboxes_returned->clear();
-        if (m_rbox_segment_vector.size() > 1 && m_rbox_segment_vector[1].validity > nframes/6)
+        if (m_rbox_segment_vector.size() > 1 && m_rbox_segment_vector[1].validity >= nframes/FRAMES_THRESHOLD_FRACTION)
             rboxes_returned->push_back(m_rbox_segment_vector[1]);
-        if (m_rbox_segment_vector.size() > 0 && m_rbox_segment_vector[0].validity > nframes/6)
+        if (m_rbox_segment_vector.size() > 0 && m_rbox_segment_vector[0].validity >= nframes/FRAMES_THRESHOLD_FRACTION)
             rboxes_returned->push_back(m_rbox_segment_vector[0]);
     }
 }
 
 void MDA_VISION_MODULE_BUOY::circle_calc (MvCircleVector* circles_returned, int nframes) {
+    assert (circles_returned != NULL);
+    MvCircle input_circle;
+    m_circle_segment_vector.clear();
+    
+    // go thru each frame and pull all individual segments into a vector
+    // set i to point to the element 1 past read_index
+    int i = read_index + 1;
+    if (i >= N_FRAMES_TO_KEEP) i = 0;
+    do {
+        if (m_frame_data_vector[i].has_data()) {
+            if (m_frame_data_vector[i].circle_valid)
+                m_circle_segment_vector.push_back(m_frame_data_vector[i].m_frame_circle);
+        }
+        if (++i >= N_FRAMES_TO_KEEP) i = 0;
+    } while (i != read_index);
 
+
+    // bin the frames
+    for (unsigned i = 0; i < m_circle_segment_vector.size(); i++) {
+        for (unsigned j = i+1; j < m_circle_segment_vector.size(); j++) {
+            CvPoint center1 = m_circle_segment_vector[i].center;
+            CvPoint center2 = m_circle_segment_vector[j].center;  
+            
+            if (abs(center1.x-center2.x) < 25 &&
+                abs(center1.y-center2.y) < 25 && 
+                abs(m_circle_segment_vector[i].radius-m_circle_segment_vector[j].radius) < 40 &&
+                m_circle_segment_vector[i].color_check(m_circle_segment_vector[j], 20)
+                //m_circle_segment_vector[i].color_int == m_circle_segment_vector[j].color_int
+            )
+            {
+                m_circle_segment_vector[i].shape_merge(m_circle_segment_vector[j]);
+                m_circle_segment_vector.erase(m_circle_segment_vector.begin()+j);
+                j--;
+            }
+        }
+    }
+
+    for (unsigned i = 0; i < m_circle_segment_vector.size(); i++) {
+        if (m_circle_segment_vector[i].count < nframes/FRAMES_THRESHOLD_FRACTION) {
+            m_circle_segment_vector.erase(m_circle_segment_vector.begin()+i);
+            i--;
+        }
+    }
+
+    // sort by count
+    std::sort (m_circle_segment_vector.begin(), m_circle_segment_vector.end(), shape_count_greater_than);
+
+    // debug
+    printf ("Buoy: circle_calc segments:\n");
+    for (unsigned i = 0; i < m_circle_segment_vector.size(); i++) {
+        printf ("\tSegment %d (%3d,%3d) R=%1.0f, color=%s  count=%d\n", i, 
+            m_circle_segment_vector[i].center.x, m_circle_segment_vector[i].center.y, m_circle_segment_vector[i].radius, 
+            color_int_to_string(m_circle_segment_vector[i].color_int).c_str(), m_circle_segment_vector[i].count);
+    }
+
+    circles_returned->clear();
+    if (m_circle_segment_vector.size() > 0 && m_circle_segment_vector[0].validity >= nframes/FRAMES_THRESHOLD_FRACTION)
+        circles_returned->push_back(m_circle_segment_vector[0]);
 }
 
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY::frame_calc () {
-    
+    /*
     MDA_VISION_RETURN_CODE retval = FATAL_ERROR;
     const int ANGLE_LIMIT = 35;
 
@@ -250,75 +319,9 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_BUOY::frame_calc () {
     // sort by count
     std::sort (m_rbox_segment_vector.begin(), m_rbox_segment_vector.end(), shape_count_greater_than);
 
-    // debug
-    /*for (unsigned i = 0; i<=1 && i<m_rbox_segment_vector.size(); i++) {
-        printf ("\tSegment %d (%3d,%3d) height=%3.0f, width=%3.0f   count=%d\n", i, m_rbox_segment_vector[i].center.x, m_rbox_segment_vector[i].center.y,
-            m_rbox_segment_vector[i].length, m_rbox_segment_vector[i].width, m_rbox_segment_vector[i].count);
-    }*/
-    
     return FULL_DETECT;
-
-if(0){
-    if (m_rbox_segment_vector.size() == 0 || m_rbox_segment_vector[0].count < 2) { // not enough good segments, return no target
-        printf ("Buoy: No Target\n");
-        return NO_TARGET;
-    }
-    else if (m_rbox_segment_vector.size() > 1 && m_rbox_segment_vector[1].count < 2) { // first segment is good enough, use that only
-        printf ("Buoy: ONE_SEGMENT\n");
-        int buoy_pixel_height = m_rbox_segment_vector[0].length;
-        
-        // check segment is vertical
-        if (abs(m_rbox_segment_vector[0].angle) > ANGLE_LIMIT) {
-            DEBUG_PRINT("One Segment: angle outside limit\n");
-            return NO_TARGET;
-        }
-
-        m_pixel_x = m_rbox_segment_vector[0].center.x;
-        m_pixel_y = m_rbox_segment_vector[0].center.x;
-        m_range = (RBOX_REAL_LENGTH * gray_img->height) / (buoy_pixel_height * TAN_FOV_Y);
-
-        retval = ONE_SEGMENT;
-    }
-    else if (m_rbox_segment_vector.size() > 1) { // full detect, return both segments
-        int buoy_pixel_height = (m_rbox_segment_vector[0].length + m_rbox_segment_vector[1].length) / 2;
-        //const int BUOY_HEIGHT_TO_WIDTH_RATIO = RBOX_REAL_LENGTH / RBOX_REAL_DIAMETER;
-
-        // check segment is vertical
-        if (abs(m_rbox_segment_vector[0].angle) > ANGLE_LIMIT || abs(m_rbox_segment_vector[1].angle) > ANGLE_LIMIT) {
-            DEBUG_PRINT("Full Detect: angle outside limit\n");
-            return NO_TARGET;
-        }
-        // check length similarity
-        if (m_rbox_segment_vector[0].length > 1.3*m_rbox_segment_vector[1].length || 1.3*m_rbox_segment_vector[0].length < m_rbox_segment_vector[1].length) {
-            DEBUG_PRINT("Full Detect: similarity check failed\n");
-            return NO_TARGET;
-        }
-        /*if (gate_width_to_height_ratio > 1.3*BUOY_HEIGHT_TO_WIDTH_RATIO || 1.3*gate_width_to_height_ratio < BUOY_HEIGHT_TO_WIDTH_RATIO) {
-            DEBUG_PRINT("Full Detect: gate width to height check failed\n");
-            return NO_TARGET  ; 
-        }*/
-
-        m_pixel_x = (m_rbox_segment_vector[0].center.x + m_rbox_segment_vector[1].center.x) / 2;
-        m_pixel_y = (m_rbox_segment_vector[0].center.y + m_rbox_segment_vector[1].center.y) / 2;
-        m_range = (RBOX_REAL_LENGTH * gray_img->height) / (buoy_pixel_height * TAN_FOV_Y);
-
-        printf ("Buoy: FULL_DETECT\n");
-        retval = FULL_DETECT;
-    }
-
-#ifdef M_DEBUG
-    for (unsigned i = 0; i<=1 && i<m_rbox_segment_vector.size(); i++)
-        m_rbox_segment_vector[i].drawOntoImage(gray_img);
-      window2.showImage(gray_img);
-#endif
-
-    m_pixel_x -= gray_img->width/2;
-    m_pixel_y -= gray_img->height/2;
-    m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / gray_img->width);
-    m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
-    printf ("Buoy (%3d,%3d) (%5.2f,%5.2f) range=%d\n", m_pixel_x, m_pixel_y, m_angular_x, m_angular_y, m_range);
-    return retval;
-}
+    */
+    exit (1);
 }
 
 bool MDA_VISION_MODULE_BUOY::rbox_stable (int rbox_index, float threshold) {
