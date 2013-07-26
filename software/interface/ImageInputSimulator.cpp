@@ -1,6 +1,8 @@
 #include "ImageInput.h"
 #include "SimulatorSingleton.h"
 
+#include <unistd.h>
+
 ImageInputSimulator::ImageInputSimulator(const char *settings_file) : ImageInput(settings_file, false)
 {
   SimulatorSingleton::get_instance().register_instance();
