@@ -70,6 +70,7 @@ public:
 
     float match_rectangle (IplImage* img, MvRBoxVector* rbox_vector, COLOR_TRIPLE color, float min_lw_ratio=1, float max_lw_ratio=100, int method=0);
     float match_circle (IplImage* img, MvCircleVector* circle_vector, COLOR_TRIPLE color, int method=0);
+    float match_ellipse (IplImage* img, MvRBoxVector* circle_vector, COLOR_TRIPLE color, float min_lw_ratio=1, float max_lw_ratio=100, int method=0);
 
     void drawOntoImage (IplImage* img) { draw_contours (m_contours, img); }        
 
