@@ -350,13 +350,9 @@ float mvContours::match_circle (IplImage* img, MvCircleVector* circle_vector, CO
 
         // check the contour's area to make sure it isnt too small
         double area = cvContourArea(c_contour);
-        if (method == 1) {
-        }
-        else {
-            if (area < img->width*img->height/600) {
-                DEBUG_PRINT ("Circle Fail: Contour too small!\n");
-                continue;
-            }
+        if (area < img->width*img->height/600) {
+            DEBUG_PRINT ("Circle Fail: Contour too small!\n");
+            continue;
         }
     
         // do some kind of matching to ensure the contour is a circle
@@ -382,12 +378,7 @@ float mvContours::match_circle (IplImage* img, MvCircleVector* circle_vector, CO
         double r11 = fabs( MEAN2(nu02,nu20) / nu11);
         double R = MEAN2(nu20,nu02) / std::max((MEAN2(nu21,nu12)), (MEAN2(nu30,nu03)));
         bool pass = true;
-        if (method == 1) {
-            pass = true; //(r03 <= 50.0) && (r12 <= 30.0) && (r02 <= 30.0) && (r11 > 6.0) && (R > 100);
-        }
-        else {
-            pass = (r03 <= 25.0) && (r12 <= 12.0) && (r02 <= 12.0) && (r11 > 2.5) && (R > 25);
-        }
+        pass = (r03 <= 25.0) && (r12 <= 12.0) && (r02 <= 12.0) && (r11 > 2.5) && (R > 25);
 
         if (!pass) {
             //DEBUG_PRINT ("Circle Moms: nu11=%lf, nu20=%lf, nu02=%lf, nu21=%lf, nu12=%lf, nu30=%lf, nu03=%lf\n", nu11, nu20, nu02, nu21, nu12, nu30, nu03);
@@ -409,17 +400,9 @@ float mvContours::match_circle (IplImage* img, MvCircleVector* circle_vector, CO
         // do checks on area and perimeter
         double area_ratio = area / (CV_PI*radius*radius);
         //double perimeter_ratio = perimeter / (2*CV_PI*radius);
-        if (method == 1) {
-            if (area_ratio < 0.3) {
-                DEBUG_PRINT ("Circle Fail: Area: %6.2lf\n", area_ratio);
-                continue;
-            }
-        }
-        else {
-            if (area_ratio < 0.7) {
-                DEBUG_PRINT ("Circle Fail: Area: %6.2lf\n", area_ratio);
-                continue;
-            }
+        if (area_ratio < 0.7) {
+            DEBUG_PRINT ("Circle Fail: Area: %6.2lf\n", area_ratio);
+            continue;
         }
         
         MvCircle circle;
@@ -441,6 +424,100 @@ float mvContours::match_circle (IplImage* img, MvCircleVector* circle_vector, CO
 
     return n_circles;
 }
+
+
+float mvContours::match_ellipse (IplImage* img, MvRBoxVector* ellipse_vector, COLOR_TRIPLE color, float min_lw_ratio, float max_lw_ratio, int method) {
+    assert (img != NULL);
+    assert (img->nChannels == 1);
+
+    int n_contours = find_contour_and_check_errors(img);
+    if (n_contours < 1 || m_contours == NULL)
+        return -1;
+
+    bin_calc.start();
+    CvSeq* c_contour = m_contours;
+    int n_circles = 0;
+
+    // debug
+    //mvWindow window("contours");
+
+    // examine each contour, put the passing ones into the circle_vector
+    for (int C = 0; C < n_contours; C++, c_contour = c_contour->h_next) {
+        // debug
+        /*cvZero (img);
+        draw_contours (c_contour, img);
+        window.showImage (img);
+        cvWaitKey(0);*/
+
+        // check that there are at least 6 points
+        if (c_contour->total < 6) {
+            continue;
+        }
+        // check the contour's area to make sure it isnt too small
+        double area = cvContourArea(c_contour);
+        if (area < img->width*img->height/1000) {
+            DEBUG_PRINT ("Ellipse Fail: Contour too small!\n");
+            continue;
+        }
+    
+        // get min enclosing circle and radius
+        //CvBox2D ellipse = cvFitEllipse2(c_contour);
+        CvBox2D ellipse = cvMinAreaRect2(c_contour, m_storage);
+        int height = ellipse.size.height;
+        int width = ellipse.size.width;
+        int a = height/2;
+        int b = width/2;
+        float height_to_width = static_cast<float>(height)/width;
+        double perimeter = cvArcLength (c_contour, CV_WHOLE_SEQ, 1);
+
+        if (height > img->width/2 || height < 0 || width > img->width/2 || width < 0) {
+            continue;
+        }
+        // check length to width
+        if (height_to_width < min_lw_ratio || height_to_width > max_lw_ratio) {
+            DEBUG_PRINT ("Ellipse Fail: height_to_width = %6.2f\n", height_to_width);    
+            continue;
+        }
+
+        // do checks on area and perimeter
+        double ellipse_area = (CV_PI*a*b);
+        double ellipse_perimeter = CV_PI*(3*(a+b)-sqrt((3*a+b)*(a+3*b)));
+        double area_ratio = area / ellipse_area;
+        double perimeter_ratio = perimeter / ellipse_perimeter;
+        DEBUG_PRINT ("Ellipse: area=%5.2lf/%5.2lf, perimeter=%5.2lf/%5.2lf\n", area, ellipse_area, perimeter, ellipse_perimeter);
+        if (area_ratio < 0.75 || area_ratio > 1.25) {
+            DEBUG_PRINT ("Ellipse Fail: Area: %6.2lf\n", area_ratio);
+            continue;
+        }
+        if (perimeter_ratio < 0.75 || perimeter_ratio > 1.25) {
+            DEBUG_PRINT ("Ellipse Fail: perimeter: %6.2lf\n", perimeter_ratio);
+            continue;
+        }
+        
+        MvRotatedBox rbox;
+        rbox.center.x = ellipse.center.x;
+        rbox.center.y = ellipse.center.y;
+        rbox.length = height;
+        rbox.width = width;
+        rbox.angle = ellipse.angle;
+        rbox.m1 = color.m1;
+        rbox.m2 = color.m2;
+        rbox.m3 = color.m3;
+        assign_color_to_shape (color, &rbox);
+        rbox.validity = area_ratio;
+        ellipse_vector->push_back(rbox);
+
+        //cvEllipse (img, cvPoint(ellipse.center.x,ellipse.center.y), cvSize(b,a), ellipse.angle, 0, 359, CV_RGB(50,50,50), 2);
+        //window.showImage (img);
+        //cvWaitKey(0);
+        n_circles++;
+    }
+    
+    bin_calc.stop();
+
+    return n_circles;
+}
+
 
 int assign_color_to_shape (int B, int G, int R, MvShape* shape) {
     int H,S,V;
