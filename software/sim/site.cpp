@@ -506,6 +506,7 @@ void do_buoys()
                   /*STACKS*/ 5);
       }
       else {
+        glScalef(1.0, 1.0, 1.4);
         gluSphere(buoys[2 * i],
                 /* radius*/ .12,//double size
                 /* slices*/ 40,
