@@ -1,6 +1,8 @@
 #include "mda_vision.h"
 #include "mda_tasks.h"
 
+const int MASTER_TIMEOUT = 45;
+
 MDA_TASK_FRAME:: MDA_TASK_FRAME (AttitudeInput* a, ImageInput* i, ActuatorOutput* o) :
     MDA_TASK_BASE (a, i, o)
 {
@@ -19,6 +21,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
     bool done_frame = false;
     set(DEPTH, 500);
     TIMER t;
+    t.restart();
 
     while (1) {
         IplImage* frame = image_input->get_image();
@@ -39,6 +42,11 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
             }
             else if (vision_code == NO_TARGET) {
                 set(SPEED, 3);
+
+                if (t.get_time() > MASTER_TIMEOUT) {
+                    stop();
+                    return TASK_MISSING;
+                }
             }
             else if (vision_code == FULL_DETECT) {
                 int ang_x = frame_vision.get_angular_x();

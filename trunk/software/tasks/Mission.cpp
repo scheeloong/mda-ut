@@ -30,7 +30,7 @@ void Mission::work_internal(bool show_image)
   // Tasks
   //MDA_TASK_GATE       gate(attitude_input, image_input, actuator_output);
   MDA_TASK_BUOY       buoy(attitude_input, image_input, actuator_output);
-  //MDA_TASK_FRAME      frame(attitude_input, image_input, actuator_output);
+  MDA_TASK_FRAME      frame(attitude_input, image_input, actuator_output);
   MDA_TASK_PATH       path(attitude_input, image_input, actuator_output);
   //MDA_TASK_PATH_SKIP  path_skip(attitude_input, image_input, actuator_output);
   MDA_TASK_SURFACE    surface(attitude_input, image_input, actuator_output);
@@ -43,6 +43,7 @@ void Mission::work_internal(bool show_image)
     &path,
     //&path_skip,
     //&path,
+    &frame,
     &surface,
     NULL};
 
