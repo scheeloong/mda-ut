@@ -14,27 +14,172 @@ const char MDA_VISION_MODULE_FRAME::MDA_VISION_FRAME_SETTINGS[] = "vision_frame_
 /// #########################################################################
 MDA_VISION_MODULE_FRAME:: MDA_VISION_MODULE_FRAME () :
     window (mvWindow("Frame Vision Module")),
-    AdvancedColorFilter (mvAdvancedColorFilter(MDA_VISION_FRAME_SETTINGS)),
-    HoughLines (mvHoughLines(MDA_VISION_FRAME_SETTINGS)),
-    lines (mvLines())
+    window2 (mvWindow("Frame Vision Module 2"))//,
 {
-    filtered_img = mvGetScratchImage (); // common size
+    N_FRAMES_TO_KEEP = 8;
+    gray_img = mvGetScratchImage();
+    gray_img_2 = mvGetScratchImage2();
 }
 
 MDA_VISION_MODULE_FRAME:: ~MDA_VISION_MODULE_FRAME () {
     mvReleaseScratchImage();
+    mvReleaseScratchImage2();
 }
 
-void MDA_VISION_MODULE_FRAME:: primary_filter (IplImage* src) {
-    AdvancedColorFilter.filter (src, filtered_img);
-    filtered_img->origin = src->origin;
-    lines.clearData ();
-    KMeans.clearData ();
-    
-    HoughLines.findLines (filtered_img, &lines);
-    KMeans.cluster_auto (1, 3, &lines, 1);
+void MDA_VISION_MODULE_FRAME::primary_filter (IplImage* src) {
+    // shift the frames back by 1
+    shift_frame_data (m_frame_data_vector, read_index, N_FRAMES_TO_KEEP);
+
+    // HSV hack!
+    /*unsigned char *srcptr;
+    int zeros = 0;
+    for (int i = 0; i < src->height; i++) {
+        srcptr = (unsigned char*)src->imageData + i*src->widthStep;
+        for (int j = 0; j < src->width; j++) {
+            if (srcptr[1] < 90) {
+                srcptr[0] = 0;
+                srcptr[1] = 0;
+                srcptr[2] = 0;
+                zeros++;
+            }
+            srcptr += 3;
+        }
+    }
+    if (zeros > 0.999 * 400*300) {
+        printf ("Path: add_frame: not enough pixels\n");
+        return;
+    }*/
+
+    watershed_filter.watershed(src, gray_img, 1);
+    window.showImage (src);
 }
 
+MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME::calc_vci () {
+    MDA_VISION_RETURN_CODE retval = NO_TARGET;
+    COLOR_TRIPLE color;
+    int H,S,V;
+    MvRotatedBox rbox;
+    MvRBoxVector rbox_vector;
+
+    while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
+        // check that the segment is roughly red
+        tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
+        if (S < 10 || V < 40 || color.m2 < 70 || color.m1 > 90/*|| !(H >= 160 || H < 130)*/) {
+            DEBUG_PRINT ("VISION_FRAME: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
+            continue;
+        }
+
+        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 6.0, 40.0, 1);
+        //window2.showImage (gray_img_2);
+    }
+
+    // debug
+    for (unsigned i = 0; i < rbox_vector.size(); i++) {
+        rbox_vector[i].drawOntoImage(gray_img);
+    }
+    window2.showImage (gray_img);
+
+    if (rbox_vector.size() < 2) { // not enough good segments, return no target
+        printf ("Frame: No Target\n");
+        return NO_TARGET;
+    }
+    else if (rbox_vector.size() == 2) {
+        MvRotatedBox rbox0 = rbox_vector[0];
+        MvRotatedBox rbox1 = rbox_vector[1];
+        float height = -1;
+        float width  = -1;
+
+        if(abs(rbox0.angle) > 60 && abs(rbox1.angle) > 60){
+            printf("Frame Sanity Failure: 2 Horizontal Lines?????\n");
+            return NO_TARGET;
+        }
+        else if(abs(rbox0.angle) > 30 && abs(rbox1.angle) < 30){
+            printf ("Frame: 2 segments, rbox0 horiz\n");
+            // 0 is horiz
+            m_pixel_x = rbox0.center.x - gray_img->width/2;
+            m_pixel_y = rbox1.center.y - gray_img->height/2;
+            width  = rbox0.length;
+            height = rbox1.length;
+
+            retval = FULL_DETECT;
+        }
+        else if(abs(rbox0.angle) < 30 && abs(rbox1.angle) > 60){
+            printf ("Frame: 2 segments, rbox1 horiz\n");
+            // 1 is horiz
+            m_pixel_x = rbox1.center.x - gray_img->width/2;
+            m_pixel_y = rbox0.center.y - gray_img->height/2;
+            width  = rbox1.length;
+            height = rbox0.length;
+
+            retval = FULL_DETECT;
+        }
+        else if(abs(rbox0.angle) < 30 && abs(rbox1.angle) < 30){
+            printf ("Frame: 2 segments, both vertical\n");
+            // 2 vertical
+            m_pixel_x = (rbox0.center.x + rbox1.center.x - gray_img->width) / 2;
+            m_pixel_y = (rbox0.center.y + rbox1.center.y - gray_img->height) / 2;
+            width  = abs(rbox0.center.x - rbox1.center.x);
+            height = (rbox0.length + rbox1.length) / 2;
+
+            retval = FULL_DETECT;
+        }
+        else {
+            return NO_TARGET;
+        }
+
+        m_range = (float)(FRAME_REAL_WIDTH * gray_img->width / width * TAN_FOV_X);
+    }
+    else if (rbox_vector.size() == 3) {
+        MvRotatedBox rbox0 = rbox_vector[0];
+        MvRotatedBox rbox1 = rbox_vector[1];
+        MvRotatedBox rbox2 = rbox_vector[2];
+        float height = -1;
+        float width  = -1;
+
+        if(abs(rbox0.angle) > 60 && abs(rbox1.angle) < 30 && abs(rbox2.angle) < 30) {
+            printf ("Frame: 3 segments, rbox0 horiz\n");
+            m_pixel_x = rbox0.center.x - gray_img->width/2;
+            m_pixel_y = (rbox1.center.y + rbox2.center.y - gray_img->height) / 2;
+            width  = abs(rbox1.center.x - rbox2.center.x);
+            height = (rbox1.length + rbox2.length) / 2;
+
+            retval = FULL_DETECT;
+        }
+        else if(abs(rbox0.angle) < 30 && abs(rbox1.angle) > 60 && abs(rbox2.angle) < 30) {
+            printf ("Frame: 3 segments, rbox1 horiz\n");
+            m_pixel_x = rbox1.center.x - gray_img->width/2;
+            m_pixel_y = (rbox0.center.y + rbox2.center.y - gray_img->height) / 2;
+            width  = abs(rbox0.center.x - rbox2.center.x);
+            height = (rbox0.length + rbox2.length) / 2;
+
+            retval = FULL_DETECT;
+        }
+        else if(abs(rbox0.angle) < 30 && abs(rbox1.angle) < 30 && abs(rbox2.angle) > 60) {
+            printf ("Frame: 3 segments, rbox2 horiz\n");
+            m_pixel_x = rbox2.center.x - gray_img->width/2;
+            m_pixel_y = (rbox0.center.y + rbox1.center.y - gray_img->height) / 2;
+            width  = abs(rbox0.center.x - rbox1.center.x);
+            height = (rbox0.length + rbox1.length) / 2;
+
+            retval = FULL_DETECT;
+        }
+        else{
+            return NO_TARGET;
+        }
+
+        m_range = (float)(FRAME_REAL_WIDTH * gray_img->width / width * TAN_FOV_X);
+    }
+    else {
+        return NO_TARGET;
+    }
+
+    m_angular_x = RAD_TO_DEG * atan(TAN_FOV_X * m_pixel_x / gray_img->width);
+    m_angular_y = RAD_TO_DEG * atan(TAN_FOV_Y * m_pixel_y / gray_img->height);
+    DEBUG_PRINT ("Frame: (%d,%d) (%5.2f, %5.2f)  range=%d\n", m_pixel_x, m_pixel_y, 
+        m_angular_x, m_angular_y, m_range);
+    return retval;
+}
+/*
 MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
     MDA_VISION_RETURN_CODE retval = FATAL_ERROR;
     unsigned nClusters = KMeans.nClusters();
@@ -258,3 +403,4 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME:: calc_vci () {
         }
         return retval;
 }
+*/

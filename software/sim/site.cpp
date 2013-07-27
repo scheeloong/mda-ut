@@ -570,7 +570,7 @@ void do_u_gate()
                /*HEIGHT*/ U_GATEWIDTH,
                /*SLICES*/ 10,
                /*STACKS*/ 10);
-
+/*
 #ifdef CYCLE_COLORS
    // set color base on time
    unsigned long long t = gettimeofday() / 1000000; // convert to seconds
@@ -578,7 +578,7 @@ void do_u_gate()
    if (t % 2 == 0)              // every other period
     glColor3f (1.0f, 0.0f, 0.0f);
 #endif
-
+*/
    // far side vertical piece
    glTranslatef (0, VERT_SPACE, 0); // up
    glRotatef(-90, 1.0, 0.0, 0.0); // pointing up
