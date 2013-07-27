@@ -90,7 +90,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
         if (!done_gate) {
             if (state == STARTING_GATE) {
                 printf ("Starting Gate: Moving Foward at High Speed\n");
-                set (SPEED, 8);
+                set (SPEED, 7);
 
                 if (timer.get_time() > MASTER_TIMEOUT) {
                     printf ("Starting Gate: Master Timer Timeout!!\n");
@@ -126,6 +126,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     set(SPEED, 0);
                     set(YAW, starting_yaw);
                     timer.restart();
+                    while (timer.get_time() < 2);
                     state = STARTING_PATH;
                 }
             }
@@ -164,8 +165,11 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
             }
             else if (state == AT_SEARCH_DEPTH){
                 if (vision_code == NO_TARGET) {
+                    if (timer.get_time() < 1) {
+                        continue;
+                    }
                     printf ("Searching: No target\n");
-                    if (timer.get_time() > 10) { // timeout, go back to starting state
+                    if (timer.get_time() > 11) { // timeout, go back to starting state
                         printf ("Timeout\n");
                         //set (YAW, starting_yaw);
                         timer.restart();
@@ -186,7 +190,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                     timer.restart();
                     printf ("Searching: Good\n");
                     if(pix_distance > frame->height/5){ // move over the path
-                        if (abs(xy_ang) < 10) { 
+                        if (abs(xy_ang) < 10) {
+                            // go fowards or backwards depending on the pix_y value 
                             if (pix_y >= 0) { 
                                 printf ("Set speed foward\n");
                                 set(SPEED, 3);
@@ -197,6 +202,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
                         }
                         else {
                             if (abs(xy_ang) > 90 ) {
+                                // turn different direction based on pix_y value
                                 xy_ang = (xy_ang > 0) ? xy_ang - 180 : xy_ang + 180; 
                             } 
                             printf("Turning %s %d degrees (xy_ang)\n", (abs(xy_ang) > 0) ? "Right" : "Left", static_cast<int>(abs(xy_ang)));
@@ -242,8 +248,11 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
             }
         } // done_path
         else {
-            // charge foward for 2 secs
+            // wait foward 2 secs, then charge foward for 2 secs
             timer.restart();
+            while (timer.get_time() < 2) {
+                set(SPEED, 0);
+            }
             while (timer.get_time() < 2) {
                 set(SPEED, 4);
             }

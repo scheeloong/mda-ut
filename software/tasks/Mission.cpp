@@ -40,7 +40,7 @@ void Mission::work_internal(bool show_image)
     //&gate,
     &path,
     //&buoy,
-    //&path,
+    &path,
     //&path_skip,
     //&path,
     &surface,
@@ -54,6 +54,8 @@ void Mission::work_internal(bool show_image)
 
   printf ("Running a %s mission!\n", show_image?"test":"Real");
   
+  int task_index = 0;
+
   // Run each task until the list of tasks is complete
   while (*task_ptr) {
     int starting_yaw = attitude_input->yaw();
@@ -61,7 +63,7 @@ void Mission::work_internal(bool show_image)
 
     ret_code = (*task_ptr)->run_task();
 
-    if (ret_code == TASK_REDO || ret_code == TASK_ERROR || ret_code == TASK_MISSING) {
+    if (ret_code == TASK_REDO) {
       // reset position, go back to orig depth, orig yaw, then retreat for 2 seconds
       reset.run_task(starting_depth, starting_yaw, -2);
       // rerun task
@@ -73,5 +75,6 @@ void Mission::work_internal(bool show_image)
     }
     
     task_ptr++;
+    task_index++;
   }
 }
