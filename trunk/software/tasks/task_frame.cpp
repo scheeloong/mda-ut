@@ -17,6 +17,8 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
 
     bool done_frame = false;
+    set(DEPTH, 500);
+    TIMER t;
 
     while (1) {
         IplImage* frame = image_input->get_image();
@@ -35,38 +37,38 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
                 ret_code = TASK_ERROR;
                 break;
             }
-            else if (vision_code == NO_TARGET || vision_code == UNKNOWN_TARGET) {
-                set(SPEED, 1);
+            else if (vision_code == NO_TARGET) {
+                set(SPEED, 3);
             }
-            else if (vision_code == ONE_SEGMENT) {
+            else if (vision_code == FULL_DETECT) {
                 int ang_x = frame_vision.get_angular_x();
                 int ang_y = frame_vision.get_angular_y();
                 int range = frame_vision.get_range();
                 int depth_change = tan(ang_y*0.017453) * range; 
 
-                if(fabs(ang_y) > 10.0) move(SINK,depth_change);
-                else if(abs(ang_x) > 5.0) move(RIGHT, ang_x);
-                else set(SPEED, 1);
-            } 
-            else if (vision_code == FULL_DETECT) {
                 // if we can see full frame and range is less than 400 we are done the frame part
-                if (frame_vision.get_range() < 400) {
-                    // set target yaw to current yaw and go forward
+                if (frame_vision.get_range() < 350) {
+                    t.restart();
+                    while (t.get_time() < 5) {
+                        set (SPEED, 9);
+                    }
                     stop();
                     done_frame = true;
                     ret_code = TASK_DONE;
                     break;
                 }
 
-                int ang_x = frame_vision.get_angular_x();
-                int ang_y = frame_vision.get_angular_y();
-                int range = frame_vision.get_range();
-                int depth_change = tan(ang_y*0.017453) * range; 
-
-
-                if(fabs(ang_y) > 10.0) move(SINK, depth_change);
-                else if(abs(ang_x) > 5.0) move(RIGHT, ang_x);
-                else set(SPEED, 1);
+                if(fabs(ang_y) > 20.0) {
+                    stop();
+                    move(SINK, depth_change);
+                }
+                else if(abs(ang_x) > 10.0) {
+                    stop();
+                    move(RIGHT, ang_x);
+                }
+                else {
+                    set(SPEED, 5);
+                }
             }
             else {
                 printf ("Error: %s: line %d\ntask module recieved an unhandled vision code.\n", __FILE__, __LINE__);

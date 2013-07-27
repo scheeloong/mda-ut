@@ -354,26 +354,12 @@ class MDA_VISION_MODULE_FRAME : public MDA_VISION_MODULE_BASE {
     static const float FRAME_REAL_VERTICAL_SEGMENT_LENGTH = 40.0;
 
     mvWindow window;
-    mvAdvancedColorFilter AdvancedColorFilter;
-    mvHoughLines HoughLines;
-    mvKMeans KMeans;
-
-    mvLines lines;
-
-    int IsRed;
+    mvWindow window2;
+    mvWatershedFilter watershed_filter;
+    mvContours contour_filter;
     
-    IplImage* filtered_img;
-
-    int check_pixel_is_color (unsigned char* imgPtr, unsigned char color) {
-        if ((imgPtr[0] == color || imgPtr[0] == MV_UNCOLORED) &&
-            (imgPtr[-1] == color || imgPtr[-1] == MV_UNCOLORED) && 
-            (imgPtr[1] == color || imgPtr[1] == MV_UNCOLORED)
-          )
-        {
-            return 1;            
-        }
-        return 0;
-    }
+    IplImage* gray_img;
+    IplImage* gray_img_2;
 
 public:
     MDA_VISION_MODULE_FRAME ();
@@ -383,7 +369,6 @@ public:
     MDA_VISION_RETURN_CODE calc_vci ();
 
     virtual int get_angle() {printf ("VISION_MODULE_FRAME - get_angle not allowed\n"); exit(1); return 0;}
-    int is_red() { return IsRed; } // 0 means no, 1 means yes, -1 means dunno
 };
 
 /// ########################################################################
