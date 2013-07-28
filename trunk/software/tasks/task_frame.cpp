@@ -25,9 +25,11 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
 
     int FRAME_DEPTH;
     read_mv_setting ("hacks.csv", "FRAME_DEPTH", FRAME_DEPTH);
-
-    set(DEPTH, 500);
-    set(DEPTH, 600);
+    
+    if (FRAME_DEPTH > 500)
+        set(DEPTH, 500);
+    if (FRAME_DEPTH > 600)
+        set(DEPTH, 600);
     set(DEPTH, FRAME_DEPTH);
     set(YAW, starting_yaw);
 
@@ -52,7 +54,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
                 break;
             }
             else if (vision_code == NO_TARGET) {
-                set(SPEED, 3);
+                set(SPEED, 5);
 
                 if (t.get_time() > MASTER_TIMEOUT) {
                     stop();
@@ -69,7 +71,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
                 if (frame_vision.get_range() < 350) {
                     t.restart();
                     while (t.get_time() < 5) {
-                        set (SPEED, 9);
+                        set (SPEED, 8);
                     }
                     stop();
                     done_frame = true;
@@ -77,7 +79,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
                     break;
                 }
 
-                if(fabs(ang_y) > 20.0) {
+                if(fabs(ang_y) > 30.0) {
                     stop();
                     move(SINK, depth_change);
                 }

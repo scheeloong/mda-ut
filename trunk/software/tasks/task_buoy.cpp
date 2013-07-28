@@ -58,7 +58,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(int buoy_index, BUOY_COLOR 
     int starting_yaw = attitude_input->yaw();
     printf("Starting yaw: %d\n", starting_yaw);
 
-    set (DEPTH, 400);
+    //set (DEPTH, 400);
 
     TASK_STATE state = STARTING;
     bool done_buoy = false;
@@ -71,22 +71,32 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(int buoy_index, BUOY_COLOR 
 //###### hack code for competition
     set (SPEED, 0);
     
-    int hack_depth;
+    int hack_depth, hack_time;
     read_mv_setting ("hacks.csv", "BUOY_DEPTH", hack_depth);
-    set (DEPTH, 500);
-    set (DEPTH, 600);
+    read_mv_setting ("hacks.csv", "BUOY_TIME", hack_time);
+    printf ("Buoy: going to depth %d\n", hack_depth);
+        fflush(stdout);
+    if (hack_depth > 500)
+	set (DEPTH, 500);
+    if (hack_depth > 600)
+        set (DEPTH, 600);
     set (DEPTH, hack_depth);
     set (YAW, starting_yaw);
 
+    printf ("Buoy: moving forward for %d seconds\n", hack_time);
+        fflush(stdout);
     timer.restart();
-    while (timer.get_time() < 5)
+    while (timer.get_time() < hack_time) {
         set (SPEED, 8);
+    }
     set(SPEED, 0);
 
-    set (DEPTH, 600);
-    set (DEPTH, 500);
+    if (hack_depth > 600)
+         set (DEPTH, 600);
+    if (hack_depth > 500)
+        set (DEPTH, 500);
     set (YAW, starting_yaw);
-
+    return TASK_DONE;
 //###### end hack code for competition
     /**
     * Basic Algorithm

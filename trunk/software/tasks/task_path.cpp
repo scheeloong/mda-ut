@@ -39,12 +39,15 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
     int starting_yaw = attitude_input->yaw();
     printf("Starting yaw: %d\n", starting_yaw);
     
+    int GATE_DEPTH;
+    read_mv_setting ("hacks.csv", "GATE_DEPTH", GATE_DEPTH);
+
     // gate depth
     if (HARDCODED_DEPTH > 350)
         set (DEPTH, 350);
     if (HARDCODED_DEPTH > 400)
         set (DEPTH, 400);
-    set (DEPTH, 450);
+    set (DEPTH, GATE_DEPTH);
     //set(DEPTH, 100);
 
     // go to the starting orientation in case sinking changed it
@@ -90,7 +93,7 @@ MDA_TASK_RETURN_CODE MDA_TASK_PATH:: run_task() {
         if (!done_gate) {
             if (state == STARTING_GATE) {
                 printf ("Starting Gate: Moving Foward at High Speed\n");
-                set (SPEED, 7);
+                set (SPEED, 5);
 
                 if (timer.get_time() > MASTER_TIMEOUT) {
                     printf ("Starting Gate: Master Timer Timeout!!\n");
