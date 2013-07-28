@@ -36,7 +36,7 @@ void Mission::work_internal(bool show_image)
   MDA_TASK_SURFACE    surface(attitude_input, image_input, actuator_output);
   MDA_TASK_RESET      reset(attitude_input, image_input, actuator_output);
   // List of tasks to be performed in order (NULL-terminated)
-  MDA_TASK_BASE *tasks[] = {
+  /*MDA_TASK_BASE *tasks[] = {
     //&gate,
     &path,
     //&buoy,
@@ -49,13 +49,24 @@ void Mission::work_internal(bool show_image)
 
   // Pointer to current task
   MDA_TASK_BASE **task_ptr = tasks;
-
+  */
   // Result of a task
   MDA_TASK_RETURN_CODE ret_code;
 
   printf ("Running a %s mission!\n", show_image?"test":"Real");
-  
-  int task_index = 0;
+  int RUN_BUOY;
+  read_mv_setting ("hacks.csv", "RUN_BUOY", RUN_BUOY);  
+  int RUN_FRAME;
+  read_mv_setting ("hacks.csv", "RUN_FRAME", RUN_FRAME);  
+
+
+  ret_code = path.run_task();
+  if (RUN_BUOY) ret_code = buoy.run_task();
+  ret_code = path.run_task();
+  if (RUN_FRAME) ret_code = frame.run_task();
+  ret_code = surface.run_task();
+
+  /*int task_index = 0;
 
   // Run each task until the list of tasks is complete
   while (*task_ptr) {
@@ -77,5 +88,5 @@ void Mission::work_internal(bool show_image)
     
     task_ptr++;
     task_index++;
-  }
+  }*/
 }

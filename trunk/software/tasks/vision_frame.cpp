@@ -64,12 +64,12 @@ MDA_VISION_RETURN_CODE MDA_VISION_MODULE_FRAME::calc_vci () {
     while ( watershed_filter.get_next_watershed_segment(gray_img_2, color) ) {
         // check that the segment is roughly red
         tripletBGR2HSV (color.m1,color.m2,color.m3, H,S,V);
-        if (S < 10 || V < 40 || color.m2 < 70 || color.m1 > 90/*|| !(H >= 160 || H < 130)*/) {
+        if (S < 10 || V < 30 || color.m2 < 40 || color.m1 > 80/*|| !(H >= 160 || H < 130)*/) {
             DEBUG_PRINT ("VISION_FRAME: rejected rectangle due to color: HSV=(%3d,%3d,%3d)\n", H,S,V);
             continue;
         }
 
-        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 6.0, 40.0, 1);
+        contour_filter.match_rectangle(gray_img_2, &rbox_vector, color, 5.0, 40.0, 1);
         //window2.showImage (gray_img_2);
     }
 

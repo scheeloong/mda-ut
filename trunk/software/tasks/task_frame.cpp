@@ -17,9 +17,20 @@ MDA_TASK_RETURN_CODE MDA_TASK_FRAME:: run_task() {
 
     MDA_VISION_MODULE_FRAME frame_vision;
     MDA_TASK_RETURN_CODE ret_code = TASK_MISSING;
+    
+    int starting_yaw = attitude_input->yaw();
+    printf("Starting yaw: %d\n", starting_yaw);
 
     bool done_frame = false;
+
+    int FRAME_DEPTH;
+    read_mv_setting ("hacks.csv", "FRAME_DEPTH", FRAME_DEPTH);
+
     set(DEPTH, 500);
+    set(DEPTH, 600);
+    set(DEPTH, FRAME_DEPTH);
+    set(YAW, starting_yaw);
+
     TIMER t;
     t.restart();
 
