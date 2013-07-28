@@ -5,7 +5,7 @@ rm -f software/interface/log.txt $dir
 cd software/vision && ./init_webcam.sh
 cd ../..
 
-cd software/interface && ./aquatux aquatux_submarine.csv | tee aquatux.txt
+cd software/interface && ./aquatux aquatux_submarine_mission.csv | tee aquatux.txt
 cd ../..
 
 dir=tests/`date +%b_%d,%H:%M`

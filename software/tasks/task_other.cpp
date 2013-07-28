@@ -14,8 +14,13 @@ MDA_TASK_RETURN_CODE MDA_TASK_SURFACE:: run_task() {
     fflush(stdout);
 
     TIMER t;
-    t.restart();
-    if (attitude_input->depth() > 270 && t.get_time() < 2) {
+    if (attitude_input->depth() > 500) {
+      set(DEPTH, 500);
+    }
+    if (attitude_input->depth() > 400) {
+      set(DEPTH, 400);
+    }
+    if (attitude_input->depth() > 270) {
       set(DEPTH, MDA_TASK_BASE::starting_depth);
     }
 

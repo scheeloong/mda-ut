@@ -67,6 +67,27 @@ MDA_TASK_RETURN_CODE MDA_TASK_BUOY:: run_single_buoy(int buoy_index, BUOY_COLOR 
     timer.restart();
     master_timer.restart();
 
+
+//###### hack code for competition
+    set (SPEED, 0);
+    
+    int hack_depth;
+    read_mv_setting ("hacks.csv", "BUOY_DEPTH", hack_depth);
+    set (DEPTH, 500);
+    set (DEPTH, 600);
+    set (DEPTH, hack_depth);
+    set (YAW, starting_yaw);
+
+    timer.restart();
+    while (timer.get_time() < 5)
+        set (SPEED, 8);
+    set(SPEED, 0);
+
+    set (DEPTH, 600);
+    set (DEPTH, 500);
+    set (YAW, starting_yaw);
+
+//###### end hack code for competition
     /**
     * Basic Algorithm
     *  - Assume for now that we just want to hit the cylindrical buoys when they're red
