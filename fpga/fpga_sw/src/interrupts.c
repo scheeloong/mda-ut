@@ -2,7 +2,18 @@
  * interrupts.c
  *
  * The timer and power management interrupts.
- * Note that the timer interrupt is also closely related to the controller.
+ *
+ * The power management interrupt is triggered whenever a specific voltage
+ * does not meet its threshold (either by under-voltage or over-voltage). This interrupt
+ * allows the software to gather stats and decide when to actually turn off power.
+ * Important: the hardware does not power off itself, but relies on software to do so.
+ *
+ * Timer interrupt is triggered at a constant interval, and is currently used to call the  controller code,
+ * through calculate_pid() and update_depth_reading(). Separate timers can be used it different intervals are needed,
+ * though one should suffice with modular arithmetic (ie see how update_depth_reading() is called more often).
+ *
+ * Update: calculate_pid() is not called directly here since it is potentially slow code. Interrupt handlers should be fast.
+ * Instead, an update_pid flag is set to 1 and a scheduler in utils.c will schedule the calculate_pid() call.
  *
  * Author: victor
  */
