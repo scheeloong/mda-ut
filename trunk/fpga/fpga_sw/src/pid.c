@@ -1,3 +1,9 @@
+/*
+Implementation of the Controller_PID struct as defined by pid.h and its functions.
+
+This is used as data in pid.c
+*/
+
 #include "pid.h"
 #include "settings.h"
 
