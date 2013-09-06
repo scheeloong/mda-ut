@@ -1,7 +1,14 @@
 /*
  * controller.c
  *
- * The submarine's motor controller.
+ * The submarine's motor controller. The motor controller is implemented as several PID controllers.
+ * Yaw, pitch, roll and depth have separate controllers.
+ *
+ * The controllers work by setting a target attitude (each controller is separate), and the PID controller
+ * will aim to maintain the target attitude. The PID controllers then consolidate together to set the motor PWM values.
+ *
+ * calculate_pid() is expected to be called at a constant interval, driven by a timer. update_depth_reading() is expected
+ * to be called more often to perform depth-averaging.
  *
  * Author: Ritchie
  */
