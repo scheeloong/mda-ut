@@ -1,3 +1,10 @@
+/*
+This file was mostly copied from a DE0-Nano CD example and is used to read
+accelerometer data from the FPGA. This is not really used anymore.
+
+Victor - Sept 2013
+*/
+
 #include "terasic_includes.h"
 #include "accelerometer_adxl345_spi.h"
 #include "terasic_spi.h"
