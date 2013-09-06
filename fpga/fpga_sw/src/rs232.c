@@ -1,4 +1,9 @@
-// Implementation for IMU interface to serial UART
+/*
+Implementation for IMU interface to serial UART.
+
+This includes accessors to the IMU data as well as initialization and interrupt-handling.
+There are some specific hacks to work with our VectorNav IMU that you will need to read in the code for.
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
