@@ -1,7 +1,11 @@
 /*
  * main.c
  *
- * The guts of the FPGA processor
+ * This is an oversized main file, which includes the main() function.
+ * The bulk of this file defines a list of commands and implements how each command is implemented. These commands are the only way
+ * to communicate to the FPGA hardware from outside the FPGA. This communication is done through stdin and stdout.
+ *
+ * The main() function runs init(), then processes commands in a loop. It should never exit.
  *
  * Author: victor
  */
