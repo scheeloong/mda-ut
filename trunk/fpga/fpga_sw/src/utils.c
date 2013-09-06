@@ -1,7 +1,12 @@
 /*
  * utils.c
  *
- * Useful utility functions
+ * Useful utility functions:
+ *
+ * 1. Setters and getters (as applicable) for motor PWM, 3-axis acceleration, depth
+ * 2. Utility string functions to parse commands and parts of commands (ie integers)
+ * 3. An initialization function to set up interrupts and set default values
+ * 4. A loop that handles timer-driven interrupts (to ensure other interrupts can be serviced immediately)
  *
  * Author: victor
  */
