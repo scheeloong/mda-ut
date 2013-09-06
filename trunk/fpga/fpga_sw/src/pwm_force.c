@@ -1,4 +1,8 @@
-// Create a lookup table and use it to compute a PWM value, given force.
+/*
+Create a lookup table and use it to compute a PWM value, given force.
+
+This lookup table is used to speed up math for a non-linear function from force to PWM.
+*/
 
 #include "pwm_force.h"
 #include "settings.h"
