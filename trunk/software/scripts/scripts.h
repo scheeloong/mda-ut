@@ -1,3 +1,13 @@
+/*
+This header file allows C and C++ files to access the FPGA software (such as script C files or the main code in interface/).
+init_fpga() must be called before any FPGA API is called (ie to get depth or set target yaw) because this creates a process
+to communicate with the FPGA. This also creates signal handlers that try to exit gracefully on signals (most notably Ctrl+C).
+
+Note: the function definitions are declared as 'inline' to link properly because this is a header file.
+
+Victor Zhang - Sept 2013
+*/
+
 #ifndef __MDA_SCRIPTS_H__
 #define __MDA_SCRIPTS_H__
 
