@@ -2,7 +2,7 @@ MAIN=main
 WEBCAM=webcam
 HU=hu
 EXES=$(MAIN) $(WEBCAM) $(HU)
-A=libvision.a
+SO=libvision.so
 
 include ../Makefile.in
 include Makefile.deps
@@ -12,13 +12,13 @@ MAIN_SRC=$(MAIN_DIR)main.cpp
 WEBCAM_SRC=$(MAIN_DIR)webcam.cpp
 HU_SRC=$(MAIN_DIR)hu.cpp
 
-$(MAIN): $(OBJ) $(MAIN_SRC) $(LIB)
-	$(CXX) -o $@ $(OBJ) $(MAIN_SRC) $(CXXFLAGS) -I .
+$(MAIN): $(MAIN_SRC)
+	$(CXX) -o $@ $(MAIN_SRC) $(CXXFLAGS) -I .
 
-$(WEBCAM): $(OBJ) $(WEBCAM_SRC) $(LIB)
-	$(CXX) -o $@ $(OBJ) $(WEBCAM_SRC) $(CXXFLAGS) -I .
+$(WEBCAM): $(WEBCAM_SRC)
+	$(CXX) -o $@ $(WEBCAM_SRC) $(CXXFLAGS) -I .
 
-$(HU): $(OBJ) $(HU_SRC) $(LIB)
-	$(CXX) -o $@ $(OBJ) $(HU_SRC) $(CXXFLAGS) -I .
+$(HU): $(HU_SRC)
+	$(CXX) -o $@ $(HU_SRC) $(CXXFLAGS) -I .
 
 .PHONY: $(PHONY_TARGETS)
