@@ -2,10 +2,10 @@
 # MDA Top level makefile
 #
 # This makefile can compile everything given that you have everything
-# as explained to you on the wiki
+# as explained to you on the wiki.
 #
 # You should only have to change the name of the directories listed at the top 
-# to change what you want to build
+# to change what you want to build.
 #
 
 DIRS = fpga software
